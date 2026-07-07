@@ -1,6 +1,0 @@
-- name: "Local Pharmacy"
-  devCost: 0
-  scanCost: 0
-  printCost: 0
-  pushPullCost: 0
-  pushPullType: "per_stop"

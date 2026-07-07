@@ -1,0 +1,6 @@
+- name: "Irohas Melbourne"
+  devCost: 17
+  scanCost: 0
+  printCost: 0
+  pushPullCost: 5
+  pushPullType: "per_stop"
