@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Film Cost Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 max-w-md w-full">
+        <h1 class="text-2xl font-bold text-center mb-6 text-gray-900">Film Cost Calculator</h1>
+        
+        <form id="calculatorForm" class="space-y-4">
+            <div class="bg-blue-50 p-4 rounded-lg space-y-3">
+                <h2 class="font-semibold text-blue-800 text-sm uppercase tracking-wide">The Film</h2>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Total cost of film pack ($ incl. postage)</label>
+                    <input type="number" id="filmCost" step="0.01" min="0" class="w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. 45.00" required>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Rolls in pack</label>
+                        <input type="number" id="rolls" min="1" class="w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value="1" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Exposures/Roll</label>
+                        <input type="number" id="exposures" min="1" class="w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value="36" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-green-50 p-4 rounded-lg space-y-3">
+                <h2 class="font-semibold text-green-800 text-sm uppercase tracking-wide">Lab Costs (Per Roll)</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Developing ($)</label>
+                        <input type="number" id="devCost" step="0.01" min="0" class="w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-green-500 outline-none" value="0">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Push / Pull ($)</label>
+                        <input type="number" id="pushPullCost" step="0.01" min="0" class="w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-green-500 outline-none" value="0">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Scanning ($)</label>
+                        <input type="number" id="scanCost" step="0.01" min="0" class="w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-green-500 outline-none" value="0">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Printing ($)</label>
+                        <input type="number" id="printCost" step="0.01" min="0" class="w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-green-500 outline-none" value="0">
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <div class="mt-8 text-center bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <p class="text-sm text-gray-500 uppercase tracking-wide mb-1">True Cost Per Photo</p>
+            <div class="text-4xl font-bold text-gray-900" id="costPerPhoto">$0.00</div>
+            <p class="text-sm text-gray-500 mt-2" id="breakdown">Total Cost: $0.00 | Total Photos: 0</p>
+        </div>
+    </div>
+
+    <script>
+        function calculateCost() {
+            // Get values
+            const filmCost = parseFloat(document.getElementById('filmCost').value) || 0;
+            const rolls = parseInt(document.getElementById('rolls').value) || 1;
+            const exposures = parseInt(document.getElementById('exposures').value) || 1;
+            
+            const devCost = parseFloat(document.getElementById('devCost').value) || 0;
+            const pushPullCost = parseFloat(document.getElementById('pushPullCost').value) || 0;
+            const scanCost = parseFloat(document.getElementById('scanCost').value) || 0;
+            const printCost = parseFloat(document.getElementById('printCost').value) || 0;
+
+            // Math
+            const labCostPerRoll = devCost + pushPullCost + scanCost + printCost;
+            const totalLabCost = labCostPerRoll * rolls;
+            const grandTotal = filmCost + totalLabCost;
+            const totalPhotos = exposures * rolls;
+            
+            const costPerPhoto = totalPhotos > 0 ? (grandTotal / totalPhotos) : 0;
+
+            // Update UI
+            document.getElementById('costPerPhoto').innerText = `$${costPerPhoto.toFixed(2)}`;
+            document.getElementById('breakdown').innerText = `Grand Total: $${grandTotal.toFixed(2)} | Total Photos: ${totalPhotos}`;
+        }
+
+        // Add event listeners to all inputs to calculate in real-time
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('input', calculateCost);
+        });
+    </script>
+</body>
+</html>
