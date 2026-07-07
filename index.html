@@ -119,37 +119,14 @@
                         <label for="labName" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Lab Name</label>
                         <input type="text" id="labName" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" placeholder="e.g. Irohas Melbourne">
                     </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label for="devCost" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Dev Cost ($)</label>
-                            <input type="number" id="devCost" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                        </div>
-                        <div>
-                            <label for="turnaroundTime" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Turnaround Time</label>
-                            <select id="turnaroundTime" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                                <option value="next_day">Next Day</option>
-                                <option value="same_week">Same Week</option>
-                                <option value="longer">Longer</option>
-                            </select>
-                        </div>
+
+                    <div>
+                        <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Service Tiers</label>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mb-2">One lab, many service options — e.g. standard vs. hi-res scan, or next-day vs. same-week turnaround. Add a tier for each combination this lab offers.</p>
+                        <div id="tiersContainer" class="space-y-3"></div>
+                        <button id="addTierBtn" type="button" class="w-full mt-2 border-2 border-dashed border-green-400 dark:border-green-700 text-green-700 dark:text-green-400 py-1.5 rounded text-sm font-medium hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors">+ Add Service Tier</button>
                     </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label for="pushPullCost" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Push/Pull Fee ($)</label>
-                            <input type="number" id="pushPullCost" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                        </div>
-                        <div>
-                            <label for="pushPullType" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Push/Pull Fee Type</label>
-                            <select id="pushPullType" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                                <option value="per_stop">Per Stop</option>
-                                <option value="flat">Flat Fee</option>
-                            </select>
-                        </div>
-                    </div>
-                    <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                        <input type="checkbox" id="highResScan" class="rounded border-gray-300 dark:border-gray-600 text-green-600 focus:ring-green-500">
-                        High Res Scans
-                    </label>
+
                     <button id="saveLabBtn" type="button" class="w-full bg-green-600 text-white py-2 rounded font-medium hover:bg-green-700">Save as Lab Profile</button>
                 </div>
             </div>
@@ -169,6 +146,13 @@
                 </div>
             </div>
 
+            <div id="labBestPicks" class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4 text-left"></div>
+
+            <div class="flex items-center gap-2 mb-3">
+                <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest">All Options</span>
+                <div class="flex-1 border-t border-gray-200 dark:border-gray-600"></div>
+            </div>
+
             <div class="flex gap-2 mb-4 justify-center">
                 <button id="filterNextDayBtn" type="button" class="px-3 py-1.5 rounded-full text-xs font-semibold border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-amber-400 transition-colors">⚡ Next Day</button>
                 <button id="filterHiResBtn" type="button" class="px-3 py-1.5 rounded-full text-xs font-semibold border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-indigo-400 transition-colors">HI-RES</button>
@@ -178,7 +162,7 @@
         </div>
 
         <p class="mt-8 text-center text-xs text-gray-500 dark:text-gray-500">
-            Vibe coded by Claude (Anthropic). <br>
+            Originally vibe coded by Gemini, with further features built by Claude (Anthropic). <br>
             Source code: <a href="https://github.com/trentnbauer/FilmCalc" class="underline hover:text-blue-500">github.com/trentnbauer/FilmCalc</a> 
         </p>
     </div>
@@ -298,12 +282,101 @@
             longer: 'Longer'
         };
 
+        // ---------- Lab service tiers ----------
+        // A lab can have multiple "service tiers" (e.g. standard vs hi-res scan,
+        // next-day vs same-week turnaround), each with its own cost/turnaround/hi-res
+        // settings. normalizeLabServices() bridges the current { name, services: [...] }
+        // schema with the older flat single-tier schema so both keep working.
+        function normalizeLabServices(lab) {
+            if (Array.isArray(lab.services) && lab.services.length > 0) {
+                return lab.services.map(s => ({
+                    devCost: parseFloat(s.devCost) || 0,
+                    pushPullCost: parseFloat(s.pushPullCost) || 0,
+                    pushPullType: s.pushPullType || 'per_stop',
+                    turnaroundTime: s.turnaroundTime || 'same_week',
+                    highResScan: !!s.highResScan
+                }));
+            }
+            // Legacy flat schema fallback (pre-service-tiers saved profiles)
+            return [{
+                devCost: parseFloat(lab.devCost) || 0,
+                pushPullCost: parseFloat(lab.pushPullCost) || 0,
+                pushPullType: lab.pushPullType || 'per_stop',
+                turnaroundTime: lab.turnaroundTime || 'same_week',
+                highResScan: !!lab.highResScan
+            }];
+        }
+
+        function tierBlockHTML(tier) {
+            tier = tier || {};
+            const devCost = tier.devCost ?? '';
+            const pushPullCost = tier.pushPullCost ?? '';
+            const pushPullType = tier.pushPullType || 'per_stop';
+            const turnaroundTime = tier.turnaroundTime || 'same_week';
+            const highResScan = !!tier.highResScan;
+            return `
+                <div class="tier-block bg-white dark:bg-gray-800/60 border border-green-200 dark:border-green-800 rounded-lg p-3 space-y-2 relative">
+                    <button type="button" class="removeTierBtn absolute top-2 right-2 text-red-400 hover:text-red-600 text-xs font-bold" aria-label="Remove Tier">✕</button>
+                    <div class="grid grid-cols-2 gap-2 pr-6">
+                        <div>
+                            <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Dev Cost ($)</label>
+                            <input type="number" class="tier-devCost w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" value="${devCost}">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Turnaround Time</label>
+                            <select class="tier-turnaroundTime w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                                <option value="next_day" ${turnaroundTime === 'next_day' ? 'selected' : ''}>Next Day</option>
+                                <option value="same_week" ${turnaroundTime === 'same_week' ? 'selected' : ''}>Same Week</option>
+                                <option value="longer" ${turnaroundTime === 'longer' ? 'selected' : ''}>Longer</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Push/Pull Fee ($)</label>
+                            <input type="number" class="tier-pushPullCost w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" value="${pushPullCost}">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Push/Pull Fee Type</label>
+                            <select class="tier-pushPullType w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                                <option value="per_stop" ${pushPullType === 'per_stop' ? 'selected' : ''}>Per Stop</option>
+                                <option value="flat" ${pushPullType === 'flat' ? 'selected' : ''}>Flat Fee</option>
+                            </select>
+                        </div>
+                    </div>
+                    <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                        <input type="checkbox" class="tier-highResScan rounded border-gray-300 dark:border-gray-600 text-green-600 focus:ring-green-500" ${highResScan ? 'checked' : ''}>
+                        High Res Scans
+                    </label>
+                </div>`;
+        }
+
+        function addTierBlock(tier) {
+            const container = document.getElementById('tiersContainer');
+            container.insertAdjacentHTML('beforeend', tierBlockHTML(tier));
+            const newBlock = container.lastElementChild;
+            newBlock.querySelectorAll('input, select').forEach(el => el.addEventListener('input', updateLabComparison));
+            newBlock.querySelector('.removeTierBtn').addEventListener('click', () => {
+                newBlock.remove();
+                updateLabComparison();
+            });
+        }
+
+        function resetTiers(tiers) {
+            document.getElementById('tiersContainer').innerHTML = '';
+            (tiers && tiers.length ? tiers : [{}]).forEach(addTierBlock);
+        }
+
+        document.getElementById('addTierBtn').addEventListener('click', () => addTierBlock({}));
+        resetTiers([{}]);
+
         // ---------- Labs for this roll ----------
         // Compares every saved lab profile (built-in + custom) against the current
         // Box Speed / Dev Speed, since push/pull cost — not just base dev price —
         // can flip which lab is actually cheapest for a given roll. Sorted by
         // cost per photo since that's the number that actually matters.
         function updateLabComparison() {
+            const bestPicksContainer = document.getElementById('labBestPicks');
             const container = document.getElementById('labComparison');
 
             const devSpeedRaw = document.getElementById('devSpeed').value;
@@ -313,6 +386,7 @@
 
             const hasRequiredFields = [devSpeedRaw, filmCostRaw, rollsRaw, exposuresRaw].every(v => v !== '' && v !== null && parseFloat(v) > 0);
             if (!hasRequiredFields) {
+                bestPicksContainer.innerHTML = '';
                 container.innerHTML = '<p class="text-sm text-gray-400 text-center">Fill in Dev Speed, Total Cost, Rolls & Exposures to compare labs</p>';
                 return;
             }
@@ -331,57 +405,98 @@
             const names = Object.keys(allLabs);
 
             if (names.length === 0) {
+                bestPicksContainer.innerHTML = '';
                 container.innerHTML = '<p class="text-sm text-gray-400 text-center">Save a lab profile to compare prices</p>';
                 return;
             }
 
-            let results = names.map(name => {
+            let idCounter = 0;
+            const allResults = names.flatMap(name => {
                 const lab = allLabs[name];
-                const devCost = parseFloat(lab.devCost) || 0;
-                const basePushPull = parseFloat(lab.pushPullCost) || 0;
-                const pushPullType = lab.pushPullType || 'per_stop';
+                const services = normalizeLabServices(lab);
 
-                let activePushPullCost = 0, stops = 0;
-                if (boxSpeed > 0 && devSpeed > 0 && boxSpeed !== devSpeed) {
-                    stops = Math.round(Math.abs(Math.log2(devSpeed / boxSpeed)) * 10) / 10;
-                    activePushPullCost = (pushPullType === 'per_stop') ? (basePushPull * stops) : basePushPull;
-                }
+                return services.map(tier => {
+                    let activePushPullCost = 0, stops = 0;
+                    if (boxSpeed > 0 && devSpeed > 0 && boxSpeed !== devSpeed) {
+                        stops = Math.round(Math.abs(Math.log2(devSpeed / boxSpeed)) * 10) / 10;
+                        activePushPullCost = (tier.pushPullType === 'per_stop') ? (tier.pushPullCost * stops) : tier.pushPullCost;
+                    }
 
-                const labCostPerRoll = devCost + activePushPullCost + perRollFee;
-                const grandTotal = filmCost + (labCostPerRoll * rolls) + onceOffFee;
-                const costPerRoll = rolls > 0 ? grandTotal / rolls : 0;
-                const costPerPhoto = totalPhotos > 0 ? grandTotal / totalPhotos : 0;
+                    const labCostPerRoll = tier.devCost + activePushPullCost + perRollFee;
+                    const grandTotal = filmCost + (labCostPerRoll * rolls) + onceOffFee;
+                    const costPerRoll = rolls > 0 ? grandTotal / rolls : 0;
+                    const costPerPhoto = totalPhotos > 0 ? grandTotal / totalPhotos : 0;
 
-                return {
-                    name,
-                    stops,
-                    devCostPerRoll: labCostPerRoll,
-                    costPerRoll,
-                    costPerPhoto,
-                    highResScan: !!lab.highResScan,
-                    turnaroundTime: lab.turnaroundTime || 'same_week'
-                };
+                    return {
+                        id: idCounter++,
+                        name,
+                        stops,
+                        devCostPerRoll: labCostPerRoll,
+                        costPerRoll,
+                        costPerPhoto,
+                        highResScan: tier.highResScan,
+                        turnaroundTime: tier.turnaroundTime
+                    };
+                });
             }).sort((a, b) => a.costPerPhoto - b.costPerPhoto);
 
-            if (filterNextDay) results = results.filter(r => r.turnaroundTime === 'next_day');
-            if (filterHiRes) results = results.filter(r => r.highResScan);
-
-            if (results.length === 0) {
-                container.innerHTML = '<p class="text-sm text-gray-400 text-center">No labs match the selected filters</p>';
+            if (allResults.length === 0) {
+                bestPicksContainer.innerHTML = '';
+                container.innerHTML = '<p class="text-sm text-gray-400 text-center">Save a lab profile to compare prices</p>';
                 return;
             }
 
             const currentLabName = document.getElementById('labName').value.trim();
 
-            container.innerHTML = results.map((r, i) => {
-                const isCheapest = i === 0;
-                const isCurrent = r.name === currentLabName;
-                const stopsLabel = r.stops > 0 ? ` <span class="text-xs text-gray-400">(${r.stops} stop push/pull)</span>` : '';
+            const cheapest = (arr) => arr.length ? arr[0] : null;
+            const bestPicks = [
+                { label: '🏆 Cheapest Total', pick: cheapest(allResults) },
+                { label: '⚡ Cheapest Fastest', pick: cheapest(allResults.filter(r => r.turnaroundTime === 'next_day')) },
+                { label: '🔍 Cheapest Hi-Res', pick: cheapest(allResults.filter(r => r.highResScan)) },
+                { label: '⚡🔍 Cheapest Hi-Res + Fastest', pick: cheapest(allResults.filter(r => r.highResScan && r.turnaroundTime === 'next_day')) }
+            ];
+
+            const usedIds = new Set(bestPicks.map(bp => bp.pick && bp.pick.id).filter(id => id !== undefined && id !== null));
+
+            function renderBadges(r) {
                 const hiResBadge = r.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">HI-RES</span>` : '';
                 const turnaroundBadge = ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 align-middle">${turnaroundLabels[r.turnaroundTime] || r.turnaroundTime}</span>`;
-                return `<div class="flex justify-between items-start px-3 py-2 rounded-lg text-sm ${isCheapest ? 'bg-green-100 dark:bg-green-900/30' : 'bg-white dark:bg-gray-800/50'} ${isCurrent ? 'ring-2 ring-blue-400' : ''} ${r.highResScan ? 'border border-indigo-300 dark:border-indigo-700' : ''}">
-                    <span class="${isCheapest ? 'font-semibold text-green-800 dark:text-green-400' : 'text-gray-700 dark:text-gray-300'}">${isCheapest ? '🏆 ' : ''}${r.name}${hiResBadge}${turnaroundBadge}${stopsLabel}</span>
-                    <span class="font-mono text-right leading-tight ${isCheapest ? 'text-green-800 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}">
+                const stopsLabel = r.stops > 0 ? ` <span class="text-xs text-gray-400">(${r.stops} stop push/pull)</span>` : '';
+                return hiResBadge + turnaroundBadge + stopsLabel;
+            }
+
+            bestPicksContainer.innerHTML = bestPicks.map(({ label, pick }) => {
+                if (!pick) {
+                    return `<div class="px-3 py-3 rounded-lg text-sm bg-white dark:bg-gray-800/50 border border-dashed border-gray-300 dark:border-gray-600">
+                        <div class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">${label}</div>
+                        <div class="text-gray-400 dark:text-gray-500 text-sm">No matching lab</div>
+                    </div>`;
+                }
+                const isCurrent = pick.name === currentLabName;
+                return `<div class="px-3 py-3 rounded-lg text-sm bg-green-100 dark:bg-green-900/30 ${isCurrent ? 'ring-2 ring-blue-400' : ''}">
+                    <div class="text-xs font-semibold text-green-700 dark:text-green-400 uppercase tracking-wide mb-1">${label}</div>
+                    <div class="font-semibold text-green-800 dark:text-green-400">${pick.name}${renderBadges(pick)}</div>
+                    <div class="font-mono text-green-800 dark:text-green-400 mt-1">
+                        <span class="font-semibold">$${pick.costPerPhoto.toFixed(2)}/photo</span>
+                        <span class="text-xs opacity-80"> · $${pick.devCostPerRoll.toFixed(2)}/dev · $${pick.costPerRoll.toFixed(2)}/total</span>
+                    </div>
+                </div>`;
+            }).join('');
+
+            let otherResults = allResults.filter(r => !usedIds.has(r.id));
+            if (filterNextDay) otherResults = otherResults.filter(r => r.turnaroundTime === 'next_day');
+            if (filterHiRes) otherResults = otherResults.filter(r => r.highResScan);
+
+            if (otherResults.length === 0) {
+                container.innerHTML = '<p class="text-sm text-gray-400 text-center">No other labs match the selected filters</p>';
+                return;
+            }
+
+            container.innerHTML = otherResults.map(r => {
+                const isCurrent = r.name === currentLabName;
+                return `<div class="flex justify-between items-start px-3 py-2 rounded-lg text-sm bg-white dark:bg-gray-800/50 ${isCurrent ? 'ring-2 ring-blue-400' : ''} ${r.highResScan ? 'border border-indigo-300 dark:border-indigo-700' : ''}">
+                    <span class="text-gray-700 dark:text-gray-300">${r.name}${renderBadges(r)}</span>
+                    <span class="font-mono text-right leading-tight text-gray-600 dark:text-gray-400">
                         <div class="font-semibold">$${r.costPerPhoto.toFixed(2)}/photo</div>
                         <div class="text-xs opacity-80">$${r.devCostPerRoll.toFixed(2)}/dev</div>
                         <div class="text-xs opacity-80">$${r.costPerRoll.toFixed(2)}/total</div>
@@ -440,13 +555,13 @@
 
         document.getElementById('savedLabsDropdown').addEventListener('change', (e) => {
             const p = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') }[e.target.value];
-            if (!p) return;
+            if (!p) {
+                resetTiers([{}]);
+                updateLabComparison();
+                return;
+            }
             document.getElementById('labName').value = p.name;
-            document.getElementById('devCost').value = p.devCost || 0;
-            document.getElementById('pushPullCost').value = p.pushPullCost || 0;
-            document.getElementById('pushPullType').value = p.pushPullType || 'per_stop';
-            document.getElementById('turnaroundTime').value = p.turnaroundTime || 'same_week';
-            document.getElementById('highResScan').checked = !!p.highResScan;
+            resetTiers(normalizeLabServices(p));
             updateLabComparison();
         });
 
@@ -470,15 +585,17 @@
         document.getElementById('saveLabBtn').addEventListener('click', () => {
             const name = document.getElementById('labName').value.trim();
             if (!name) return alert('Enter Lab Name');
+            const tierBlocks = document.querySelectorAll('#tiersContainer .tier-block');
+            if (tierBlocks.length === 0) return alert('Add at least one service tier');
+            const services = Array.from(tierBlocks).map(block => ({
+                devCost: block.querySelector('.tier-devCost').value,
+                pushPullCost: block.querySelector('.tier-pushPullCost').value,
+                pushPullType: block.querySelector('.tier-pushPullType').value,
+                turnaroundTime: block.querySelector('.tier-turnaroundTime').value,
+                highResScan: block.querySelector('.tier-highResScan').checked
+            }));
             let saved = JSON.parse(localStorage.getItem('labProfiles') || '{}');
-            saved[name] = {
-                name,
-                devCost: document.getElementById('devCost').value,
-                pushPullCost: document.getElementById('pushPullCost').value,
-                pushPullType: document.getElementById('pushPullType').value,
-                turnaroundTime: document.getElementById('turnaroundTime').value,
-                highResScan: document.getElementById('highResScan').checked
-            };
+            saved[name] = { name, services };
             localStorage.setItem('labProfiles', JSON.stringify(saved));
             updateLabDropdown();
             document.getElementById('savedLabsDropdown').value = name;
@@ -529,11 +646,7 @@
             const all = { ...defaultLabs, ...saved };
             return Object.values(all).map(l => ({
                 name: l.name,
-                devCost: Number(l.devCost) || 0,
-                pushPullCost: Number(l.pushPullCost) || 0,
-                pushPullType: l.pushPullType || 'per_stop',
-                turnaroundTime: l.turnaroundTime || 'same_week',
-                highResScan: !!l.highResScan
+                services: normalizeLabServices(l)
             }));
         }
 
@@ -566,7 +679,7 @@
                         const parsed = jsyaml.load(event.target.result);
                         if (!Array.isArray(parsed) || parsed.length === 0) throw new Error('empty or not a list');
 
-                        const isLabFile = 'devCost' in parsed[0];
+                        const isLabFile = 'services' in parsed[0] || 'devCost' in parsed[0];
                         const isFilmFile = 'boxSpeed' in parsed[0] || 'filmCost' in parsed[0];
 
                         if (isLabFile) {
