@@ -150,10 +150,8 @@
     </div>
 
     <script>
-        // --- State ---
         let defaultFilms = {};
 
-        // --- CSV Loader ---
         async function loadCSV() {
             try {
                 const response = await fetch('films.csv');
@@ -177,7 +175,6 @@
             finally { updateFilmDropdown(); }
         }
 
-        // --- Calculator ---
         function calculateCost() {
             const filmCost = parseFloat(document.getElementById('filmCost').value);
             const devCost = parseFloat(document.getElementById('devCost').value);
@@ -219,14 +216,12 @@
         const inputs = document.querySelectorAll('input, select');
         inputs.forEach(i => { i.addEventListener('input', calculateCost); i.addEventListener('change', calculateCost); });
 
-        // --- Auto-fill Speed ---
         const boxSpeedInput = document.getElementById('boxSpeed');
         const devSpeedInput = document.getElementById('devSpeed');
         let devSpeedManuallyEdited = false;
         devSpeedInput.addEventListener('input', () => devSpeedManuallyEdited = true);
         boxSpeedInput.addEventListener('input', () => { if (!devSpeedManuallyEdited) devSpeedInput.value = boxSpeedInput.value; calculateCost(); });
 
-        // --- Logic ---
         function updateFilmDropdown() {
             const dropdown = document.getElementById('savedFilmsDropdown');
             dropdown.innerHTML = '<option value="">-- Load a saved film --</option>';
