@@ -26,28 +26,19 @@
         </button>
 
         <h1 class="text-2xl font-bold text-center mb-6 text-gray-900 dark:text-white pr-8">Film Cost Calculator</h1>
-
-        <div class="mb-4 bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-100 dark:border-purple-800/30">
-            <label class="block text-sm font-semibold text-purple-800 dark:text-purple-400 mb-2 uppercase tracking-wide">Saved Film Profiles</label>
-            <div class="flex gap-2">
-                <select id="savedFilmsDropdown" class="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-purple-500 outline-none transition-colors">
-                    <option value="">-- Loading films... --</option>
-                </select>
-                <button id="saveFilmBtn" type="button" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded shadow transition-colors font-medium">Save</button>
-            </div>
-        </div>
-
-        <div class="mb-6 bg-teal-50 dark:bg-teal-900/20 p-4 rounded-lg border border-teal-100 dark:border-teal-800/30">
-            <label class="block text-sm font-semibold text-teal-800 dark:text-teal-400 mb-2 uppercase tracking-wide">Saved Lab Profiles</label>
-            <div class="flex gap-2">
-                <select id="savedLabsDropdown" class="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-teal-500 outline-none transition-colors">
-                    <option value="">-- Load a saved lab --</option>
-                </select>
-                <button id="saveLabBtn" type="button" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded shadow transition-colors font-medium">Save</button>
-            </div>
-        </div>
         
         <form id="calculatorForm" class="space-y-4">
+            
+            <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-100 dark:border-purple-800/30">
+                <label class="block text-sm font-semibold text-purple-800 dark:text-purple-400 mb-2 uppercase tracking-wide">Saved Film Profiles</label>
+                <div class="flex gap-2">
+                    <select id="savedFilmsDropdown" class="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-purple-500 outline-none transition-colors">
+                        <option value="">-- Loading films... --</option>
+                    </select>
+                    <button id="saveFilmBtn" type="button" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded shadow transition-colors font-medium">Save</button>
+                </div>
+            </div>
+
             <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg space-y-3 transition-colors duration-200">
                 <h2 class="font-semibold text-blue-800 dark:text-blue-400 text-sm uppercase tracking-wide">The Film</h2>
                 <div class="grid grid-cols-3 gap-4">
@@ -61,7 +52,7 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-1 dark:text-gray-300">Total cost of film pack ($ incl. postage)</label>
+                    <label class="block text-sm font-medium mb-1 dark:text-gray-300">Total cost of film pack (incl. postage)</label>
                     <input type="number" id="filmCost" step="0.01" min="0" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-colors" placeholder="e.g. 45.00" required>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
@@ -76,6 +67,16 @@
                 </div>
             </div>
 
+            <div class="bg-teal-50 dark:bg-teal-900/20 p-4 rounded-lg border border-teal-100 dark:border-teal-800/30">
+                <label class="block text-sm font-semibold text-teal-800 dark:text-teal-400 mb-2 uppercase tracking-wide">Saved Lab Profiles</label>
+                <div class="flex gap-2">
+                    <select id="savedLabsDropdown" class="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-teal-500 outline-none transition-colors">
+                        <option value="">-- Load a saved lab --</option>
+                    </select>
+                    <button id="saveLabBtn" type="button" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded shadow transition-colors font-medium">Save</button>
+                </div>
+            </div>
+
             <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg space-y-3 transition-colors duration-200">
                 <h2 class="font-semibold text-green-800 dark:text-green-400 text-sm uppercase tracking-wide">Lab Costs (Per Roll)</h2>
                 <div>
@@ -84,19 +85,19 @@
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium mb-1 dark:text-gray-300">Developing ($)</label>
+                        <label class="block text-sm font-medium mb-1 dark:text-gray-300">Developing</label>
                         <input type="number" id="devCost" step="0.01" min="0" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-green-500 outline-none transition-colors" value="0">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-1 dark:text-gray-300">Push / Pull ($)</label>
+                        <label class="block text-sm font-medium mb-1 dark:text-gray-300">Push / Pull</label>
                         <input type="number" id="pushPullCost" step="0.01" min="0" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-green-500 outline-none transition-colors" value="0">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-1 dark:text-gray-300">Scanning ($)</label>
+                        <label class="block text-sm font-medium mb-1 dark:text-gray-300">Scanning</label>
                         <input type="number" id="scanCost" step="0.01" min="0" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-green-500 outline-none transition-colors" value="0">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-1 dark:text-gray-300">Printing ($)</label>
+                        <label class="block text-sm font-medium mb-1 dark:text-gray-300">Printing</label>
                         <input type="number" id="printCost" step="0.01" min="0" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-green-500 outline-none transition-colors" value="0">
                     </div>
                 </div>
@@ -105,21 +106,14 @@
 
         <div class="mt-8 text-center bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border border-gray-200 dark:border-gray-600 transition-colors duration-200">
             <p class="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">True Cost Per Photo</p>
-            <div class="text-4xl font-bold text-gray-900 dark:text-white" id="costPerPhoto">$0.00</div>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-2" id="breakdown">Total Cost: $0.00 | Total Photos: 0</p>
+            <div class="text-4xl font-bold text-gray-900 dark:text-white" id="costPerPhoto">0.00</div>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-2" id="breakdown">Total Cost: 0.00 | Total Photos: 0</p>
         </div>
     </div>
 
     <script>
         // --- State ---
         let defaultFilms = {};
-        
-        const defaultLabs = {
-            "Standard Lab (Dev + Scan)": { name: "Standard Lab (Dev + Scan)", devCost: 8, pushPullCost: 0, scanCost: 12, printCost: 0 },
-            "Pro Lab (High Res Scans)": { name: "Pro Lab (High Res Scans)", devCost: 10, pushPullCost: 3, scanCost: 20, printCost: 0 },
-            "Pharmacy (Prints Included)": { name: "Pharmacy (Prints Included)", devCost: 5, pushPullCost: 0, scanCost: 5, printCost: 10 },
-            "Mail-in (Dev Only)": { name: "Mail-in (Dev Only)", devCost: 6, pushPullCost: 2, scanCost: 0, printCost: 0 }
-        };
 
         // --- CSV Loader (Films) ---
         async function loadCSV() {
@@ -170,8 +164,8 @@
             
             const costPerPhoto = totalPhotos > 0 ? (grandTotal / totalPhotos) : 0;
 
-            document.getElementById('costPerPhoto').innerText = `$${costPerPhoto.toFixed(2)}`;
-            document.getElementById('breakdown').innerText = `Grand Total: $${grandTotal.toFixed(2)} | Total Photos: ${totalPhotos}`;
+            document.getElementById('costPerPhoto').innerText = costPerPhoto.toFixed(2);
+            document.getElementById('breakdown').innerText = `Total Cost: ${grandTotal.toFixed(2)} | Total Photos: ${totalPhotos}`;
         }
 
         const inputs = document.querySelectorAll('input');
@@ -245,8 +239,8 @@
 
         // --- Lab Save/Load Logic ---
         function getMergedLabs() {
-            const savedLabs = JSON.parse(localStorage.getItem('labProfiles')) || {};
-            return { ...defaultLabs, ...savedLabs };
+            // Only pull from local storage now
+            return JSON.parse(localStorage.getItem('labProfiles')) || {};
         }
 
         function updateLabDropdown() {
