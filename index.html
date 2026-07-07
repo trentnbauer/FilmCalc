@@ -1,1048 +1,150 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="icon" type="image/svg+xml" href="/icon.svg">
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Film Cost Calculator</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
-    <script>
-        tailwind.config = { darkMode: 'class', }
-        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark')
-        } else {
-            document.documentElement.classList.remove('dark')
-        }
-    </script>
-</head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans min-h-screen flex items-start justify-center p-4 pt-8 md:pt-12 transition-colors duration-200">
-
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 md:p-8 max-w-2xl w-full relative transition-colors duration-200">
-        
-        <div class="absolute top-6 right-6 flex items-center gap-2">
-            <button id="settingsToggle" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Settings">
-                <svg class="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
-            </button>
-            <button id="themeToggle" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Toggle Dark Mode">
-                <svg id="themeToggleLightIcon" class="hidden w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4.22 3.22a1 1 0 011.415 0l.708.708a1 1 0 01-1.414 1.414l-.708-.708a1 1 0 010-1.414zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM14.22 15.78a1 1 0 010 1.415l-.708.708a1 1 0 01-1.414-1.414l-.708-.708a1 1 0 011.415 0zM10 16a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-4.22-3.22a1 1 0 01-1.415 0l-.708-.708a1 1 0 011.414-1.414l.708.708a1 1 0 010 1.415zM2 10a1 1 0 011-1h1a1 1 0 110 2H3a1 1 0 01-1-1zm3.22-4.22a1 1 0 010-1.415l.708-.708a1 1 0 011.414 1.414l-.708.708a1 1 0 01-1.415 0zM10 5a5 5 0 100 10 5 5 0 000-10z" clip-rule="evenodd"></path></svg>
-                <svg id="themeToggleDarkIcon" class="hidden w-5 h-5 text-gray-700" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
-            </button>
-        </div>
-
-        <div id="settingsModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 max-w-md w-full relative">
-                <button id="settingsCloseBtn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-xl leading-none" aria-label="Close Settings">✕</button>
-                <h2 class="text-lg font-bold mb-4 text-gray-900 dark:text-white">Settings</h2>
-
-                <div class="space-y-4">
-                    <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3">
-                        <h3 class="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide">Recommended Pick Threshold</h3>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">In "Labs For This Roll", if the cheapest Hi-Res + Fastest option costs less than this percentage more than the absolute cheapest, its card is highlighted gold as the recommended pick — since a small premium is usually worth both perks. "Cheapest Total" always shows the actual cheapest option, unchanged.</p>
-                        <div class="flex items-center gap-2">
-                            <input type="number" id="upgradeThresholdInput" min="0" max="100" step="1" class="w-24 border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
-                            <span class="text-sm text-gray-600 dark:text-gray-300">% price premium allowed</span>
-                        </div>
-                    </div>
-                    <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3">
-                        <h3 class="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide">Export Data</h3>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Downloads <code>config.yaml</code> with all your saved film & lab profiles plus your settings, in the same format the app reads it in — so it can be dropped straight back into the project's repo with no editing.</p>
-                        <button id="exportBtn" type="button" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-medium">Export as YAML</button>
-                    </div>
-                    <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3">
-                        <h3 class="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide">Import Data</h3>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Select a <code>config.yaml</code> file to load its films, labs, and settings.</p>
-                        <button id="importBtn" type="button" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-medium">Import YAML</button>
-                        <input type="file" id="importFile" class="hidden" accept=".yaml,.yml" multiple>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <h1 class="text-3xl font-bold text-center mb-8 text-gray-900 dark:text-white pr-8">Film Cost Calculator</h1>
-        
-        <form id="calculatorForm" class="space-y-6">
-
-            <div class="flex gap-2 border-b border-gray-200 dark:border-gray-700">
-                <button id="tabFilmBtn" type="button" class="flex-1 px-4 py-2.5 font-semibold text-sm uppercase tracking-wide border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 transition-colors">Calculator</button>
-                <button id="tabLabBtn" type="button" class="flex-1 px-4 py-2.5 font-semibold text-sm uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">Lab</button>
-                <button id="tabCheapestFilmsBtn" type="button" class="flex-1 px-4 py-2.5 font-semibold text-sm uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">Film Library</button>
-            </div>
-
-            <div id="filmTabContent" class="space-y-6">
-                <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-100 dark:border-purple-800/30">
-                    <label class="block text-sm font-semibold text-purple-800 dark:text-purple-400 mb-2 uppercase tracking-wide">Load Saved Film</label>
-                    <select id="savedFilmsDropdown" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm"><option value="">-- Load a saved film --</option></select>
-                </div>
-
-                <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg space-y-3">
-                    <h2 class="font-semibold text-blue-800 dark:text-blue-400 text-sm uppercase tracking-wide">Film Setup</h2>
-                    <div>
-                        <label for="filmName" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Film Name</label>
-                        <input type="text" id="filmName" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" placeholder="e.g. Kodak Gold 200">
-                    </div>
-                    <div>
-                        <label for="bundleLabel" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Bundle Label (optional)</label>
-                        <input type="text" id="bundleLabel" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" placeholder="e.g. 3-Pack, 24exp Bulk 10-Pack">
-                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Only needed if you're saving two bundles with the exact same rolls & exposures (e.g. same size from a different store) — different rolls/exposures are always kept separate automatically.</p>
-                    </div>
-                    <div>
-                        <label for="boxSpeed" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Box Speed (ISO)</label>
-                        <input type="number" id="boxSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                    </div>
-                    <div>
-                        <label for="filmCost" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Total Cost incl. Postage ($)</label>
-                        <input type="number" id="filmCost" step="0.01" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label for="rolls" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Rolls</label>
-                            <input type="number" id="rolls" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                        </div>
-                        <div>
-                            <label for="exposures" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Exposures per Roll</label>
-                            <input type="number" id="exposures" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Where to Buy (optional)</label>
-                        <div class="grid grid-cols-2 gap-2">
-                            <input type="text" id="storeName" placeholder="Store name" class="border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                            <input type="url" id="buyLink" placeholder="https://..." class="border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                        </div>
-                        <a id="buyLinkDisplay" href="#" target="_blank" rel="noopener noreferrer" class="hidden mt-1 inline-flex items-center gap-1 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">
-                            🛒 Buy this film
-                        </a>
-                    </div>
-                    <div class="bg-blue-100/60 dark:bg-blue-900/30 rounded-lg p-3 text-center">
-                        <p class="text-xs text-blue-700 dark:text-blue-400 uppercase tracking-wide">Film Cost Per Photo <span class="normal-case font-normal opacity-75">(excl. lab fees)</span></p>
-                        <p id="filmOnlyCostPerPhoto" class="text-xl font-bold text-blue-800 dark:text-blue-300 mt-1">--</p>
-                        <div id="filmSpeedComparison"></div>
-                    </div>
-                    <button id="saveFilmBtn" type="button" class="w-full bg-blue-600 text-white py-2 rounded font-medium hover:bg-blue-700">Save as Film Profile</button>
-                </div>
-            </div>
-
-            <div id="labTabContent" class="space-y-6 hidden">
-                <div class="bg-teal-50 dark:bg-teal-900/20 p-4 rounded-lg border border-teal-100 dark:border-teal-800/30">
-                    <label class="block text-sm font-semibold text-teal-800 dark:text-teal-400 mb-2 uppercase tracking-wide">Lab Management</label>
-                    <select id="savedLabsDropdown" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 mb-2 text-sm"><option value="">-- Load a saved lab --</option></select>
-                    <button id="deleteLabBtn" type="button" class="w-full bg-red-500 hover:bg-red-600 text-white py-1 rounded text-sm font-bold">Delete Selected Lab</button>
-                </div>
-
-                <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg space-y-3">
-                    <h2 class="font-semibold text-green-800 dark:text-green-400 text-sm uppercase tracking-wide">Lab Setup</h2>
-                    <div>
-                        <label for="labName" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Lab Name</label>
-                        <input type="text" id="labName" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" placeholder="e.g. Irohas Melbourne">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Service Tiers</label>
-                        <p class="text-xs text-gray-400 dark:text-gray-500 mb-2">One lab, many service options — e.g. standard vs. hi-res scan, or next-day vs. same-week turnaround. Add a tier for each combination this lab offers.</p>
-                        <div id="tiersContainer" class="space-y-3"></div>
-                        <button id="addTierBtn" type="button" class="w-full mt-2 border-2 border-dashed border-green-400 dark:border-green-700 text-green-700 dark:text-green-400 py-1.5 rounded text-sm font-medium hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors">+ Add Service Tier</button>
-                    </div>
-
-                    <button id="saveLabBtn" type="button" class="w-full bg-green-600 text-white py-2 rounded font-medium hover:bg-green-700">Save as Lab Profile</button>
-                </div>
-            </div>
-
-            <div id="cheapestFilmsTabContent" class="space-y-4 hidden">
-                <p class="text-xs text-gray-400 dark:text-gray-500">Every saved film profile (built-in + custom), grouped by Box Speed. The cheapest cost-per-photo bundle at each ISO is highlighted, with its buy link and pack total if you saved one.</p>
-                <div id="filmBestPicks" class="space-y-3"></div>
-                <div class="flex items-center gap-2">
-                    <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest">All Saved Films</span>
-                    <div class="flex-1 border-t border-gray-200 dark:border-gray-600"></div>
-                </div>
-                <div id="filmAllOptions" class="space-y-1.5"></div>
-            </div>
-        </form>
-
-        <div id="labsForThisRollSection">
-            <div class="mt-8 grid grid-cols-2 gap-2 text-left">
-                <div>
-                    <label for="devSpeed" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Dev Speed (ISO)</label>
-                    <input type="number" id="devSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
-                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Different from Box Speed if you're pushing/pulling this roll.</p>
-                </div>
-                <div></div>
-                <div>
-                    <label for="onceOffFee" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Once-off Fee ($)</label>
-                    <input type="number" id="onceOffFee" step="0.01" placeholder="e.g. shipping" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
-                </div>
-                <div>
-                    <label for="perRollFee" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Per-roll Fee ($)</label>
-                    <input type="number" id="perRollFee" step="0.01" placeholder="e.g. surcharge" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
-                </div>
-            </div>
-
-            <div class="mt-4 text-center bg-gray-50 dark:bg-gray-700/50 p-6 rounded-lg border border-gray-200 dark:border-gray-600">
-                <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-3 text-center">Labs For This Roll</h3>
-
-                <div id="labBestPicks" class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4 text-left"></div>
-
-                <div class="flex items-center gap-2 mb-3">
-                    <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest">All Options</span>
-                    <div class="flex-1 border-t border-gray-200 dark:border-gray-600"></div>
-                </div>
-
-                <div class="flex gap-2 mb-4 justify-center">
-                    <button id="filterNextDayBtn" type="button" class="px-3 py-1.5 rounded-full text-xs font-semibold border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-amber-400 transition-colors">⚡ Next Day</button>
-                    <button id="filterHiResBtn" type="button" class="px-3 py-1.5 rounded-full text-xs font-semibold border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-indigo-400 transition-colors">HI-RES</button>
-                </div>
-
-                <div id="labComparison" class="space-y-1.5 text-left"></div>
-            </div>
-        </div>
-
-        <p class="mt-8 text-center text-xs text-gray-500 dark:text-gray-500">
-            Originally vibe coded by Gemini, with further features built by Claude (Anthropic). <br>
-            Source code: <a href="https://github.com/trentnbauer/FilmCalc" class="underline hover:text-blue-500">github.com/trentnbauer/FilmCalc</a> 
-        </p>
-    </div>
-
-    <script>
-        const themeToggle = document.getElementById('themeToggle');
-        const lightIcon = document.getElementById('themeToggleLightIcon');
-        const darkIcon = document.getElementById('themeToggleDarkIcon');
-
-        function updateThemeIcons() {
-            const isDark = document.documentElement.classList.contains('dark');
-            // Sun icon shows when in dark mode (click it to go light)
-            lightIcon.classList.toggle('hidden', !isDark);
-            // Moon icon shows when in light mode (click it to go dark)
-            darkIcon.classList.toggle('hidden', isDark);
-        }
-
-        themeToggle.addEventListener('click', () => {
-            document.documentElement.classList.toggle('dark');
-            localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-            updateThemeIcons();
-        });
-
-        updateThemeIcons();
-
-        // ---------- Settings modal ----------
-        const settingsToggle = document.getElementById('settingsToggle');
-        const settingsModal = document.getElementById('settingsModal');
-        const settingsCloseBtn = document.getElementById('settingsCloseBtn');
-
-        function openSettings() { settingsModal.classList.remove('hidden'); }
-        function closeSettings() { settingsModal.classList.add('hidden'); }
-
-        settingsToggle.addEventListener('click', openSettings);
-        settingsCloseBtn.addEventListener('click', closeSettings);
-        settingsModal.addEventListener('click', (e) => { if (e.target === settingsModal) closeSettings(); });
-
-        // ---------- Cheapest Total upgrade threshold ----------
-        const upgradeThresholdInput = document.getElementById('upgradeThresholdInput');
-        upgradeThresholdInput.value = localStorage.getItem('upgradeThresholdPercent') ?? '10';
-        upgradeThresholdInput.addEventListener('input', () => {
-            const val = Math.min(100, Math.max(0, parseFloat(upgradeThresholdInput.value) || 0));
-            localStorage.setItem('upgradeThresholdPercent', val);
-            updateLabComparison();
-        });
-
-        // ---------- Tab switching ----------
-        const tabs = {
-            film: { btn: document.getElementById('tabFilmBtn'), content: document.getElementById('filmTabContent') },
-            lab: { btn: document.getElementById('tabLabBtn'), content: document.getElementById('labTabContent') },
-            cheapestFilms: { btn: document.getElementById('tabCheapestFilmsBtn'), content: document.getElementById('cheapestFilmsTabContent') }
-        };
-
-        function setTabActive(btn, active) {
-            btn.classList.toggle('border-blue-600', active);
-            btn.classList.toggle('text-blue-600', active);
-            btn.classList.toggle('dark:text-blue-400', active);
-            btn.classList.toggle('border-transparent', !active);
-            btn.classList.toggle('text-gray-400', !active);
-            btn.classList.toggle('dark:text-gray-500', !active);
-        }
-
-        function switchTab(tab) {
-            Object.keys(tabs).forEach(key => {
-                const active = key === tab;
-                tabs[key].content.classList.toggle('hidden', !active);
-                setTabActive(tabs[key].btn, active);
-            });
-            document.getElementById('labsForThisRollSection').classList.toggle('hidden', tab !== 'film');
-        }
-
-        Object.keys(tabs).forEach(key => tabs[key].btn.addEventListener('click', () => switchTab(key)));
-
-        // ---------- Default profiles & settings (loaded from config.yaml) ----------
-        let defaultFilms = {};
-        let defaultLabs = {};
-        let configSettings = {};
-
-        async function loadDefaults() {
-            try {
-                const res = await fetch('config.yaml');
-                if (res.ok) {
-                    const parsed = jsyaml.load(await res.text()) || {};
-                    (parsed.films || []).forEach(f => { defaultFilms[filmProfileKey(f.name, f.rolls, f.exposures, f.bundleLabel)] = f; });
-                    (parsed.labs || []).forEach(l => { defaultLabs[l.name] = l; });
-                    configSettings = parsed.settings || {};
-                }
-            } catch (e) {
-                console.error('Error loading config.yaml', e);
-            } finally {
-                updateFilmDropdown();
-                updateLabDropdown();
-                applyConfigSettings();
-            }
-        }
-
-        // Config-file settings act as the factory default — only applied if the
-        // person hasn't already saved their own override via the Settings panel.
-        function applyConfigSettings() {
-            if (localStorage.getItem('upgradeThresholdPercent') === null && configSettings.upgradeThresholdPercent !== undefined) {
-                localStorage.setItem('upgradeThresholdPercent', configSettings.upgradeThresholdPercent);
-            }
-            upgradeThresholdInput.value = localStorage.getItem('upgradeThresholdPercent') ?? '10';
-            updateLabComparison();
-        }
-
-        // ---------- Filters ----------
-        let filterNextDay = false;
-        let filterHiRes = false;
-
-        function setFilterActive(btn, active, activeClasses) {
-            btn.classList.toggle('border-transparent', active);
-            activeClasses.forEach(c => btn.classList.toggle(c, active));
-            btn.classList.toggle('border-gray-300', !active);
-            btn.classList.toggle('dark:border-gray-600', !active);
-            btn.classList.toggle('text-gray-600', !active);
-            btn.classList.toggle('dark:text-gray-300', !active);
-        }
-
-        const filterNextDayBtn = document.getElementById('filterNextDayBtn');
-        const filterHiResBtn = document.getElementById('filterHiResBtn');
-
-        filterNextDayBtn.addEventListener('click', () => {
-            filterNextDay = !filterNextDay;
-            setFilterActive(filterNextDayBtn, filterNextDay, ['bg-amber-100', 'dark:bg-amber-900/40', 'text-amber-800', 'dark:text-amber-300']);
-            updateLabComparison();
-        });
-
-        filterHiResBtn.addEventListener('click', () => {
-            filterHiRes = !filterHiRes;
-            setFilterActive(filterHiResBtn, filterHiRes, ['bg-indigo-100', 'dark:bg-indigo-900/40', 'text-indigo-800', 'dark:text-indigo-300']);
-            updateLabComparison();
-        });
-
-        const turnaroundLabels = {
-            next_day: '⚡ Next Day',
-            same_week: 'Same Week',
-            longer: 'Longer'
-        };
-
-        // ---------- Lab service tiers ----------
-        // A lab can have multiple "service tiers" (e.g. standard vs hi-res scan,
-        // next-day vs same-week turnaround), each with its own cost/turnaround/hi-res
-        // settings. normalizeLabServices() bridges the current { name, services: [...] }
-        // schema with the older flat single-tier schema so both keep working.
-        function normalizeLabServices(lab) {
-            if (Array.isArray(lab.services) && lab.services.length > 0) {
-                return lab.services.map(s => ({
-                    devCost: parseFloat(s.devCost) || 0,
-                    pushPullCost: parseFloat(s.pushPullCost) || 0,
-                    pushPullType: s.pushPullType || 'per_stop',
-                    turnaroundTime: s.turnaroundTime || 'same_week',
-                    highResScan: !!s.highResScan
-                }));
-            }
-            // Legacy flat schema fallback (pre-service-tiers saved profiles)
-            return [{
-                devCost: parseFloat(lab.devCost) || 0,
-                pushPullCost: parseFloat(lab.pushPullCost) || 0,
-                pushPullType: lab.pushPullType || 'per_stop',
-                turnaroundTime: lab.turnaroundTime || 'same_week',
-                highResScan: !!lab.highResScan
-            }];
-        }
-
-        function tierBlockHTML(tier) {
-            tier = tier || {};
-            const devCost = tier.devCost ?? '';
-            const pushPullCost = tier.pushPullCost ?? '';
-            const pushPullType = tier.pushPullType || 'per_stop';
-            const turnaroundTime = tier.turnaroundTime || 'same_week';
-            const highResScan = !!tier.highResScan;
-            return `
-                <div class="tier-block bg-white dark:bg-gray-800/60 border border-green-200 dark:border-green-800 rounded-lg p-3 space-y-2 relative">
-                    <button type="button" class="removeTierBtn absolute top-2 right-2 text-red-400 hover:text-red-600 text-xs font-bold" aria-label="Remove Tier">✕</button>
-                    <div class="grid grid-cols-2 gap-2 pr-6">
-                        <div>
-                            <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Dev Cost ($)</label>
-                            <input type="number" class="tier-devCost w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" value="${devCost}">
-                        </div>
-                        <div>
-                            <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Turnaround Time</label>
-                            <select class="tier-turnaroundTime w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                                <option value="next_day" ${turnaroundTime === 'next_day' ? 'selected' : ''}>Next Day</option>
-                                <option value="same_week" ${turnaroundTime === 'same_week' ? 'selected' : ''}>Same Week</option>
-                                <option value="longer" ${turnaroundTime === 'longer' ? 'selected' : ''}>Longer</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Push/Pull Fee ($)</label>
-                            <input type="number" class="tier-pushPullCost w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" value="${pushPullCost}">
-                        </div>
-                        <div>
-                            <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Push/Pull Fee Type</label>
-                            <select class="tier-pushPullType w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                                <option value="per_stop" ${pushPullType === 'per_stop' ? 'selected' : ''}>Per Stop</option>
-                                <option value="flat" ${pushPullType === 'flat' ? 'selected' : ''}>Flat Fee</option>
-                            </select>
-                        </div>
-                    </div>
-                    <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                        <input type="checkbox" class="tier-highResScan rounded border-gray-300 dark:border-gray-600 text-green-600 focus:ring-green-500" ${highResScan ? 'checked' : ''}>
-                        High Res Scans
-                    </label>
-                </div>`;
-        }
-
-        function addTierBlock(tier) {
-            const container = document.getElementById('tiersContainer');
-            container.insertAdjacentHTML('beforeend', tierBlockHTML(tier));
-            const newBlock = container.lastElementChild;
-            newBlock.querySelectorAll('input, select').forEach(el => el.addEventListener('input', updateLabComparison));
-            newBlock.querySelector('.removeTierBtn').addEventListener('click', () => {
-                newBlock.remove();
-                updateLabComparison();
-            });
-        }
-
-        function resetTiers(tiers) {
-            document.getElementById('tiersContainer').innerHTML = '';
-            (tiers && tiers.length ? tiers : [{}]).forEach(addTierBlock);
-        }
-
-        document.getElementById('addTierBtn').addEventListener('click', () => addTierBlock({}));
-        resetTiers([{}]);
-
-        // ---------- Labs for this roll ----------
-        // Compares every saved lab profile (built-in + custom) against the current
-        // Box Speed / Dev Speed, since push/pull cost — not just base dev price —
-        // can flip which lab is actually cheapest for a given roll. Sorted by
-        // cost per photo since that's the number that actually matters.
-        function updateLabComparison() {
-            const bestPicksContainer = document.getElementById('labBestPicks');
-            const container = document.getElementById('labComparison');
-
-            const devSpeedRaw = document.getElementById('devSpeed').value;
-            const filmCostRaw = document.getElementById('filmCost').value;
-            const rollsRaw = document.getElementById('rolls').value;
-            const exposuresRaw = document.getElementById('exposures').value;
-
-            const hasRequiredFields = [devSpeedRaw, filmCostRaw, rollsRaw, exposuresRaw].every(v => v !== '' && v !== null && parseFloat(v) > 0);
-            if (!hasRequiredFields) {
-                bestPicksContainer.innerHTML = '';
-                container.innerHTML = '<p class="text-sm text-gray-400 text-center">Fill in Dev Speed, Total Cost, Rolls & Exposures to compare labs</p>';
-                return;
-            }
-
-            const boxSpeed = parseInt(document.getElementById('boxSpeed').value) || 0;
-            const devSpeed = parseInt(devSpeedRaw) || 0;
-            const filmCost = parseFloat(filmCostRaw) || 0;
-            const rolls = parseInt(rollsRaw) || 1;
-            const exposures = parseInt(exposuresRaw) || 1;
-            const totalPhotos = exposures * rolls;
-
-            const onceOffFee = parseFloat(document.getElementById('onceOffFee').value) || 0;
-            const perRollFee = parseFloat(document.getElementById('perRollFee').value) || 0;
-
-            const allLabs = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') };
-            const names = Object.keys(allLabs);
-
-            if (names.length === 0) {
-                bestPicksContainer.innerHTML = '';
-                container.innerHTML = '<p class="text-sm text-gray-400 text-center">Save a lab profile to compare prices</p>';
-                return;
-            }
-
-            let idCounter = 0;
-            const allResults = names.flatMap(name => {
-                const lab = allLabs[name];
-                const services = normalizeLabServices(lab);
-
-                return services.map(tier => {
-                    let activePushPullCost = 0, stops = 0;
-                    if (boxSpeed > 0 && devSpeed > 0 && boxSpeed !== devSpeed) {
-                        stops = Math.round(Math.abs(Math.log2(devSpeed / boxSpeed)) * 10) / 10;
-                        activePushPullCost = (tier.pushPullType === 'per_stop') ? (tier.pushPullCost * stops) : tier.pushPullCost;
-                    }
-
-                    const labCostPerRoll = tier.devCost + activePushPullCost + perRollFee;
-                    const grandTotal = filmCost + (labCostPerRoll * rolls) + onceOffFee;
-                    const costPerRoll = rolls > 0 ? grandTotal / rolls : 0;
-                    const costPerPhoto = totalPhotos > 0 ? grandTotal / totalPhotos : 0;
-
-                    return {
-                        id: idCounter++,
-                        name,
-                        stops,
-                        devCostPerRoll: labCostPerRoll,
-                        costPerRoll,
-                        costPerPhoto,
-                        highResScan: tier.highResScan,
-                        turnaroundTime: tier.turnaroundTime
-                    };
-                });
-            }).sort((a, b) => a.costPerPhoto - b.costPerPhoto);
-
-            if (allResults.length === 0) {
-                bestPicksContainer.innerHTML = '';
-                container.innerHTML = '<p class="text-sm text-gray-400 text-center">Save a lab profile to compare prices</p>';
-                return;
-            }
-
-            const currentLabName = document.getElementById('labName').value.trim();
-
-            const cheapest = (arr) => arr.length ? arr[0] : null;
-            const rawCheapestTotal = cheapest(allResults);
-            const cheapestFastest = cheapest(allResults.filter(r => r.turnaroundTime === 'next_day'));
-            const cheapestHiRes = cheapest(allResults.filter(r => r.highResScan));
-            const cheapestHiResFastest = cheapest(allResults.filter(r => r.highResScan && r.turnaroundTime === 'next_day'));
-
-            // If the fully-loaded option (hi-res + next day) is within the user's
-            // configured threshold of the absolute cheapest, it's flagged as the
-            // recommended pick (highlighted gold) — a few cents more for both
-            // perks usually beats "technically cheapest" with worse service.
-            // "Cheapest Total" always shows the actual cheapest, unchanged.
-            // Adjustable in Settings, defaults to 10%.
-            const UPGRADE_THRESHOLD = (parseFloat(localStorage.getItem('upgradeThresholdPercent')) || 10) / 100;
-            let hiResFastestNote = '';
-            let hiResFastestRecommended = false;
-            if (rawCheapestTotal && cheapestHiResFastest && cheapestHiResFastest.id !== rawCheapestTotal.id) {
-                const premium = (cheapestHiResFastest.costPerPhoto - rawCheapestTotal.costPerPhoto) / rawCheapestTotal.costPerPhoto;
-                if (premium >= 0 && premium < UPGRADE_THRESHOLD) {
-                    hiResFastestRecommended = true;
-                    hiResFastestNote = `Only ${(premium * 100).toFixed(1)}% more than the absolute cheapest ($${rawCheapestTotal.costPerPhoto.toFixed(2)}/photo) — this one includes hi-res + next day.`;
-                }
-            }
-
-            const bestPicks = [
-                { label: '🏆 Cheapest Total', pick: rawCheapestTotal },
-                { label: '⚡ Cheapest Fastest', pick: cheapestFastest },
-                { label: '🔍 Cheapest Hi-Res', pick: cheapestHiRes },
-                { label: '⚡🔍 Cheapest Hi-Res + Fastest', pick: cheapestHiResFastest, note: hiResFastestNote, recommended: hiResFastestRecommended }
-            ];
-
-            const usedIds = new Set(bestPicks.map(bp => bp.pick && bp.pick.id).filter(id => id !== undefined && id !== null));
-
-            function renderBadges(r) {
-                const hiResBadge = r.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">HI-RES</span>` : '';
-                const turnaroundBadge = ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 align-middle">${turnaroundLabels[r.turnaroundTime] || r.turnaroundTime}</span>`;
-                const stopsLabel = r.stops > 0 ? ` <span class="text-xs text-gray-400">(${r.stops} stop push/pull)</span>` : '';
-                return hiResBadge + turnaroundBadge + stopsLabel;
-            }
-
-            bestPicksContainer.innerHTML = bestPicks.map(({ label, pick, note, recommended }) => {
-                if (!pick) {
-                    return `<div class="px-3 py-3 rounded-lg text-sm bg-white dark:bg-gray-800/50 border border-dashed border-gray-300 dark:border-gray-600">
-                        <div class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">${label}</div>
-                        <div class="text-gray-400 dark:text-gray-500 text-sm">No matching lab</div>
-                    </div>`;
-                }
-                const isCurrent = pick.name === currentLabName;
-                const noteHtml = note ? `<div class="text-xs ${recommended ? 'text-amber-800/80 dark:text-amber-300/80' : 'text-green-700/80 dark:text-green-400/80'} mt-1 italic">${note}</div>` : '';
-                return `<div class="px-3 py-3 rounded-lg text-sm ${recommended ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-green-100 dark:bg-green-900/30'} ${isCurrent ? 'ring-2 ring-blue-400' : ''}">
-                    <div class="text-xs font-semibold ${recommended ? 'text-amber-700 dark:text-amber-400' : 'text-green-700 dark:text-green-400'} uppercase tracking-wide mb-1">${label}</div>
-                    <div class="font-semibold ${recommended ? 'text-amber-800 dark:text-amber-300' : 'text-green-800 dark:text-green-400'}">${pick.name}${renderBadges(pick)}</div>
-                    <div class="font-mono ${recommended ? 'text-amber-800 dark:text-amber-300' : 'text-green-800 dark:text-green-400'} mt-1">
-                        <span class="font-semibold">$${pick.costPerPhoto.toFixed(2)}/photo</span>
-                        <span class="text-xs opacity-80"> · $${pick.devCostPerRoll.toFixed(2)}/dev · $${pick.costPerRoll.toFixed(2)}/total</span>
-                    </div>
-                    ${noteHtml}
-                </div>`;
-            }).join('');
-
-            let otherResults = allResults.filter(r => !usedIds.has(r.id));
-            if (filterNextDay) otherResults = otherResults.filter(r => r.turnaroundTime === 'next_day');
-            if (filterHiRes) otherResults = otherResults.filter(r => r.highResScan);
-
-            if (otherResults.length === 0) {
-                container.innerHTML = '<p class="text-sm text-gray-400 text-center">No other labs match the selected filters</p>';
-                return;
-            }
-
-            container.innerHTML = otherResults.map(r => {
-                const isCurrent = r.name === currentLabName;
-                return `<div class="flex justify-between items-start px-3 py-2 rounded-lg text-sm bg-white dark:bg-gray-800/50 ${isCurrent ? 'ring-2 ring-blue-400' : ''} ${r.highResScan ? 'border border-indigo-300 dark:border-indigo-700' : ''}">
-                    <span class="text-gray-700 dark:text-gray-300">${r.name}${renderBadges(r)}</span>
-                    <span class="font-mono text-right leading-tight text-gray-600 dark:text-gray-400">
-                        <div class="font-semibold">$${r.costPerPhoto.toFixed(2)}/photo</div>
-                        <div class="text-xs opacity-80">$${r.devCostPerRoll.toFixed(2)}/dev</div>
-                        <div class="text-xs opacity-80">$${r.costPerRoll.toFixed(2)}/total</div>
-                    </span>
-                </div>`;
-            }).join('');
-        }
-
-        // ---------- Film-only cost per photo (excludes lab fees) ----------
-        function computeCostPerPhoto(cost, rolls, exposures) {
-            const totalPhotos = (parseInt(rolls) || 0) * (parseInt(exposures) || 0);
-            return totalPhotos > 0 ? (parseFloat(cost) || 0) / totalPhotos : null;
-        }
-
-        function updateFilmOnlyCost() {
-            const costPerPhoto = computeCostPerPhoto(
-                document.getElementById('filmCost').value,
-                document.getElementById('rolls').value,
-                document.getElementById('exposures').value
-            );
-            document.getElementById('filmOnlyCostPerPhoto').textContent = costPerPhoto !== null ? `$${costPerPhoto.toFixed(2)}` : '--';
-        }
-
-        // Compares this film's cost per photo against every other saved film
-        // profile that shares the same Box Speed, since that's the fairest
-        // like-for-like comparison (a 400 vs 800 film isn't really competing).
-        function updateFilmSpeedComparison() {
-            const container = document.getElementById('filmSpeedComparison');
-            const boxSpeed = parseInt(document.getElementById('boxSpeed').value) || 0;
-            const currentCost = computeCostPerPhoto(
-                document.getElementById('filmCost').value,
-                document.getElementById('rolls').value,
-                document.getElementById('exposures').value
-            );
-
-            if (!boxSpeed || currentCost === null) {
-                container.innerHTML = '';
-                return;
-            }
-
-            const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
-            const currentKey = filmProfileKey(
-                document.getElementById('filmName').value.trim(),
-                document.getElementById('rolls').value,
-                document.getElementById('exposures').value,
-                document.getElementById('bundleLabel').value.trim()
-            );
-
-            const others = Object.entries(allFilms)
-                .filter(([key, f]) => (parseInt(f.boxSpeed) || 0) === boxSpeed && key !== currentKey)
-                .map(([key, f]) => ({ name: f.bundleLabel ? `${f.name} — ${f.bundleLabel}` : f.name, costPerPhoto: computeCostPerPhoto(f.filmCost, f.rolls, f.exposures) }))
-                .filter(f => f.costPerPhoto !== null && f.costPerPhoto > 0);
-
-            if (others.length === 0) {
-                container.innerHTML = `<p class="text-xs text-gray-400 mt-2">No other saved ${boxSpeed} ISO films to compare yet</p>`;
-                return;
-            }
-
-            const cheapestOther = others.reduce((a, b) => (a.costPerPhoto <= b.costPerPhoto ? a : b));
-
-            if (currentCost <= cheapestOther.costPerPhoto) {
-                container.innerHTML = `<p class="text-xs text-green-700 dark:text-green-400 mt-2 font-medium">🏆 Cheapest saved ${boxSpeed} ISO film</p>`;
-            } else {
-                const diff = currentCost - cheapestOther.costPerPhoto;
-                container.innerHTML = `<p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                    <span class="font-semibold text-blue-700 dark:text-blue-400">${cheapestOther.name}</span> is cheaper at $${cheapestOther.costPerPhoto.toFixed(2)}/photo
-                    <span class="block opacity-75">(+$${diff.toFixed(2)}/photo vs this one)</span>
-                </p>`;
-            }
-        }
-
-        // ---------- Film Library (cheapest per ISO) ----------
-        // Groups every saved film profile (built-in + custom) by Box Speed and
-        // surfaces the cheapest cost-per-photo bundle at each ISO, with its buy
-        // link if one was saved. Everything else shows below as "All Saved Films".
-        function updateFilmComparison() {
-            const bestContainer = document.getElementById('filmBestPicks');
-            const allContainer = document.getElementById('filmAllOptions');
-            if (!bestContainer || !allContainer) return;
-
-            const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
-
-            const entries = Object.entries(allFilms)
-                .map(([key, f], idx) => ({
-                    id: idx,
-                    key,
-                    name: f.bundleLabel ? `${f.name} — ${f.bundleLabel}` : f.name,
-                    boxSpeed: parseInt(f.boxSpeed) || 0,
-                    rolls: f.rolls || '?',
-                    exposures: f.exposures || '?',
-                    storeName: f.storeName || '',
-                    buyLink: f.buyLink || '',
-                    packTotalCost: parseFloat(f.filmCost) || 0,
-                    costPerPhoto: computeCostPerPhoto(f.filmCost, f.rolls, f.exposures)
-                }))
-                .filter(f => f.costPerPhoto !== null && f.costPerPhoto > 0 && f.boxSpeed > 0);
-
-            if (entries.length === 0) {
-                bestContainer.innerHTML = '<p class="text-sm text-gray-400 text-center">Save a film profile to compare prices</p>';
-                allContainer.innerHTML = '';
-                return;
-            }
-
-            const entriesById = new Map(entries.map(e => [e.id, e]));
-            const overallCheapest = entries.reduce((a, b) => (a.costPerPhoto <= b.costPerPhoto ? a : b));
-
-            const byIso = {};
-            entries.forEach(e => {
-                if (!byIso[e.boxSpeed]) byIso[e.boxSpeed] = [];
-                byIso[e.boxSpeed].push(e);
-            });
-            Object.values(byIso).forEach(arr => arr.sort((a, b) => a.costPerPhoto - b.costPerPhoto));
-
-            const isoSpeeds = Object.keys(byIso).map(Number).sort((a, b) => a - b);
-
-            function renderBuyLink(e) {
-                if (!e.buyLink) return '';
-                const label = e.storeName ? `🛒 Buy from ${e.storeName}` : '🛒 Buy';
-                return ` <a href="${e.buyLink}" target="_blank" rel="noopener noreferrer" class="inline-block text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline align-middle">${label}</a>`;
-            }
-
-            function renderDeleteBtn(e) {
-                return `<button type="button" data-delete-film-id="${e.id}" class="ml-2 text-red-400 hover:text-red-600 text-xs font-bold align-middle" aria-label="Delete film">✕</button>`;
-            }
-
-            bestContainer.innerHTML = isoSpeeds.map(iso => {
-                const cheapest = byIso[iso][0];
-                const isOverallCheapest = cheapest.id === overallCheapest.id;
-                const bg = isOverallCheapest ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-green-100 dark:bg-green-900/30';
-                const labelColor = isOverallCheapest ? 'text-amber-700 dark:text-amber-400' : 'text-green-700 dark:text-green-400';
-                const textColor = isOverallCheapest ? 'text-amber-800 dark:text-amber-300' : 'text-green-800 dark:text-green-400';
-                const label = isOverallCheapest ? `⭐ Cheapest Overall (${iso} ISO)` : `🏆 Cheapest ${iso} ISO`;
-                return `<div class="px-3 py-3 rounded-lg text-sm ${bg}">
-                    <div class="flex justify-between items-start">
-                        <div class="text-xs font-semibold ${labelColor} uppercase tracking-wide mb-1">${label}</div>
-                        ${renderDeleteBtn(cheapest)}
-                    </div>
-                    <div class="font-semibold ${textColor}">${cheapest.name}${renderBuyLink(cheapest)}</div>
-                    <div class="font-mono ${textColor} mt-1">
-                        <span class="font-semibold">$${cheapest.costPerPhoto.toFixed(2)}/photo</span>
-                        <span class="text-xs opacity-80"> · $${cheapest.packTotalCost.toFixed(2)} pack total · ${cheapest.rolls} Roll${cheapest.rolls == 1 ? '' : 's'} × ${cheapest.exposures}exp</span>
-                    </div>
-                </div>`;
-            }).join('');
-
-            const usedIds = new Set(isoSpeeds.map(iso => byIso[iso][0].id));
-            const others = entries.filter(e => !usedIds.has(e.id)).sort((a, b) => a.boxSpeed - b.boxSpeed || a.costPerPhoto - b.costPerPhoto);
-
-            if (others.length === 0) {
-                allContainer.innerHTML = '<p class="text-sm text-gray-400 text-center">No other saved films</p>';
-            } else {
-                allContainer.innerHTML = others.map(e => `<div class="flex justify-between items-start px-3 py-2 rounded-lg text-sm bg-white dark:bg-gray-800/50">
-                    <span class="text-gray-700 dark:text-gray-300">${e.name}${renderBuyLink(e)} <span class="text-xs text-gray-400">(${e.boxSpeed} ISO)</span>${renderDeleteBtn(e)}</span>
-                    <span class="font-mono text-right leading-tight text-gray-600 dark:text-gray-400">
-                        <div class="font-semibold">$${e.costPerPhoto.toFixed(2)}/photo</div>
-                        <div class="text-xs opacity-80">$${e.packTotalCost.toFixed(2)} pack total · ${e.rolls} Roll${e.rolls == 1 ? '' : 's'} × ${e.exposures}exp</div>
-                    </span>
-                </div>`).join('');
-            }
-
-            [bestContainer, allContainer].forEach(container => {
-                container.querySelectorAll('[data-delete-film-id]').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        const entry = entriesById.get(parseInt(btn.dataset.deleteFilmId));
-                        if (entry) deleteFilmProfile(entry.key);
-                    });
-                });
-            });
-        }
-
-        function updateBuyLink() {
-            const url = document.getElementById('buyLink').value.trim();
-            const storeName = document.getElementById('storeName').value.trim();
-            const link = document.getElementById('buyLinkDisplay');
-            if (url) {
-                link.href = url;
-                link.textContent = storeName ? `🛒 Buy from ${storeName}` : '🛒 Buy this film';
-                link.classList.remove('hidden');
-            } else {
-                link.classList.add('hidden');
-            }
-        }
-
-        document.querySelectorAll('input, select').forEach(i => i.addEventListener('input', updateLabComparison));
-        document.querySelectorAll('input, select').forEach(i => i.addEventListener('input', updateFilmOnlyCost));
-        document.querySelectorAll('input, select').forEach(i => i.addEventListener('input', updateFilmSpeedComparison));
-        document.getElementById('buyLink').addEventListener('input', updateBuyLink);
-        document.getElementById('storeName').addEventListener('input', updateBuyLink);
-        updateFilmOnlyCost();
-        updateFilmSpeedComparison();
-        updateBuyLink();
-
-        // Dev Speed defaults to Box Speed unless the user has explicitly typed a different value
-        let devSpeedOverridden = false;
-        const boxSpeedInput = document.getElementById('boxSpeed');
-        const devSpeedInput = document.getElementById('devSpeed');
-        devSpeedInput.addEventListener('input', () => { devSpeedOverridden = true; });
-        boxSpeedInput.addEventListener('input', () => {
-            if (!devSpeedOverridden) devSpeedInput.value = boxSpeedInput.value;
-        });
-
-        // ---------- Profile dropdowns ----------
-        function updateDropdown(id, data, storageKey, labelFn) {
-            const dropdown = document.getElementById(id);
-            const current = dropdown.value;
-            const saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
-            const all = { ...data, ...saved };
-            dropdown.innerHTML = '<option value="">-- Load profile --</option>';
-            Object.keys(all).sort().forEach(n => {
-                const label = labelFn ? labelFn(all[n]) : n;
-                dropdown.innerHTML += `<option value="${n}">${label}</option>`;
-            });
-            if (all[current]) dropdown.value = current;
-        }
-
-        // A film profile is keyed by name + rolls + exposures, since the same
-        // film stock can come in different pack sizes (3-pack vs bulk 10-pack,
-        // 24exp vs 36exp) at different prices/links — without this, saving a
-        // different size under the same name would silently overwrite the last one.
-        // Bundle Label is only needed to tell apart two bundles with the exact
-        // same rolls/exposures (e.g. same size bought from a different store).
-        function filmProfileKey(name, rolls, exposures, bundleLabel) {
-            const base = `${name}__${rolls || '?'}x${exposures || '?'}`;
-            return bundleLabel ? `${base}__${bundleLabel}` : base;
-        }
-
-        function formatFilmLabel(f) {
-            const boxSpeed = f.boxSpeed || '?';
-            const rolls = f.rolls || '?';
-            const exposures = f.exposures || '?';
-            const nameWithBundle = f.bundleLabel ? `${f.name} — ${f.bundleLabel}` : f.name;
-            return `${nameWithBundle} (${boxSpeed} ISO | ${rolls} Roll${rolls == 1 ? '' : 's'} | ${exposures}exp)`;
-        }
-
-        function updateFilmDropdown() { updateDropdown('savedFilmsDropdown', defaultFilms, 'filmProfiles', formatFilmLabel); updateFilmComparison(); }
-        function updateLabDropdown() { updateDropdown('savedLabsDropdown', defaultLabs, 'labProfiles'); updateLabComparison(); }
-
-        document.getElementById('savedFilmsDropdown').addEventListener('change', (e) => {
-            const p = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') }[e.target.value];
-            if (!p) return;
-            document.getElementById('filmName').value = p.name;
-            document.getElementById('bundleLabel').value = p.bundleLabel || '';
-            document.getElementById('boxSpeed').value = p.boxSpeed || '';
-            document.getElementById('devSpeed').value = p.boxSpeed || '';
-            devSpeedOverridden = false;
-            document.getElementById('filmCost').value = p.filmCost || '';
-            document.getElementById('rolls').value = p.rolls || '1';
-            document.getElementById('exposures').value = p.exposures || '36';
-            document.getElementById('storeName').value = p.storeName || '';
-            document.getElementById('buyLink').value = p.buyLink || '';
-            updateLabComparison();
-            updateFilmOnlyCost();
-            updateFilmSpeedComparison();
-            updateBuyLink();
-        });
-
-        document.getElementById('savedLabsDropdown').addEventListener('change', (e) => {
-            const p = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') }[e.target.value];
-            if (!p) {
-                resetTiers([{}]);
-                updateLabComparison();
-                return;
-            }
-            document.getElementById('labName').value = p.name;
-            resetTiers(normalizeLabServices(p));
-            updateLabComparison();
-        });
-
-        // ---------- Save profiles ----------
-        document.getElementById('saveFilmBtn').addEventListener('click', () => {
-            const name = document.getElementById('filmName').value.trim();
-            if (!name) return alert('Enter Film Name');
-            const bundleLabel = document.getElementById('bundleLabel').value.trim();
-            const rolls = document.getElementById('rolls').value;
-            const exposures = document.getElementById('exposures').value;
-            const key = filmProfileKey(name, rolls, exposures, bundleLabel);
-            let saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
-            saved[key] = {
-                name,
-                bundleLabel,
-                boxSpeed: document.getElementById('boxSpeed').value,
-                filmCost: document.getElementById('filmCost').value,
-                rolls,
-                exposures,
-                storeName: document.getElementById('storeName').value.trim(),
-                buyLink: document.getElementById('buyLink').value.trim()
-            };
-            localStorage.setItem('filmProfiles', JSON.stringify(saved));
-            updateFilmDropdown();
-            document.getElementById('savedFilmsDropdown').value = key;
-        });
-
-        document.getElementById('saveLabBtn').addEventListener('click', () => {
-            const name = document.getElementById('labName').value.trim();
-            if (!name) return alert('Enter Lab Name');
-            const tierBlocks = document.querySelectorAll('#tiersContainer .tier-block');
-            if (tierBlocks.length === 0) return alert('Add at least one service tier');
-            const services = Array.from(tierBlocks).map(block => ({
-                devCost: block.querySelector('.tier-devCost').value,
-                pushPullCost: block.querySelector('.tier-pushPullCost').value,
-                pushPullType: block.querySelector('.tier-pushPullType').value,
-                turnaroundTime: block.querySelector('.tier-turnaroundTime').value,
-                highResScan: block.querySelector('.tier-highResScan').checked
-            }));
-            let saved = JSON.parse(localStorage.getItem('labProfiles') || '{}');
-            saved[name] = { name, services };
-            localStorage.setItem('labProfiles', JSON.stringify(saved));
-            updateLabDropdown();
-            document.getElementById('savedLabsDropdown').value = name;
-        });
-
-        // ---------- Delete profiles ----------
-        // Film deletion now lives in the Film Library tab (management), not the
-        // Calculator tab (quick lookup) — this function is called from there.
-        function deleteFilmProfile(key) {
-            if (!key) return;
-            if (defaultFilms[key] && !JSON.parse(localStorage.getItem('filmProfiles') || '{}')[key]) {
-                alert('Built-in film profiles can\'t be deleted, only custom saved ones.');
-                return;
-            }
-            if (!confirm('Delete this saved film profile?')) return;
-            let saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
-            delete saved[key];
-            localStorage.setItem('filmProfiles', JSON.stringify(saved));
-            updateFilmDropdown();
-        }
-
-        document.getElementById('deleteLabBtn').addEventListener('click', () => {
-            const dropdown = document.getElementById('savedLabsDropdown');
-            const name = dropdown.value;
-            if (!name) return alert('Select a saved lab to delete');
-            if (defaultLabs[name] && !JSON.parse(localStorage.getItem('labProfiles') || '{}')[name]) {
-                return alert('Built-in lab profiles can\'t be deleted, only custom saved ones.');
-            }
-            let saved = JSON.parse(localStorage.getItem('labProfiles') || '{}');
-            delete saved[name];
-            localStorage.setItem('labProfiles', JSON.stringify(saved));
-            updateLabDropdown();
-        });
-
-        // ---------- Export / Import (single config.yaml: films + labs + settings) ----------
-        function buildFilmsArray() {
-            const saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
-            const all = { ...defaultFilms, ...saved };
-            return Object.values(all).map(f => ({
-                name: f.name,
-                bundleLabel: f.bundleLabel || '',
-                boxSpeed: Number(f.boxSpeed) || 0,
-                rolls: Number(f.rolls) || 1,
-                exposures: Number(f.exposures) || 36,
-                filmCost: Number(f.filmCost) || 0,
-                storeName: f.storeName || '',
-                buyLink: f.buyLink || ''
-            }));
-        }
-
-        function buildLabsArray() {
-            const saved = JSON.parse(localStorage.getItem('labProfiles') || '{}');
-            const all = { ...defaultLabs, ...saved };
-            return Object.values(all).map(l => ({
-                name: l.name,
-                services: normalizeLabServices(l)
-            }));
-        }
-
-        function buildConfig() {
-            return {
-                settings: {
-                    upgradeThresholdPercent: parseFloat(localStorage.getItem('upgradeThresholdPercent')) || 10
-                },
-                films: buildFilmsArray(),
-                labs: buildLabsArray()
-            };
-        }
-
-        function downloadYaml(filename, data) {
-            const yamlText = jsyaml.dump(data, { indent: 2 });
-            const blob = new Blob([yamlText], { type: 'text/yaml' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = filename;
-            a.click();
-            URL.revokeObjectURL(a.href);
-        }
-
-        document.getElementById('exportBtn').addEventListener('click', () => {
-            downloadYaml('config.yaml', buildConfig());
-        });
-
-        document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
-        document.getElementById('importFile').addEventListener('change', (e) => {
-            const files = Array.from(e.target.files || []);
-            if (!files.length) return;
-
-            let filmsImported = 0, labsImported = 0, settingsImported = false, errors = 0;
-
-            const readFile = (file) => new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    try {
-                        const parsed = jsyaml.load(event.target.result);
-
-                        if (parsed && !Array.isArray(parsed) && (parsed.films || parsed.labs || parsed.settings)) {
-                            // Combined config.yaml (current format)
-                            if (Array.isArray(parsed.films)) {
-                                let saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
-                                parsed.films.forEach(f => { if (f.name) { saved[filmProfileKey(f.name, f.rolls, f.exposures, f.bundleLabel)] = f; filmsImported++; } });
-                                localStorage.setItem('filmProfiles', JSON.stringify(saved));
-                            }
-                            if (Array.isArray(parsed.labs)) {
-                                let saved = JSON.parse(localStorage.getItem('labProfiles') || '{}');
-                                parsed.labs.forEach(l => { if (l.name) { saved[l.name] = l; labsImported++; } });
-                                localStorage.setItem('labProfiles', JSON.stringify(saved));
-                            }
-                            if (parsed.settings && parsed.settings.upgradeThresholdPercent !== undefined) {
-                                localStorage.setItem('upgradeThresholdPercent', parsed.settings.upgradeThresholdPercent);
-                                settingsImported = true;
-                            }
-                        } else if (Array.isArray(parsed) && parsed.length > 0) {
-                            // Legacy standalone films.yaml / labs.yaml (pre-combined-config)
-                            const isLabFile = 'services' in parsed[0] || 'devCost' in parsed[0];
-                            const isFilmFile = 'boxSpeed' in parsed[0] || 'filmCost' in parsed[0];
-
-                            if (isLabFile) {
-                                let saved = JSON.parse(localStorage.getItem('labProfiles') || '{}');
-                                parsed.forEach(l => { if (l.name) { saved[l.name] = l; labsImported++; } });
-                                localStorage.setItem('labProfiles', JSON.stringify(saved));
-                            } else if (isFilmFile) {
-                                let saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
-                                parsed.forEach(f => { if (f.name) { saved[filmProfileKey(f.name, f.rolls, f.exposures, f.bundleLabel)] = f; filmsImported++; } });
-                                localStorage.setItem('filmProfiles', JSON.stringify(saved));
-                            } else {
-                                errors++;
-                            }
-                        } else {
-                            errors++;
-                        }
-                    } catch (err) {
-                        errors++;
-                    }
-                    resolve();
-                };
-                reader.onerror = () => { errors++; resolve(); };
-                reader.readAsText(file);
-            });
-
-            Promise.all(files.map(readFile)).then(() => {
-                updateFilmDropdown();
-                updateLabDropdown();
-                if (settingsImported) upgradeThresholdInput.value = localStorage.getItem('upgradeThresholdPercent');
-                updateLabComparison();
-                if (errors > 0 && filmsImported === 0 && labsImported === 0 && !settingsImported) {
-                    alert('Could not read that file — is it a valid config.yaml?');
-                } else {
-                    alert(`Imported ${filmsImported} film profile(s), ${labsImported} lab profile(s)${settingsImported ? ', and settings' : ''}.`);
-                }
-                e.target.value = '';
-            });
-        });
-
-        loadDefaults();
-    </script>
-</body>
-</html>
+# Film Cost Calculator
+
+A lightweight, responsive, mobile-friendly web app for analog photographers to work out the true cost per photo of shooting film — and to figure out which of their labs is actually cheapest for a given roll, once push/pull fees are factored in.
+
+## Features
+
+- **Cost breakdown** — Calculates cost per photo, dev-only cost per roll, and total cost per roll (film stock + developing), based on film cost, dev/scan/print pricing, push/pull fees, and once-off or per-roll surcharges.
+- **One film, many bundles** — Each film stock is saved once, with a list of bundles underneath it (e.g. a 3-pack vs. a bulk 10-pack, or 24exp vs. 36exp), each with its own price, store, and buy link — managed entirely in the Film Library tab. The Calculator tab stays a quick lookup: pick a saved bundle from the dropdown, or just type in Box Speed / Total Cost / Rolls / Exposures for a one-off calculation.
+- **Buy links** — Save a store name and purchase link against a bundle; a "🛒 Buy from {store}" link shows up when that bundle is loaded in the Calculator, and again in the Film Library.
+- **Film Library tab** — Manage every film stock and its bundles (add, edit, delete), and see every saved bundle grouped by Box Speed, with the cheapest cost-per-photo bundle at each ISO highlighted, and the single cheapest bundle overall highlighted in gold.
+- **Labs for this roll** — Every saved lab profile is automatically compared against your current film and push/pull settings, sorted by cost per photo. A lab that's cheaper at box speed isn't always cheaper once you push 2 stops — this handles that. Each lab shows its turnaround time (Next Day / Same Week / Longer), and labs offering high-res scans get a "HI-RES" badge. Filter toggles let you narrow the list to Next Day and/or Hi-Res labs only. "Cheapest Total" always shows the actual cheapest option; if the cheapest Hi-Res + Fastest option is within a configurable percentage of that, its own card is highlighted gold as the recommended pick instead.
+- **Push/pull aware** — Automatically works out stops pushed or pulled from Box Speed vs. Dev Speed (using log2 of the ratio), and applies each lab's push/pull fee — either a flat fee or a per-stop rate.
+- **Profile management** — Save your own film stocks and lab pricing as reusable profiles, stored locally in your browser. Optionally seed the app with defaults via `config.yaml` (see below) — if it isn't present, the app just starts with no saved profiles.
+- **YAML export/import** — Export your saved profiles and settings as a single `config.yaml` — the exact format the app reads on load — so it can be dropped straight into a self-hosted instance with no manual editing.
+- **Dark mode** — Toggle in the top corner, respects system preference by default.
+- **Mobile-first design** — Scales from phone screens to desktop.
+
+## Getting Started
+
+### Live version
+
+The live calculator is hosted at: **https://filmcalc.trentbauer.com**
+
+### Self-hosting with Docker
+
+Since all your saved film and lab profiles live in your browser's `localStorage`, the live version works perfectly well for most people — there's nothing wrong with just using it. You might prefer self-hosting if you:
+
+- Want to seed the app with a fixed set of default film stocks and labs (e.g. for a household, club, or team to share a common starting point)
+- Don't want to depend on `filmcalc.trentbauer.com` staying online, or want a version you control the uptime of
+- Run it on a local network / homelab alongside your other self-hosted tools, without needing internet access to use it
+- Want to inspect or modify the source yourself with full control over the deployment
+
+```yaml
+services:
+  app:
+    image: ghcr.io/trentnbauer/filmcalc:latest
+    ports:
+      - ${WEBPORT:-8080}:80
+    volumes:
+      - data:/usr/share/nginx/html
+    restart: unless-stopped
+    labels:
+      - autoheal=true
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  autoheal:
+    image: willfarrell/autoheal:latest
+    restart: unless-stopped
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=autoheal
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+volumes:
+  data:
+```
+
+By default the app runs on port `8080` — set a `WEBPORT` environment variable (or a `.env` file) if you'd like a different port.
+
+The `healthcheck` pings the app every 30 seconds and marks it unhealthy after 3 failed attempts. On its own, Docker's `restart` policy only restarts a container on a hard crash — it won't act on a failed healthcheck. The `autoheal` sidecar watches for any container labelled `autoheal=true` and force-restarts it if Docker marks it unhealthy, so a broken/unresponsive app container gets rebooted automatically.
+
+### Adding default profiles (optional)
+
+This app doesn't ship with any default film stocks, labs, or settings baked in — it just starts empty and lets you build up profiles via the UI, which are saved in your browser's `localStorage`.
+
+If you'd rather seed it with defaults (e.g. for a shared/self-hosted instance), you can copy your own `config.yaml` straight into the running container using `docker compose cp`:
+
+```bash
+docker compose cp config.yaml app:/usr/share/nginx/html/config.yaml
+```
+
+Refresh the page and the app will pick it up automatically — no restart or rebuild needed. Format:
+
+```yaml
+settings:
+  upgradeThresholdPercent: 10   # see "Labs For This Roll" below
+
+films:
+  - name: "Kodak Gold"
+    boxSpeed: 400
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 25
+        storeName: "Example Camera Store"                      # optional; shown in the buy link
+        buyLink: "https://www.example.com/kodak-gold-200"       # optional
+      - rolls: 10
+        exposures: 36
+        filmCost: 210
+        storeName: "Example Bulk Store"
+        buyLink: "https://www.example.com/kodak-gold-200-bulk"
+
+labs:
+  - name: "Irohas Melbourne"
+    services:
+      - devCost: 17
+        pushPullCost: 5
+        pushPullType: "per_stop"    # or "flat"
+        turnaroundTime: "next_day"  # "next_day" | "same_week" | "longer"
+        highResScan: true           # marks this tier as offering high-res scans
+
+  - name: "Walkens Melbourne"
+    services:
+      - devCost: 16
+        pushPullCost: 10
+        pushPullType: "flat"
+        turnaroundTime: "same_week"
+        highResScan: false
+      - devCost: 23
+        pushPullCost: 10
+        pushPullType: "flat"
+        turnaroundTime: "same_week"
+        highResScan: true
+      - devCost: 33
+        pushPullCost: 10
+        pushPullType: "flat"
+        turnaroundTime: "next_day"
+        highResScan: true
+```
+
+Each lab is one entry with a `services` list underneath it — one item per service tier the lab offers (e.g. standard vs. hi-res scan, or next-day vs. same-week turnaround), rather than a separate top-level lab entry for every combination. Every service tier shows up as its own row in the "Labs For This Roll" comparison, labelled with the parent lab's name plus its turnaround/hi-res badges.
+
+All three top-level keys (`settings`, `films`, `labs`) are optional — include only what you want to seed. `settings.upgradeThresholdPercent` acts as a factory default for the "Cheapest Total" upgrade threshold (see Settings in the app) and only applies if the person hasn't already changed it themselves.
+
+## Built With
+
+- [Tailwind CSS](https://tailwindcss.com/) — styling and responsive layout
+- [js-yaml](https://github.com/nodeca/js-yaml) — reading and writing the YAML profile files client-side
+- Vanilla JavaScript — application logic, `localStorage` for saved profiles
+- nginx (Alpine) — serves the static app in the Docker image
+
+Originally vibe coded by Google Gemini, with further features (push/pull-aware lab comparison, YAML import/export, dark mode fixes, tabs, settings, Docker self-hosting) built by Claude (Anthropic).
+
+## Author
+
+**Trent Bauer**
+- Portfolio: [trentbauer.com](https://trentbauer.com)
+
+---
+*Created with passion for analog photography and community infrastructure.*
