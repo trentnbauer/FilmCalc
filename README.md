@@ -7,8 +7,8 @@ A lightweight, responsive, mobile-friendly web app for analog photographers to w
 - **Cost breakdown** — Calculates cost per photo, dev-only cost per roll, and total cost per roll (film stock + developing), based on film cost, dev/scan/print pricing, push/pull fees, and once-off or per-roll surcharges.
 - **Labs for this roll** — Every saved lab profile is automatically compared against your current film and push/pull settings, sorted by cost per photo. A lab that's cheaper at box speed isn't always cheaper once you push 2 stops — this handles that. Each lab shows its turnaround time (Next Day / Same Week / Longer), and labs offering high-res scans get a "HI-RES" badge. Filter toggles let you narrow the list to Next Day and/or Hi-Res labs only.
 - **Push/pull aware** — Automatically works out stops pushed or pulled from Box Speed vs. Dev Speed (using log2 of the ratio), and applies each lab's push/pull fee — either a flat fee or a per-stop rate.
-- **Profile management** — Save your own film stocks and lab pricing as reusable profiles, stored locally in your browser. Optionally seed the app with defaults via `films.yaml` and `labs.yaml` (see below) — if these aren't present, the app just starts with no saved profiles.
-- **YAML export/import** — Export your saved profiles as `films.yaml` / `labs.yaml` — the exact format the app reads on load — so they can be dropped straight into a self-hosted instance with no manual editing. Import supports loading one or both files back in.
+- **Profile management** — Save your own film stocks and lab pricing as reusable profiles, stored locally in your browser. Optionally seed the app with defaults via `config.yaml` (see below) — if it isn't present, the app just starts with no saved profiles.
+- **YAML export/import** — Export your saved profiles and settings as a single `config.yaml` — the exact format the app reads on load — so it can be dropped straight into a self-hosted instance with no manual editing.
 - **Dark mode** — Toggle in the top corner, respects system preference by default.
 - **Mobile-first design** — Scales from phone screens to desktop.
 
@@ -68,65 +68,59 @@ The `healthcheck` pings the app every 30 seconds and marks it unhealthy after 3 
 
 ### Adding default profiles (optional)
 
-This app doesn't ship with any default film stocks or labs baked in — it just starts empty and lets you build up profiles via the UI, which are saved in your browser's `localStorage`.
+This app doesn't ship with any default film stocks, labs, or settings baked in — it just starts empty and lets you build up profiles via the UI, which are saved in your browser's `localStorage`.
 
-If you'd rather seed it with defaults (e.g. for a shared/self-hosted instance), you can copy your own `films.yaml` and `labs.yaml` straight into the running container using `docker compose cp`:
+If you'd rather seed it with defaults (e.g. for a shared/self-hosted instance), you can copy your own `config.yaml` straight into the running container using `docker compose cp`:
 
 ```bash
-docker compose cp films.yaml app:/usr/share/nginx/html/films.yaml
-docker compose cp labs.yaml app:/usr/share/nginx/html/labs.yaml
+docker compose cp config.yaml app:/usr/share/nginx/html/config.yaml
 ```
 
-Refresh the page and the app will pick them up automatically — no restart or rebuild needed. Format:
-
-**`films.yaml`**
-```yaml
-- name: "Kodak Gold"
-  boxSpeed: 400
-  rolls: 1
-  exposures: 36
-  filmCost: 25
-```
-
-**`labs.yaml`**
-
-Each lab is one entry with a `services` list underneath it — one item per service tier the lab offers (e.g. standard vs. hi-res scan, or next-day vs. same-week turnaround), rather than a separate top-level lab entry for every combination:
+Refresh the page and the app will pick it up automatically — no restart or rebuild needed. Format:
 
 ```yaml
-- name: Irohas Melbourne
-  services:
-    - devCost: 17
-      pushPullCost: 5
-      pushPullType: per_stop
-      turnaroundTime: next_day
-      highResScan: true
+settings:
+  upgradeThresholdPercent: 10   # see "Labs For This Roll" below
 
-- name: Walkens Melbourne
-  services:
-    - devCost: 16
-      pushPullCost: 10
-      pushPullType: flat
-      turnaroundTime: same_week
-      highResScan: false
-    - devCost: 23
-      pushPullCost: 10
-      pushPullType: flat
-      turnaroundTime: same_week
-      highResScan: true
-    - devCost: 26
-      pushPullCost: 10
-      pushPullType: flat
-      turnaroundTime: next_day
-      highResScan: true
-    - devCost: 33
-      pushPullCost: 10
-      pushPullType: flat
-      turnaroundTime: next_day
-      highResScan: true
+films:
+  - name: "Kodak Gold"
+    boxSpeed: 400
+    rolls: 1
+    exposures: 36
+    filmCost: 25
+    buyLink: "https://www.example.com/kodak-gold-200"   # optional; shows a "Buy this film" link in Film Setup
 
+labs:
+  - name: "Irohas Melbourne"
+    services:
+      - devCost: 17
+        pushPullCost: 5
+        pushPullType: "per_stop"    # or "flat"
+        turnaroundTime: "next_day"  # "next_day" | "same_week" | "longer"
+        highResScan: true           # marks this tier as offering high-res scans
+
+  - name: "Walkens Melbourne"
+    services:
+      - devCost: 16
+        pushPullCost: 10
+        pushPullType: "flat"
+        turnaroundTime: "same_week"
+        highResScan: false
+      - devCost: 23
+        pushPullCost: 10
+        pushPullType: "flat"
+        turnaroundTime: "same_week"
+        highResScan: true
+      - devCost: 33
+        pushPullCost: 10
+        pushPullType: "flat"
+        turnaroundTime: "next_day"
+        highResScan: true
 ```
 
-Every service tier shows up as its own row in the "Labs For This Roll" comparison, labelled with the parent lab's name plus its turnaround/hi-res badges.
+Each lab is one entry with a `services` list underneath it — one item per service tier the lab offers (e.g. standard vs. hi-res scan, or next-day vs. same-week turnaround), rather than a separate top-level lab entry for every combination. Every service tier shows up as its own row in the "Labs For This Roll" comparison, labelled with the parent lab's name plus its turnaround/hi-res badges.
+
+All three top-level keys (`settings`, `films`, `labs`) are optional — include only what you want to seed. `settings.upgradeThresholdPercent` acts as a factory default for the "Cheapest Total" upgrade threshold (see Settings in the app) and only applies if the person hasn't already changed it themselves.
 
 ## Built With
 
