@@ -21,7 +21,7 @@
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 md:p-8 max-w-md w-full relative transition-colors duration-200">
         
         <button id="themeToggle" class="absolute top-6 right-6 p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Toggle Dark Mode">
-            <svg id="themeToggleLightIcon" class="hidden w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4.22 3.22a1 1 0 011.415 0l.708.708a1 1 0 01-1.414 1.414l-.708-.708a1 1 0 010-1.414zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM14.22 15.78a1 1 0 010 1.415l-.708.708a1 1 0 01-1.414-1.414l-.708-.708a1 1 0 011.415 0zM10 16a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-4.22-3.22a1 1 0 01-1.415 0l-.708-.708a1 1 0 011.414-1.414l.708.708a1 1 0 010 1.415zM2 10a1 1 0 011-1h1a1 1 0 110 2H3a1 1 0 01-1-1zm3.22-4.22a1 1 0 010-1.415l.708-.708a1 1 0 011.414 1.414l-.708.708a1 1 0 01-1.415 0zM10 5a5 5 0 100 10 5 5 0 000-10z" clip-rule="evenodd"></path></svg>
+            <svg id="themeToggleLightIcon" class="hidden w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4.22 3.22a1 1 0 011.415 0l.708.708a1 1 0 01-1.414 1.414l-.708-.708a1 1 0 010-1.414zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM14.22 15.78a1 1 0 010 1.415l-.708.708a1 1 0 01-1.414-1.414l-.708-.708a1 1 0 011.415 0zM10 16a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-4.22-3.22a1 1 0 01-1.415 0l-.708-.708a1 1 0 011.414-1.414l-.708.708a1 1 0 010 1.415zM2 10a1 1 0 011-1h1a1 1 0 110 2H3a1 1 0 01-1-1zm3.22-4.22a1 1 0 010-1.415l.708-.708a1 1 0 011.414 1.414l-.708.708a1 1 0 01-1.415 0zM10 5a5 5 0 100 10 5 5 0 000-10z" clip-rule="evenodd"></path></svg>
             <svg id="themeToggleDarkIcon" class="hidden w-5 h-5 text-gray-700" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
         </button>
 
@@ -53,10 +53,11 @@
                         <input type="number" id="boxSpeed" min="1" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-colors" placeholder="400">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-1 dark:text-gray-300">Dev Speed <span class="text-xs font-normal text-gray-500 block">(leave same as box if unsure)</span></label>
+                        <label class="block text-sm font-medium mb-1 dark:text-gray-300">Dev Speed</label>
                         <input type="number" id="devSpeed" min="1" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-colors" placeholder="400">
                     </div>
                 </div>
+                <p class="text-xs text-gray-500 -mt-2">(leave Dev Speed same as box if unsure)</p>
 
                 <div>
                     <label class="block text-sm font-medium mb-1 dark:text-gray-300">Total cost of film pack (incl. postage)</label>
@@ -119,13 +120,16 @@
                     </div>
                 </div>
                 
-                <div class="pt-4 mt-2 border-t border-green-200 dark:border-green-800">
-                    <label class="block text-sm font-medium mb-1 dark:text-gray-300">Once-off Fee</label>
-                    <input type="number" id="onceOffFee" step="0.01" min="0" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-green-500 outline-none transition-colors" value="0">
-                </div>
-
                 <div class="pt-4 mt-4 border-t border-green-200 dark:border-green-800 flex justify-end">
                     <button id="saveLabBtn" type="button" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded shadow transition-colors font-medium">Save Profile</button>
+                </div>
+            </div>
+
+            <div class="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg space-y-3 transition-colors duration-200">
+                <h2 class="font-semibold text-orange-800 dark:text-orange-400 text-sm uppercase tracking-wide">Additional Fees</h2>
+                <div>
+                    <label class="block text-sm font-medium mb-1 dark:text-gray-300">Once-off Fee</label>
+                    <input type="number" id="onceOffFee" step="0.01" min="0" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-orange-500 outline-none transition-colors" value="0">
                 </div>
             </div>
         </form>
@@ -150,8 +154,10 @@
     </div>
 
     <script>
+        // --- State ---
         let defaultFilms = {};
 
+        // --- CSV Loader ---
         async function loadCSV() {
             try {
                 const response = await fetch('films.csv');
@@ -175,6 +181,7 @@
             finally { updateFilmDropdown(); }
         }
 
+        // --- Calculator ---
         function calculateCost() {
             const filmCost = parseFloat(document.getElementById('filmCost').value);
             const devCost = parseFloat(document.getElementById('devCost').value);
@@ -216,12 +223,14 @@
         const inputs = document.querySelectorAll('input, select');
         inputs.forEach(i => { i.addEventListener('input', calculateCost); i.addEventListener('change', calculateCost); });
 
+        // --- Auto-fill Speed ---
         const boxSpeedInput = document.getElementById('boxSpeed');
         const devSpeedInput = document.getElementById('devSpeed');
         let devSpeedManuallyEdited = false;
         devSpeedInput.addEventListener('input', () => devSpeedManuallyEdited = true);
         boxSpeedInput.addEventListener('input', () => { if (!devSpeedManuallyEdited) devSpeedInput.value = boxSpeedInput.value; calculateCost(); });
 
+        // --- Logic ---
         function updateFilmDropdown() {
             const dropdown = document.getElementById('savedFilmsDropdown');
             dropdown.innerHTML = '<option value="">-- Load a saved film --</option>';
