@@ -8,10 +8,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Film Cost Calculator</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
     <script>
         tailwind.config = { darkMode: 'class', }
-    </script>
-    <script>
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark')
         } else {
@@ -31,50 +30,44 @@
         <h1 class="text-3xl font-bold text-center mb-8 text-gray-900 dark:text-white pr-8">Film Cost Calculator</h1>
         
         <form id="calculatorForm" class="space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-100 dark:border-purple-800/30">
-                    <label class="block text-sm font-semibold text-purple-800 dark:text-purple-400 mb-2 uppercase tracking-wide">Load Saved Film</label>
-                    <div class="flex gap-2">
-                        <select id="savedFilmsDropdown" class="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-purple-500 outline-none transition-colors">
-                            <option value="">-- Loading --</option>
-                        </select>
-                        <button id="deleteFilmBtn" type="button" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded shadow transition-colors font-bold">✕</button>
-                    </div>
+                    <label class="block text-sm font-semibold text-purple-800 dark:text-purple-400 mb-2 uppercase tracking-wide">Film Management</label>
+                    <select id="savedFilmsDropdown" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 mb-2 text-sm"><option value="">-- Load a saved film --</option></select>
+                    <button id="deleteFilmBtn" type="button" class="w-full bg-red-500 hover:bg-red-600 text-white py-1 rounded text-sm font-bold">Delete Selected Film</button>
                 </div>
                 <div class="bg-teal-50 dark:bg-teal-900/20 p-4 rounded-lg border border-teal-100 dark:border-teal-800/30">
-                    <label class="block text-sm font-semibold text-teal-800 dark:text-teal-400 mb-2 uppercase tracking-wide">Load Saved Lab</label>
-                    <div class="flex gap-2">
-                        <select id="savedLabsDropdown" class="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-teal-500 outline-none transition-colors">
-                            <option value="">-- Loading --</option>
-                        </select>
-                        <button id="deleteLabBtn" type="button" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded shadow transition-colors font-bold">✕</button>
-                    </div>
+                    <label class="block text-sm font-semibold text-teal-800 dark:text-teal-400 mb-2 uppercase tracking-wide">Lab Management</label>
+                    <select id="savedLabsDropdown" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 mb-2 text-sm"><option value="">-- Load a saved lab --</option></select>
+                    <button id="deleteLabBtn" type="button" class="w-full bg-red-500 hover:bg-red-600 text-white py-1 rounded text-sm font-bold">Delete Selected Lab</button>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg space-y-3">
-                    <h2 class="font-semibold text-blue-800 dark:text-blue-400 text-sm uppercase tracking-wide">The Film</h2>
+                    <h2 class="font-semibold text-blue-800 dark:text-blue-400 text-sm uppercase tracking-wide">Film Setup</h2>
                     <input type="text" id="filmName" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" placeholder="Film Name">
                     <div class="grid grid-cols-2 gap-2">
                         <input type="number" id="boxSpeed" placeholder="Box Speed" class="border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                         <input type="number" id="devSpeed" placeholder="Dev Speed" class="border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                     </div>
-                    <p class="text-xs text-gray-500 -mt-2">(leave Dev Speed same as box if unsure)</p>
                     <input type="number" id="filmCost" step="0.01" placeholder="Total cost ($)" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                     <div class="grid grid-cols-2 gap-2">
                         <input type="number" id="rolls" placeholder="Rolls" class="border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                         <input type="number" id="exposures" placeholder="Exposures" class="border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                     </div>
-                    <button id="saveFilmBtn" type="button" class="w-full bg-blue-600 text-white py-2 rounded font-medium hover:bg-blue-700">Save Film Profile</button>
+                    <button id="saveFilmBtn" type="button" class="w-full bg-blue-600 text-white py-2 rounded font-medium hover:bg-blue-700">Save as Film Profile</button>
                 </div>
 
                 <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg space-y-3">
-                    <h2 class="font-semibold text-green-800 dark:text-green-400 text-sm uppercase tracking-wide">Lab Costs (Per Roll)</h2>
+                    <h2 class="font-semibold text-green-800 dark:text-green-400 text-sm uppercase tracking-wide">Lab Setup</h2>
                     <input type="text" id="labName" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" placeholder="Lab Name">
                     <div class="grid grid-cols-2 gap-2">
                         <input type="number" id="devCost" placeholder="Dev" class="border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                         <input type="number" id="scanCost" placeholder="Scan" class="border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
                         <input type="number" id="printCost" placeholder="Print" class="border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                         <input type="number" id="pushPullCost" placeholder="P/P Fee" class="border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                     </div>
@@ -82,18 +75,18 @@
                         <option value="per_stop">Per Stop</option>
                         <option value="flat">Flat Fee</option>
                     </select>
-                    <button id="saveLabBtn" type="button" class="w-full bg-green-600 text-white py-2 rounded font-medium hover:bg-green-700">Save Lab Profile</button>
+                    <button id="saveLabBtn" type="button" class="w-full bg-green-600 text-white py-2 rounded font-medium hover:bg-green-700">Save as Lab Profile</button>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg space-y-2">
                     <h2 class="font-semibold text-orange-800 dark:text-orange-400 text-sm uppercase tracking-wide">Once-off Fee</h2>
-                    <input type="number" id="onceOffFee" step="0.01" placeholder="e.g. Shipping" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                    <input type="number" id="onceOffFee" step="0.01" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                 </div>
                 <div class="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg space-y-2">
                     <h2 class="font-semibold text-yellow-800 dark:text-yellow-400 text-sm uppercase tracking-wide">Per-roll Fee</h2>
-                    <input type="number" id="perRollFee" step="0.01" placeholder="e.g. Surcharge" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                    <input type="number" id="perRollFee" step="0.01" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                 </div>
             </div>
         </form>
@@ -112,35 +105,57 @@
             </div>
         </div>
 
-        <p class="mt-8 text-center text-xs text-gray-400 dark:text-gray-600">
-            Vibe coded by Gemini | <a href="https://trentbauer.com" class="hover:text-blue-500 underline transition-colors">trentbauer.com</a>
+        <p class="mt-8 text-center text-xs text-gray-500 dark:text-gray-500">
+            This project is "vibe coded" by Gemini. <br>
+            Source code: <a href="https://github.com/trentnbauer/FilmCalc" class="underline hover:text-blue-500">github.com/trentnbauer/FilmCalc</a> 
         </p>
     </div>
 
     <script>
-        let defaultFilms = {}, defaultLabs = {};
+        const themeToggle = document.getElementById('themeToggle');
+        const lightIcon = document.getElementById('themeToggleLightIcon');
+        const darkIcon = document.getElementById('themeToggleDarkIcon');
 
-        async function loadCSVs() {
-            try {
-                const [fRes, lRes] = await Promise.all([fetch('films.csv'), fetch('labs.csv')]);
-                if (fRes.ok) parseCSV(await fRes.text(), defaultFilms);
-                if (lRes.ok) parseCSV(await lRes.text(), defaultLabs);
-            } catch (e) { console.error("Error loading CSVs", e); }
-            finally { updateFilmDropdown(); updateLabDropdown(); }
+        function updateThemeIcons() {
+            const isDark = document.documentElement.classList.contains('dark');
+            // Sun icon shows when in dark mode (click it to go light)
+            lightIcon.classList.toggle('hidden', !isDark);
+            // Moon icon shows when in light mode (click it to go dark)
+            darkIcon.classList.toggle('hidden', isDark);
         }
 
-        function parseCSV(text, target) {
-            const lines = text.split('\n');
-            const headers = lines[0].split(',').map(h => h.trim());
-            for (let i = 1; i < lines.length; i++) {
-                if (!lines[i].trim()) continue;
-                const vals = lines[i].split(',');
-                const obj = { name: vals[0] };
-                for (let j = 1; j < headers.length; j++) obj[headers[j]] = vals[j];
-                target[obj.name] = obj;
+        themeToggle.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+            updateThemeIcons();
+        });
+
+        updateThemeIcons();
+
+        // ---------- Default profiles (loaded from films.yaml / labs.yml) ----------
+        let defaultFilms = {};
+        let defaultLabs = {};
+
+        async function loadDefaults() {
+            try {
+                const [fRes, lRes] = await Promise.all([fetch('films.yaml'), fetch('labs.yml')]);
+                if (fRes.ok) {
+                    const parsed = jsyaml.load(await fRes.text()) || [];
+                    parsed.forEach(f => { defaultFilms[f.name] = f; });
+                }
+                if (lRes.ok) {
+                    const parsed = jsyaml.load(await lRes.text()) || [];
+                    parsed.forEach(l => { defaultLabs[l.name] = l; });
+                }
+            } catch (e) {
+                console.error('Error loading default profiles', e);
+            } finally {
+                updateFilmDropdown();
+                updateLabDropdown();
             }
         }
 
+        // ---------- Cost calculation ----------
         function calculateCost() {
             const filmCost = parseFloat(document.getElementById('filmCost').value) || 0;
             const devCost = parseFloat(document.getElementById('devCost').value) || 0;
@@ -152,14 +167,14 @@
             const printCost = parseFloat(document.getElementById('printCost').value) || 0;
             const onceOffFee = parseFloat(document.getElementById('onceOffFee').value) || 0;
             const perRollFee = parseFloat(document.getElementById('perRollFee').value) || 0;
-            
+
             let activePushPullCost = 0;
             let pushPullText = "";
 
             if (boxSpeed > 0 && devSpeed > 0 && boxSpeed !== devSpeed) {
                 const basePushPull = parseFloat(document.getElementById('pushPullCost').value) || 0;
                 const pushPullType = document.getElementById('pushPullType').value;
-                let stops = Math.round(Math.abs(Math.log2(devSpeed / boxSpeed)) * 10) / 10; 
+                let stops = Math.round(Math.abs(Math.log2(devSpeed / boxSpeed)) * 10) / 10;
                 activePushPullCost = (pushPullType === 'per_stop') ? (basePushPull * stops) : basePushPull;
                 pushPullText = ` | ${devSpeed > boxSpeed ? "Pushed" : "Pulled"} ${stops} stop(s)`;
             }
@@ -167,7 +182,7 @@
             const labCostPerRoll = devCost + activePushPullCost + scanCost + printCost + perRollFee;
             const grandTotal = filmCost + (labCostPerRoll * rolls) + onceOffFee;
             const totalPhotos = exposures * rolls;
-            
+
             document.getElementById('costPerPhoto').innerText = `$${(totalPhotos > 0 ? grandTotal / totalPhotos : 0).toFixed(2)}`;
             document.getElementById('costPerRoll').innerText = `$${(rolls > 0 ? grandTotal / rolls : 0).toFixed(2)}`;
             document.getElementById('breakdown').innerText = `Total Cost: $${grandTotal.toFixed(2)} | Photos: ${totalPhotos}${pushPullText}`;
@@ -175,12 +190,24 @@
 
         document.querySelectorAll('input, select').forEach(i => i.addEventListener('input', calculateCost));
 
+        // Dev Speed defaults to Box Speed unless the user has explicitly typed a different value
+        let devSpeedOverridden = false;
+        const boxSpeedInput = document.getElementById('boxSpeed');
+        const devSpeedInput = document.getElementById('devSpeed');
+        devSpeedInput.addEventListener('input', () => { devSpeedOverridden = true; });
+        boxSpeedInput.addEventListener('input', () => {
+            if (!devSpeedOverridden) devSpeedInput.value = boxSpeedInput.value;
+        });
+
+        // ---------- Profile dropdowns ----------
         function updateDropdown(id, data, storageKey) {
             const dropdown = document.getElementById(id);
+            const current = dropdown.value;
             const saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
             const all = { ...data, ...saved };
             dropdown.innerHTML = '<option value="">-- Load profile --</option>';
             Object.keys(all).sort().forEach(n => dropdown.innerHTML += `<option value="${n}">${n}</option>`);
+            if (all[current]) dropdown.value = current;
         }
 
         function updateFilmDropdown() { updateDropdown('savedFilmsDropdown', defaultFilms, 'filmProfiles'); }
@@ -192,6 +219,7 @@
             document.getElementById('filmName').value = p.name;
             document.getElementById('boxSpeed').value = p.boxSpeed || '';
             document.getElementById('devSpeed').value = p.boxSpeed || '';
+            devSpeedOverridden = false;
             document.getElementById('filmCost').value = p.filmCost || '';
             document.getElementById('rolls').value = p.rolls || '1';
             document.getElementById('exposures').value = p.exposures || '36';
@@ -212,48 +240,103 @@
             calculateCost();
         });
 
+        // ---------- Save profiles ----------
         document.getElementById('saveFilmBtn').addEventListener('click', () => {
             const name = document.getElementById('filmName').value.trim();
-            if (!name) return alert("Enter Film Name");
+            if (!name) return alert('Enter Film Name');
             let saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
-            saved[name] = { name, boxSpeed: document.getElementById('boxSpeed').value, filmCost: document.getElementById('filmCost').value, rolls: document.getElementById('rolls').value, exposures: document.getElementById('exposures').value };
+            saved[name] = {
+                name,
+                boxSpeed: document.getElementById('boxSpeed').value,
+                filmCost: document.getElementById('filmCost').value,
+                rolls: document.getElementById('rolls').value,
+                exposures: document.getElementById('exposures').value
+            };
             localStorage.setItem('filmProfiles', JSON.stringify(saved));
             updateFilmDropdown();
+            document.getElementById('savedFilmsDropdown').value = name;
         });
 
         document.getElementById('saveLabBtn').addEventListener('click', () => {
             const name = document.getElementById('labName').value.trim();
-            if (!name) return alert("Enter Lab Name");
+            if (!name) return alert('Enter Lab Name');
             let saved = JSON.parse(localStorage.getItem('labProfiles') || '{}');
-            saved[name] = { name, devCost: document.getElementById('devCost').value, pushPullCost: document.getElementById('pushPullCost').value, pushPullType: document.getElementById('pushPullType').value, scanCost: document.getElementById('scanCost').value, printCost: document.getElementById('printCost').value, onceOffFee: document.getElementById('onceOffFee').value, perRollFee: document.getElementById('perRollFee').value };
+            saved[name] = {
+                name,
+                devCost: document.getElementById('devCost').value,
+                scanCost: document.getElementById('scanCost').value,
+                printCost: document.getElementById('printCost').value,
+                pushPullCost: document.getElementById('pushPullCost').value,
+                pushPullType: document.getElementById('pushPullType').value,
+                onceOffFee: document.getElementById('onceOffFee').value,
+                perRollFee: document.getElementById('perRollFee').value
+            };
+            localStorage.setItem('labProfiles', JSON.stringify(saved));
+            updateLabDropdown();
+            document.getElementById('savedLabsDropdown').value = name;
+        });
+
+        // ---------- Delete profiles ----------
+        document.getElementById('deleteFilmBtn').addEventListener('click', () => {
+            const dropdown = document.getElementById('savedFilmsDropdown');
+            const name = dropdown.value;
+            if (!name) return alert('Select a saved film to delete');
+            if (defaultFilms[name] && !JSON.parse(localStorage.getItem('filmProfiles') || '{}')[name]) {
+                return alert('Built-in film profiles can\'t be deleted, only custom saved ones.');
+            }
+            let saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
+            delete saved[name];
+            localStorage.setItem('filmProfiles', JSON.stringify(saved));
+            updateFilmDropdown();
+        });
+
+        document.getElementById('deleteLabBtn').addEventListener('click', () => {
+            const dropdown = document.getElementById('savedLabsDropdown');
+            const name = dropdown.value;
+            if (!name) return alert('Select a saved lab to delete');
+            if (defaultLabs[name] && !JSON.parse(localStorage.getItem('labProfiles') || '{}')[name]) {
+                return alert('Built-in lab profiles can\'t be deleted, only custom saved ones.');
+            }
+            let saved = JSON.parse(localStorage.getItem('labProfiles') || '{}');
+            delete saved[name];
             localStorage.setItem('labProfiles', JSON.stringify(saved));
             updateLabDropdown();
         });
 
+        // ---------- Export / Import ----------
         document.getElementById('exportBtn').addEventListener('click', () => {
-            const data = { films: JSON.parse(localStorage.getItem('filmProfiles') || '{}'), labs: JSON.parse(localStorage.getItem('labProfiles') || '{}') };
-            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
-            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'calculator_data.json'; a.click();
+            const data = {
+                films: JSON.parse(localStorage.getItem('filmProfiles') || '{}'),
+                labs: JSON.parse(localStorage.getItem('labProfiles') || '{}')
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'calculator_data.json';
+            a.click();
         });
 
         document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
         document.getElementById('importFile').addEventListener('change', (e) => {
+            if (!e.target.files.length) return;
             const reader = new FileReader();
             reader.onload = (event) => {
-                const data = JSON.parse(event.target.result);
-                if (data.films) localStorage.setItem('filmProfiles', JSON.stringify(data.films));
-                if (data.labs) localStorage.setItem('labProfiles', JSON.stringify(data.labs));
-                updateFilmDropdown(); updateLabDropdown(); alert('Data imported!');
+                try {
+                    const data = JSON.parse(event.target.result);
+                    if (data.films) localStorage.setItem('filmProfiles', JSON.stringify(data.films));
+                    if (data.labs) localStorage.setItem('labProfiles', JSON.stringify(data.labs));
+                    updateFilmDropdown();
+                    updateLabDropdown();
+                    alert('Data imported!');
+                } catch (err) {
+                    alert('Could not read that file — is it a valid export from this app?');
+                }
             };
             reader.readAsText(e.target.files[0]);
+            e.target.value = '';
         });
 
-        document.getElementById('themeToggle').addEventListener('click', () => {
-            document.documentElement.classList.toggle('dark');
-            localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-        });
-
-        loadCSVs();
+        loadDefaults();
     </script>
 </body>
 </html>
