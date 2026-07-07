@@ -1,5 +1,0 @@
-- name: "Kodak Gold"
-  boxSpeed: 400
-  rolls: 1
-  exposures: 36
-  filmCost: 25
