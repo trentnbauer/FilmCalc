@@ -125,16 +125,6 @@
                             <input type="number" id="devCost" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                         </div>
                         <div>
-                            <label for="scanCost" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Scan Cost ($)</label>
-                            <input type="number" id="scanCost" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label for="printCost" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Print Cost ($)</label>
-                            <input type="number" id="printCost" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                        </div>
-                        <div>
                             <label for="pushPullCost" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Push/Pull Fee ($)</label>
                             <input type="number" id="pushPullCost" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                         </div>
@@ -144,6 +134,14 @@
                         <select id="pushPullType" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                             <option value="per_stop">Per Stop</option>
                             <option value="flat">Flat Fee</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="turnaroundTime" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Turnaround Time</label>
+                        <select id="turnaroundTime" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                            <option value="next_day">Next Day</option>
+                            <option value="same_week">Same Week</option>
+                            <option value="longer">Longer</option>
                         </select>
                     </div>
                     <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
@@ -156,7 +154,7 @@
         </form>
 
         <div class="mt-8 text-center bg-gray-50 dark:bg-gray-700/50 p-6 rounded-lg border border-gray-200 dark:border-gray-600">
-            <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-3 text-center">Cheapest Lab For This Roll</h3>
+            <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-3 text-center">Labs For This Roll</h3>
 
             <div class="grid grid-cols-2 gap-2 mb-4 text-left">
                 <div>
@@ -167,6 +165,11 @@
                     <label for="perRollFee" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Per-roll Fee ($)</label>
                     <input type="number" id="perRollFee" step="0.01" placeholder="e.g. surcharge" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
                 </div>
+            </div>
+
+            <div class="flex gap-2 mb-4 justify-center">
+                <button id="filterNextDayBtn" type="button" class="px-3 py-1.5 rounded-full text-xs font-semibold border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-amber-400 transition-colors">⚡ Next Day</button>
+                <button id="filterHiResBtn" type="button" class="px-3 py-1.5 rounded-full text-xs font-semibold border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-indigo-400 transition-colors">HI-RES</button>
             </div>
 
             <div id="labComparison" class="space-y-1.5 text-left"></div>
@@ -259,7 +262,41 @@
             }
         }
 
-        // ---------- Cheapest lab comparison ----------
+        // ---------- Filters ----------
+        let filterNextDay = false;
+        let filterHiRes = false;
+
+        function setFilterActive(btn, active, activeClasses) {
+            btn.classList.toggle('border-transparent', active);
+            activeClasses.forEach(c => btn.classList.toggle(c, active));
+            btn.classList.toggle('border-gray-300', !active);
+            btn.classList.toggle('dark:border-gray-600', !active);
+            btn.classList.toggle('text-gray-600', !active);
+            btn.classList.toggle('dark:text-gray-300', !active);
+        }
+
+        const filterNextDayBtn = document.getElementById('filterNextDayBtn');
+        const filterHiResBtn = document.getElementById('filterHiResBtn');
+
+        filterNextDayBtn.addEventListener('click', () => {
+            filterNextDay = !filterNextDay;
+            setFilterActive(filterNextDayBtn, filterNextDay, ['bg-amber-100', 'dark:bg-amber-900/40', 'text-amber-800', 'dark:text-amber-300']);
+            updateLabComparison();
+        });
+
+        filterHiResBtn.addEventListener('click', () => {
+            filterHiRes = !filterHiRes;
+            setFilterActive(filterHiResBtn, filterHiRes, ['bg-indigo-100', 'dark:bg-indigo-900/40', 'text-indigo-800', 'dark:text-indigo-300']);
+            updateLabComparison();
+        });
+
+        const turnaroundLabels = {
+            next_day: '⚡ Next Day',
+            same_week: 'Same Week',
+            longer: 'Longer'
+        };
+
+        // ---------- Labs for this roll ----------
         // Compares every saved lab profile (built-in + custom) against the current
         // Box Speed / Dev Speed, since push/pull cost — not just base dev price —
         // can flip which lab is actually cheapest for a given roll. Sorted by
@@ -296,11 +333,9 @@
                 return;
             }
 
-            const results = names.map(name => {
+            let results = names.map(name => {
                 const lab = allLabs[name];
                 const devCost = parseFloat(lab.devCost) || 0;
-                const scanCost = parseFloat(lab.scanCost) || 0;
-                const printCost = parseFloat(lab.printCost) || 0;
                 const basePushPull = parseFloat(lab.pushPullCost) || 0;
                 const pushPullType = lab.pushPullType || 'per_stop';
 
@@ -310,13 +345,29 @@
                     activePushPullCost = (pushPullType === 'per_stop') ? (basePushPull * stops) : basePushPull;
                 }
 
-                const labCostPerRoll = devCost + activePushPullCost + scanCost + printCost + perRollFee;
+                const labCostPerRoll = devCost + activePushPullCost + perRollFee;
                 const grandTotal = filmCost + (labCostPerRoll * rolls) + onceOffFee;
                 const costPerRoll = rolls > 0 ? grandTotal / rolls : 0;
                 const costPerPhoto = totalPhotos > 0 ? grandTotal / totalPhotos : 0;
 
-                return { name, stops, devCostPerRoll: labCostPerRoll, costPerRoll, costPerPhoto, highResScan: !!lab.highResScan };
+                return {
+                    name,
+                    stops,
+                    devCostPerRoll: labCostPerRoll,
+                    costPerRoll,
+                    costPerPhoto,
+                    highResScan: !!lab.highResScan,
+                    turnaroundTime: lab.turnaroundTime || 'same_week'
+                };
             }).sort((a, b) => a.costPerPhoto - b.costPerPhoto);
+
+            if (filterNextDay) results = results.filter(r => r.turnaroundTime === 'next_day');
+            if (filterHiRes) results = results.filter(r => r.highResScan);
+
+            if (results.length === 0) {
+                container.innerHTML = '<p class="text-sm text-gray-400 text-center">No labs match the selected filters</p>';
+                return;
+            }
 
             const currentLabName = document.getElementById('labName').value.trim();
 
@@ -325,8 +376,9 @@
                 const isCurrent = r.name === currentLabName;
                 const stopsLabel = r.stops > 0 ? ` <span class="text-xs text-gray-400">(${r.stops} stop push/pull)</span>` : '';
                 const hiResBadge = r.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">HI-RES</span>` : '';
+                const turnaroundBadge = ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 align-middle">${turnaroundLabels[r.turnaroundTime] || r.turnaroundTime}</span>`;
                 return `<div class="flex justify-between items-start px-3 py-2 rounded-lg text-sm ${isCheapest ? 'bg-green-100 dark:bg-green-900/30' : 'bg-white dark:bg-gray-800/50'} ${isCurrent ? 'ring-2 ring-blue-400' : ''} ${r.highResScan ? 'border border-indigo-300 dark:border-indigo-700' : ''}">
-                    <span class="${isCheapest ? 'font-semibold text-green-800 dark:text-green-400' : 'text-gray-700 dark:text-gray-300'}">${isCheapest ? '🏆 ' : ''}${r.name}${hiResBadge}${stopsLabel}</span>
+                    <span class="${isCheapest ? 'font-semibold text-green-800 dark:text-green-400' : 'text-gray-700 dark:text-gray-300'}">${isCheapest ? '🏆 ' : ''}${r.name}${hiResBadge}${turnaroundBadge}${stopsLabel}</span>
                     <span class="font-mono text-right leading-tight ${isCheapest ? 'text-green-800 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}">
                         <div class="font-semibold">$${r.costPerPhoto.toFixed(2)}/photo</div>
                         <div class="text-xs opacity-80">$${r.devCostPerRoll.toFixed(2)}/dev</div>
@@ -389,10 +441,9 @@
             if (!p) return;
             document.getElementById('labName').value = p.name;
             document.getElementById('devCost').value = p.devCost || 0;
-            document.getElementById('scanCost').value = p.scanCost || 0;
-            document.getElementById('printCost').value = p.printCost || 0;
             document.getElementById('pushPullCost').value = p.pushPullCost || 0;
             document.getElementById('pushPullType').value = p.pushPullType || 'per_stop';
+            document.getElementById('turnaroundTime').value = p.turnaroundTime || 'same_week';
             document.getElementById('highResScan').checked = !!p.highResScan;
             updateLabComparison();
         });
@@ -421,10 +472,9 @@
             saved[name] = {
                 name,
                 devCost: document.getElementById('devCost').value,
-                scanCost: document.getElementById('scanCost').value,
-                printCost: document.getElementById('printCost').value,
                 pushPullCost: document.getElementById('pushPullCost').value,
                 pushPullType: document.getElementById('pushPullType').value,
+                turnaroundTime: document.getElementById('turnaroundTime').value,
                 highResScan: document.getElementById('highResScan').checked
             };
             localStorage.setItem('labProfiles', JSON.stringify(saved));
@@ -478,10 +528,9 @@
             return Object.values(all).map(l => ({
                 name: l.name,
                 devCost: Number(l.devCost) || 0,
-                scanCost: Number(l.scanCost) || 0,
-                printCost: Number(l.printCost) || 0,
                 pushPullCost: Number(l.pushPullCost) || 0,
                 pushPullType: l.pushPullType || 'per_stop',
+                turnaroundTime: l.turnaroundTime || 'same_week',
                 highResScan: !!l.highResScan
             }));
         }
