@@ -551,14 +551,14 @@
                 .filter(f => f.costPerPhoto !== null && f.costPerPhoto > 0);
 
             if (others.length === 0) {
-                container.innerHTML = `<p class="text-xs text-gray-400 mt-2">No other saved ${boxSpeed}ISO films to compare yet</p>`;
+                container.innerHTML = `<p class="text-xs text-gray-400 mt-2">No other saved ${boxSpeed} ISO films to compare yet</p>`;
                 return;
             }
 
             const cheapestOther = others.reduce((a, b) => (a.costPerPhoto <= b.costPerPhoto ? a : b));
 
             if (currentCost <= cheapestOther.costPerPhoto) {
-                container.innerHTML = `<p class="text-xs text-green-700 dark:text-green-400 mt-2 font-medium">🏆 Cheapest saved ${boxSpeed}ISO film</p>`;
+                container.innerHTML = `<p class="text-xs text-green-700 dark:text-green-400 mt-2 font-medium">🏆 Cheapest saved ${boxSpeed} ISO film</p>`;
             } else {
                 const diff = currentCost - cheapestOther.costPerPhoto;
                 container.innerHTML = `<p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
@@ -601,7 +601,7 @@
             const boxSpeed = f.boxSpeed || '?';
             const rolls = f.rolls || '?';
             const exposures = f.exposures || '?';
-            return `${f.name} (${boxSpeed}ISO | ${rolls} Roll${rolls == 1 ? '' : 's'} | ${exposures}exp)`;
+            return `${f.name} (${boxSpeed} ISO | ${rolls} Roll${rolls == 1 ? '' : 's'} | ${exposures}exp)`;
         }
 
         function updateFilmDropdown() { updateDropdown('savedFilmsDropdown', defaultFilms, 'filmProfiles', formatFilmLabel); }
