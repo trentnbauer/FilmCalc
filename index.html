@@ -30,21 +30,20 @@
         <h1 class="text-3xl font-bold text-center mb-8 text-gray-900 dark:text-white pr-8">Film Cost Calculator</h1>
         
         <form id="calculatorForm" class="space-y-6">
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <div class="flex gap-2 border-b border-gray-200 dark:border-gray-700">
+                <button id="tabFilmBtn" type="button" class="flex-1 px-4 py-2.5 font-semibold text-sm uppercase tracking-wide border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 transition-colors">Film</button>
+                <button id="tabLabBtn" type="button" class="flex-1 px-4 py-2.5 font-semibold text-sm uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">Lab</button>
+                <button id="tabSettingsBtn" type="button" class="flex-1 px-4 py-2.5 font-semibold text-sm uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">Settings</button>
+            </div>
+
+            <div id="filmTabContent" class="space-y-6">
                 <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-100 dark:border-purple-800/30">
                     <label class="block text-sm font-semibold text-purple-800 dark:text-purple-400 mb-2 uppercase tracking-wide">Film Management</label>
                     <select id="savedFilmsDropdown" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 mb-2 text-sm"><option value="">-- Load a saved film --</option></select>
                     <button id="deleteFilmBtn" type="button" class="w-full bg-red-500 hover:bg-red-600 text-white py-1 rounded text-sm font-bold">Delete Selected Film</button>
                 </div>
-                <div class="bg-teal-50 dark:bg-teal-900/20 p-4 rounded-lg border border-teal-100 dark:border-teal-800/30">
-                    <label class="block text-sm font-semibold text-teal-800 dark:text-teal-400 mb-2 uppercase tracking-wide">Lab Management</label>
-                    <select id="savedLabsDropdown" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 mb-2 text-sm"><option value="">-- Load a saved lab --</option></select>
-                    <button id="deleteLabBtn" type="button" class="w-full bg-red-500 hover:bg-red-600 text-white py-1 rounded text-sm font-bold">Delete Selected Lab</button>
-                </div>
-            </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg space-y-3">
                     <h2 class="font-semibold text-blue-800 dark:text-blue-400 text-sm uppercase tracking-wide">Film Setup</h2>
                     <input type="text" id="filmName" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" placeholder="Film Name">
@@ -58,6 +57,14 @@
                         <input type="number" id="exposures" placeholder="Exposures" class="border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                     </div>
                     <button id="saveFilmBtn" type="button" class="w-full bg-blue-600 text-white py-2 rounded font-medium hover:bg-blue-700">Save as Film Profile</button>
+                </div>
+            </div>
+
+            <div id="labTabContent" class="space-y-6 hidden">
+                <div class="bg-teal-50 dark:bg-teal-900/20 p-4 rounded-lg border border-teal-100 dark:border-teal-800/30">
+                    <label class="block text-sm font-semibold text-teal-800 dark:text-teal-400 mb-2 uppercase tracking-wide">Lab Management</label>
+                    <select id="savedLabsDropdown" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 mb-2 text-sm"><option value="">-- Load a saved lab --</option></select>
+                    <button id="deleteLabBtn" type="button" class="w-full bg-red-500 hover:bg-red-600 text-white py-1 rounded text-sm font-bold">Delete Selected Lab</button>
                 </div>
 
                 <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg space-y-3">
@@ -75,39 +82,32 @@
                         <option value="per_stop">Per Stop</option>
                         <option value="flat">Flat Fee</option>
                     </select>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" id="onceOffFee" step="0.01" placeholder="Once-off Fee" class="border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                        <input type="number" id="perRollFee" step="0.01" placeholder="Per-roll Fee" class="border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                    </div>
                     <button id="saveLabBtn" type="button" class="w-full bg-green-600 text-white py-2 rounded font-medium hover:bg-green-700">Save as Lab Profile</button>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg space-y-2">
-                    <h2 class="font-semibold text-orange-800 dark:text-orange-400 text-sm uppercase tracking-wide">Once-off Fee</h2>
-                    <input type="number" id="onceOffFee" step="0.01" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+            <div id="settingsTabContent" class="space-y-6 hidden">
+                <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3">
+                    <h2 class="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide">Export Data</h2>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Downloads <code>films.yaml</code> and <code>labs.yml</code> with all your saved profiles, in the same format the app reads them in — so they can be dropped straight back into the project's repo with no editing.</p>
+                    <button id="exportBtn" type="button" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-medium">Export as YAML</button>
                 </div>
-                <div class="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg space-y-2">
-                    <h2 class="font-semibold text-yellow-800 dark:text-yellow-400 text-sm uppercase tracking-wide">Per-roll Fee</h2>
-                    <input type="number" id="perRollFee" step="0.01" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3">
+                    <h2 class="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide">Import Data</h2>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Select one or both YAML files (<code>films.yaml</code> / <code>labs.yml</code>) to load them as saved profiles.</p>
+                    <button id="importBtn" type="button" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-medium">Import YAML</button>
+                    <input type="file" id="importFile" class="hidden" accept=".yaml,.yml" multiple>
                 </div>
             </div>
         </form>
 
         <div class="mt-8 text-center bg-gray-50 dark:bg-gray-700/50 p-6 rounded-lg border border-gray-200 dark:border-gray-600">
-            <div class="grid grid-cols-2 gap-8">
-                <div><p class="text-sm text-gray-500 uppercase tracking-widest">Per Photo</p><div class="text-5xl font-bold text-gray-900 dark:text-white mt-2" id="costPerPhoto">--</div></div>
-                <div><p class="text-sm text-gray-500 uppercase tracking-widest">Per Roll</p><div class="text-5xl font-bold text-gray-900 dark:text-white mt-2" id="costPerRoll">--</div></div>
-            </div>
-            <p class="text-sm text-gray-500 mt-6" id="breakdown">Please enter Film Cost & Developing Cost</p>
-
-            <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-600 text-left">
-                <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-3 text-center">Cheapest Lab For This Roll</h3>
-                <div id="labComparison" class="space-y-1.5"></div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-gray-200 dark:border-gray-600">
-                <button id="exportBtn" type="button" class="bg-gray-500 hover:bg-gray-600 text-white py-2 rounded">Export Data</button>
-                <button id="importBtn" type="button" class="bg-gray-500 hover:bg-gray-600 text-white py-2 rounded">Import Data</button>
-                <input type="file" id="importFile" class="hidden" accept=".json">
-            </div>
+            <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-3 text-center">Cheapest Lab For This Roll</h3>
+            <div id="labComparison" class="space-y-1.5 text-left"></div>
         </div>
 
         <p class="mt-8 text-center text-xs text-gray-500 dark:text-gray-500">
@@ -137,6 +137,32 @@
 
         updateThemeIcons();
 
+        // ---------- Tab switching ----------
+        const tabs = {
+            film: { btn: document.getElementById('tabFilmBtn'), content: document.getElementById('filmTabContent') },
+            lab: { btn: document.getElementById('tabLabBtn'), content: document.getElementById('labTabContent') },
+            settings: { btn: document.getElementById('tabSettingsBtn'), content: document.getElementById('settingsTabContent') }
+        };
+
+        function setTabActive(btn, active) {
+            btn.classList.toggle('border-blue-600', active);
+            btn.classList.toggle('text-blue-600', active);
+            btn.classList.toggle('dark:text-blue-400', active);
+            btn.classList.toggle('border-transparent', !active);
+            btn.classList.toggle('text-gray-400', !active);
+            btn.classList.toggle('dark:text-gray-500', !active);
+        }
+
+        function switchTab(tab) {
+            Object.keys(tabs).forEach(key => {
+                const active = key === tab;
+                tabs[key].content.classList.toggle('hidden', !active);
+                setTabActive(tabs[key].btn, active);
+            });
+        }
+
+        Object.keys(tabs).forEach(key => tabs[key].btn.addEventListener('click', () => switchTab(key)));
+
         // ---------- Default profiles (loaded from films.yaml / labs.yml) ----------
         let defaultFilms = {};
         let defaultLabs = {};
@@ -160,48 +186,18 @@
             }
         }
 
-        // ---------- Cost calculation ----------
-        function calculateCost() {
-            const filmCost = parseFloat(document.getElementById('filmCost').value) || 0;
-            const devCost = parseFloat(document.getElementById('devCost').value) || 0;
-            const rolls = parseInt(document.getElementById('rolls').value) || 1;
-            const exposures = parseInt(document.getElementById('exposures').value) || 1;
-            const boxSpeed = parseInt(document.getElementById('boxSpeed').value) || 0;
-            const devSpeed = parseInt(document.getElementById('devSpeed').value) || 0;
-            const scanCost = parseFloat(document.getElementById('scanCost').value) || 0;
-            const printCost = parseFloat(document.getElementById('printCost').value) || 0;
-            const onceOffFee = parseFloat(document.getElementById('onceOffFee').value) || 0;
-            const perRollFee = parseFloat(document.getElementById('perRollFee').value) || 0;
-
-            let activePushPullCost = 0;
-            let pushPullText = "";
-
-            if (boxSpeed > 0 && devSpeed > 0 && boxSpeed !== devSpeed) {
-                const basePushPull = parseFloat(document.getElementById('pushPullCost').value) || 0;
-                const pushPullType = document.getElementById('pushPullType').value;
-                let stops = Math.round(Math.abs(Math.log2(devSpeed / boxSpeed)) * 10) / 10;
-                activePushPullCost = (pushPullType === 'per_stop') ? (basePushPull * stops) : basePushPull;
-                pushPullText = ` | ${devSpeed > boxSpeed ? "Pushed" : "Pulled"} ${stops} stop(s)`;
-            }
-
-            const labCostPerRoll = devCost + activePushPullCost + scanCost + printCost + perRollFee;
-            const grandTotal = filmCost + (labCostPerRoll * rolls) + onceOffFee;
-            const totalPhotos = exposures * rolls;
-
-            document.getElementById('costPerPhoto').innerText = `$${(totalPhotos > 0 ? grandTotal / totalPhotos : 0).toFixed(2)}`;
-            document.getElementById('costPerRoll').innerText = `$${(rolls > 0 ? grandTotal / rolls : 0).toFixed(2)}`;
-            document.getElementById('breakdown').innerText = `Total Cost: $${grandTotal.toFixed(2)} | Photos: ${totalPhotos}${pushPullText}`;
-
-            updateLabComparison();
-        }
-
         // ---------- Cheapest lab comparison ----------
         // Compares every saved lab profile (built-in + custom) against the current
         // Box Speed / Dev Speed, since push/pull cost — not just base dev price —
-        // can flip which lab is actually cheapest for a given roll.
+        // can flip which lab is actually cheapest for a given roll. Sorted by
+        // cost per photo since that's the number that actually matters.
         function updateLabComparison() {
             const boxSpeed = parseInt(document.getElementById('boxSpeed').value) || 0;
             const devSpeed = parseInt(document.getElementById('devSpeed').value) || 0;
+            const filmCost = parseFloat(document.getElementById('filmCost').value) || 0;
+            const rolls = parseInt(document.getElementById('rolls').value) || 1;
+            const exposures = parseInt(document.getElementById('exposures').value) || 1;
+            const totalPhotos = exposures * rolls;
             const container = document.getElementById('labComparison');
 
             const allLabs = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') };
@@ -218,6 +214,7 @@
                 const scanCost = parseFloat(lab.scanCost) || 0;
                 const printCost = parseFloat(lab.printCost) || 0;
                 const perRollFee = parseFloat(lab.perRollFee) || 0;
+                const onceOffFee = parseFloat(lab.onceOffFee) || 0;
                 const basePushPull = parseFloat(lab.pushPullCost) || 0;
                 const pushPullType = lab.pushPullType || 'per_stop';
 
@@ -227,9 +224,13 @@
                     activePushPullCost = (pushPullType === 'per_stop') ? (basePushPull * stops) : basePushPull;
                 }
 
-                const perRoll = devCost + activePushPullCost + scanCost + printCost + perRollFee;
-                return { name, perRoll, stops };
-            }).sort((a, b) => a.perRoll - b.perRoll);
+                const labCostPerRoll = devCost + activePushPullCost + scanCost + printCost + perRollFee;
+                const grandTotal = filmCost + (labCostPerRoll * rolls) + onceOffFee;
+                const costPerRoll = rolls > 0 ? grandTotal / rolls : 0;
+                const costPerPhoto = totalPhotos > 0 ? grandTotal / totalPhotos : 0;
+
+                return { name, stops, devCostPerRoll: labCostPerRoll, costPerRoll, costPerPhoto };
+            }).sort((a, b) => a.costPerPhoto - b.costPerPhoto);
 
             const currentLabName = document.getElementById('labName').value.trim();
 
@@ -237,14 +238,18 @@
                 const isCheapest = i === 0;
                 const isCurrent = r.name === currentLabName;
                 const stopsLabel = r.stops > 0 ? ` <span class="text-xs text-gray-400">(${r.stops} stop push/pull)</span>` : '';
-                return `<div class="flex justify-between items-center px-3 py-2 rounded-lg text-sm ${isCheapest ? 'bg-green-100 dark:bg-green-900/30' : 'bg-white dark:bg-gray-800/50'} ${isCurrent ? 'ring-2 ring-blue-400' : ''}">
+                return `<div class="flex justify-between items-start px-3 py-2 rounded-lg text-sm ${isCheapest ? 'bg-green-100 dark:bg-green-900/30' : 'bg-white dark:bg-gray-800/50'} ${isCurrent ? 'ring-2 ring-blue-400' : ''}">
                     <span class="${isCheapest ? 'font-semibold text-green-800 dark:text-green-400' : 'text-gray-700 dark:text-gray-300'}">${isCheapest ? '🏆 ' : ''}${r.name}${stopsLabel}</span>
-                    <span class="font-mono ${isCheapest ? 'font-semibold text-green-800 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}">$${r.perRoll.toFixed(2)}/roll</span>
+                    <span class="font-mono text-right leading-tight ${isCheapest ? 'text-green-800 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}">
+                        <div class="font-semibold">$${r.costPerPhoto.toFixed(2)}/photo</div>
+                        <div class="text-xs opacity-80">$${r.devCostPerRoll.toFixed(2)}/dev</div>
+                        <div class="text-xs opacity-80">$${r.costPerRoll.toFixed(2)}/total</div>
+                    </span>
                 </div>`;
             }).join('');
         }
 
-        document.querySelectorAll('input, select').forEach(i => i.addEventListener('input', calculateCost));
+        document.querySelectorAll('input, select').forEach(i => i.addEventListener('input', updateLabComparison));
 
         // Dev Speed defaults to Box Speed unless the user has explicitly typed a different value
         let devSpeedOverridden = false;
@@ -279,7 +284,7 @@
             document.getElementById('filmCost').value = p.filmCost || '';
             document.getElementById('rolls').value = p.rolls || '1';
             document.getElementById('exposures').value = p.exposures || '36';
-            calculateCost();
+            updateLabComparison();
         });
 
         document.getElementById('savedLabsDropdown').addEventListener('change', (e) => {
@@ -293,7 +298,7 @@
             document.getElementById('pushPullType').value = p.pushPullType || 'per_stop';
             document.getElementById('onceOffFee').value = p.onceOffFee || 0;
             document.getElementById('perRollFee').value = p.perRollFee || 0;
-            calculateCost();
+            updateLabComparison();
         });
 
         // ---------- Save profiles ----------
@@ -359,37 +364,96 @@
             updateLabDropdown();
         });
 
-        // ---------- Export / Import ----------
-        document.getElementById('exportBtn').addEventListener('click', () => {
-            const data = {
-                films: JSON.parse(localStorage.getItem('filmProfiles') || '{}'),
-                labs: JSON.parse(localStorage.getItem('labProfiles') || '{}')
-            };
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        // ---------- Export / Import (YAML, matching films.yaml / labs.yml schema) ----------
+        function buildFilmsArray() {
+            const saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
+            const all = { ...defaultFilms, ...saved };
+            return Object.values(all).map(f => ({
+                name: f.name,
+                boxSpeed: Number(f.boxSpeed) || 0,
+                rolls: Number(f.rolls) || 1,
+                exposures: Number(f.exposures) || 36,
+                filmCost: Number(f.filmCost) || 0
+            }));
+        }
+
+        function buildLabsArray() {
+            const saved = JSON.parse(localStorage.getItem('labProfiles') || '{}');
+            const all = { ...defaultLabs, ...saved };
+            return Object.values(all).map(l => ({
+                name: l.name,
+                devCost: Number(l.devCost) || 0,
+                scanCost: Number(l.scanCost) || 0,
+                printCost: Number(l.printCost) || 0,
+                pushPullCost: Number(l.pushPullCost) || 0,
+                pushPullType: l.pushPullType || 'per_stop',
+                onceOffFee: Number(l.onceOffFee) || 0,
+                perRollFee: Number(l.perRollFee) || 0
+            }));
+        }
+
+        function downloadYaml(filename, arr) {
+            const yamlText = jsyaml.dump(arr, { indent: 2 });
+            const blob = new Blob([yamlText], { type: 'text/yaml' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = 'calculator_data.json';
+            a.download = filename;
             a.click();
+            URL.revokeObjectURL(a.href);
+        }
+
+        document.getElementById('exportBtn').addEventListener('click', () => {
+            downloadYaml('films.yaml', buildFilmsArray());
+            downloadYaml('labs.yml', buildLabsArray());
         });
 
         document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
         document.getElementById('importFile').addEventListener('change', (e) => {
-            if (!e.target.files.length) return;
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                try {
-                    const data = JSON.parse(event.target.result);
-                    if (data.films) localStorage.setItem('filmProfiles', JSON.stringify(data.films));
-                    if (data.labs) localStorage.setItem('labProfiles', JSON.stringify(data.labs));
-                    updateFilmDropdown();
-                    updateLabDropdown();
-                    alert('Data imported!');
-                } catch (err) {
-                    alert('Could not read that file — is it a valid export from this app?');
+            const files = Array.from(e.target.files || []);
+            if (!files.length) return;
+
+            let filmsImported = 0, labsImported = 0, errors = 0;
+
+            const readFile = (file) => new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const parsed = jsyaml.load(event.target.result);
+                        if (!Array.isArray(parsed) || parsed.length === 0) throw new Error('empty or not a list');
+
+                        const isLabFile = 'devCost' in parsed[0];
+                        const isFilmFile = 'boxSpeed' in parsed[0] || 'filmCost' in parsed[0];
+
+                        if (isLabFile) {
+                            let saved = JSON.parse(localStorage.getItem('labProfiles') || '{}');
+                            parsed.forEach(l => { if (l.name) { saved[l.name] = l; labsImported++; } });
+                            localStorage.setItem('labProfiles', JSON.stringify(saved));
+                        } else if (isFilmFile) {
+                            let saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
+                            parsed.forEach(f => { if (f.name) { saved[f.name] = f; filmsImported++; } });
+                            localStorage.setItem('filmProfiles', JSON.stringify(saved));
+                        } else {
+                            errors++;
+                        }
+                    } catch (err) {
+                        errors++;
+                    }
+                    resolve();
+                };
+                reader.onerror = () => { errors++; resolve(); };
+                reader.readAsText(file);
+            });
+
+            Promise.all(files.map(readFile)).then(() => {
+                updateFilmDropdown();
+                updateLabDropdown();
+                if (errors > 0 && filmsImported === 0 && labsImported === 0) {
+                    alert('Could not read those files — are they valid films.yaml / labs.yml files?');
+                } else {
+                    alert(`Imported ${filmsImported} film profile(s) and ${labsImported} lab profile(s).`);
                 }
-            };
-            reader.readAsText(e.target.files[0]);
-            e.target.value = '';
+                e.target.value = '';
+            });
         });
 
         loadDefaults();
