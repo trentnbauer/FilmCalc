@@ -5,7 +5,7 @@ A lightweight, responsive, mobile-friendly web app for analog photographers to w
 ## Features
 
 - **Cost breakdown** — Calculates cost per photo, dev-only cost per roll, and total cost per roll (film stock + developing), based on film cost, dev/scan/print pricing, push/pull fees, and once-off or per-roll surcharges.
-- **Cheapest lab comparison** — Every saved lab profile is automatically compared against your current film and push/pull settings, sorted by cost per photo. A lab that's cheaper at box speed isn't always cheaper once you push 2 stops — this handles that. Labs marked as offering high-res scans are visually flagged with a "HI-RES" badge.
+- **Labs for this roll** — Every saved lab profile is automatically compared against your current film and push/pull settings, sorted by cost per photo. A lab that's cheaper at box speed isn't always cheaper once you push 2 stops — this handles that. Each lab shows its turnaround time (Next Day / Same Week / Longer), and labs offering high-res scans get a "HI-RES" badge. Filter toggles let you narrow the list to Next Day and/or Hi-Res labs only.
 - **Push/pull aware** — Automatically works out stops pushed or pulled from Box Speed vs. Dev Speed (using log2 of the ratio), and applies each lab's push/pull fee — either a flat fee or a per-stop rate.
 - **Profile management** — Save your own film stocks and lab pricing as reusable profiles, stored locally in your browser. Built-in defaults come from `films.yaml` and `labs.yaml`, which ship with the repo and can be edited directly.
 - **YAML export/import** — Export your saved profiles as `films.yaml` / `labs.yaml` — the exact format the app reads on load — so they can be committed straight back into a self-hosted instance with no manual editing. Import supports loading one or both files back in.
@@ -20,28 +20,23 @@ The live calculator is hosted at: **https://filmcalc.trentbauer.com**
 
 ### Self-hosting with Docker
 
-This repo includes a `Dockerfile`, `docker-compose.yml`, and a GitHub Action that builds and publishes an image to GitHub Container Registry (GHCR) on every push to `main`.
-
-**Option 1 — build locally:**
-
-```bash
-git clone https://github.com/trentnbauer/FilmCalc.git
-cd FilmCalc
-docker compose up -d --build
-```
-
-**Option 2 — use the published image:**
-
-Edit `docker-compose.yml` and swap the `build: .` line for:
-
 ```yaml
-image: ghcr.io/trentnbauer/filmcalc:latest
-```
-
-Then run:
-
-```bash
-docker compose up -d
+services:
+  filmcalc:
+    image: ghcr.io/trentnbauer/filmcalc:latest
+    ports:
+      - "8080:80"
+    # Optional: bind-mount your own films.yaml / labs.yaml so you can edit your
+    # default film stocks and labs without needing to rebuild or republish the image.
+    # volumes:
+    #   - ./films.yaml:/usr/share/nginx/html/films.yaml:ro
+    #   - ./labs.yaml:/usr/share/nginx/html/labs.yaml:ro
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 ```
 
 The app will be available at `http://localhost:8080`.
@@ -63,14 +58,13 @@ Edit `films.yaml` and `labs.yaml` in the project root to change the film stocks 
 ```yaml
 - name: "Irohas Melbourne"
   devCost: 17
-  scanCost: 0
-  printCost: 0
   pushPullCost: 5
-  pushPullType: "per_stop"   # or "flat"
-  highResScan: true          # marks this lab as offering high-res scans
+  pushPullType: "per_stop"    # or "flat"
+  turnaroundTime: "next_day"  # "next_day" | "same_week" | "longer"
+  highResScan: true           # marks this lab as offering high-res scans
 ```
 
-If you're bind-mounting these files instead of rebuilding the image, uncomment the `volumes:` section in `docker-compose.yml`.
+If you'd rather use your own default film stocks and labs without waiting on a new image publish, uncomment the `volumes:` section in `docker-compose.yml` to bind-mount your own `films.yaml` / `labs.yaml` over the ones baked into the image.
 
 ## Built With
 
