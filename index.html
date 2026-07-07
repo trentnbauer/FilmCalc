@@ -105,6 +105,7 @@
                     <div class="bg-blue-100/60 dark:bg-blue-900/30 rounded-lg p-3 text-center">
                         <p class="text-xs text-blue-700 dark:text-blue-400 uppercase tracking-wide">Film Cost Per Photo <span class="normal-case font-normal opacity-75">(excl. lab fees)</span></p>
                         <p id="filmOnlyCostPerPhoto" class="text-xl font-bold text-blue-800 dark:text-blue-300 mt-1">--</p>
+                        <div id="filmSpeedComparison"></div>
                     </div>
                     <button id="saveFilmBtn" type="button" class="w-full bg-blue-600 text-white py-2 rounded font-medium hover:bg-blue-700">Save as Film Profile</button>
                 </div>
@@ -510,18 +511,68 @@
         }
 
         // ---------- Film-only cost per photo (excludes lab fees) ----------
+        function computeCostPerPhoto(cost, rolls, exposures) {
+            const totalPhotos = (parseInt(rolls) || 0) * (parseInt(exposures) || 0);
+            return totalPhotos > 0 ? (parseFloat(cost) || 0) / totalPhotos : null;
+        }
+
         function updateFilmOnlyCost() {
-            const filmCost = parseFloat(document.getElementById('filmCost').value) || 0;
-            const rolls = parseInt(document.getElementById('rolls').value) || 0;
-            const exposures = parseInt(document.getElementById('exposures').value) || 0;
-            const totalPhotos = rolls * exposures;
-            const el = document.getElementById('filmOnlyCostPerPhoto');
-            el.textContent = totalPhotos > 0 ? `$${(filmCost / totalPhotos).toFixed(2)}` : '--';
+            const costPerPhoto = computeCostPerPhoto(
+                document.getElementById('filmCost').value,
+                document.getElementById('rolls').value,
+                document.getElementById('exposures').value
+            );
+            document.getElementById('filmOnlyCostPerPhoto').textContent = costPerPhoto !== null ? `$${costPerPhoto.toFixed(2)}` : '--';
+        }
+
+        // Compares this film's cost per photo against every other saved film
+        // profile that shares the same Box Speed, since that's the fairest
+        // like-for-like comparison (a 400 vs 800 film isn't really competing).
+        function updateFilmSpeedComparison() {
+            const container = document.getElementById('filmSpeedComparison');
+            const boxSpeed = parseInt(document.getElementById('boxSpeed').value) || 0;
+            const currentCost = computeCostPerPhoto(
+                document.getElementById('filmCost').value,
+                document.getElementById('rolls').value,
+                document.getElementById('exposures').value
+            );
+
+            if (!boxSpeed || currentCost === null) {
+                container.innerHTML = '';
+                return;
+            }
+
+            const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
+            const currentName = document.getElementById('filmName').value.trim();
+
+            const others = Object.values(allFilms)
+                .filter(f => (parseInt(f.boxSpeed) || 0) === boxSpeed && f.name !== currentName)
+                .map(f => ({ name: f.name, costPerPhoto: computeCostPerPhoto(f.filmCost, f.rolls, f.exposures) }))
+                .filter(f => f.costPerPhoto !== null && f.costPerPhoto > 0);
+
+            if (others.length === 0) {
+                container.innerHTML = `<p class="text-xs text-gray-400 mt-2">No other saved ${boxSpeed}ISO films to compare yet</p>`;
+                return;
+            }
+
+            const cheapestOther = others.reduce((a, b) => (a.costPerPhoto <= b.costPerPhoto ? a : b));
+
+            if (currentCost <= cheapestOther.costPerPhoto) {
+                container.innerHTML = `<p class="text-xs text-green-700 dark:text-green-400 mt-2 font-medium">🏆 Cheapest saved ${boxSpeed}ISO film</p>`;
+            } else {
+                const diff = currentCost - cheapestOther.costPerPhoto;
+                container.innerHTML = `<p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    <span class="font-semibold text-blue-700 dark:text-blue-400">${cheapestOther.name}</span> is cheaper at $${cheapestOther.costPerPhoto.toFixed(2)}/photo
+                    <span class="block opacity-75">(+$${diff.toFixed(2)}/photo vs this one)</span>
+                </p>`;
+            }
         }
 
         document.querySelectorAll('input, select').forEach(i => i.addEventListener('input', updateLabComparison));
         document.querySelectorAll('input, select').forEach(i => i.addEventListener('input', updateFilmOnlyCost));
+        document.querySelectorAll('input, select').forEach(i => i.addEventListener('input', updateFilmSpeedComparison));
         updateFilmOnlyCost();
+        updateFilmSpeedComparison();
 
         // Dev Speed defaults to Box Speed unless the user has explicitly typed a different value
         let devSpeedOverridden = false;
@@ -568,6 +619,7 @@
             document.getElementById('exposures').value = p.exposures || '36';
             updateLabComparison();
             updateFilmOnlyCost();
+            updateFilmSpeedComparison();
         });
 
         document.getElementById('savedLabsDropdown').addEventListener('change', (e) => {
