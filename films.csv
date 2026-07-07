@@ -1,6 +1,6 @@
-name,iso,rolls,exposures,devCost,pushPullCost,scanCost,printCost
-Kodak Portra 400,400,1,36,0,0,0,0
-Kodak Gold 200,200,1,36,0,0,0,0
-Ilford HP5 Plus,400,1,36,0,0,0,0
-Cinestill 800T,800,1,36,0,0,0,0
-Fujifilm C200,200,1,36,0,0,0,0
+brand,name,boxSpeed,rolls,exposures,devCost,pushPullCost,scanCost,printCost
+Kodak,Portra,400,1,36,0,0,0,0
+Kodak,Gold,200,1,36,0,0,0,0
+Ilford,HP5 Plus,400,1,36,0,0,0,0
+CineStill,800T,800,1,36,0,0,0,0
+Fujifilm,C200,200,1,36,0,0,0,0
