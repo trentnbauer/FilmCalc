@@ -125,24 +125,26 @@
                             <input type="number" id="devCost" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                         </div>
                         <div>
+                            <label for="turnaroundTime" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Turnaround Time</label>
+                            <select id="turnaroundTime" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                                <option value="next_day">Next Day</option>
+                                <option value="same_week">Same Week</option>
+                                <option value="longer">Longer</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
                             <label for="pushPullCost" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Push/Pull Fee ($)</label>
                             <input type="number" id="pushPullCost" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                         </div>
-                    </div>
-                    <div>
-                        <label for="pushPullType" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Push/Pull Fee Type</label>
-                        <select id="pushPullType" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                            <option value="per_stop">Per Stop</option>
-                            <option value="flat">Flat Fee</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="turnaroundTime" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Turnaround Time</label>
-                        <select id="turnaroundTime" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                            <option value="next_day">Next Day</option>
-                            <option value="same_week">Same Week</option>
-                            <option value="longer">Longer</option>
-                        </select>
+                        <div>
+                            <label for="pushPullType" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Push/Pull Fee Type</label>
+                            <select id="pushPullType" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                                <option value="per_stop">Per Stop</option>
+                                <option value="flat">Flat Fee</option>
+                            </select>
+                        </div>
                     </div>
                     <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                         <input type="checkbox" id="highResScan" class="rounded border-gray-300 dark:border-gray-600 text-green-600 focus:ring-green-500">
