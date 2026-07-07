@@ -1,0 +1,14 @@
+services:
+  app:
+     image: ghcr.io/trentnbauer/filmcalc:latest
+    ports:
+      - "8080:80"
+     volumes:
+       - ./films.yaml:/usr/share/nginx/html/films.yaml:ro
+       - ./labs.yml:/usr/share/nginx/html/labs.yml:ro
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
