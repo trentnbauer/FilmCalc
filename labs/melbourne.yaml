@@ -7,14 +7,6 @@ labs:
         pushPullType: per_stop
         turnaroundTime: next_day
         highResScan: true
-  - name: Obscura Ballarat
-    hidden: false
-    services:
-      - devCost: 35
-        pushPullCost: 0
-        pushPullType: per_stop
-        turnaroundTime: longer
-        highResScan: false
   - name: Walkens Melbourne
     hidden: false
     services:
