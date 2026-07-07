@@ -21,7 +21,7 @@
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 md:p-8 max-w-md w-full relative transition-colors duration-200">
         
         <button id="themeToggle" class="absolute top-6 right-6 p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Toggle Dark Mode">
-            <svg id="themeToggleLightIcon" class="hidden w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4.22 3.22a1 1 0 011.415 0l.708.708a1 1 0 01-1.414 1.414l-.708-.708a1 1 0 010-1.414zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM14.22 15.78a1 1 0 010 1.415l-.708.708a1 1 0 01-1.414-1.414l.708-.708a1 1 0 011.415 0zM10 16a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-4.22-3.22a1 1 0 01-1.415 0l-.708-.708a1 1 0 011.414-1.414l.708.708a1 1 0 010 1.415zM2 10a1 1 0 011-1h1a1 1 0 110 2H3a1 1 0 01-1-1zm3.22-4.22a1 1 0 010-1.415l.708-.708a1 1 0 011.414 1.414l-.708.708a1 1 0 01-1.415 0zM10 5a5 5 0 100 10 5 5 0 000-10z" clip-rule="evenodd"></path></svg>
+            <svg id="themeToggleLightIcon" class="hidden w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4.22 3.22a1 1 0 011.415 0l.708.708a1 1 0 01-1.414 1.414l-.708-.708a1 1 0 010-1.414zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM14.22 15.78a1 1 0 010 1.415l-.708.708a1 1 0 01-1.414-1.414l-.708-.708a1 1 0 011.415 0zM10 16a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-4.22-3.22a1 1 0 01-1.415 0l-.708-.708a1 1 0 011.414-1.414l.708.708a1 1 0 010 1.415zM2 10a1 1 0 011-1h1a1 1 0 110 2H3a1 1 0 01-1-1zm3.22-4.22a1 1 0 010-1.415l.708-.708a1 1 0 011.414 1.414l-.708.708a1 1 0 01-1.415 0zM10 5a5 5 0 100 10 5 5 0 000-10z" clip-rule="evenodd"></path></svg>
             <svg id="themeToggleDarkIcon" class="hidden w-5 h-5 text-gray-700" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
         </button>
 
@@ -30,30 +30,37 @@
         <form id="calculatorForm" class="space-y-4">
             
             <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-100 dark:border-purple-800/30">
-                <label class="block text-sm font-semibold text-purple-800 dark:text-purple-400 mb-2 uppercase tracking-wide">Saved Film Profiles</label>
+                <label class="block text-sm font-semibold text-purple-800 dark:text-purple-400 mb-2 uppercase tracking-wide">Load Saved Film</label>
                 <div class="flex gap-2">
                     <select id="savedFilmsDropdown" class="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-purple-500 outline-none transition-colors">
                         <option value="">-- Loading films... --</option>
                     </select>
-                    <button id="saveFilmBtn" type="button" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded shadow transition-colors font-medium">Save</button>
+                    <button id="deleteFilmBtn" type="button" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded shadow transition-colors font-bold">✕</button>
                 </div>
             </div>
 
             <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg space-y-3 transition-colors duration-200">
                 <h2 class="font-semibold text-blue-800 dark:text-blue-400 text-sm uppercase tracking-wide">The Film</h2>
-                <div class="grid grid-cols-3 gap-4">
-                    <div class="col-span-2">
-                        <label class="block text-sm font-medium mb-1 dark:text-gray-300">Film Name</label>
-                        <input type="text" id="filmName" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-colors" placeholder="e.g. Portra">
+                
+                <div>
+                    <label class="block text-sm font-medium mb-1 dark:text-gray-300">Film Name</label>
+                    <input type="text" id="filmName" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-colors" placeholder="e.g. Kodak Portra 400">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1 dark:text-gray-300">Box Speed</label>
+                        <input type="number" id="boxSpeed" min="1" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-colors" placeholder="400">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-1 dark:text-gray-300">ISO</label>
-                        <input type="number" id="filmIso" min="1" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-colors" placeholder="400">
+                        <label class="block text-sm font-medium mb-1 dark:text-gray-300">Dev Speed <span class="text-xs font-normal text-gray-500 block">(leave same as box if unsure)</span></label>
+                        <input type="number" id="devSpeed" min="1" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-colors" placeholder="400">
                     </div>
                 </div>
+
                 <div>
                     <label class="block text-sm font-medium mb-1 dark:text-gray-300">Total cost of film pack (incl. postage)</label>
-                    <input type="number" id="filmCost" step="0.01" min="0" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-colors" placeholder="e.g. 45.00" required>
+                    <input type="number" id="filmCost" step="0.01" min="0" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-colors" placeholder="0.00" required>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
@@ -65,15 +72,19 @@
                         <input type="number" id="exposures" min="1" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-colors" value="36" required>
                     </div>
                 </div>
+
+                <div class="pt-4 mt-4 border-t border-blue-200 dark:border-blue-800 flex justify-end">
+                    <button id="saveFilmBtn" type="button" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded shadow transition-colors font-medium">Save Profile</button>
+                </div>
             </div>
 
             <div class="bg-teal-50 dark:bg-teal-900/20 p-4 rounded-lg border border-teal-100 dark:border-teal-800/30">
-                <label class="block text-sm font-semibold text-teal-800 dark:text-teal-400 mb-2 uppercase tracking-wide">Saved Lab Profiles</label>
+                <label class="block text-sm font-semibold text-teal-800 dark:text-teal-400 mb-2 uppercase tracking-wide">Load Saved Lab</label>
                 <div class="flex gap-2">
                     <select id="savedLabsDropdown" class="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-teal-500 outline-none transition-colors">
                         <option value="">-- Load a saved lab --</option>
                     </select>
-                    <button id="saveLabBtn" type="button" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded shadow transition-colors font-medium">Save</button>
+                    <button id="deleteLabBtn" type="button" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded shadow transition-colors font-bold">✕</button>
                 </div>
             </div>
 
@@ -86,11 +97,7 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium mb-1 dark:text-gray-300">Developing</label>
-                        <input type="number" id="devCost" step="0.01" min="0" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-green-500 outline-none transition-colors" value="0">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1 dark:text-gray-300">Push / Pull</label>
-                        <input type="number" id="pushPullCost" step="0.01" min="0" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-green-500 outline-none transition-colors" value="0">
+                        <input type="number" id="devCost" step="0.01" min="0" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-green-500 outline-none transition-colors" placeholder="0.00">
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1 dark:text-gray-300">Scanning</label>
@@ -100,27 +107,57 @@
                         <label class="block text-sm font-medium mb-1 dark:text-gray-300">Printing</label>
                         <input type="number" id="printCost" step="0.01" min="0" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-green-500 outline-none transition-colors" value="0">
                     </div>
+                    <div class="col-span-2 md:col-span-1">
+                        <label class="block text-sm font-medium mb-1 dark:text-gray-300">Push / Pull Fee</label>
+                        <div class="flex gap-2">
+                            <input type="number" id="pushPullCost" step="0.01" min="0" class="w-1/2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-green-500 outline-none transition-colors" value="0">
+                            <select id="pushPullType" class="w-1/2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-green-500 outline-none transition-colors">
+                                <option value="per_stop" selected>Per Stop</option>
+                                <option value="flat">Flat Fee</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="pt-4 mt-2 border-t border-green-200 dark:border-green-800">
+                    <label class="block text-sm font-medium mb-1 dark:text-gray-300">Once-off Fee</label>
+                    <input type="number" id="onceOffFee" step="0.01" min="0" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-green-500 outline-none transition-colors" value="0">
+                </div>
+
+                <div class="pt-4 mt-4 border-t border-green-200 dark:border-green-800 flex justify-end">
+                    <button id="saveLabBtn" type="button" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded shadow transition-colors font-medium">Save Profile</button>
                 </div>
             </div>
         </form>
 
         <div class="mt-8 text-center bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border border-gray-200 dark:border-gray-600 transition-colors duration-200">
-            <p class="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">True Cost Per Photo</p>
-            <div class="text-4xl font-bold text-gray-900 dark:text-white" id="costPerPhoto">0.00</div>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-2" id="breakdown">Total Cost: 0.00 | Total Photos: 0</p>
+            <div class="grid grid-cols-2 gap-4 my-2">
+                <div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Per Photo</p>
+                    <div class="text-4xl font-bold text-gray-900 dark:text-white" id="costPerPhoto">--</div>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Per Roll</p>
+                    <div class="text-4xl font-bold text-gray-900 dark:text-white" id="costPerRoll">--</div>
+                </div>
+            </div>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-4 pt-4 border-t border-gray-200 dark:border-gray-600" id="breakdown">Please enter Film Cost & Developing Cost</p>
         </div>
+
+        <p class="mt-8 text-center text-xs text-gray-400 dark:text-gray-600">
+            Vibe coded by Gemini | <a href="https://trentbauer.com" class="hover:text-blue-500 underline transition-colors">trentbauer.com</a>
+        </p>
     </div>
 
     <script>
         // --- State ---
         let defaultFilms = {};
 
-        // --- CSV Loader (Films) ---
+        // --- CSV Loader ---
         async function loadCSV() {
             try {
                 const response = await fetch('films.csv');
                 if (!response.ok) throw new Error("Could not fetch CSV");
-                
                 const csvText = await response.text();
                 const lines = csvText.split('\n');
                 const headers = lines[0].split(',').map(h => h.trim());
@@ -129,212 +166,153 @@
                     if (!lines[i].trim()) continue; 
                     const values = lines[i].split(',');
                     const film = {};
-                    
                     for (let j = 0; j < headers.length; j++) {
                         let val = values[j] ? values[j].trim() : '';
-                        if (headers[j] !== 'name') {
-                            val = parseFloat(val) || 0; 
-                        }
+                        if (headers[j] !== 'name') val = parseFloat(val) || 0; 
                         film[headers[j]] = val;
                     }
                     if (film.name) defaultFilms[film.name] = film;
                 }
-            } catch (error) {
-                console.error("Error loading films.csv, falling back to empty defaults.", error);
-            } finally {
-                updateFilmDropdown();
-            }
+            } catch (error) { console.error("CSV Load Error:", error); } 
+            finally { updateFilmDropdown(); }
         }
 
-        // --- Calculator Logic ---
+        // --- Calculator ---
         function calculateCost() {
-            const filmCost = parseFloat(document.getElementById('filmCost').value) || 0;
+            const filmCost = parseFloat(document.getElementById('filmCost').value);
+            const devCost = parseFloat(document.getElementById('devCost').value);
+            
+            if (isNaN(filmCost) || isNaN(devCost)) {
+                document.getElementById('costPerPhoto').innerText = "--";
+                document.getElementById('costPerRoll').innerText = "--";
+                document.getElementById('breakdown').innerText = "Please enter Film Cost & Developing Cost";
+                return;
+            }
+
             const rolls = parseInt(document.getElementById('rolls').value) || 1;
             const exposures = parseInt(document.getElementById('exposures').value) || 1;
-            
-            const devCost = parseFloat(document.getElementById('devCost').value) || 0;
-            const pushPullCost = parseFloat(document.getElementById('pushPullCost').value) || 0;
+            const boxSpeed = parseInt(document.getElementById('boxSpeed').value) || 0;
+            const devSpeed = parseInt(document.getElementById('devSpeed').value) || 0;
             const scanCost = parseFloat(document.getElementById('scanCost').value) || 0;
             const printCost = parseFloat(document.getElementById('printCost').value) || 0;
+            const onceOffFee = parseFloat(document.getElementById('onceOffFee').value) || 0;
+            
+            let activePushPullCost = 0;
+            let pushPullText = "";
 
-            const labCostPerRoll = devCost + pushPullCost + scanCost + printCost;
-            const totalLabCost = labCostPerRoll * rolls;
-            const grandTotal = filmCost + totalLabCost;
+            if (boxSpeed > 0 && devSpeed > 0 && boxSpeed !== devSpeed) {
+                const basePushPull = parseFloat(document.getElementById('pushPullCost').value) || 0;
+                const pushPullType = document.getElementById('pushPullType').value;
+                let stops = Math.round(Math.abs(Math.log2(devSpeed / boxSpeed)) * 10) / 10; 
+                activePushPullCost = (pushPullType === 'per_stop') ? (basePushPull * stops) : basePushPull;
+                pushPullText = ` | ${devSpeed > boxSpeed ? "Pushed" : "Pulled"} ${stops} stop(s)`;
+            }
+
+            const grandTotal = filmCost + ((devCost + activePushPullCost + scanCost + printCost) * rolls) + onceOffFee;
             const totalPhotos = exposures * rolls;
             
-            const costPerPhoto = totalPhotos > 0 ? (grandTotal / totalPhotos) : 0;
-
-            document.getElementById('costPerPhoto').innerText = costPerPhoto.toFixed(2);
-            document.getElementById('breakdown').innerText = `Total Cost: ${grandTotal.toFixed(2)} | Total Photos: ${totalPhotos}`;
+            document.getElementById('costPerPhoto').innerText = `$${(totalPhotos > 0 ? grandTotal / totalPhotos : 0).toFixed(2)}`;
+            document.getElementById('costPerRoll').innerText = `$${(rolls > 0 ? grandTotal / rolls : 0).toFixed(2)}`;
+            document.getElementById('breakdown').innerText = `Total Cost: $${grandTotal.toFixed(2)} | Photos: ${totalPhotos}${pushPullText}`;
         }
 
-        const inputs = document.querySelectorAll('input');
-        inputs.forEach(input => {
-            input.addEventListener('input', calculateCost);
-        });
+        const inputs = document.querySelectorAll('input, select');
+        inputs.forEach(i => { i.addEventListener('input', calculateCost); i.addEventListener('change', calculateCost); });
 
-        // --- Film Save/Load Logic ---
-        function getMergedFilms() {
-            const savedFilms = JSON.parse(localStorage.getItem('filmProfiles')) || {};
-            return { ...defaultFilms, ...savedFilms };
-        }
+        // --- Auto-fill Speed ---
+        const boxSpeedInput = document.getElementById('boxSpeed');
+        const devSpeedInput = document.getElementById('devSpeed');
+        let devSpeedManuallyEdited = false;
+        devSpeedInput.addEventListener('input', () => devSpeedManuallyEdited = true);
+        boxSpeedInput.addEventListener('input', () => { if (!devSpeedManuallyEdited) devSpeedInput.value = boxSpeedInput.value; calculateCost(); });
 
+        // --- Logic ---
         function updateFilmDropdown() {
             const dropdown = document.getElementById('savedFilmsDropdown');
-            const allFilms = getMergedFilms();
-            
             dropdown.innerHTML = '<option value="">-- Load a saved film --</option>';
-            const sortedNames = Object.keys(allFilms).sort();
-
-            sortedNames.forEach(name => {
-                const opt = document.createElement('option');
-                opt.value = name;
-                const isoStr = allFilms[name].iso ? ` (ISO ${allFilms[name].iso})` : '';
-                opt.textContent = `${name}${isoStr}`;
-                dropdown.appendChild(opt);
+            const films = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
+            Object.keys(films).sort().forEach(name => {
+                const opt = document.createElement('option'); opt.value = name; opt.textContent = name; dropdown.appendChild(opt);
             });
         }
 
         function saveFilmProfile() {
             const name = document.getElementById('filmName').value.trim();
-            if (!name) { alert("Please enter a Film Name to save this profile."); return; }
-
-            const profile = {
-                name: name,
-                iso: document.getElementById('filmIso').value,
-                filmCost: document.getElementById('filmCost').value,
-                rolls: document.getElementById('rolls').value,
-                exposures: document.getElementById('exposures').value
-            };
-
-            let savedFilms = JSON.parse(localStorage.getItem('filmProfiles')) || {};
-            savedFilms[name] = profile; 
-            localStorage.setItem('filmProfiles', JSON.stringify(savedFilms));
-            
-            const saveBtn = document.getElementById('saveFilmBtn');
-            const originalText = saveBtn.innerText;
-            saveBtn.innerText = "Saved!";
-            setTimeout(() => saveBtn.innerText = originalText, 1500);
-
+            if (!name) return alert("Enter Film Name");
+            let saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
+            saved[name] = { name, boxSpeed: boxSpeedInput.value, filmCost: document.getElementById('filmCost').value, rolls: document.getElementById('rolls').value, exposures: document.getElementById('exposures').value };
+            localStorage.setItem('filmProfiles', JSON.stringify(saved));
             updateFilmDropdown();
-            document.getElementById('savedFilmsDropdown').value = name;
         }
 
         function loadFilmProfile(e) {
-            const name = e.target.value;
-            if (!name) return; 
-
-            const allFilms = getMergedFilms();
-            const profile = allFilms[name];
-
-            if (profile) {
-                document.getElementById('filmName').value = profile.name || '';
-                document.getElementById('filmIso').value = profile.iso || '';
-                document.getElementById('filmCost').value = profile.filmCost || ''; 
-                document.getElementById('rolls').value = profile.rolls || '1';
-                document.getElementById('exposures').value = profile.exposures || '36';
-                calculateCost();
-            }
+            const profile = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') }[e.target.value];
+            if (!profile) return;
+            devSpeedManuallyEdited = false;
+            document.getElementById('filmName').value = profile.name;
+            document.getElementById('boxSpeed').value = profile.boxSpeed || '';
+            document.getElementById('devSpeed').value = profile.boxSpeed || '';
+            document.getElementById('filmCost').value = profile.filmCost || '';
+            document.getElementById('rolls').value = profile.rolls || '1';
+            document.getElementById('exposures').value = profile.exposures || '36';
+            calculateCost();
         }
 
-        // --- Lab Save/Load Logic ---
-        function getMergedLabs() {
-            // Only pull from local storage now
-            return JSON.parse(localStorage.getItem('labProfiles')) || {};
+        function deleteFilmProfile() {
+            let saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
+            const name = document.getElementById('filmName').value.trim();
+            if (saved[name]) { delete saved[name]; localStorage.setItem('filmProfiles', JSON.stringify(saved)); updateFilmDropdown(); }
         }
 
         function updateLabDropdown() {
             const dropdown = document.getElementById('savedLabsDropdown');
-            const allLabs = getMergedLabs();
-            
             dropdown.innerHTML = '<option value="">-- Load a saved lab --</option>';
-            const sortedNames = Object.keys(allLabs).sort();
-
-            sortedNames.forEach(name => {
-                const opt = document.createElement('option');
-                opt.value = name;
-                opt.textContent = name;
-                dropdown.appendChild(opt);
-            });
+            const labs = JSON.parse(localStorage.getItem('labProfiles') || '{}');
+            Object.keys(labs).sort().forEach(name => { const opt = document.createElement('option'); opt.value = name; opt.textContent = name; dropdown.appendChild(opt); });
         }
 
         function saveLabProfile() {
             const name = document.getElementById('labName').value.trim();
-            if (!name) { alert("Please enter a Lab Name to save this profile."); return; }
-
-            const profile = {
-                name: name,
-                devCost: document.getElementById('devCost').value,
-                pushPullCost: document.getElementById('pushPullCost').value,
-                scanCost: document.getElementById('scanCost').value,
-                printCost: document.getElementById('printCost').value
-            };
-
-            let savedLabs = JSON.parse(localStorage.getItem('labProfiles')) || {};
-            savedLabs[name] = profile; 
-            localStorage.setItem('labProfiles', JSON.stringify(savedLabs));
-            
-            const saveBtn = document.getElementById('saveLabBtn');
-            const originalText = saveBtn.innerText;
-            saveBtn.innerText = "Saved!";
-            setTimeout(() => saveBtn.innerText = originalText, 1500);
-
+            if (!name) return alert("Enter Lab Name");
+            let saved = JSON.parse(localStorage.getItem('labProfiles') || '{}');
+            saved[name] = { name, devCost: document.getElementById('devCost').value, pushPullCost: document.getElementById('pushPullCost').value, pushPullType: document.getElementById('pushPullType').value, scanCost: document.getElementById('scanCost').value, printCost: document.getElementById('printCost').value, onceOffFee: document.getElementById('onceOffFee').value };
+            localStorage.setItem('labProfiles', JSON.stringify(saved));
             updateLabDropdown();
-            document.getElementById('savedLabsDropdown').value = name;
         }
 
         function loadLabProfile(e) {
-            const name = e.target.value;
-            if (!name) return; 
-
-            const allLabs = getMergedLabs();
-            const profile = allLabs[name];
-
-            if (profile) {
-                document.getElementById('labName').value = profile.name || '';
-                document.getElementById('devCost').value = profile.devCost || '';
-                document.getElementById('pushPullCost').value = profile.pushPullCost || '';
-                document.getElementById('scanCost').value = profile.scanCost || '';
-                document.getElementById('printCost').value = profile.printCost || '';
-                calculateCost();
-            }
+            const profile = JSON.parse(localStorage.getItem('labProfiles') || '{}')[e.target.value];
+            if (!profile) return;
+            document.getElementById('labName').value = profile.name;
+            document.getElementById('devCost').value = profile.devCost;
+            document.getElementById('pushPullCost').value = profile.pushPullCost;
+            document.getElementById('pushPullType').value = profile.pushPullType;
+            document.getElementById('scanCost').value = profile.scanCost;
+            document.getElementById('printCost').value = profile.printCost;
+            document.getElementById('onceOffFee').value = profile.onceOffFee;
+            calculateCost();
         }
 
-        // Event Listeners
+        function deleteLabProfile() {
+            let saved = JSON.parse(localStorage.getItem('labProfiles') || '{}');
+            const name = document.getElementById('labName').value.trim();
+            if (saved[name]) { delete saved[name]; localStorage.setItem('labProfiles', JSON.stringify(saved)); updateLabDropdown(); }
+        }
+
         document.getElementById('saveFilmBtn').addEventListener('click', saveFilmProfile);
+        document.getElementById('deleteFilmBtn').addEventListener('click', deleteFilmProfile);
         document.getElementById('savedFilmsDropdown').addEventListener('change', loadFilmProfile);
-        
         document.getElementById('saveLabBtn').addEventListener('click', saveLabProfile);
+        document.getElementById('deleteLabBtn').addEventListener('click', deleteLabProfile);
         document.getElementById('savedLabsDropdown').addEventListener('change', loadLabProfile);
 
-        // --- Dark Mode Toggle Logic ---
-        const themeToggleDarkIcon = document.getElementById('themeToggleDarkIcon');
-        const themeToggleLightIcon = document.getElementById('themeToggleLightIcon');
-        const themeToggleBtn = document.getElementById('themeToggle');
-
-        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            themeToggleLightIcon.classList.remove('hidden');
-        } else {
-            themeToggleDarkIcon.classList.remove('hidden');
-        }
-
-        themeToggleBtn.addEventListener('click', function() {
-            themeToggleDarkIcon.classList.toggle('hidden');
-            themeToggleLightIcon.classList.toggle('hidden');
-
-            if (document.documentElement.classList.contains('dark')) {
-                document.documentElement.classList.remove('dark');
-                localStorage.setItem('theme', 'light');
-            } else {
-                document.documentElement.classList.add('dark');
-                localStorage.setItem('theme', 'dark');
-            }
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
         });
 
-        // Initialize App
         loadCSV();
         updateLabDropdown();
-
     </script>
 </body>
 </html>
