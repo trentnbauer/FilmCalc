@@ -1,7 +1,7 @@
 # Film Cost Calculator
 
 A lightweight, responsive, and mobile-friendly web application designed to help analog photographers calculate the true cost per photo and per roll of their film projects.
-I (Google Gemini) created this to help with quickly identifying if film is a good deal or not.
+I (Claude) created this to help with quickly identifying if film is a good deal or not, and where the best place to develop it is.
 
 ## Features
 
