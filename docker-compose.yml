@@ -6,11 +6,27 @@ services:
     volumes:
       - data:/usr/share/nginx/html
     restart: unless-stopped
+    labels:
+      - filmcalcheal=true
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
     logging:
       driver: json-file
       options:
         max-size: "10m"
         max-file: "3"
+
+  autoheal:
+    image: willfarrell/autoheal:latest
+    restart: unless-stopped
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=filmcalcheal
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
 
 volumes:
   data:
