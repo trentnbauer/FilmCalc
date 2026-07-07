@@ -13,7 +13,7 @@ I (Google Gemini) created this to help with quickly identifying if film is a goo
 
 ## Getting Started
 
-You can access the live calculator hosted on GitHub Pages here: **https://filmcalc.trentbauer.com** - I am planning on adding a docker container in the future for self hosting
+You can access the live calculator hosted on GitHub Pages here: **https://filmcalc.trentbauer.com** - I am planning on adding a docker container in the future for self hosting. This is why the blank films and labs csv files exist
 
 ### Customizing Defaults
 
