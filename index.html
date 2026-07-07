@@ -348,17 +348,27 @@
         });
 
         // ---------- Profile dropdowns ----------
-        function updateDropdown(id, data, storageKey) {
+        function updateDropdown(id, data, storageKey, labelFn) {
             const dropdown = document.getElementById(id);
             const current = dropdown.value;
             const saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
             const all = { ...data, ...saved };
             dropdown.innerHTML = '<option value="">-- Load profile --</option>';
-            Object.keys(all).sort().forEach(n => dropdown.innerHTML += `<option value="${n}">${n}</option>`);
+            Object.keys(all).sort().forEach(n => {
+                const label = labelFn ? labelFn(all[n]) : n;
+                dropdown.innerHTML += `<option value="${n}">${label}</option>`;
+            });
             if (all[current]) dropdown.value = current;
         }
 
-        function updateFilmDropdown() { updateDropdown('savedFilmsDropdown', defaultFilms, 'filmProfiles'); }
+        function formatFilmLabel(f) {
+            const boxSpeed = f.boxSpeed || '?';
+            const rolls = f.rolls || '?';
+            const exposures = f.exposures || '?';
+            return `${f.name} (${boxSpeed}ISO | ${rolls} Roll${rolls == 1 ? '' : 's'} | ${exposures}exp)`;
+        }
+
+        function updateFilmDropdown() { updateDropdown('savedFilmsDropdown', defaultFilms, 'filmProfiles', formatFilmLabel); }
         function updateLabDropdown() { updateDropdown('savedLabsDropdown', defaultLabs, 'labProfiles'); updateLabComparison(); }
 
         document.getElementById('savedFilmsDropdown').addEventListener('change', (e) => {
