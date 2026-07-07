@@ -5,13 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Film Cost Calculator</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <script>
-        tailwind.config = {
-            darkMode: 'class',
-        }
+        tailwind.config = { darkMode: 'class', }
     </script>
-
     <script>
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark')
@@ -31,20 +27,29 @@
 
         <h1 class="text-2xl font-bold text-center mb-6 text-gray-900 dark:text-white pr-8">Film Cost Calculator</h1>
 
-        <div class="mb-6 bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-100 dark:border-purple-800/30">
+        <div class="mb-4 bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-100 dark:border-purple-800/30">
             <label class="block text-sm font-semibold text-purple-800 dark:text-purple-400 mb-2 uppercase tracking-wide">Saved Film Profiles</label>
             <div class="flex gap-2">
                 <select id="savedFilmsDropdown" class="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-purple-500 outline-none transition-colors">
-                    <option value="">-- Load a saved film --</option>
+                    <option value="">-- Loading films... --</option>
                 </select>
                 <button id="saveFilmBtn" type="button" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded shadow transition-colors font-medium">Save</button>
+            </div>
+        </div>
+
+        <div class="mb-6 bg-teal-50 dark:bg-teal-900/20 p-4 rounded-lg border border-teal-100 dark:border-teal-800/30">
+            <label class="block text-sm font-semibold text-teal-800 dark:text-teal-400 mb-2 uppercase tracking-wide">Saved Lab Profiles</label>
+            <div class="flex gap-2">
+                <select id="savedLabsDropdown" class="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-teal-500 outline-none transition-colors">
+                    <option value="">-- Load a saved lab --</option>
+                </select>
+                <button id="saveLabBtn" type="button" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded shadow transition-colors font-medium">Save</button>
             </div>
         </div>
         
         <form id="calculatorForm" class="space-y-4">
             <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg space-y-3 transition-colors duration-200">
                 <h2 class="font-semibold text-blue-800 dark:text-blue-400 text-sm uppercase tracking-wide">The Film</h2>
-                
                 <div class="grid grid-cols-3 gap-4">
                     <div class="col-span-2">
                         <label class="block text-sm font-medium mb-1 dark:text-gray-300">Film Name</label>
@@ -55,7 +60,6 @@
                         <input type="number" id="filmIso" min="1" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-colors" placeholder="400">
                     </div>
                 </div>
-
                 <div>
                     <label class="block text-sm font-medium mb-1 dark:text-gray-300">Total cost of film pack ($ incl. postage)</label>
                     <input type="number" id="filmCost" step="0.01" min="0" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-colors" placeholder="e.g. 45.00" required>
@@ -74,6 +78,10 @@
 
             <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg space-y-3 transition-colors duration-200">
                 <h2 class="font-semibold text-green-800 dark:text-green-400 text-sm uppercase tracking-wide">Lab Costs (Per Roll)</h2>
+                <div>
+                    <label class="block text-sm font-medium mb-1 dark:text-gray-300">Lab Name</label>
+                    <input type="text" id="labName" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-green-500 outline-none transition-colors" placeholder="e.g. Local Pharmacy">
+                </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium mb-1 dark:text-gray-300">Developing ($)</label>
@@ -103,6 +111,47 @@
     </div>
 
     <script>
+        // --- State ---
+        let defaultFilms = {};
+        
+        const defaultLabs = {
+            "Standard Lab (Dev + Scan)": { name: "Standard Lab (Dev + Scan)", devCost: 8, pushPullCost: 0, scanCost: 12, printCost: 0 },
+            "Pro Lab (High Res Scans)": { name: "Pro Lab (High Res Scans)", devCost: 10, pushPullCost: 3, scanCost: 20, printCost: 0 },
+            "Pharmacy (Prints Included)": { name: "Pharmacy (Prints Included)", devCost: 5, pushPullCost: 0, scanCost: 5, printCost: 10 },
+            "Mail-in (Dev Only)": { name: "Mail-in (Dev Only)", devCost: 6, pushPullCost: 2, scanCost: 0, printCost: 0 }
+        };
+
+        // --- CSV Loader (Films) ---
+        async function loadCSV() {
+            try {
+                const response = await fetch('films.csv');
+                if (!response.ok) throw new Error("Could not fetch CSV");
+                
+                const csvText = await response.text();
+                const lines = csvText.split('\n');
+                const headers = lines[0].split(',').map(h => h.trim());
+                
+                for (let i = 1; i < lines.length; i++) {
+                    if (!lines[i].trim()) continue; 
+                    const values = lines[i].split(',');
+                    const film = {};
+                    
+                    for (let j = 0; j < headers.length; j++) {
+                        let val = values[j] ? values[j].trim() : '';
+                        if (headers[j] !== 'name') {
+                            val = parseFloat(val) || 0; 
+                        }
+                        film[headers[j]] = val;
+                    }
+                    if (film.name) defaultFilms[film.name] = film;
+                }
+            } catch (error) {
+                console.error("Error loading films.csv, falling back to empty defaults.", error);
+            } finally {
+                updateFilmDropdown();
+            }
+        }
+
         // --- Calculator Logic ---
         function calculateCost() {
             const filmCost = parseFloat(document.getElementById('filmCost').value) || 0;
@@ -130,85 +179,139 @@
             input.addEventListener('input', calculateCost);
         });
 
-        // --- Save and Load Logic (Local Storage) ---
-        function updateDropdown() {
-            const dropdown = document.getElementById('savedFilmsDropdown');
+        // --- Film Save/Load Logic ---
+        function getMergedFilms() {
             const savedFilms = JSON.parse(localStorage.getItem('filmProfiles')) || {};
+            return { ...defaultFilms, ...savedFilms };
+        }
+
+        function updateFilmDropdown() {
+            const dropdown = document.getElementById('savedFilmsDropdown');
+            const allFilms = getMergedFilms();
             
             dropdown.innerHTML = '<option value="">-- Load a saved film --</option>';
-            
-            for (const name in savedFilms) {
+            const sortedNames = Object.keys(allFilms).sort();
+
+            sortedNames.forEach(name => {
                 const opt = document.createElement('option');
                 opt.value = name;
-                // Add ISO to the dropdown label if it exists
-                const isoStr = savedFilms[name].iso ? ` (ISO ${savedFilms[name].iso})` : '';
+                const isoStr = allFilms[name].iso ? ` (ISO ${allFilms[name].iso})` : '';
                 opt.textContent = `${name}${isoStr}`;
                 dropdown.appendChild(opt);
-            }
+            });
         }
 
         function saveFilmProfile() {
             const name = document.getElementById('filmName').value.trim();
-            
-            if (!name) {
-                alert("Please enter a Film Name to save this profile.");
-                return;
-            }
+            if (!name) { alert("Please enter a Film Name to save this profile."); return; }
 
             const profile = {
                 name: name,
                 iso: document.getElementById('filmIso').value,
                 filmCost: document.getElementById('filmCost').value,
                 rolls: document.getElementById('rolls').value,
-                exposures: document.getElementById('exposures').value,
+                exposures: document.getElementById('exposures').value
+            };
+
+            let savedFilms = JSON.parse(localStorage.getItem('filmProfiles')) || {};
+            savedFilms[name] = profile; 
+            localStorage.setItem('filmProfiles', JSON.stringify(savedFilms));
+            
+            const saveBtn = document.getElementById('saveFilmBtn');
+            const originalText = saveBtn.innerText;
+            saveBtn.innerText = "Saved!";
+            setTimeout(() => saveBtn.innerText = originalText, 1500);
+
+            updateFilmDropdown();
+            document.getElementById('savedFilmsDropdown').value = name;
+        }
+
+        function loadFilmProfile(e) {
+            const name = e.target.value;
+            if (!name) return; 
+
+            const allFilms = getMergedFilms();
+            const profile = allFilms[name];
+
+            if (profile) {
+                document.getElementById('filmName').value = profile.name || '';
+                document.getElementById('filmIso').value = profile.iso || '';
+                document.getElementById('filmCost').value = profile.filmCost || ''; 
+                document.getElementById('rolls').value = profile.rolls || '1';
+                document.getElementById('exposures').value = profile.exposures || '36';
+                calculateCost();
+            }
+        }
+
+        // --- Lab Save/Load Logic ---
+        function getMergedLabs() {
+            const savedLabs = JSON.parse(localStorage.getItem('labProfiles')) || {};
+            return { ...defaultLabs, ...savedLabs };
+        }
+
+        function updateLabDropdown() {
+            const dropdown = document.getElementById('savedLabsDropdown');
+            const allLabs = getMergedLabs();
+            
+            dropdown.innerHTML = '<option value="">-- Load a saved lab --</option>';
+            const sortedNames = Object.keys(allLabs).sort();
+
+            sortedNames.forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name;
+                dropdown.appendChild(opt);
+            });
+        }
+
+        function saveLabProfile() {
+            const name = document.getElementById('labName').value.trim();
+            if (!name) { alert("Please enter a Lab Name to save this profile."); return; }
+
+            const profile = {
+                name: name,
                 devCost: document.getElementById('devCost').value,
                 pushPullCost: document.getElementById('pushPullCost').value,
                 scanCost: document.getElementById('scanCost').value,
                 printCost: document.getElementById('printCost').value
             };
 
-            let savedFilms = JSON.parse(localStorage.getItem('filmProfiles')) || {};
-            savedFilms[name] = profile; // Overwrites if the name already exists
-            localStorage.setItem('filmProfiles', JSON.stringify(savedFilms));
+            let savedLabs = JSON.parse(localStorage.getItem('labProfiles')) || {};
+            savedLabs[name] = profile; 
+            localStorage.setItem('labProfiles', JSON.stringify(savedLabs));
             
-            // Visual feedback
-            const saveBtn = document.getElementById('saveFilmBtn');
+            const saveBtn = document.getElementById('saveLabBtn');
             const originalText = saveBtn.innerText;
             saveBtn.innerText = "Saved!";
             setTimeout(() => saveBtn.innerText = originalText, 1500);
 
-            updateDropdown();
-            // Select the newly saved item in the dropdown
-            document.getElementById('savedFilmsDropdown').value = name;
+            updateLabDropdown();
+            document.getElementById('savedLabsDropdown').value = name;
         }
 
-        function loadFilmProfile(e) {
+        function loadLabProfile(e) {
             const name = e.target.value;
-            if (!name) return; // Ignore if they pick the default empty option
+            if (!name) return; 
 
-            const savedFilms = JSON.parse(localStorage.getItem('filmProfiles')) || {};
-            const profile = savedFilms[name];
+            const allLabs = getMergedLabs();
+            const profile = allLabs[name];
 
             if (profile) {
-                document.getElementById('filmName').value = profile.name || '';
-                document.getElementById('filmIso').value = profile.iso || '';
-                document.getElementById('filmCost').value = profile.filmCost || '';
-                document.getElementById('rolls').value = profile.rolls || '1';
-                document.getElementById('exposures').value = profile.exposures || '36';
+                document.getElementById('labName').value = profile.name || '';
                 document.getElementById('devCost').value = profile.devCost || '';
                 document.getElementById('pushPullCost').value = profile.pushPullCost || '';
                 document.getElementById('scanCost').value = profile.scanCost || '';
                 document.getElementById('printCost').value = profile.printCost || '';
-                
                 calculateCost();
             }
         }
 
+        // Event Listeners
         document.getElementById('saveFilmBtn').addEventListener('click', saveFilmProfile);
         document.getElementById('savedFilmsDropdown').addEventListener('change', loadFilmProfile);
         
-        // Initialize dropdown on page load
-        updateDropdown();
+        document.getElementById('saveLabBtn').addEventListener('click', saveLabProfile);
+        document.getElementById('savedLabsDropdown').addEventListener('change', loadLabProfile);
 
         // --- Dark Mode Toggle Logic ---
         const themeToggleDarkIcon = document.getElementById('themeToggleDarkIcon');
@@ -225,24 +328,19 @@
             themeToggleDarkIcon.classList.toggle('hidden');
             themeToggleLightIcon.classList.toggle('hidden');
 
-            if (localStorage.getItem('theme')) {
-                if (localStorage.getItem('theme') === 'light') {
-                    document.documentElement.classList.add('dark');
-                    localStorage.setItem('theme', 'dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                    localStorage.setItem('theme', 'light');
-                }
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
             } else {
-                if (document.documentElement.classList.contains('dark')) {
-                    document.documentElement.classList.remove('dark');
-                    localStorage.setItem('theme', 'light');
-                } else {
-                    document.documentElement.classList.add('dark');
-                    localStorage.setItem('theme', 'dark');
-                }
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
             }
         });
+
+        // Initialize App
+        loadCSV();
+        updateLabDropdown();
+
     </script>
 </body>
 </html>
