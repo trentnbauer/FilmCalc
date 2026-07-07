@@ -80,14 +80,8 @@
             </div>
 
             <div id="filmTabContent" class="space-y-6">
-                <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-100 dark:border-purple-800/30">
-                    <label class="block text-sm font-semibold text-purple-800 dark:text-purple-400 mb-2 uppercase tracking-wide">Load Saved Film</label>
-                    <select id="savedFilmsDropdown" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm"><option value="">-- Load a saved film --</option></select>
-                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">Quick lookup only — manage film stocks and bundles in the Film Library tab.</p>
-                </div>
-
                 <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg space-y-3">
-                    <h2 class="font-semibold text-blue-800 dark:text-blue-400 text-sm uppercase tracking-wide">Film Setup</h2>
+                    <h2 class="font-semibold text-blue-800 dark:text-blue-400 text-sm uppercase tracking-wide">Quick Calculate</h2>
                     <div>
                         <label for="boxSpeed" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Box Speed (ISO)</label>
                         <input type="number" id="boxSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
@@ -106,13 +100,18 @@
                             <input type="number" id="exposures" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                         </div>
                     </div>
-                    <div id="calcBuyLinkInfo"></div>
                     <div class="bg-blue-100/60 dark:bg-blue-900/30 rounded-lg p-3 text-center">
                         <p class="text-xs text-blue-700 dark:text-blue-400 uppercase tracking-wide">Film Cost Per Photo <span class="normal-case font-normal opacity-75">(excl. lab fees)</span></p>
                         <p id="filmOnlyCostPerPhoto" class="text-xl font-bold text-blue-800 dark:text-blue-300 mt-1">--</p>
-                        <div id="calcBundleList" class="mt-2 text-left"></div>
                         <div id="filmSpeedComparison"></div>
                     </div>
+                </div>
+
+                <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-100 dark:border-purple-800/30">
+                    <label class="block text-sm font-semibold text-purple-800 dark:text-purple-400 mb-2 uppercase tracking-wide">Load Saved Film</label>
+                    <select id="savedFilmsDropdown" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm"><option value="">-- Load a saved film --</option></select>
+                    <div id="calcBuyLinkInfo" class="mt-2"></div>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">Quick lookup only — manage film stocks and bundles in the Film Library tab.</p>
                 </div>
             </div>
 
@@ -711,46 +710,80 @@
         // Compares this film's cost per photo against every other saved film
         // profile that shares the same Box Speed, since that's the fairest
         // like-for-like comparison (a 400 vs 800 film isn't really competing).
+        // Compares whatever's typed into Film Setup against every saved bundle in
+        // the Film Library at the same Box Speed — live, with no need to pick a
+        // saved film first. Shows the full ranked list plus buy links, and where
+        // the current entry would land if it's complete enough to cost out.
         function updateFilmSpeedComparison() {
             const container = document.getElementById('filmSpeedComparison');
             const boxSpeed = parseInt(document.getElementById('boxSpeed').value) || 0;
+
+            if (!boxSpeed) {
+                container.innerHTML = '';
+                return;
+            }
+
             const currentCost = computeCostPerPhoto(
                 document.getElementById('filmCost').value,
                 document.getElementById('rolls').value,
                 document.getElementById('exposures').value
             );
 
-            if (!boxSpeed || currentCost === null) {
-                container.innerHTML = '';
-                return;
-            }
-
             const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
 
-            const others = Object.values(allFilms)
+            const matches = Object.values(allFilms)
                 .filter(f => (parseInt(f.boxSpeed) || 0) === boxSpeed)
                 .flatMap(f => normalizeFilmBundles(f).map(b => ({
                     name: f.name,
+                    rolls: b.rolls,
+                    exposures: b.exposures,
+                    packTotalCost: b.filmCost,
+                    storeName: b.storeName,
+                    buyLink: b.buyLink,
                     costPerPhoto: computeCostPerPhoto(b.filmCost, b.rolls, b.exposures)
                 })))
-                .filter(f => f.costPerPhoto !== null && f.costPerPhoto > 0);
+                .filter(f => f.costPerPhoto !== null && f.costPerPhoto > 0)
+                .sort((a, b) => a.costPerPhoto - b.costPerPhoto);
 
-            if (others.length === 0) {
-                container.innerHTML = `<p class="text-xs text-gray-400 mt-2">No other saved ${boxSpeed} ISO films to compare yet</p>`;
+            if (matches.length === 0) {
+                container.innerHTML = `<p class="text-xs text-gray-400 mt-2">No saved ${boxSpeed} ISO films in your Film Library yet</p>`;
                 return;
             }
 
-            const cheapestOther = others.reduce((a, b) => (a.costPerPhoto <= b.costPerPhoto ? a : b));
+            const cheapest = matches[0];
 
-            if (currentCost <= cheapestOther.costPerPhoto) {
-                container.innerHTML = `<p class="text-xs text-green-700 dark:text-green-400 mt-2 font-medium">🏆 Cheapest saved ${boxSpeed} ISO film</p>`;
-            } else {
-                const diff = currentCost - cheapestOther.costPerPhoto;
-                container.innerHTML = `<p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                    <span class="font-semibold text-blue-700 dark:text-blue-400">${cheapestOther.name}</span> is cheaper at $${cheapestOther.costPerPhoto.toFixed(2)}/photo
-                    <span class="block opacity-75">(+$${diff.toFixed(2)}/photo vs this one)</span>
-                </p>`;
+            function renderBuyLink(m) {
+                if (!m.buyLink) return '';
+                const label = m.storeName ? `🛒 Buy from ${m.storeName}` : '🛒 Buy';
+                return ` <a href="${m.buyLink}" target="_blank" rel="noopener noreferrer" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">${label}</a>`;
             }
+
+            let summary = '';
+            if (currentCost !== null) {
+                if (currentCost <= cheapest.costPerPhoto) {
+                    summary = `<p class="text-xs text-green-700 dark:text-green-400 font-medium mb-2">🏆 This beats every saved ${boxSpeed} ISO film</p>`;
+                } else {
+                    const diff = currentCost - cheapest.costPerPhoto;
+                    summary = `<p class="text-xs text-gray-500 dark:text-gray-400 mb-2"><span class="font-semibold text-blue-700 dark:text-blue-400">${cheapest.name}</span> is cheaper at $${cheapest.costPerPhoto.toFixed(2)}/photo <span class="opacity-75">(+$${diff.toFixed(2)}/photo vs this one)</span></p>`;
+                }
+            }
+
+            const rows = matches.slice(0, 5).map((m, i) => {
+                const isCheapest = i === 0;
+                return `<div class="flex justify-between items-center px-2 py-1 rounded text-xs mb-1 ${isCheapest ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-white/60 dark:bg-gray-800/40'}">
+                    <span class="${isCheapest ? 'font-semibold text-amber-800 dark:text-amber-300' : 'text-gray-600 dark:text-gray-300'}">${isCheapest ? '⭐ ' : ''}${m.name} <span class="text-xs opacity-70">(${m.rolls}×${m.exposures}exp)</span>${renderBuyLink(m)}</span>
+                    <span class="font-mono ${isCheapest ? 'text-amber-800 dark:text-amber-300 font-semibold' : 'text-gray-500 dark:text-gray-400'}">$${m.costPerPhoto.toFixed(2)}/photo</span>
+                </div>`;
+            }).join('');
+
+            const moreLabel = matches.length > 5 ? `<p class="text-xs text-gray-400 mt-1">+${matches.length - 5} more saved at this ISO</p>` : '';
+
+            container.innerHTML = `<div class="mt-2 text-left">
+                ${summary}
+                <p class="text-xs text-blue-700/70 dark:text-blue-400/70 mb-1">Film Library at ${boxSpeed} ISO:</p>
+                ${rows}
+                ${moreLabel}
+            </div>`;
         }
 
         // ---------- Film Library (cheapest per ISO) ----------
@@ -836,72 +869,6 @@
             }
         }
 
-        // Read-only "Buy this film" info shown in the Calculator after loading a
-        // saved bundle — not editable there, since bundle management now lives
-        // entirely in the Film Library tab.
-        function updateCalcBuyLinkInfo(bundle) {
-            const el = document.getElementById('calcBuyLinkInfo');
-            if (!el) return;
-            if (bundle && bundle.buyLink) {
-                const label = bundle.storeName ? `🛒 Buy from ${bundle.storeName}` : '🛒 Buy this film';
-                el.innerHTML = `<a href="${bundle.buyLink}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">${label}</a>`;
-            } else {
-                el.innerHTML = '';
-            }
-        }
-
-        // Fills the Calculator's fields from a specific film + bundle, and
-        // refreshes everything downstream (lab comparison, cost readouts).
-        function applyBundleToCalculator(film, bundle) {
-            document.getElementById('boxSpeed').value = film.boxSpeed || '';
-            document.getElementById('devSpeed').value = film.boxSpeed || '';
-            devSpeedOverridden = false;
-            document.getElementById('filmCost').value = bundle.filmCost || '';
-            document.getElementById('rolls').value = bundle.rolls || '1';
-            document.getElementById('exposures').value = bundle.exposures || '36';
-            updateCalcBuyLinkInfo(bundle);
-            updateLabComparison();
-            updateFilmOnlyCost();
-            updateFilmSpeedComparison();
-        }
-
-        // Shows every saved bundle for the currently-loaded film stock right in
-        // the Film Cost Per Photo box, so picking a pack size doesn't require a
-        // separate dropdown entry per bundle — click one to load its numbers.
-        function renderCalcBundleList(filmName) {
-            const container = document.getElementById('calcBundleList');
-            if (!filmName) { container.innerHTML = ''; return; }
-            const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
-            const film = allFilms[filmName];
-            if (!film) { container.innerHTML = ''; return; }
-            const bundles = normalizeFilmBundles(film);
-
-            const currentRolls = document.getElementById('rolls').value;
-            const currentExposures = document.getElementById('exposures').value;
-            const currentCost = document.getElementById('filmCost').value;
-
-            const heading = bundles.length > 1
-                ? `<p class="text-xs text-blue-700/70 dark:text-blue-400/70 mb-1">Saved bundles — tap to load:</p>`
-                : '';
-
-            container.innerHTML = heading + bundles.map((b, i) => {
-                const costPerPhoto = computeCostPerPhoto(b.filmCost, b.rolls, b.exposures);
-                const isActive = String(b.rolls) === String(currentRolls) && String(b.exposures) === String(currentExposures) && String(parseFloat(b.filmCost) || 0) === String(parseFloat(currentCost) || 0);
-                return `<button type="button" data-bundle-index="${i}" class="w-full flex justify-between items-center px-2 py-1.5 rounded text-xs mb-1 transition-colors ${isActive ? 'bg-blue-300 dark:bg-blue-700/60 font-semibold' : 'bg-white/70 dark:bg-gray-800/50 hover:bg-blue-200 dark:hover:bg-blue-900/40'}">
-                    <span class="text-blue-900 dark:text-blue-200">${b.rolls} Roll${b.rolls == 1 ? '' : 's'} × ${b.exposures}exp — $${(parseFloat(b.filmCost) || 0).toFixed(2)} pack</span>
-                    <span class="font-mono text-blue-900 dark:text-blue-200">${costPerPhoto !== null ? '$' + costPerPhoto.toFixed(2) + '/photo' : ''}</span>
-                </button>`;
-            }).join('');
-
-            container.querySelectorAll('[data-bundle-index]').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const idx = parseInt(btn.dataset.bundleIndex);
-                    applyBundleToCalculator(film, bundles[idx]);
-                    renderCalcBundleList(filmName);
-                });
-            });
-        }
-
         document.querySelectorAll('input, select').forEach(i => i.addEventListener('input', updateLabComparison));
         document.querySelectorAll('input, select').forEach(i => i.addEventListener('input', updateFilmOnlyCost));
         document.querySelectorAll('input, select').forEach(i => i.addEventListener('input', updateFilmSpeedComparison));
@@ -931,15 +898,41 @@
             if (all[current]) dropdown.value = current;
         }
 
-        // Calculator's dropdown lists film stocks only, one entry per name — the
-        // different pack sizes/exposures show up as a bundle list in the Film
-        // Cost Per Photo box instead of cluttering this dropdown with a row per bundle.
+        // Calculator's dropdown lists every bundle across every saved film, since
+        // picking a specific pack size/price is exactly what "quick lookup" needs.
+        // Value format: "<film name>::<bundle index>".
         function updateCalculatorFilmDropdown() {
-            updateDropdown('savedFilmsDropdown', defaultFilms, 'filmProfiles', f => {
-                const bundles = normalizeFilmBundles(f);
-                const countLabel = bundles.length > 1 ? ` — ${bundles.length} bundles` : '';
-                return `${f.name} (${f.boxSpeed || '?'} ISO${countLabel})`;
+            const dropdown = document.getElementById('savedFilmsDropdown');
+            const current = dropdown.value;
+            const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
+            const options = [];
+            Object.keys(allFilms).sort().forEach(name => {
+                const film = allFilms[name];
+                const boxSpeed = film.boxSpeed || '?';
+                normalizeFilmBundles(film).forEach((b, i) => {
+                    options.push({
+                        value: `${name}::${i}`,
+                        label: `${name} (${boxSpeed} ISO | ${b.rolls} Roll${b.rolls == 1 ? '' : 's'} | ${b.exposures}exp)`
+                    });
+                });
             });
+            dropdown.innerHTML = '<option value="">-- Load a saved film --</option>' +
+                options.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
+            if (options.some(o => o.value === current)) dropdown.value = current;
+        }
+
+        // Read-only "Buy this film" info shown after loading a saved bundle here
+        // — not editable in the Calculator, since bundle management lives in
+        // the Film Library tab.
+        function updateCalcBuyLinkInfo(bundle) {
+            const el = document.getElementById('calcBuyLinkInfo');
+            if (!el) return;
+            if (bundle && bundle.buyLink) {
+                const label = bundle.storeName ? `🛒 Buy from ${bundle.storeName}` : '🛒 Buy this film';
+                el.innerHTML = `<a href="${bundle.buyLink}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">${label}</a>`;
+            } else {
+                el.innerHTML = '';
+            }
         }
 
         // Film Library's dropdown lists film stocks only (one entry per name),
@@ -952,23 +945,33 @@
             updateCalculatorFilmDropdown();
             updateLibraryFilmDropdown();
             updateFilmComparison();
+            updateFilmSpeedComparison();
         }
 
         function updateLabDropdown() { updateDropdown('savedLabsDropdown', defaultLabs, 'labProfiles'); updateLabComparison(); }
 
         document.getElementById('savedFilmsDropdown').addEventListener('change', (e) => {
-            const name = e.target.value;
-            if (!name) {
+            if (!e.target.value) {
                 updateCalcBuyLinkInfo(null);
-                renderCalcBundleList(null);
                 return;
             }
+            const [name, idxStr] = e.target.value.split('::');
             const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
             const film = allFilms[name];
             if (!film) return;
             const bundles = normalizeFilmBundles(film);
-            applyBundleToCalculator(film, bundles[0]);
-            renderCalcBundleList(name);
+            const bundle = bundles[parseInt(idxStr)] || bundles[0];
+
+            document.getElementById('boxSpeed').value = film.boxSpeed || '';
+            document.getElementById('devSpeed').value = film.boxSpeed || '';
+            devSpeedOverridden = false;
+            document.getElementById('filmCost').value = bundle.filmCost || '';
+            document.getElementById('rolls').value = bundle.rolls || '1';
+            document.getElementById('exposures').value = bundle.exposures || '36';
+            updateCalcBuyLinkInfo(bundle);
+            updateLabComparison();
+            updateFilmOnlyCost();
+            updateFilmSpeedComparison();
         });
 
         document.getElementById('libraryFilmsDropdown').addEventListener('change', (e) => {
