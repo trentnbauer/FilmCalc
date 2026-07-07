@@ -37,7 +37,7 @@ services:
       - data:/usr/share/nginx/html
     restart: unless-stopped
     labels:
-      - filmcalcheal=true
+      - autoheal=true
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost/"]
       interval: 30s
@@ -54,7 +54,7 @@ services:
     image: willfarrell/autoheal:latest
     restart: unless-stopped
     environment:
-      - AUTOHEAL_CONTAINER_LABEL=filmcalcheal
+      - AUTOHEAL_CONTAINER_LABEL=autoheal
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
@@ -89,14 +89,38 @@ Refresh the page and the app will pick them up automatically — no restart or r
 ```
 
 **`labs.yaml`**
+
+Each lab is one entry with a `services` list underneath it — one item per service tier the lab offers (e.g. standard vs. hi-res scan, or next-day vs. same-week turnaround), rather than a separate top-level lab entry for every combination:
+
 ```yaml
 - name: "Irohas Melbourne"
-  devCost: 17
-  pushPullCost: 5
-  pushPullType: "per_stop"    # or "flat"
-  turnaroundTime: "next_day"  # "next_day" | "same_week" | "longer"
-  highResScan: true           # marks this lab as offering high-res scans
+  services:
+    - devCost: 17
+      pushPullCost: 5
+      pushPullType: "per_stop"    # or "flat"
+      turnaroundTime: "next_day"  # "next_day" | "same_week" | "longer"
+      highResScan: true           # marks this tier as offering high-res scans
+
+- name: "Walkens Melbourne"
+  services:
+    - devCost: 16
+      pushPullCost: 10
+      pushPullType: "flat"
+      turnaroundTime: "same_week"
+      highResScan: false
+    - devCost: 23
+      pushPullCost: 10
+      pushPullType: "flat"
+      turnaroundTime: "same_week"
+      highResScan: true
+    - devCost: 33
+      pushPullCost: 10
+      pushPullType: "flat"
+      turnaroundTime: "next_day"
+      highResScan: true
 ```
+
+Every service tier shows up as its own row in the "Labs For This Roll" comparison, labelled with the parent lab's name plus its turnaround/hi-res badges.
 
 ## Built With
 
