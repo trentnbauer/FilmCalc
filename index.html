@@ -53,7 +53,6 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Film Section -->
                 <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg space-y-3">
                     <h2 class="font-semibold text-blue-800 dark:text-blue-400 text-sm uppercase tracking-wide">The Film</h2>
                     <input type="text" id="filmName" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" placeholder="Film Name">
@@ -70,7 +69,6 @@
                     <button id="saveFilmBtn" type="button" class="w-full bg-blue-600 text-white py-2 rounded font-medium hover:bg-blue-700">Save Film Profile</button>
                 </div>
 
-                <!-- Lab Section -->
                 <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg space-y-3">
                     <h2 class="font-semibold text-green-800 dark:text-green-400 text-sm uppercase tracking-wide">Lab Costs (Per Roll)</h2>
                     <input type="text" id="labName" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" placeholder="Lab Name">
@@ -88,7 +86,6 @@
                 </div>
             </div>
 
-            <!-- Additional Fees -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg space-y-2">
                     <h2 class="font-semibold text-orange-800 dark:text-orange-400 text-sm uppercase tracking-wide">Once-off Fee</h2>
@@ -98,6 +95,12 @@
                     <h2 class="font-semibold text-yellow-800 dark:text-yellow-400 text-sm uppercase tracking-wide">Per-roll Fee</h2>
                     <input type="number" id="perRollFee" step="0.01" placeholder="e.g. Surcharge" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                 </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <button id="exportBtn" type="button" class="bg-gray-500 hover:bg-gray-600 text-white py-2 rounded">Export Data</button>
+                <button id="importBtn" type="button" class="bg-gray-500 hover:bg-gray-600 text-white py-2 rounded">Import Data</button>
+                <input type="file" id="importFile" class="hidden" accept=".json">
             </div>
         </form>
 
@@ -170,6 +173,8 @@
             document.getElementById('breakdown').innerText = `Total Cost: $${grandTotal.toFixed(2)} | Photos: ${totalPhotos}${pushPullText}`;
         }
 
+        document.querySelectorAll('input, select').forEach(i => i.addEventListener('input', calculateCost));
+
         function updateDropdown(id, data, storageKey) {
             const dropdown = document.getElementById(id);
             const saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
@@ -207,10 +212,44 @@
             calculateCost();
         });
 
-        // Event listeners for Save/Delete buttons remain...
-        document.querySelectorAll('input, select').forEach(i => i.addEventListener('input', calculateCost));
-        document.getElementById('saveFilmBtn').addEventListener('click', () => { /* save logic */ });
-        document.getElementById('saveLabBtn').addEventListener('click', () => { /* save logic */ });
+        // Save Logic
+        document.getElementById('saveFilmBtn').addEventListener('click', () => {
+            const name = document.getElementById('filmName').value.trim();
+            if (!name) return alert("Enter Film Name");
+            let saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
+            saved[name] = { name, boxSpeed: document.getElementById('boxSpeed').value, filmCost: document.getElementById('filmCost').value, rolls: document.getElementById('rolls').value, exposures: document.getElementById('exposures').value };
+            localStorage.setItem('filmProfiles', JSON.stringify(saved));
+            updateFilmDropdown();
+        });
+
+        document.getElementById('saveLabBtn').addEventListener('click', () => {
+            const name = document.getElementById('labName').value.trim();
+            if (!name) return alert("Enter Lab Name");
+            let saved = JSON.parse(localStorage.getItem('labProfiles') || '{}');
+            saved[name] = { name, devCost: document.getElementById('devCost').value, pushPullCost: document.getElementById('pushPullCost').value, pushPullType: document.getElementById('pushPullType').value, scanCost: document.getElementById('scanCost').value, printCost: document.getElementById('printCost').value, onceOffFee: document.getElementById('onceOffFee').value, perRollFee: document.getElementById('perRollFee').value };
+            localStorage.setItem('labProfiles', JSON.stringify(saved));
+            updateLabDropdown();
+        });
+
+        // Import/Export
+        document.getElementById('exportBtn').addEventListener('click', () => {
+            const data = { films: JSON.parse(localStorage.getItem('filmProfiles') || '{}'), labs: JSON.parse(localStorage.getItem('labProfiles') || '{}') };
+            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'calculator_data.json'; a.click();
+        });
+
+        document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
+        document.getElementById('importFile').addEventListener('change', (e) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const data = JSON.parse(event.target.result);
+                if (data.films) localStorage.setItem('filmProfiles', JSON.stringify(data.films));
+                if (data.labs) localStorage.setItem('labProfiles', JSON.stringify(data.labs));
+                updateFilmDropdown(); updateLabDropdown(); alert('Data imported!');
+            };
+            reader.readAsText(e.target.files[0]);
+        });
+
         document.getElementById('themeToggle').addEventListener('click', () => {
             document.documentElement.classList.toggle('dark');
             localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
