@@ -5,64 +5,84 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Film Cost Calculator</title>
     <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 text-gray-800 font-sans min-h-screen flex items-center justify-center p-4">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
 
-    <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 max-w-md w-full">
-        <h1 class="text-2xl font-bold text-center mb-6 text-gray-900">Film Cost Calculator</h1>
+    <script>
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark')
+        } else {
+            document.documentElement.classList.remove('dark')
+        }
+    </script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans min-h-screen flex items-center justify-center p-4 transition-colors duration-200">
+
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 md:p-8 max-w-md w-full relative transition-colors duration-200">
+        
+        <button id="themeToggle" class="absolute top-6 right-6 p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Toggle Dark Mode">
+            <svg id="themeToggleLightIcon" class="hidden w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4.22 3.22a1 1 0 011.415 0l.708.708a1 1 0 01-1.414 1.414l-.708-.708a1 1 0 010-1.414zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM14.22 15.78a1 1 0 010 1.415l-.708.708a1 1 0 01-1.414-1.414l.708-.708a1 1 0 011.415 0zM10 16a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-4.22-3.22a1 1 0 01-1.415 0l-.708-.708a1 1 0 011.414-1.414l.708.708a1 1 0 010 1.415zM2 10a1 1 0 011-1h1a1 1 0 110 2H3a1 1 0 01-1-1zm3.22-4.22a1 1 0 010-1.415l.708-.708a1 1 0 011.414 1.414l-.708.708a1 1 0 01-1.415 0zM10 5a5 5 0 100 10 5 5 0 000-10z" clip-rule="evenodd"></path></svg>
+            <svg id="themeToggleDarkIcon" class="hidden w-5 h-5 text-gray-700" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+        </button>
+
+        <h1 class="text-2xl font-bold text-center mb-6 text-gray-900 dark:text-white pr-8">Film Cost Calculator</h1>
         
         <form id="calculatorForm" class="space-y-4">
-            <div class="bg-blue-50 p-4 rounded-lg space-y-3">
-                <h2 class="font-semibold text-blue-800 text-sm uppercase tracking-wide">The Film</h2>
+            <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg space-y-3 transition-colors duration-200">
+                <h2 class="font-semibold text-blue-800 dark:text-blue-400 text-sm uppercase tracking-wide">The Film</h2>
                 <div>
-                    <label class="block text-sm font-medium mb-1">Total cost of film pack ($ incl. postage)</label>
-                    <input type="number" id="filmCost" step="0.01" min="0" class="w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. 45.00" required>
+                    <label class="block text-sm font-medium mb-1 dark:text-gray-300">Total cost of film pack ($ incl. postage)</label>
+                    <input type="number" id="filmCost" step="0.01" min="0" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-colors" placeholder="e.g. 45.00" required>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium mb-1">Rolls in pack</label>
-                        <input type="number" id="rolls" min="1" class="w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value="1" required>
+                        <label class="block text-sm font-medium mb-1 dark:text-gray-300">Rolls in pack</label>
+                        <input type="number" id="rolls" min="1" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-colors" value="1" required>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-1">Exposures/Roll</label>
-                        <input type="number" id="exposures" min="1" class="w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value="36" required>
+                        <label class="block text-sm font-medium mb-1 dark:text-gray-300">Exposures/Roll</label>
+                        <input type="number" id="exposures" min="1" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-colors" value="36" required>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-green-50 p-4 rounded-lg space-y-3">
-                <h2 class="font-semibold text-green-800 text-sm uppercase tracking-wide">Lab Costs (Per Roll)</h2>
+            <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg space-y-3 transition-colors duration-200">
+                <h2 class="font-semibold text-green-800 dark:text-green-400 text-sm uppercase tracking-wide">Lab Costs (Per Roll)</h2>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium mb-1">Developing ($)</label>
-                        <input type="number" id="devCost" step="0.01" min="0" class="w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-green-500 outline-none" value="0">
+                        <label class="block text-sm font-medium mb-1 dark:text-gray-300">Developing ($)</label>
+                        <input type="number" id="devCost" step="0.01" min="0" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-green-500 outline-none transition-colors" value="0">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-1">Push / Pull ($)</label>
-                        <input type="number" id="pushPullCost" step="0.01" min="0" class="w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-green-500 outline-none" value="0">
+                        <label class="block text-sm font-medium mb-1 dark:text-gray-300">Push / Pull ($)</label>
+                        <input type="number" id="pushPullCost" step="0.01" min="0" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-green-500 outline-none transition-colors" value="0">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-1">Scanning ($)</label>
-                        <input type="number" id="scanCost" step="0.01" min="0" class="w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-green-500 outline-none" value="0">
+                        <label class="block text-sm font-medium mb-1 dark:text-gray-300">Scanning ($)</label>
+                        <input type="number" id="scanCost" step="0.01" min="0" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-green-500 outline-none transition-colors" value="0">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-1">Printing ($)</label>
-                        <input type="number" id="printCost" step="0.01" min="0" class="w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-green-500 outline-none" value="0">
+                        <label class="block text-sm font-medium mb-1 dark:text-gray-300">Printing ($)</label>
+                        <input type="number" id="printCost" step="0.01" min="0" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 focus:ring-2 focus:ring-green-500 outline-none transition-colors" value="0">
                     </div>
                 </div>
             </div>
         </form>
 
-        <div class="mt-8 text-center bg-gray-50 p-4 rounded-lg border border-gray-200">
-            <p class="text-sm text-gray-500 uppercase tracking-wide mb-1">True Cost Per Photo</p>
-            <div class="text-4xl font-bold text-gray-900" id="costPerPhoto">$0.00</div>
-            <p class="text-sm text-gray-500 mt-2" id="breakdown">Total Cost: $0.00 | Total Photos: 0</p>
+        <div class="mt-8 text-center bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border border-gray-200 dark:border-gray-600 transition-colors duration-200">
+            <p class="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">True Cost Per Photo</p>
+            <div class="text-4xl font-bold text-gray-900 dark:text-white" id="costPerPhoto">$0.00</div>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-2" id="breakdown">Total Cost: $0.00 | Total Photos: 0</p>
         </div>
     </div>
 
     <script>
+        // --- Calculator Logic ---
         function calculateCost() {
-            // Get values
             const filmCost = parseFloat(document.getElementById('filmCost').value) || 0;
             const rolls = parseInt(document.getElementById('rolls').value) || 1;
             const exposures = parseInt(document.getElementById('exposures').value) || 1;
@@ -72,7 +92,6 @@
             const scanCost = parseFloat(document.getElementById('scanCost').value) || 0;
             const printCost = parseFloat(document.getElementById('printCost').value) || 0;
 
-            // Math
             const labCostPerRoll = devCost + pushPullCost + scanCost + printCost;
             const totalLabCost = labCostPerRoll * rolls;
             const grandTotal = filmCost + totalLabCost;
@@ -80,15 +99,51 @@
             
             const costPerPhoto = totalPhotos > 0 ? (grandTotal / totalPhotos) : 0;
 
-            // Update UI
             document.getElementById('costPerPhoto').innerText = `$${costPerPhoto.toFixed(2)}`;
             document.getElementById('breakdown').innerText = `Grand Total: $${grandTotal.toFixed(2)} | Total Photos: ${totalPhotos}`;
         }
 
-        // Add event listeners to all inputs to calculate in real-time
         const inputs = document.querySelectorAll('input');
         inputs.forEach(input => {
             input.addEventListener('input', calculateCost);
+        });
+
+        // --- Dark Mode Toggle Logic ---
+        const themeToggleDarkIcon = document.getElementById('themeToggleDarkIcon');
+        const themeToggleLightIcon = document.getElementById('themeToggleLightIcon');
+        const themeToggleBtn = document.getElementById('themeToggle');
+
+        // Change the icons inside the button based on previous settings
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            themeToggleLightIcon.classList.remove('hidden');
+        } else {
+            themeToggleDarkIcon.classList.remove('hidden');
+        }
+
+        themeToggleBtn.addEventListener('click', function() {
+            // Toggle icons inside button
+            themeToggleDarkIcon.classList.toggle('hidden');
+            themeToggleLightIcon.classList.toggle('hidden');
+
+            // If set via local storage previously
+            if (localStorage.getItem('theme')) {
+                if (localStorage.getItem('theme') === 'light') {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('theme', 'light');
+                }
+            // If NOT set via local storage previously
+            } else {
+                if (document.documentElement.classList.contains('dark')) {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
         });
     </script>
 </body>
