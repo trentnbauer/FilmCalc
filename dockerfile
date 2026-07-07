@@ -7,7 +7,7 @@ RUN rm -rf /usr/share/nginx/html/*
 # Copy app files
 COPY index.html /usr/share/nginx/html/index.html
 COPY films.yaml /usr/share/nginx/html/films.yaml
-COPY labs.yml /usr/share/nginx/html/labs.yml
+COPY labs.yaml /usr/share/nginx/html/labs.yaml
 COPY favicon.ico /usr/share/nginx/html/favicon.ico
 COPY icon.ico /usr/share/nginx/html/icon.ico
 COPY icon.svg /usr/share/nginx/html/icon.svg
