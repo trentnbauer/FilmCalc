@@ -42,8 +42,8 @@
 
                 <div class="space-y-4">
                     <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3">
-                        <h3 class="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide">Cheapest Total Upgrade</h3>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">In "Labs For This Roll", if the cheapest Hi-Res + Fastest option costs less than this percentage more than the absolute cheapest, it's shown as the "Cheapest Total" pick instead — since a small premium is usually worth both perks.</p>
+                        <h3 class="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide">Recommended Pick Threshold</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">In "Labs For This Roll", if the cheapest Hi-Res + Fastest option costs less than this percentage more than the absolute cheapest, its card is highlighted gold as the recommended pick — since a small premium is usually worth both perks. "Cheapest Total" always shows the actual cheapest option, unchanged.</p>
                         <div class="flex items-center gap-2">
                             <input type="number" id="upgradeThresholdInput" min="0" max="100" step="1" class="w-24 border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
                             <span class="text-sm text-gray-600 dark:text-gray-300">% price premium allowed</span>
@@ -514,27 +514,27 @@
             const cheapestHiResFastest = cheapest(allResults.filter(r => r.highResScan && r.turnaroundTime === 'next_day'));
 
             // If the fully-loaded option (hi-res + next day) is within the user's
-            // configured threshold of the absolute cheapest, it's a better real-world
-            // pick — a few cents more for both perks beats "technically cheapest"
-            // with worse service. Adjustable in Settings, defaults to 10%.
+            // configured threshold of the absolute cheapest, it's flagged as the
+            // recommended pick (highlighted gold) — a few cents more for both
+            // perks usually beats "technically cheapest" with worse service.
+            // "Cheapest Total" always shows the actual cheapest, unchanged.
+            // Adjustable in Settings, defaults to 10%.
             const UPGRADE_THRESHOLD = (parseFloat(localStorage.getItem('upgradeThresholdPercent')) || 10) / 100;
-            let cheapestTotalPick = rawCheapestTotal;
-            let cheapestTotalNote = '';
+            let hiResFastestNote = '';
+            let hiResFastestRecommended = false;
             if (rawCheapestTotal && cheapestHiResFastest && cheapestHiResFastest.id !== rawCheapestTotal.id) {
                 const premium = (cheapestHiResFastest.costPerPhoto - rawCheapestTotal.costPerPhoto) / rawCheapestTotal.costPerPhoto;
                 if (premium >= 0 && premium < UPGRADE_THRESHOLD) {
-                    cheapestTotalPick = cheapestHiResFastest;
-                    cheapestTotalNote = `Only ${(premium * 100).toFixed(1)}% more than the absolute cheapest ($${rawCheapestTotal.costPerPhoto.toFixed(2)}/photo) — this one includes hi-res + next day.`;
+                    hiResFastestRecommended = true;
+                    hiResFastestNote = `Only ${(premium * 100).toFixed(1)}% more than the absolute cheapest ($${rawCheapestTotal.costPerPhoto.toFixed(2)}/photo) — this one includes hi-res + next day.`;
                 }
             }
 
-            const isUpgraded = cheapestTotalPick !== rawCheapestTotal;
-
             const bestPicks = [
-                { label: '🏆 Cheapest Total', pick: cheapestTotalPick, note: cheapestTotalNote, recommended: isUpgraded },
+                { label: '🏆 Cheapest Total', pick: rawCheapestTotal },
                 { label: '⚡ Cheapest Fastest', pick: cheapestFastest },
                 { label: '🔍 Cheapest Hi-Res', pick: cheapestHiRes },
-                { label: '⚡🔍 Cheapest Hi-Res + Fastest', pick: cheapestHiResFastest }
+                { label: '⚡🔍 Cheapest Hi-Res + Fastest', pick: cheapestHiResFastest, note: hiResFastestNote, recommended: hiResFastestRecommended }
             ];
 
             const usedIds = new Set(bestPicks.map(bp => bp.pick && bp.pick.id).filter(id => id !== undefined && id !== null));
