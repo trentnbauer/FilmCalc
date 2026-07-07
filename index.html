@@ -22,10 +22,39 @@
 
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 md:p-8 max-w-2xl w-full relative transition-colors duration-200">
         
-        <button id="themeToggle" class="absolute top-6 right-6 p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Toggle Dark Mode">
-            <svg id="themeToggleLightIcon" class="hidden w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4.22 3.22a1 1 0 011.415 0l.708.708a1 1 0 01-1.414 1.414l-.708-.708a1 1 0 010-1.414zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM14.22 15.78a1 1 0 010 1.415l-.708.708a1 1 0 01-1.414-1.414l-.708-.708a1 1 0 011.415 0zM10 16a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-4.22-3.22a1 1 0 01-1.415 0l-.708-.708a1 1 0 011.414-1.414l.708.708a1 1 0 010 1.415zM2 10a1 1 0 011-1h1a1 1 0 110 2H3a1 1 0 01-1-1zm3.22-4.22a1 1 0 010-1.415l.708-.708a1 1 0 011.414 1.414l-.708.708a1 1 0 01-1.415 0zM10 5a5 5 0 100 10 5 5 0 000-10z" clip-rule="evenodd"></path></svg>
-            <svg id="themeToggleDarkIcon" class="hidden w-5 h-5 text-gray-700" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
-        </button>
+        <div class="absolute top-6 right-6 flex items-center gap-2">
+            <button id="settingsToggle" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Settings">
+                <svg class="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+            </button>
+            <button id="themeToggle" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Toggle Dark Mode">
+                <svg id="themeToggleLightIcon" class="hidden w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4.22 3.22a1 1 0 011.415 0l.708.708a1 1 0 01-1.414 1.414l-.708-.708a1 1 0 010-1.414zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM14.22 15.78a1 1 0 010 1.415l-.708.708a1 1 0 01-1.414-1.414l-.708-.708a1 1 0 011.415 0zM10 16a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-4.22-3.22a1 1 0 01-1.415 0l-.708-.708a1 1 0 011.414-1.414l.708.708a1 1 0 010 1.415zM2 10a1 1 0 011-1h1a1 1 0 110 2H3a1 1 0 01-1-1zm3.22-4.22a1 1 0 010-1.415l.708-.708a1 1 0 011.414 1.414l-.708.708a1 1 0 01-1.415 0zM10 5a5 5 0 100 10 5 5 0 000-10z" clip-rule="evenodd"></path></svg>
+                <svg id="themeToggleDarkIcon" class="hidden w-5 h-5 text-gray-700" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+            </button>
+        </div>
+
+        <div id="settingsModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 max-w-md w-full relative">
+                <button id="settingsCloseBtn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-xl leading-none" aria-label="Close Settings">✕</button>
+                <h2 class="text-lg font-bold mb-4 text-gray-900 dark:text-white">Settings</h2>
+
+                <div class="space-y-4">
+                    <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3">
+                        <h3 class="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide">Export Data</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Downloads <code>films.yaml</code> and <code>labs.yml</code> with all your saved profiles, in the same format the app reads them in — so they can be dropped straight back into the project's repo with no editing.</p>
+                        <button id="exportBtn" type="button" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-medium">Export as YAML</button>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3">
+                        <h3 class="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide">Import Data</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Select one or both YAML files (<code>films.yaml</code> / <code>labs.yml</code>) to load them as saved profiles.</p>
+                        <button id="importBtn" type="button" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-medium">Import YAML</button>
+                        <input type="file" id="importFile" class="hidden" accept=".yaml,.yml" multiple>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <h1 class="text-3xl font-bold text-center mb-8 text-gray-900 dark:text-white pr-8">Film Cost Calculator</h1>
         
@@ -34,7 +63,6 @@
             <div class="flex gap-2 border-b border-gray-200 dark:border-gray-700">
                 <button id="tabFilmBtn" type="button" class="flex-1 px-4 py-2.5 font-semibold text-sm uppercase tracking-wide border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 transition-colors">Film</button>
                 <button id="tabLabBtn" type="button" class="flex-1 px-4 py-2.5 font-semibold text-sm uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">Lab</button>
-                <button id="tabSettingsBtn" type="button" class="flex-1 px-4 py-2.5 font-semibold text-sm uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">Settings</button>
             </div>
 
             <div id="filmTabContent" class="space-y-6">
@@ -82,36 +110,30 @@
                         <option value="per_stop">Per Stop</option>
                         <option value="flat">Flat Fee</option>
                     </select>
-                    <div class="grid grid-cols-2 gap-2">
-                        <input type="number" id="onceOffFee" step="0.01" placeholder="Once-off Fee" class="border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                        <input type="number" id="perRollFee" step="0.01" placeholder="Per-roll Fee" class="border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                    </div>
                     <button id="saveLabBtn" type="button" class="w-full bg-green-600 text-white py-2 rounded font-medium hover:bg-green-700">Save as Lab Profile</button>
-                </div>
-            </div>
-
-            <div id="settingsTabContent" class="space-y-6 hidden">
-                <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3">
-                    <h2 class="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide">Export Data</h2>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">Downloads <code>films.yaml</code> and <code>labs.yaml</code> with all your saved profiles, in the same format the app reads them in — so they can be dropped straight back into the project's repo with no editing.</p>
-                    <button id="exportBtn" type="button" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-medium">Export as YAML</button>
-                </div>
-                <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3">
-                    <h2 class="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide">Import Data</h2>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">Select one or both YAML files (<code>films.yaml</code> / <code>labs.yaml</code>) to load them as saved profiles.</p>
-                    <button id="importBtn" type="button" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-medium">Import YAML</button>
-                    <input type="file" id="importFile" class="hidden" accept=".yaml,.yml" multiple>
                 </div>
             </div>
         </form>
 
         <div class="mt-8 text-center bg-gray-50 dark:bg-gray-700/50 p-6 rounded-lg border border-gray-200 dark:border-gray-600">
             <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-3 text-center">Cheapest Lab For This Roll</h3>
+
+            <div class="grid grid-cols-2 gap-2 mb-4 text-left">
+                <div>
+                    <label for="onceOffFee" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Once-off Fee ($)</label>
+                    <input type="number" id="onceOffFee" step="0.01" placeholder="e.g. shipping" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
+                </div>
+                <div>
+                    <label for="perRollFee" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Per-roll Fee ($)</label>
+                    <input type="number" id="perRollFee" step="0.01" placeholder="e.g. surcharge" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
+                </div>
+            </div>
+
             <div id="labComparison" class="space-y-1.5 text-left"></div>
         </div>
 
         <p class="mt-8 text-center text-xs text-gray-500 dark:text-gray-500">
-            This project is "vibe coded" by Gemini. <br>
+            Originally vibe coded by Gemini, with further features built by Claude (Anthropic). <br>
             Source code: <a href="https://github.com/trentnbauer/FilmCalc" class="underline hover:text-blue-500">github.com/trentnbauer/FilmCalc</a> 
         </p>
     </div>
@@ -137,11 +159,22 @@
 
         updateThemeIcons();
 
+        // ---------- Settings modal ----------
+        const settingsToggle = document.getElementById('settingsToggle');
+        const settingsModal = document.getElementById('settingsModal');
+        const settingsCloseBtn = document.getElementById('settingsCloseBtn');
+
+        function openSettings() { settingsModal.classList.remove('hidden'); }
+        function closeSettings() { settingsModal.classList.add('hidden'); }
+
+        settingsToggle.addEventListener('click', openSettings);
+        settingsCloseBtn.addEventListener('click', closeSettings);
+        settingsModal.addEventListener('click', (e) => { if (e.target === settingsModal) closeSettings(); });
+
         // ---------- Tab switching ----------
         const tabs = {
             film: { btn: document.getElementById('tabFilmBtn'), content: document.getElementById('filmTabContent') },
-            lab: { btn: document.getElementById('tabLabBtn'), content: document.getElementById('labTabContent') },
-            settings: { btn: document.getElementById('tabSettingsBtn'), content: document.getElementById('settingsTabContent') }
+            lab: { btn: document.getElementById('tabLabBtn'), content: document.getElementById('labTabContent') }
         };
 
         function setTabActive(btn, active) {
@@ -163,13 +196,13 @@
 
         Object.keys(tabs).forEach(key => tabs[key].btn.addEventListener('click', () => switchTab(key)));
 
-        // ---------- Default profiles (loaded from films.yaml / labs.yaml) ----------
+        // ---------- Default profiles (loaded from films.yaml / labs.yml) ----------
         let defaultFilms = {};
         let defaultLabs = {};
 
         async function loadDefaults() {
             try {
-                const [fRes, lRes] = await Promise.all([fetch('films.yaml'), fetch('labs.yaml')]);
+                const [fRes, lRes] = await Promise.all([fetch('films.yaml'), fetch('labs.yml')]);
                 if (fRes.ok) {
                     const parsed = jsyaml.load(await fRes.text()) || [];
                     parsed.forEach(f => { defaultFilms[f.name] = f; });
@@ -192,13 +225,28 @@
         // can flip which lab is actually cheapest for a given roll. Sorted by
         // cost per photo since that's the number that actually matters.
         function updateLabComparison() {
-            const boxSpeed = parseInt(document.getElementById('boxSpeed').value) || 0;
-            const devSpeed = parseInt(document.getElementById('devSpeed').value) || 0;
-            const filmCost = parseFloat(document.getElementById('filmCost').value) || 0;
-            const rolls = parseInt(document.getElementById('rolls').value) || 1;
-            const exposures = parseInt(document.getElementById('exposures').value) || 1;
-            const totalPhotos = exposures * rolls;
             const container = document.getElementById('labComparison');
+
+            const devSpeedRaw = document.getElementById('devSpeed').value;
+            const filmCostRaw = document.getElementById('filmCost').value;
+            const rollsRaw = document.getElementById('rolls').value;
+            const exposuresRaw = document.getElementById('exposures').value;
+
+            const hasRequiredFields = [devSpeedRaw, filmCostRaw, rollsRaw, exposuresRaw].every(v => v !== '' && v !== null && parseFloat(v) > 0);
+            if (!hasRequiredFields) {
+                container.innerHTML = '<p class="text-sm text-gray-400 text-center">Fill in Dev Speed, Total Cost, Rolls & Exposures to compare labs</p>';
+                return;
+            }
+
+            const boxSpeed = parseInt(document.getElementById('boxSpeed').value) || 0;
+            const devSpeed = parseInt(devSpeedRaw) || 0;
+            const filmCost = parseFloat(filmCostRaw) || 0;
+            const rolls = parseInt(rollsRaw) || 1;
+            const exposures = parseInt(exposuresRaw) || 1;
+            const totalPhotos = exposures * rolls;
+
+            const onceOffFee = parseFloat(document.getElementById('onceOffFee').value) || 0;
+            const perRollFee = parseFloat(document.getElementById('perRollFee').value) || 0;
 
             const allLabs = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') };
             const names = Object.keys(allLabs);
@@ -213,8 +261,6 @@
                 const devCost = parseFloat(lab.devCost) || 0;
                 const scanCost = parseFloat(lab.scanCost) || 0;
                 const printCost = parseFloat(lab.printCost) || 0;
-                const perRollFee = parseFloat(lab.perRollFee) || 0;
-                const onceOffFee = parseFloat(lab.onceOffFee) || 0;
                 const basePushPull = parseFloat(lab.pushPullCost) || 0;
                 const pushPullType = lab.pushPullType || 'per_stop';
 
@@ -296,8 +342,6 @@
             document.getElementById('printCost').value = p.printCost || 0;
             document.getElementById('pushPullCost').value = p.pushPullCost || 0;
             document.getElementById('pushPullType').value = p.pushPullType || 'per_stop';
-            document.getElementById('onceOffFee').value = p.onceOffFee || 0;
-            document.getElementById('perRollFee').value = p.perRollFee || 0;
             updateLabComparison();
         });
 
@@ -328,9 +372,7 @@
                 scanCost: document.getElementById('scanCost').value,
                 printCost: document.getElementById('printCost').value,
                 pushPullCost: document.getElementById('pushPullCost').value,
-                pushPullType: document.getElementById('pushPullType').value,
-                onceOffFee: document.getElementById('onceOffFee').value,
-                perRollFee: document.getElementById('perRollFee').value
+                pushPullType: document.getElementById('pushPullType').value
             };
             localStorage.setItem('labProfiles', JSON.stringify(saved));
             updateLabDropdown();
@@ -364,7 +406,7 @@
             updateLabDropdown();
         });
 
-        // ---------- Export / Import (YAML, matching films.yaml / labs.yaml schema) ----------
+        // ---------- Export / Import (YAML, matching films.yaml / labs.yml schema) ----------
         function buildFilmsArray() {
             const saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
             const all = { ...defaultFilms, ...saved };
@@ -386,9 +428,7 @@
                 scanCost: Number(l.scanCost) || 0,
                 printCost: Number(l.printCost) || 0,
                 pushPullCost: Number(l.pushPullCost) || 0,
-                pushPullType: l.pushPullType || 'per_stop',
-                onceOffFee: Number(l.onceOffFee) || 0,
-                perRollFee: Number(l.perRollFee) || 0
+                pushPullType: l.pushPullType || 'per_stop'
             }));
         }
 
@@ -404,7 +444,7 @@
 
         document.getElementById('exportBtn').addEventListener('click', () => {
             downloadYaml('films.yaml', buildFilmsArray());
-            downloadYaml('labs.yaml', buildLabsArray());
+            downloadYaml('labs.yml', buildLabsArray());
         });
 
         document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
@@ -448,7 +488,7 @@
                 updateFilmDropdown();
                 updateLabDropdown();
                 if (errors > 0 && filmsImported === 0 && labsImported === 0) {
-                    alert('Could not read those files — are they valid films.yaml / labs.yaml files?');
+                    alert('Could not read those files — are they valid films.yaml / labs.yml files?');
                 } else {
                     alert(`Imported ${filmsImported} film profile(s) and ${labsImported} lab profile(s).`);
                 }
