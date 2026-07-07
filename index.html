@@ -96,12 +96,6 @@
                     <input type="number" id="perRollFee" step="0.01" placeholder="e.g. Surcharge" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                 </div>
             </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <button id="exportBtn" type="button" class="bg-gray-500 hover:bg-gray-600 text-white py-2 rounded">Export Data</button>
-                <button id="importBtn" type="button" class="bg-gray-500 hover:bg-gray-600 text-white py-2 rounded">Import Data</button>
-                <input type="file" id="importFile" class="hidden" accept=".json">
-            </div>
         </form>
 
         <div class="mt-8 text-center bg-gray-50 dark:bg-gray-700/50 p-6 rounded-lg border border-gray-200 dark:border-gray-600">
@@ -110,6 +104,12 @@
                 <div><p class="text-sm text-gray-500 uppercase tracking-widest">Per Roll</p><div class="text-5xl font-bold text-gray-900 dark:text-white mt-2" id="costPerRoll">--</div></div>
             </div>
             <p class="text-sm text-gray-500 mt-6" id="breakdown">Please enter Film Cost & Developing Cost</p>
+            
+            <div class="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-gray-200 dark:border-gray-600">
+                <button id="exportBtn" type="button" class="bg-gray-500 hover:bg-gray-600 text-white py-2 rounded">Export Data</button>
+                <button id="importBtn" type="button" class="bg-gray-500 hover:bg-gray-600 text-white py-2 rounded">Import Data</button>
+                <input type="file" id="importFile" class="hidden" accept=".json">
+            </div>
         </div>
 
         <p class="mt-8 text-center text-xs text-gray-400 dark:text-gray-600">
@@ -212,7 +212,6 @@
             calculateCost();
         });
 
-        // Save Logic
         document.getElementById('saveFilmBtn').addEventListener('click', () => {
             const name = document.getElementById('filmName').value.trim();
             if (!name) return alert("Enter Film Name");
@@ -231,7 +230,6 @@
             updateLabDropdown();
         });
 
-        // Import/Export
         document.getElementById('exportBtn').addEventListener('click', () => {
             const data = { films: JSON.parse(localStorage.getItem('filmProfiles') || '{}'), labs: JSON.parse(localStorage.getItem('labProfiles') || '{}') };
             const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
