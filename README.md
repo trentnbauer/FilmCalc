@@ -28,7 +28,7 @@ services:
       - "8080:80"
     # Optional: bind-mount your own films.yaml / labs.yaml so you can edit your
     # default film stocks and labs without needing to rebuild or republish the image.
-    # volumes:
+     volumes:
     #   - ./films.yaml:/usr/share/nginx/html/films.yaml:ro
     #   - ./labs.yaml:/usr/share/nginx/html/labs.yaml:ro
     restart: unless-stopped
@@ -43,7 +43,7 @@ The app will be available at `http://localhost:8080`.
 
 ### Customizing default profiles
 
-Edit `films.yaml` and `labs.yaml` in the project root to change the film stocks and labs that ship as defaults. Format:
+You can refill your profiles using the below YAML files;
 
 **`films.yaml`**
 ```yaml
@@ -63,8 +63,6 @@ Edit `films.yaml` and `labs.yaml` in the project root to change the film stocks 
   turnaroundTime: "next_day"  # "next_day" | "same_week" | "longer"
   highResScan: true           # marks this lab as offering high-res scans
 ```
-
-If you'd rather use your own default film stocks and labs without waiting on a new image publish, uncomment the `volumes:` section in `docker-compose.yml` to bind-mount your own `films.yaml` / `labs.yaml` over the ones baked into the image.
 
 ## Built With
 
