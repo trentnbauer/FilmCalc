@@ -4,3 +4,4 @@
   printCost: 0
   pushPullCost: 5
   pushPullType: "per_stop"
+  highResScan: true
