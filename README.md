@@ -7,8 +7,8 @@ A lightweight, responsive, mobile-friendly web app for analog photographers to w
 - **Cost breakdown** — Calculates cost per photo, dev-only cost per roll, and total cost per roll (film stock + developing), based on film cost, dev/scan/print pricing, push/pull fees, and once-off or per-roll surcharges.
 - **Labs for this roll** — Every saved lab profile is automatically compared against your current film and push/pull settings, sorted by cost per photo. A lab that's cheaper at box speed isn't always cheaper once you push 2 stops — this handles that. Each lab shows its turnaround time (Next Day / Same Week / Longer), and labs offering high-res scans get a "HI-RES" badge. Filter toggles let you narrow the list to Next Day and/or Hi-Res labs only.
 - **Push/pull aware** — Automatically works out stops pushed or pulled from Box Speed vs. Dev Speed (using log2 of the ratio), and applies each lab's push/pull fee — either a flat fee or a per-stop rate.
-- **Profile management** — Save your own film stocks and lab pricing as reusable profiles, stored locally in your browser. Built-in defaults come from `films.yaml` and `labs.yaml`, which ship with the repo and can be edited directly.
-- **YAML export/import** — Export your saved profiles as `films.yaml` / `labs.yaml` — the exact format the app reads on load — so they can be committed straight back into a self-hosted instance with no manual editing. Import supports loading one or both files back in.
+- **Profile management** — Save your own film stocks and lab pricing as reusable profiles, stored locally in your browser. Optionally seed the app with defaults via `films.yaml` and `labs.yaml` (see below) — if these aren't present, the app just starts with no saved profiles.
+- **YAML export/import** — Export your saved profiles as `films.yaml` / `labs.yaml` — the exact format the app reads on load — so they can be dropped straight into a self-hosted instance with no manual editing. Import supports loading one or both files back in.
 - **Dark mode** — Toggle in the top corner, respects system preference by default.
 - **Mobile-first design** — Scales from phone screens to desktop.
 
@@ -28,7 +28,7 @@ services:
       - "8080:80"
     # Optional: bind-mount your own films.yaml / labs.yaml so you can edit your
     # default film stocks and labs without needing to rebuild or republish the image.
-     volumes:
+    # volumes:
     #   - ./films.yaml:/usr/share/nginx/html/films.yaml:ro
     #   - ./labs.yaml:/usr/share/nginx/html/labs.yaml:ro
     restart: unless-stopped
@@ -41,9 +41,11 @@ services:
 
 The app will be available at `http://localhost:8080`.
 
-### Customizing default profiles
+### Adding default profiles (optional)
 
-You can refill your profiles using the below YAML files;
+This app doesn't ship with any default film stocks or labs baked in — it just starts empty and lets you build up profiles via the UI, which are saved in your browser's `localStorage`.
+
+If you'd rather seed it with defaults (e.g. for a shared/self-hosted instance), you can add your own `films.yaml` and `labs.yaml` on top of the container using the bind-mount lines in the `docker-compose.yml` above. Format:
 
 **`films.yaml`**
 ```yaml
