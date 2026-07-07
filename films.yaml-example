@@ -1,0 +1,10 @@
+- name: "Kodak Portra 400"
+  boxSpeed: 400
+  rolls: 1
+  exposures: 36
+  filmCost: 0
+- name: "Ilford HP5 Plus"
+  boxSpeed: 400
+  rolls: 1
+  exposures: 36
+  filmCost: 0
