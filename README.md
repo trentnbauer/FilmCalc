@@ -5,7 +5,10 @@ A lightweight, responsive, mobile-friendly web app for analog photographers to w
 ## Features
 
 - **Cost breakdown** — Calculates cost per photo, dev-only cost per roll, and total cost per roll (film stock + developing), based on film cost, dev/scan/print pricing, push/pull fees, and once-off or per-roll surcharges.
-- **Labs for this roll** — Every saved lab profile is automatically compared against your current film and push/pull settings, sorted by cost per photo. A lab that's cheaper at box speed isn't always cheaper once you push 2 stops — this handles that. Each lab shows its turnaround time (Next Day / Same Week / Longer), and labs offering high-res scans get a "HI-RES" badge. Filter toggles let you narrow the list to Next Day and/or Hi-Res labs only.
+- **Multiple bundles per film** — The same film stock can be saved multiple times with different pack sizes, exposure counts, prices, or stores (e.g. a 3-pack vs. a bulk 10-pack of Kodak Gold) without one overwriting the other. An optional Bundle Label distinguishes two bundles that happen to share the exact same rolls/exposures.
+- **Buy links** — Save a store name and purchase link against a film profile; a "🛒 Buy from {store}" link appears in Film Setup, and shows up again in the Cheapest Films tab.
+- **Cheapest Films tab** — Every saved film profile, grouped by Box Speed, with the cheapest cost-per-photo bundle at each ISO highlighted (buy link included), and everything else listed below.
+- **Labs for this roll** — Every saved lab profile is automatically compared against your current film and push/pull settings, sorted by cost per photo. A lab that's cheaper at box speed isn't always cheaper once you push 2 stops — this handles that. Each lab shows its turnaround time (Next Day / Same Week / Longer), and labs offering high-res scans get a "HI-RES" badge. Filter toggles let you narrow the list to Next Day and/or Hi-Res labs only. If the cheapest Hi-Res + Fastest option is within a configurable percentage of the absolute cheapest, it's promoted to "Cheapest Total" and highlighted in gold as the recommended pick.
 - **Push/pull aware** — Automatically works out stops pushed or pulled from Box Speed vs. Dev Speed (using log2 of the ratio), and applies each lab's push/pull fee — either a flat fee or a per-stop rate.
 - **Profile management** — Save your own film stocks and lab pricing as reusable profiles, stored locally in your browser. Optionally seed the app with defaults via `config.yaml` (see below) — if it isn't present, the app just starts with no saved profiles.
 - **YAML export/import** — Export your saved profiles and settings as a single `config.yaml` — the exact format the app reads on load — so it can be dropped straight into a self-hosted instance with no manual editing.
@@ -88,7 +91,16 @@ films:
     rolls: 1
     exposures: 36
     filmCost: 25
-    buyLink: "https://www.example.com/kodak-gold-200"   # optional; shows a "Buy this film" link in Film Setup
+    storeName: "Example Camera Store"                      # optional; shown in the buy link
+    buyLink: "https://www.example.com/kodak-gold-200"       # optional; shows a "Buy this film" link
+  - name: "Kodak Gold"
+    bundleLabel: "Bulk 10-Pack"                             # optional; only needed to tell apart two
+    boxSpeed: 400                                           # bundles with the exact same rolls/exposures —
+    rolls: 10                                               # different rolls or exposures (e.g. 24 vs 36exp)
+    exposures: 36                                           # are always kept separate automatically
+    filmCost: 210
+    storeName: "Example Bulk Store"
+    buyLink: "https://www.example.com/kodak-gold-200-bulk"
 
 labs:
   - name: "Irohas Melbourne"
