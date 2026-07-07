@@ -91,15 +91,9 @@
                         <input type="text" id="bundleLabel" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" placeholder="e.g. 3-Pack, 24exp Bulk 10-Pack">
                         <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Only needed if you're saving two bundles with the exact same rolls & exposures (e.g. same size from a different store) — different rolls/exposures are always kept separate automatically.</p>
                     </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label for="boxSpeed" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Box Speed (ISO)</label>
-                            <input type="number" id="boxSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                        </div>
-                        <div>
-                            <label for="devSpeed" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Dev Speed (ISO)</label>
-                            <input type="number" id="devSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                        </div>
+                    <div>
+                        <label for="boxSpeed" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Box Speed (ISO)</label>
+                        <input type="number" id="boxSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                     </div>
                     <div>
                         <label for="filmCost" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Total Cost incl. Postage ($)</label>
@@ -172,6 +166,12 @@
 
         <div id="labsForThisRollSection">
             <div class="mt-8 grid grid-cols-2 gap-2 text-left">
+                <div>
+                    <label for="devSpeed" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Dev Speed (ISO)</label>
+                    <input type="number" id="devSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Different from Box Speed if you're pushing/pulling this roll.</p>
+                </div>
+                <div></div>
                 <div>
                     <label for="onceOffFee" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Once-off Fee ($)</label>
                     <input type="number" id="onceOffFee" step="0.01" placeholder="e.g. shipping" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
