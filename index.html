@@ -97,7 +97,12 @@
                 <div><p class="text-sm text-gray-500 uppercase tracking-widest">Per Roll</p><div class="text-5xl font-bold text-gray-900 dark:text-white mt-2" id="costPerRoll">--</div></div>
             </div>
             <p class="text-sm text-gray-500 mt-6" id="breakdown">Please enter Film Cost & Developing Cost</p>
-            
+
+            <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-600 text-left">
+                <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-3 text-center">Cheapest Lab For This Roll</h3>
+                <div id="labComparison" class="space-y-1.5"></div>
+            </div>
+
             <div class="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-gray-200 dark:border-gray-600">
                 <button id="exportBtn" type="button" class="bg-gray-500 hover:bg-gray-600 text-white py-2 rounded">Export Data</button>
                 <button id="importBtn" type="button" class="bg-gray-500 hover:bg-gray-600 text-white py-2 rounded">Import Data</button>
@@ -186,6 +191,57 @@
             document.getElementById('costPerPhoto').innerText = `$${(totalPhotos > 0 ? grandTotal / totalPhotos : 0).toFixed(2)}`;
             document.getElementById('costPerRoll').innerText = `$${(rolls > 0 ? grandTotal / rolls : 0).toFixed(2)}`;
             document.getElementById('breakdown').innerText = `Total Cost: $${grandTotal.toFixed(2)} | Photos: ${totalPhotos}${pushPullText}`;
+
+            updateLabComparison();
+        }
+
+        // ---------- Cheapest lab comparison ----------
+        // Compares every saved lab profile (built-in + custom) against the current
+        // Box Speed / Dev Speed, since push/pull cost — not just base dev price —
+        // can flip which lab is actually cheapest for a given roll.
+        function updateLabComparison() {
+            const boxSpeed = parseInt(document.getElementById('boxSpeed').value) || 0;
+            const devSpeed = parseInt(document.getElementById('devSpeed').value) || 0;
+            const container = document.getElementById('labComparison');
+
+            const allLabs = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') };
+            const names = Object.keys(allLabs);
+
+            if (names.length === 0) {
+                container.innerHTML = '<p class="text-sm text-gray-400 text-center">Save a lab profile to compare prices</p>';
+                return;
+            }
+
+            const results = names.map(name => {
+                const lab = allLabs[name];
+                const devCost = parseFloat(lab.devCost) || 0;
+                const scanCost = parseFloat(lab.scanCost) || 0;
+                const printCost = parseFloat(lab.printCost) || 0;
+                const perRollFee = parseFloat(lab.perRollFee) || 0;
+                const basePushPull = parseFloat(lab.pushPullCost) || 0;
+                const pushPullType = lab.pushPullType || 'per_stop';
+
+                let activePushPullCost = 0, stops = 0;
+                if (boxSpeed > 0 && devSpeed > 0 && boxSpeed !== devSpeed) {
+                    stops = Math.round(Math.abs(Math.log2(devSpeed / boxSpeed)) * 10) / 10;
+                    activePushPullCost = (pushPullType === 'per_stop') ? (basePushPull * stops) : basePushPull;
+                }
+
+                const perRoll = devCost + activePushPullCost + scanCost + printCost + perRollFee;
+                return { name, perRoll, stops };
+            }).sort((a, b) => a.perRoll - b.perRoll);
+
+            const currentLabName = document.getElementById('labName').value.trim();
+
+            container.innerHTML = results.map((r, i) => {
+                const isCheapest = i === 0;
+                const isCurrent = r.name === currentLabName;
+                const stopsLabel = r.stops > 0 ? ` <span class="text-xs text-gray-400">(${r.stops} stop push/pull)</span>` : '';
+                return `<div class="flex justify-between items-center px-3 py-2 rounded-lg text-sm ${isCheapest ? 'bg-green-100 dark:bg-green-900/30' : 'bg-white dark:bg-gray-800/50'} ${isCurrent ? 'ring-2 ring-blue-400' : ''}">
+                    <span class="${isCheapest ? 'font-semibold text-green-800 dark:text-green-400' : 'text-gray-700 dark:text-gray-300'}">${isCheapest ? '🏆 ' : ''}${r.name}${stopsLabel}</span>
+                    <span class="font-mono ${isCheapest ? 'font-semibold text-green-800 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}">$${r.perRoll.toFixed(2)}/roll</span>
+                </div>`;
+            }).join('');
         }
 
         document.querySelectorAll('input, select').forEach(i => i.addEventListener('input', calculateCost));
@@ -211,7 +267,7 @@
         }
 
         function updateFilmDropdown() { updateDropdown('savedFilmsDropdown', defaultFilms, 'filmProfiles'); }
-        function updateLabDropdown() { updateDropdown('savedLabsDropdown', defaultLabs, 'labProfiles'); }
+        function updateLabDropdown() { updateDropdown('savedLabsDropdown', defaultLabs, 'labProfiles'); updateLabComparison(); }
 
         document.getElementById('savedFilmsDropdown').addEventListener('change', (e) => {
             const p = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') }[e.target.value];
