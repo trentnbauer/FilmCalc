@@ -71,6 +71,7 @@
             <div class="flex gap-2 border-b border-gray-200 dark:border-gray-700">
                 <button id="tabFilmBtn" type="button" class="flex-1 px-4 py-2.5 font-semibold text-sm uppercase tracking-wide border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 transition-colors">Film</button>
                 <button id="tabLabBtn" type="button" class="flex-1 px-4 py-2.5 font-semibold text-sm uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">Lab</button>
+                <button id="tabCheapestFilmsBtn" type="button" class="flex-1 px-4 py-2.5 font-semibold text-sm uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">Cheapest Films</button>
             </div>
 
             <div id="filmTabContent" class="space-y-6">
@@ -85,6 +86,11 @@
                     <div>
                         <label for="filmName" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Film Name</label>
                         <input type="text" id="filmName" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" placeholder="e.g. Kodak Gold 200">
+                    </div>
+                    <div>
+                        <label for="bundleLabel" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Bundle Label (optional)</label>
+                        <input type="text" id="bundleLabel" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" placeholder="e.g. 3-Pack, 24exp Bulk 10-Pack">
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Only needed if you're saving two bundles with the exact same rolls & exposures (e.g. same size from a different store) — different rolls/exposures are always kept separate automatically.</p>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
@@ -111,8 +117,11 @@
                         </div>
                     </div>
                     <div>
-                        <label for="buyLink" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Buy Link (optional)</label>
-                        <input type="url" id="buyLink" placeholder="https://..." class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                        <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Where to Buy (optional)</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="text" id="storeName" placeholder="Store name" class="border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                            <input type="url" id="buyLink" placeholder="https://..." class="border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                        </div>
                         <a id="buyLinkDisplay" href="#" target="_blank" rel="noopener noreferrer" class="hidden mt-1 inline-flex items-center gap-1 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">
                             🛒 Buy this film
                         </a>
@@ -149,6 +158,16 @@
 
                     <button id="saveLabBtn" type="button" class="w-full bg-green-600 text-white py-2 rounded font-medium hover:bg-green-700">Save as Lab Profile</button>
                 </div>
+            </div>
+
+            <div id="cheapestFilmsTabContent" class="space-y-4 hidden">
+                <p class="text-xs text-gray-400 dark:text-gray-500">Every saved film profile (built-in + custom), grouped by Box Speed. The cheapest cost-per-photo bundle at each ISO is highlighted, with its buy link if you saved one.</p>
+                <div id="filmBestPicks" class="space-y-3"></div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest">All Saved Films</span>
+                    <div class="flex-1 border-t border-gray-200 dark:border-gray-600"></div>
+                </div>
+                <div id="filmAllOptions" class="space-y-1.5"></div>
             </div>
         </form>
 
@@ -232,7 +251,8 @@
         // ---------- Tab switching ----------
         const tabs = {
             film: { btn: document.getElementById('tabFilmBtn'), content: document.getElementById('filmTabContent') },
-            lab: { btn: document.getElementById('tabLabBtn'), content: document.getElementById('labTabContent') }
+            lab: { btn: document.getElementById('tabLabBtn'), content: document.getElementById('labTabContent') },
+            cheapestFilms: { btn: document.getElementById('tabCheapestFilmsBtn'), content: document.getElementById('cheapestFilmsTabContent') }
         };
 
         function setTabActive(btn, active) {
@@ -264,7 +284,7 @@
                 const res = await fetch('config.yaml');
                 if (res.ok) {
                     const parsed = jsyaml.load(await res.text()) || {};
-                    (parsed.films || []).forEach(f => { defaultFilms[f.name] = f; });
+                    (parsed.films || []).forEach(f => { defaultFilms[filmProfileKey(f.name, f.rolls, f.exposures, f.bundleLabel)] = f; });
                     (parsed.labs || []).forEach(l => { defaultLabs[l.name] = l; });
                     configSettings = parsed.settings || {};
                 }
@@ -508,8 +528,10 @@
                 }
             }
 
+            const isUpgraded = cheapestTotalPick !== rawCheapestTotal;
+
             const bestPicks = [
-                { label: '🏆 Cheapest Total', pick: cheapestTotalPick, note: cheapestTotalNote },
+                { label: '🏆 Cheapest Total', pick: cheapestTotalPick, note: cheapestTotalNote, recommended: isUpgraded },
                 { label: '⚡ Cheapest Fastest', pick: cheapestFastest },
                 { label: '🔍 Cheapest Hi-Res', pick: cheapestHiRes },
                 { label: '⚡🔍 Cheapest Hi-Res + Fastest', pick: cheapestHiResFastest }
@@ -524,7 +546,7 @@
                 return hiResBadge + turnaroundBadge + stopsLabel;
             }
 
-            bestPicksContainer.innerHTML = bestPicks.map(({ label, pick, note }) => {
+            bestPicksContainer.innerHTML = bestPicks.map(({ label, pick, note, recommended }) => {
                 if (!pick) {
                     return `<div class="px-3 py-3 rounded-lg text-sm bg-white dark:bg-gray-800/50 border border-dashed border-gray-300 dark:border-gray-600">
                         <div class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">${label}</div>
@@ -532,11 +554,11 @@
                     </div>`;
                 }
                 const isCurrent = pick.name === currentLabName;
-                const noteHtml = note ? `<div class="text-xs text-green-700/80 dark:text-green-400/80 mt-1 italic">${note}</div>` : '';
-                return `<div class="px-3 py-3 rounded-lg text-sm bg-green-100 dark:bg-green-900/30 ${isCurrent ? 'ring-2 ring-blue-400' : ''}">
-                    <div class="text-xs font-semibold text-green-700 dark:text-green-400 uppercase tracking-wide mb-1">${label}</div>
-                    <div class="font-semibold text-green-800 dark:text-green-400">${pick.name}${renderBadges(pick)}</div>
-                    <div class="font-mono text-green-800 dark:text-green-400 mt-1">
+                const noteHtml = note ? `<div class="text-xs ${recommended ? 'text-amber-800/80 dark:text-amber-300/80' : 'text-green-700/80 dark:text-green-400/80'} mt-1 italic">${note}</div>` : '';
+                return `<div class="px-3 py-3 rounded-lg text-sm ${recommended ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-green-100 dark:bg-green-900/30'} ${isCurrent ? 'ring-2 ring-blue-400' : ''}">
+                    <div class="text-xs font-semibold ${recommended ? 'text-amber-700 dark:text-amber-400' : 'text-green-700 dark:text-green-400'} uppercase tracking-wide mb-1">${label}</div>
+                    <div class="font-semibold ${recommended ? 'text-amber-800 dark:text-amber-300' : 'text-green-800 dark:text-green-400'}">${pick.name}${renderBadges(pick)}</div>
+                    <div class="font-mono ${recommended ? 'text-amber-800 dark:text-amber-300' : 'text-green-800 dark:text-green-400'} mt-1">
                         <span class="font-semibold">$${pick.costPerPhoto.toFixed(2)}/photo</span>
                         <span class="text-xs opacity-80"> · $${pick.devCostPerRoll.toFixed(2)}/dev · $${pick.costPerRoll.toFixed(2)}/total</span>
                     </div>
@@ -599,11 +621,16 @@
             }
 
             const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
-            const currentName = document.getElementById('filmName').value.trim();
+            const currentKey = filmProfileKey(
+                document.getElementById('filmName').value.trim(),
+                document.getElementById('rolls').value,
+                document.getElementById('exposures').value,
+                document.getElementById('bundleLabel').value.trim()
+            );
 
-            const others = Object.values(allFilms)
-                .filter(f => (parseInt(f.boxSpeed) || 0) === boxSpeed && f.name !== currentName)
-                .map(f => ({ name: f.name, costPerPhoto: computeCostPerPhoto(f.filmCost, f.rolls, f.exposures) }))
+            const others = Object.entries(allFilms)
+                .filter(([key, f]) => (parseInt(f.boxSpeed) || 0) === boxSpeed && key !== currentKey)
+                .map(([key, f]) => ({ name: f.bundleLabel ? `${f.name} — ${f.bundleLabel}` : f.name, costPerPhoto: computeCostPerPhoto(f.filmCost, f.rolls, f.exposures) }))
                 .filter(f => f.costPerPhoto !== null && f.costPerPhoto > 0);
 
             if (others.length === 0) {
@@ -624,12 +651,87 @@
             }
         }
 
-        // Shows a clickable "Buy this film" link once a URL is entered
+        // ---------- Cheapest Films (per ISO) ----------
+        // Groups every saved film profile (built-in + custom) by Box Speed and
+        // surfaces the cheapest cost-per-photo bundle at each ISO, with its buy
+        // link if one was saved. Everything else shows below as "All Saved Films".
+        function updateFilmComparison() {
+            const bestContainer = document.getElementById('filmBestPicks');
+            const allContainer = document.getElementById('filmAllOptions');
+            if (!bestContainer || !allContainer) return;
+
+            const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
+
+            const entries = Object.values(allFilms)
+                .map((f, idx) => ({
+                    id: idx,
+                    name: f.bundleLabel ? `${f.name} — ${f.bundleLabel}` : f.name,
+                    boxSpeed: parseInt(f.boxSpeed) || 0,
+                    rolls: f.rolls || '?',
+                    exposures: f.exposures || '?',
+                    storeName: f.storeName || '',
+                    buyLink: f.buyLink || '',
+                    costPerPhoto: computeCostPerPhoto(f.filmCost, f.rolls, f.exposures)
+                }))
+                .filter(f => f.costPerPhoto !== null && f.costPerPhoto > 0 && f.boxSpeed > 0);
+
+            if (entries.length === 0) {
+                bestContainer.innerHTML = '<p class="text-sm text-gray-400 text-center">Save a film profile to compare prices</p>';
+                allContainer.innerHTML = '';
+                return;
+            }
+
+            const byIso = {};
+            entries.forEach(e => {
+                if (!byIso[e.boxSpeed]) byIso[e.boxSpeed] = [];
+                byIso[e.boxSpeed].push(e);
+            });
+            Object.values(byIso).forEach(arr => arr.sort((a, b) => a.costPerPhoto - b.costPerPhoto));
+
+            const isoSpeeds = Object.keys(byIso).map(Number).sort((a, b) => a - b);
+
+            function renderBuyLink(e) {
+                if (!e.buyLink) return '';
+                const label = e.storeName ? `🛒 Buy from ${e.storeName}` : '🛒 Buy';
+                return ` <a href="${e.buyLink}" target="_blank" rel="noopener noreferrer" class="inline-block text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline align-middle">${label}</a>`;
+            }
+
+            bestContainer.innerHTML = isoSpeeds.map(iso => {
+                const cheapest = byIso[iso][0];
+                return `<div class="px-3 py-3 rounded-lg text-sm bg-green-100 dark:bg-green-900/30">
+                    <div class="text-xs font-semibold text-green-700 dark:text-green-400 uppercase tracking-wide mb-1">🏆 Cheapest ${iso} ISO</div>
+                    <div class="font-semibold text-green-800 dark:text-green-400">${cheapest.name}${renderBuyLink(cheapest)}</div>
+                    <div class="font-mono text-green-800 dark:text-green-400 mt-1">
+                        <span class="font-semibold">$${cheapest.costPerPhoto.toFixed(2)}/photo</span>
+                        <span class="text-xs opacity-80"> · ${cheapest.rolls} Roll${cheapest.rolls == 1 ? '' : 's'} × ${cheapest.exposures}exp</span>
+                    </div>
+                </div>`;
+            }).join('');
+
+            const usedIds = new Set(isoSpeeds.map(iso => byIso[iso][0].id));
+            const others = entries.filter(e => !usedIds.has(e.id)).sort((a, b) => a.boxSpeed - b.boxSpeed || a.costPerPhoto - b.costPerPhoto);
+
+            if (others.length === 0) {
+                allContainer.innerHTML = '<p class="text-sm text-gray-400 text-center">No other saved films</p>';
+                return;
+            }
+
+            allContainer.innerHTML = others.map(e => `<div class="flex justify-between items-start px-3 py-2 rounded-lg text-sm bg-white dark:bg-gray-800/50">
+                <span class="text-gray-700 dark:text-gray-300">${e.name}${renderBuyLink(e)} <span class="text-xs text-gray-400">(${e.boxSpeed} ISO)</span></span>
+                <span class="font-mono text-right leading-tight text-gray-600 dark:text-gray-400">
+                    <div class="font-semibold">$${e.costPerPhoto.toFixed(2)}/photo</div>
+                    <div class="text-xs opacity-80">${e.rolls} Roll${e.rolls == 1 ? '' : 's'} × ${e.exposures}exp</div>
+                </span>
+            </div>`).join('');
+        }
+
         function updateBuyLink() {
             const url = document.getElementById('buyLink').value.trim();
+            const storeName = document.getElementById('storeName').value.trim();
             const link = document.getElementById('buyLinkDisplay');
             if (url) {
                 link.href = url;
+                link.textContent = storeName ? `🛒 Buy from ${storeName}` : '🛒 Buy this film';
                 link.classList.remove('hidden');
             } else {
                 link.classList.add('hidden');
@@ -640,6 +742,7 @@
         document.querySelectorAll('input, select').forEach(i => i.addEventListener('input', updateFilmOnlyCost));
         document.querySelectorAll('input, select').forEach(i => i.addEventListener('input', updateFilmSpeedComparison));
         document.getElementById('buyLink').addEventListener('input', updateBuyLink);
+        document.getElementById('storeName').addEventListener('input', updateBuyLink);
         updateFilmOnlyCost();
         updateFilmSpeedComparison();
         updateBuyLink();
@@ -667,26 +770,40 @@
             if (all[current]) dropdown.value = current;
         }
 
+        // A film profile is keyed by name + rolls + exposures, since the same
+        // film stock can come in different pack sizes (3-pack vs bulk 10-pack,
+        // 24exp vs 36exp) at different prices/links — without this, saving a
+        // different size under the same name would silently overwrite the last one.
+        // Bundle Label is only needed to tell apart two bundles with the exact
+        // same rolls/exposures (e.g. same size bought from a different store).
+        function filmProfileKey(name, rolls, exposures, bundleLabel) {
+            const base = `${name}__${rolls || '?'}x${exposures || '?'}`;
+            return bundleLabel ? `${base}__${bundleLabel}` : base;
+        }
+
         function formatFilmLabel(f) {
             const boxSpeed = f.boxSpeed || '?';
             const rolls = f.rolls || '?';
             const exposures = f.exposures || '?';
-            return `${f.name} (${boxSpeed} ISO | ${rolls} Roll${rolls == 1 ? '' : 's'} | ${exposures}exp)`;
+            const nameWithBundle = f.bundleLabel ? `${f.name} — ${f.bundleLabel}` : f.name;
+            return `${nameWithBundle} (${boxSpeed} ISO | ${rolls} Roll${rolls == 1 ? '' : 's'} | ${exposures}exp)`;
         }
 
-        function updateFilmDropdown() { updateDropdown('savedFilmsDropdown', defaultFilms, 'filmProfiles', formatFilmLabel); }
+        function updateFilmDropdown() { updateDropdown('savedFilmsDropdown', defaultFilms, 'filmProfiles', formatFilmLabel); updateFilmComparison(); }
         function updateLabDropdown() { updateDropdown('savedLabsDropdown', defaultLabs, 'labProfiles'); updateLabComparison(); }
 
         document.getElementById('savedFilmsDropdown').addEventListener('change', (e) => {
             const p = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') }[e.target.value];
             if (!p) return;
             document.getElementById('filmName').value = p.name;
+            document.getElementById('bundleLabel').value = p.bundleLabel || '';
             document.getElementById('boxSpeed').value = p.boxSpeed || '';
             document.getElementById('devSpeed').value = p.boxSpeed || '';
             devSpeedOverridden = false;
             document.getElementById('filmCost').value = p.filmCost || '';
             document.getElementById('rolls').value = p.rolls || '1';
             document.getElementById('exposures').value = p.exposures || '36';
+            document.getElementById('storeName').value = p.storeName || '';
             document.getElementById('buyLink').value = p.buyLink || '';
             updateLabComparison();
             updateFilmOnlyCost();
@@ -710,18 +827,24 @@
         document.getElementById('saveFilmBtn').addEventListener('click', () => {
             const name = document.getElementById('filmName').value.trim();
             if (!name) return alert('Enter Film Name');
+            const bundleLabel = document.getElementById('bundleLabel').value.trim();
+            const rolls = document.getElementById('rolls').value;
+            const exposures = document.getElementById('exposures').value;
+            const key = filmProfileKey(name, rolls, exposures, bundleLabel);
             let saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
-            saved[name] = {
+            saved[key] = {
                 name,
+                bundleLabel,
                 boxSpeed: document.getElementById('boxSpeed').value,
                 filmCost: document.getElementById('filmCost').value,
-                rolls: document.getElementById('rolls').value,
-                exposures: document.getElementById('exposures').value,
+                rolls,
+                exposures,
+                storeName: document.getElementById('storeName').value.trim(),
                 buyLink: document.getElementById('buyLink').value.trim()
             };
             localStorage.setItem('filmProfiles', JSON.stringify(saved));
             updateFilmDropdown();
-            document.getElementById('savedFilmsDropdown').value = name;
+            document.getElementById('savedFilmsDropdown').value = key;
         });
 
         document.getElementById('saveLabBtn').addEventListener('click', () => {
@@ -746,13 +869,13 @@
         // ---------- Delete profiles ----------
         document.getElementById('deleteFilmBtn').addEventListener('click', () => {
             const dropdown = document.getElementById('savedFilmsDropdown');
-            const name = dropdown.value;
-            if (!name) return alert('Select a saved film to delete');
-            if (defaultFilms[name] && !JSON.parse(localStorage.getItem('filmProfiles') || '{}')[name]) {
+            const key = dropdown.value;
+            if (!key) return alert('Select a saved film to delete');
+            if (defaultFilms[key] && !JSON.parse(localStorage.getItem('filmProfiles') || '{}')[key]) {
                 return alert('Built-in film profiles can\'t be deleted, only custom saved ones.');
             }
             let saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
-            delete saved[name];
+            delete saved[key];
             localStorage.setItem('filmProfiles', JSON.stringify(saved));
             updateFilmDropdown();
         });
@@ -776,10 +899,12 @@
             const all = { ...defaultFilms, ...saved };
             return Object.values(all).map(f => ({
                 name: f.name,
+                bundleLabel: f.bundleLabel || '',
                 boxSpeed: Number(f.boxSpeed) || 0,
                 rolls: Number(f.rolls) || 1,
                 exposures: Number(f.exposures) || 36,
                 filmCost: Number(f.filmCost) || 0,
+                storeName: f.storeName || '',
                 buyLink: f.buyLink || ''
             }));
         }
@@ -834,7 +959,7 @@
                             // Combined config.yaml (current format)
                             if (Array.isArray(parsed.films)) {
                                 let saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
-                                parsed.films.forEach(f => { if (f.name) { saved[f.name] = f; filmsImported++; } });
+                                parsed.films.forEach(f => { if (f.name) { saved[filmProfileKey(f.name, f.rolls, f.exposures, f.bundleLabel)] = f; filmsImported++; } });
                                 localStorage.setItem('filmProfiles', JSON.stringify(saved));
                             }
                             if (Array.isArray(parsed.labs)) {
@@ -857,7 +982,7 @@
                                 localStorage.setItem('labProfiles', JSON.stringify(saved));
                             } else if (isFilmFile) {
                                 let saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
-                                parsed.forEach(f => { if (f.name) { saved[f.name] = f; filmsImported++; } });
+                                parsed.forEach(f => { if (f.name) { saved[filmProfileKey(f.name, f.rolls, f.exposures, f.bundleLabel)] = f; filmsImported++; } });
                                 localStorage.setItem('filmProfiles', JSON.stringify(saved));
                             } else {
                                 errors++;
