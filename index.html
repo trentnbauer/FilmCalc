@@ -100,67 +100,69 @@
             </div>
 
             <div id="filmTabContent" class="space-y-6">
-                <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg space-y-3">
-                    <h2 class="font-semibold text-blue-800 dark:text-blue-400 text-sm uppercase tracking-wide">Quick Calculate</h2>
-                    <div>
-                        <label for="boxSpeed" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Box Speed (ISO)</label>
-                        <input type="number" id="boxSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                    </div>
-                    <div>
-                        <label for="filmCost" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Total Cost incl. Postage ($)</label>
-                        <input type="number" id="filmCost" step="0.01" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label for="rolls" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Rolls</label>
-                            <input type="number" id="rolls" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                        </div>
-                        <div>
-                            <label for="exposures" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Exposures per Roll</label>
-                            <input type="number" id="exposures" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                        </div>
-                    </div>
-                    <div class="bg-blue-100/60 dark:bg-blue-900/30 rounded-lg p-3 text-center">
-                        <p class="text-xs text-blue-700 dark:text-blue-400 uppercase tracking-wide">Film Cost Per Photo <span class="normal-case font-normal opacity-75">(excl. lab fees)</span></p>
-                        <p id="filmOnlyCostPerPhoto" class="text-xl font-bold text-blue-800 dark:text-blue-300 mt-1">--</p>
-                        <div id="filmSpeedComparison"></div>
-                    </div>
-                    <button id="saveToLibraryBtn" type="button" class="w-full bg-blue-600 text-white py-2 rounded font-medium hover:bg-blue-700">💾 Save to Film Library</button>
-                </div>
-
-                <div class="bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-100 dark:border-purple-800/30">
-                    <button id="filmLookupToggle" type="button" class="w-full flex items-center justify-between p-4 text-left">
-                        <span class="text-sm font-semibold text-purple-800 dark:text-purple-400 uppercase tracking-wide">Load Saved Film</span>
-                        <svg id="filmLookupChevron" class="w-4 h-4 text-purple-700 dark:text-purple-400 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                    <button id="quickCalcToggle" type="button" class="w-full flex items-center justify-between p-4 text-left">
+                        <span class="font-semibold text-blue-800 dark:text-blue-400 text-sm uppercase tracking-wide">Quick Calculate</span>
+                        <svg id="quickCalcChevron" class="w-4 h-4 text-blue-700 dark:text-blue-400 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                     </button>
-                    <div id="filmLookupContent" class="hidden px-4 pb-4">
-                        <select id="savedFilmsDropdown" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm"><option value="">-- Load a saved film --</option></select>
-                        <div id="calcBuyLinkInfo" class="mt-2"></div>
-                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">Quick lookup only — manage film stocks and bundles in the Film Library tab.</p>
+                    <div id="quickCalcContent" class="px-4 pb-4 space-y-3">
+                        <div class="space-y-2">
+                            <select id="savedFilmsDropdown" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm"><option value="">-- Load a saved film --</option></select>
+                            <div id="calcBuyLinkInfo"></div>
+                            <p class="text-xs text-gray-400 dark:text-gray-500">Quick lookup only — manage film stocks and bundles in the Film Library tab.</p>
+                        </div>
 
-                        <div class="mt-3 pt-3 border-t border-purple-200 dark:border-purple-800/40">
-                            <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 mb-2">
-                                <input type="checkbox" id="filmExpiredCheckbox" class="rounded border-gray-300 dark:border-gray-600 text-purple-600 focus:ring-purple-500">
-                                This film is expired
-                            </label>
-                            <div id="expiredFieldsContainer" class="hidden space-y-2">
-                                <div class="grid grid-cols-2 gap-2">
-                                    <div>
-                                        <label for="filmStorageCondition" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Storage</label>
-                                        <select id="filmStorageCondition" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
-                                            <option value="cold">Cold (fridge/freezer)</option>
-                                            <option value="storefront">Store Front / Room Temp</option>
-                                            <option value="unknown">Unknown</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label for="filmExpiryDate" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Expiry (Month/Year)</label>
-                                        <input type="month" id="filmExpiryDate" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
-                                    </div>
+                        <div id="manualFilmFields" class="space-y-3">
+                            <div>
+                                <label for="boxSpeed" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Box Speed (ISO)</label>
+                                <input type="number" id="boxSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                            </div>
+                            <div>
+                                <label for="filmCost" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Total Cost incl. Postage ($)</label>
+                                <input type="number" id="filmCost" step="0.01" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label for="rolls" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Rolls</label>
+                                    <input type="number" id="rolls" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                                 </div>
-                                <div id="expiredRecommendation" class="text-xs"></div>
+                                <div>
+                                    <label for="exposures" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Exposures per Roll</label>
+                                    <input type="number" id="exposures" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                                </div>
                             </div>
                         </div>
+
+                        <div id="filmSpeedComparison"></div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <button id="clearQuickCalcBtn" type="button" class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 rounded font-medium">Clear</button>
+                            <button id="saveToLibraryBtn" type="button" class="w-full bg-blue-600 text-white py-2 rounded font-medium hover:bg-blue-700">💾 Save to Library</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-100 dark:border-yellow-800/30 p-4">
+                    <label class="flex items-center gap-2 text-sm font-semibold text-yellow-800 dark:text-yellow-400 uppercase tracking-wide mb-2">
+                        <input type="checkbox" id="filmExpiredCheckbox" class="rounded border-gray-300 dark:border-gray-600 text-yellow-600 focus:ring-yellow-500">
+                        Expired Film
+                    </label>
+                    <div id="expiredFieldsContainer" class="hidden space-y-2">
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label for="filmStorageCondition" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Storage</label>
+                                <select id="filmStorageCondition" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
+                                    <option value="cold">Cold (fridge/freezer)</option>
+                                    <option value="storefront">Store Front / Room Temp</option>
+                                    <option value="unknown">Unknown</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="filmExpiryDate" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Expiry (Month/Year)</label>
+                                <input type="month" id="filmExpiryDate" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
+                            </div>
+                        </div>
+                        <div id="expiredRecommendation" class="text-xs"></div>
                     </div>
                 </div>
             </div>
@@ -234,25 +236,30 @@
         </form>
 
         <div id="labsForThisRollSection">
-            <div class="mt-8 grid grid-cols-2 gap-2 text-left">
+            <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Lab Settings</span>
+            <div class="mt-2 space-y-2 text-left">
                 <div>
-                    <label for="devSpeed" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Dev Speed (ISO)</label>
+                    <label for="devSpeed" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Target Speed (ISO)</label>
                     <input type="number" id="devSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
                     <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Different from Box Speed if you're pushing/pulling this roll.</p>
-                    <div id="pushPullWarning" class="text-xs mt-1"></div>
+                    <div id="pushPullWarning" class="mt-1"></div>
+                    <div id="expiredStackWarning" class="mt-1"></div>
                 </div>
-                <div></div>
-                <div>
-                    <label for="onceOffFee" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Once-off Fee ($)</label>
-                    <input type="number" id="onceOffFee" step="0.01" placeholder="e.g. shipping" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
-                </div>
-                <div>
-                    <label for="perRollFee" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Per-roll Fee ($)</label>
-                    <input type="number" id="perRollFee" step="0.01" placeholder="e.g. surcharge" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label for="onceOffFee" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Once-off Fee ($)</label>
+                        <input type="number" id="onceOffFee" step="0.01" placeholder="e.g. shipping" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
+                    </div>
+                    <div>
+                        <label for="perRollFee" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Per-roll Fee ($)</label>
+                        <input type="number" id="perRollFee" step="0.01" placeholder="e.g. surcharge" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
+                    </div>
                 </div>
             </div>
 
             <div class="mt-4 text-center bg-gray-50 dark:bg-gray-700/50 p-6 rounded-lg border border-gray-200 dark:border-gray-600">
+                <div id="cameraSettingDisplay" class="mb-3"></div>
+
                 <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-3 text-center">Labs For This Roll</h3>
 
                 <div id="pinnedResultDisplay"></div>
@@ -312,14 +319,16 @@
         settingsCloseBtn.addEventListener('click', closeSettings);
         settingsModal.addEventListener('click', (e) => { if (e.target === settingsModal) closeSettings(); });
 
-        // ---------- Collapsible film lookup ----------
-        // Collapsed by default since it's a convenience shortcut, not always needed.
-        const filmLookupToggle = document.getElementById('filmLookupToggle');
-        const filmLookupContent = document.getElementById('filmLookupContent');
-        const filmLookupChevron = document.getElementById('filmLookupChevron');
-        filmLookupToggle.addEventListener('click', () => {
-            const isHidden = filmLookupContent.classList.toggle('hidden');
-            filmLookupChevron.classList.toggle('rotate-180', !isHidden);
+        // ---------- Collapsible Quick Calculate ----------
+        // Expanded by default since it's the primary calculator, but collapsible
+        // to save space once you've got your numbers in and just want to browse.
+        const quickCalcToggle = document.getElementById('quickCalcToggle');
+        const quickCalcContent = document.getElementById('quickCalcContent');
+        const quickCalcChevron = document.getElementById('quickCalcChevron');
+        quickCalcChevron.classList.add('rotate-180');
+        quickCalcToggle.addEventListener('click', () => {
+            const isHidden = quickCalcContent.classList.toggle('hidden');
+            quickCalcChevron.classList.toggle('rotate-180', !isHidden);
         });
 
         // ---------- Expired film shooting-speed recommendation ----------
@@ -334,8 +343,56 @@
         const filmStorageCondition = document.getElementById('filmStorageCondition');
         const filmExpiryDate = document.getElementById('filmExpiryDate');
 
+        // Shared by the Expired Film box, the camera-setting info box, and the
+        // push/pull stacking warning, so all three stay consistent with one
+        // calculation instead of three copies of the same math.
+        function computeExpiredInfo() {
+            if (!filmExpiredCheckbox.checked) return null;
+            const boxSpeed = parseInt(document.getElementById('boxSpeed').value) || 0;
+            const expiryVal = filmExpiryDate.value;
+            if (!boxSpeed || !expiryVal) return null;
+
+            const [expYear, expMonth] = expiryVal.split('-').map(Number);
+            const now = new Date();
+            const nowDecimal = now.getFullYear() + (now.getMonth() + 1) / 12;
+            const expDecimal = expYear + expMonth / 12;
+            const yearsExpired = nowDecimal - expDecimal;
+            if (yearsExpired <= 0) return null;
+
+            const yearsPerStop = EXPIRED_YEARS_PER_STOP[filmStorageCondition.value] || EXPIRED_YEARS_PER_STOP.unknown;
+            const stopsLoss = Math.round((yearsExpired / yearsPerStop) * 2) / 2;
+            const recommendedEI = Math.max(1, Math.round(boxSpeed / Math.pow(2, stopsLoss)));
+            const storageLabel = { cold: 'cold-stored', storefront: 'store-front stored', unknown: 'unknown storage' }[filmStorageCondition.value];
+            return { boxSpeed, yearsExpired, stopsLoss, recommendedEI, storageLabel };
+        }
+
+        // If the age-based adjustment is already significant (1+ stops) and the
+        // person is additionally pushing/pulling away from that recommended EI,
+        // warn — stacking the two risks under/overexposing film that's already
+        // been compensated for. Lives under Dev Speed since that's what it's
+        // reacting to, not inside the Expired Film box itself.
+        function renderExpiredStackWarning() {
+            const el = document.getElementById('expiredStackWarning');
+            if (!el) return;
+            const info = computeExpiredInfo();
+            if (!info || info.stopsLoss < 1) { el.innerHTML = ''; return; }
+
+            const devSpeedVal = parseFloat(document.getElementById('devSpeed').value) || 0;
+            if (devSpeedVal <= 0 || devSpeedVal === info.recommendedEI) { el.innerHTML = ''; return; }
+
+            const extraStops = Math.round(Math.abs(Math.log2(devSpeedVal / info.recommendedEI)) * 10) / 10;
+            if (extraStops <= 0) { el.innerHTML = ''; return; }
+
+            el.innerHTML = `<div class="flex items-start gap-2 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg px-3 py-2">
+                <span class="text-red-500 dark:text-red-400">⚠️</span>
+                <p class="text-sm text-red-800 dark:text-red-300 font-medium">This film already needs ~${info.stopsLoss} stop${info.stopsLoss === 1 ? '' : 's'} of age compensation — shooting at ${devSpeedVal} ISO adds another ${extraStops} stop${extraStops === 1 ? '' : 's'} of push/pull on top of that.</p>
+            </div>`;
+        }
+
         function updateExpiredRecommendation() {
             const el = document.getElementById('expiredRecommendation');
+            renderExpiredStackWarning();
+
             if (!filmExpiredCheckbox.checked) { el.innerHTML = ''; return; }
 
             const boxSpeed = parseInt(document.getElementById('boxSpeed').value) || 0;
@@ -346,33 +403,16 @@
                 return;
             }
 
-            const [expYear, expMonth] = expiryVal.split('-').map(Number);
-            const now = new Date();
-            const nowDecimal = now.getFullYear() + (now.getMonth() + 1) / 12;
-            const expDecimal = expYear + expMonth / 12;
-            const yearsExpired = nowDecimal - expDecimal;
-
-            if (yearsExpired <= 0) {
+            const info = computeExpiredInfo();
+            if (!info) {
                 el.innerHTML = '<p class="text-gray-500 dark:text-gray-400">That date isn\'t in the past yet — no speed adjustment recommended.</p>';
                 return;
             }
 
-            const yearsPerStop = EXPIRED_YEARS_PER_STOP[filmStorageCondition.value] || EXPIRED_YEARS_PER_STOP.unknown;
-            const stopsLoss = Math.round((yearsExpired / yearsPerStop) * 2) / 2;
-            const recommendedEI = Math.max(1, Math.round(boxSpeed / Math.pow(2, stopsLoss)));
-            const storageLabel = { cold: 'cold-stored', storefront: 'store-front stored', unknown: 'unknown storage' }[filmStorageCondition.value];
-
-            el.innerHTML = `<p class="text-amber-700 dark:text-amber-400 font-medium">📷 Recommended shooting speed: ~EI ${recommendedEI}</p>
-                <p class="text-gray-500 dark:text-gray-400 mt-0.5">Rate ${stopsLoss} stop${stopsLoss === 1 ? '' : 's'} slower — ${yearsExpired.toFixed(1)} yrs past expiry, ${storageLabel}</p>
+            el.innerHTML = `<p class="text-amber-700 dark:text-amber-400 font-medium">📷 Recommended shooting speed: ~EI ${info.recommendedEI}</p>
+                <p class="text-gray-500 dark:text-gray-400 mt-0.5">Rate ${info.stopsLoss} stop${info.stopsLoss === 1 ? '' : 's'} slower — ${info.yearsExpired.toFixed(1)} yrs past expiry, ${info.storageLabel}</p>
                 <p class="text-gray-400 dark:text-gray-500 mt-1">Rule-of-thumb estimate only — bracket exposures if possible.</p>
-                <button type="button" id="useRecommendedEIBtn" class="mt-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">Use as Dev Speed →</button>`;
-
-            document.getElementById('useRecommendedEIBtn').addEventListener('click', () => {
-                document.getElementById('devSpeed').value = recommendedEI;
-                devSpeedOverridden = true;
-                updateLabComparison();
-                updateFilmSpeedComparison();
-            });
+                <p class="text-gray-400 dark:text-gray-500 mt-1">This is a camera/meter setting, not a lab instruction — develop normally at box speed unless you're also intentionally pushing/pulling for other reasons.</p>`;
         }
 
         filmExpiredCheckbox.addEventListener('change', () => {
@@ -382,6 +422,7 @@
         filmStorageCondition.addEventListener('change', updateExpiredRecommendation);
         filmExpiryDate.addEventListener('change', updateExpiredRecommendation);
         document.getElementById('boxSpeed').addEventListener('input', updateExpiredRecommendation);
+        document.getElementById('devSpeed').addEventListener('input', updateExpiredRecommendation);
 
         // ---------- Cheapest Total upgrade threshold ----------
         const upgradeThresholdInput = document.getElementById('upgradeThresholdInput');
@@ -738,7 +779,38 @@
                 el.innerHTML = '';
                 return;
             }
-            el.innerHTML = `<p class="text-amber-700 dark:text-amber-400 font-medium">⚠️ This pushes/pulls ${stops} stop${stops === 1 ? '' : 's'}, beyond this film's max of ${loadedFilmMaxPushPull} stop${loadedFilmMaxPushPull === 1 ? '' : 's'}</p>`;
+            el.innerHTML = `<div class="flex items-start gap-2 bg-orange-100 dark:bg-orange-900/30 border border-orange-300 dark:border-orange-700 rounded-lg px-3 py-2">
+                <span class="text-orange-500 dark:text-orange-400">⚠️</span>
+                <p class="text-sm text-orange-800 dark:text-orange-300 font-medium">This pushes/pulls ${stops} stop${stops === 1 ? '' : 's'}, beyond this film's max of ${loadedFilmMaxPushPull} stop${loadedFilmMaxPushPull === 1 ? '' : 's'}</p>
+            </div>`;
+        }
+
+        // Shows the camera setting (shooting ISO) and push/pull for this roll at
+        // the top of "Labs For This Roll", so it's clear at a glance what the
+        // comparison below is actually costing out.
+        function renderCameraSetting(boxSpeed, devSpeed, stops) {
+            const el = document.getElementById('cameraSettingDisplay');
+            if (!el) return;
+            if (!devSpeed) { el.innerHTML = ''; return; }
+
+            const devNoteHtml = stops > 0
+                ? `<p class="text-sm text-blue-800 dark:text-blue-300 mt-1">Development note: ${devSpeed > boxSpeed ? 'Push' : 'Pull'} ${stops} stop${stops === 1 ? '' : 's'}</p>`
+                : '';
+
+            const expiredInfo = computeExpiredInfo();
+            const expiredNote = expiredInfo
+                ? `<p class="text-xs text-blue-700/80 dark:text-blue-400/80 mt-1">Expired film estimate: ~EI ${expiredInfo.recommendedEI} recommended for age (${expiredInfo.stopsLoss} stop${expiredInfo.stopsLoss === 1 ? '' : 's'} slower, ${expiredInfo.storageLabel})</p>`
+                : '';
+
+            el.innerHTML = `<div class="flex items-start gap-2 bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700 rounded-lg px-3 py-2 text-left">
+                <span class="text-blue-500 dark:text-blue-400">📷</span>
+                <div>
+                    <p class="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">Camera Setting</p>
+                    <p class="text-sm text-blue-800 dark:text-blue-300">Set Camera or light meter to <span class="font-semibold">${devSpeed} ISO</span></p>
+                    ${devNoteHtml}
+                    ${expiredNote}
+                </div>
+            </div>`;
         }
 
         function updateLabComparison() {
@@ -757,11 +829,12 @@
                 warningStops = Math.round(Math.abs(Math.log2(devSpeedForWarning / boxSpeedForWarning)) * 10) / 10;
             }
             renderPushPullWarning(warningStops);
+            renderCameraSetting(boxSpeedForWarning, devSpeedForWarning, warningStops);
 
             const hasRequiredFields = [devSpeedRaw, filmCostRaw, rollsRaw, exposuresRaw].every(v => v !== '' && v !== null && parseFloat(v) > 0);
             if (!hasRequiredFields) {
                 bestPicksContainer.innerHTML = '';
-                container.innerHTML = '<p class="text-sm text-gray-400 text-center">Fill in Dev Speed, Total Cost, Rolls & Exposures to compare labs</p>';
+                container.innerHTML = '<p class="text-sm text-gray-400 text-center">Fill in Target Speed, Total Cost, Rolls & Exposures to compare labs</p>';
                 renderPinnedResult(null);
                 return;
             }
@@ -945,19 +1018,10 @@
             wirePinButtons(container);
         }
 
-        // ---------- Film-only cost per photo (excludes lab fees) ----------
+        // ---------- Film-only cost per photo (used for film-library comparisons) ----------
         function computeCostPerPhoto(cost, rolls, exposures) {
             const totalPhotos = (parseInt(rolls) || 0) * (parseInt(exposures) || 0);
             return totalPhotos > 0 ? (parseFloat(cost) || 0) / totalPhotos : null;
-        }
-
-        function updateFilmOnlyCost() {
-            const costPerPhoto = computeCostPerPhoto(
-                document.getElementById('filmCost').value,
-                document.getElementById('rolls').value,
-                document.getElementById('exposures').value
-            );
-            document.getElementById('filmOnlyCostPerPhoto').textContent = costPerPhoto !== null ? `$${costPerPhoto.toFixed(2)}` : '--';
         }
 
         // Compares this film's cost per photo against every other saved film
@@ -1059,16 +1123,20 @@
         function renderDevSpeedRecommendation(devSpeed, container) {
             const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
 
+            let idCounter = 0;
             const matches = Object.values(allFilms).flatMap(f => {
                 const filmBoxSpeed = parseInt(f.boxSpeed) || 0;
                 if (!filmBoxSpeed) return [];
                 const stops = Math.round(Math.log2(devSpeed / filmBoxSpeed) * 10) / 10;
                 return normalizeFilmBundles(f).map(b => ({
+                    id: idCounter++,
                     name: f.name,
                     boxSpeed: filmBoxSpeed,
+                    maxPushPull: parseFloat(f.maxPushPull) || 1,
                     stops,
                     rolls: b.rolls,
                     exposures: b.exposures,
+                    filmCost: b.filmCost,
                     storeName: b.storeName,
                     buyLink: b.buyLink,
                     costPerPhoto: computeCostPerPhoto(b.filmCost, b.rolls, b.exposures)
@@ -1095,19 +1163,39 @@
 
             const rows = matches.slice(0, 6).map((m, i) => {
                 const isCheapest = i === 0;
-                return `<div class="flex justify-between items-center px-2 py-1 rounded text-xs mb-1 ${isCheapest ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-white/60 dark:bg-gray-800/40'}">
+                return `<button type="button" data-devrec-id="${m.id}" class="w-full flex justify-between items-center px-2 py-1 rounded text-xs mb-1 text-left transition-colors ${isCheapest ? 'bg-amber-100 dark:bg-amber-900/30 hover:bg-amber-200 dark:hover:bg-amber-900/50' : 'bg-white/60 dark:bg-gray-800/40 hover:bg-blue-100 dark:hover:bg-blue-900/30'}">
                     <span class="${isCheapest ? 'font-semibold text-amber-800 dark:text-amber-300' : 'text-gray-600 dark:text-gray-300'}">${isCheapest ? '⭐ ' : ''}${m.name} <span class="opacity-70">(${m.boxSpeed} ISO native)</span> ${stopsLabel(m.stops)}${renderBuyLink(m)}</span>
                     <span class="font-mono ${isCheapest ? 'text-amber-800 dark:text-amber-300 font-semibold' : 'text-gray-500 dark:text-gray-400'}">$${m.costPerPhoto.toFixed(2)}/photo</span>
-                </div>`;
+                </button>`;
             }).join('');
 
             const moreLabel = matches.length > 6 ? `<p class="text-xs text-gray-400 mt-1">+${matches.length - 6} more in your library</p>` : '';
 
             container.innerHTML = `<div class="mt-2 text-left">
-                <p class="text-xs text-blue-700/70 dark:text-blue-400/70 mb-1">Cheapest film to shoot at ${devSpeed} ISO (native or pushed/pulled):</p>
+                <p class="text-xs text-blue-700/70 dark:text-blue-400/70 mb-1">Cheapest film to shoot at ${devSpeed} ISO (native or pushed/pulled) — tap to load:</p>
                 ${rows}
                 ${moreLabel}
             </div>`;
+
+            const matchesById = new Map(matches.map(m => [m.id, m]));
+            container.querySelectorAll('[data-devrec-id]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const m = matchesById.get(parseInt(btn.dataset.devrecId));
+                    if (!m) return;
+                    // Box Speed loads the film's native speed; Dev Speed stays as
+                    // the shooting EI the person typed in, so the push/pull this
+                    // recommendation was based on carries through to Labs For This Roll.
+                    document.getElementById('boxSpeed').value = m.boxSpeed;
+                    document.getElementById('filmCost').value = m.filmCost || '';
+                    document.getElementById('rolls').value = m.rolls || '1';
+                    document.getElementById('exposures').value = m.exposures || '36';
+                    devSpeedOverridden = true;
+                    loadedFilmMaxPushPull = m.maxPushPull;
+                    updateCalcBuyLinkInfo({ buyLink: m.buyLink, storeName: m.storeName });
+                    updateLabComparison();
+                    updateFilmSpeedComparison();
+                });
+            });
         }
 
         // ---------- Film Library (cheapest per ISO) ----------
@@ -1194,9 +1282,7 @@
         }
 
         document.querySelectorAll('input, select').forEach(i => i.addEventListener('input', updateLabComparison));
-        document.querySelectorAll('input, select').forEach(i => i.addEventListener('input', updateFilmOnlyCost));
         document.querySelectorAll('input, select').forEach(i => i.addEventListener('input', updateFilmSpeedComparison));
-        updateFilmOnlyCost();
         updateFilmSpeedComparison();
 
         // Dev Speed defaults to Box Speed unless the user has explicitly typed a different value
@@ -1297,7 +1383,6 @@
             loadedFilmMaxPushPull = parseFloat(film.maxPushPull) || 1;
             updateCalcBuyLinkInfo(bundle);
             updateLabComparison();
-            updateFilmOnlyCost();
             updateFilmSpeedComparison();
         });
 
@@ -1328,6 +1413,22 @@
             document.getElementById('labName').value = p.name;
             resetTiers(normalizeLabServices(p));
             updateLabComparison();
+        });
+
+        // ---------- Clear Quick Calculate ----------
+        // Resets just this film's numbers (not Target Speed, fees, or expired
+        // details) so you can look up the cheapest film for the same Target
+        // Speed again without a full page refresh.
+        document.getElementById('clearQuickCalcBtn').addEventListener('click', () => {
+            document.getElementById('boxSpeed').value = '';
+            document.getElementById('filmCost').value = '';
+            document.getElementById('rolls').value = '';
+            document.getElementById('exposures').value = '';
+            document.getElementById('savedFilmsDropdown').value = '';
+            loadedFilmMaxPushPull = null;
+            updateCalcBuyLinkInfo(null);
+            updateLabComparison();
+            updateFilmSpeedComparison();
         });
 
         // ---------- Save profiles ----------
