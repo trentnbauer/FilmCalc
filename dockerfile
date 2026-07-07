@@ -10,6 +10,14 @@ COPY favicon.ico /usr/share/nginx/html/favicon.ico
 COPY icon.ico /usr/share/nginx/html/icon.ico
 COPY icon.svg /usr/share/nginx/html/icon.svg
 COPY apple-touch-icon.png /usr/share/nginx/html/apple-touch-icon.png
+COPY default.conf /etc/nginx/conf.d/default.conf
+
+# The nginx worker process runs as the 'nginx' user, not root — it needs write
+# access to /usr/share/nginx/html for the config.yaml PUT endpoint (see
+# default.conf) to work, and to /tmp/client_temp for nginx's DAV module to
+# stage the request body before writing it.
+RUN chown -R nginx:nginx /usr/share/nginx/html && \
+    mkdir -p /tmp/client_temp && chown -R nginx:nginx /tmp/client_temp
 
 EXPOSE 80
 
