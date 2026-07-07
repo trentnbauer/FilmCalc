@@ -43,6 +43,22 @@
                 <div class="space-y-5">
                     <div>
                         <h3 class="font-semibold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest mb-2">Calculator Settings</h3>
+                        <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3 mb-3">
+                            <h4 class="font-semibold text-gray-700 dark:text-gray-300 text-sm">Currency</h4>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Symbol shown in front of every cost throughout the app. This just changes the label — it doesn't convert any numbers.</p>
+                            <select id="currencySelect" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
+                                <option value="$">$ (default)</option>
+                                <option value="€">€</option>
+                                <option value="£">£</option>
+                                <option value="¥">¥</option>
+                                <option value="A$">A$</option>
+                                <option value="NZ$">NZ$</option>
+                                <option value="C$">C$</option>
+                                <option value="R">R</option>
+                                <option value="custom">Custom…</option>
+                            </select>
+                            <input type="text" id="currencyCustomInput" maxlength="5" placeholder="e.g. kr" class="hidden w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
+                        </div>
                         <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3">
                             <h4 class="font-semibold text-gray-700 dark:text-gray-300 text-sm">Recommended Pick Threshold</h4>
                             <p class="text-xs text-gray-500 dark:text-gray-400">In "Labs For This Roll", if the cheapest Hi-Res + Fastest option costs less than this percentage more than the absolute cheapest, its card is highlighted gold as the recommended pick — since a small premium is usually worth both perks. "Cheapest Total" always shows the actual cheapest option, unchanged.</p>
@@ -89,7 +105,15 @@
             </div>
         </div>
 
-        <h1 class="text-3xl font-bold text-center mb-8 text-gray-900 dark:text-white pr-8">Film Cost Calculator</h1>
+        <h1 class="text-3xl font-bold text-center mb-6 text-gray-900 dark:text-white pr-8">Film Cost Calculator</h1>
+
+        <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800/30 p-4 mb-6 text-left">
+            <label for="devSpeed" class="block text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">Target Speed (ISO)</label>
+            <input type="number" id="devSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Start here — enter the ISO you're shooting at. If it differs from a film's Box Speed below, the cheapest eligible film for that push/pull loads automatically.</p>
+            <div id="pushPullWarning" class="mt-1"></div>
+            <div id="expiredStackWarning" class="mt-1"></div>
+        </div>
         
         <form id="calculatorForm" class="space-y-6">
 
@@ -105,7 +129,7 @@
                         <span class="font-semibold text-blue-800 dark:text-blue-400 text-sm uppercase tracking-wide">Quick Calculate</span>
                         <svg id="quickCalcChevron" class="w-4 h-4 text-blue-700 dark:text-blue-400 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                     </button>
-                    <div id="quickCalcContent" class="px-4 pb-4 space-y-3">
+                    <div id="quickCalcContent" class="hidden px-4 pb-4 space-y-3">
                         <div class="space-y-2">
                             <select id="savedFilmsDropdown" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm"><option value="">-- Load a saved film --</option></select>
                             <div id="calcBuyLinkInfo"></div>
@@ -181,6 +205,11 @@
                         <input type="text" id="labName" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" placeholder="e.g. Irohas Melbourne">
                     </div>
 
+                    <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                        <input type="checkbox" id="labHiddenCheckbox" class="rounded border-gray-300 dark:border-gray-600 text-green-600 focus:ring-green-500">
+                        Hide this lab from the Calculator
+                    </label>
+
                     <div>
                         <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Service Tiers</label>
                         <p class="text-xs text-gray-400 dark:text-gray-500 mb-2">One lab, many service options — e.g. standard vs. hi-res scan, or next-day vs. same-week turnaround. Add a tier for each combination this lab offers.</p>
@@ -215,6 +244,11 @@
                         <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Applies to the whole film stock, not individual bundles. A warning shows in the Calculator if a lab comparison would push/pull this film further than its limit.</p>
                     </div>
 
+                    <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                        <input type="checkbox" id="filmHiddenCheckbox" class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500">
+                        Hide this film from the Calculator
+                    </label>
+
                     <div>
                         <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Bundles</label>
                         <p class="text-xs text-gray-400 dark:text-gray-500 mb-2">One film stock, many bundles — e.g. a 3-pack vs. a bulk 10-pack, or 24exp vs. 36exp, each with its own price, store, and buy link. Add a bundle for each size you buy.</p>
@@ -237,23 +271,14 @@
 
         <div id="labsForThisRollSection">
             <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Lab Settings</span>
-            <div class="mt-2 space-y-2 text-left">
+            <div class="mt-2 grid grid-cols-2 gap-2 text-left">
                 <div>
-                    <label for="devSpeed" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Target Speed (ISO)</label>
-                    <input type="number" id="devSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
-                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Different from Box Speed if you're pushing/pulling this roll.</p>
-                    <div id="pushPullWarning" class="mt-1"></div>
-                    <div id="expiredStackWarning" class="mt-1"></div>
+                    <label for="onceOffFee" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Once-off Fee ($)</label>
+                    <input type="number" id="onceOffFee" step="0.01" placeholder="e.g. shipping" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
                 </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label for="onceOffFee" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Once-off Fee ($)</label>
-                        <input type="number" id="onceOffFee" step="0.01" placeholder="e.g. shipping" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
-                    </div>
-                    <div>
-                        <label for="perRollFee" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Per-roll Fee ($)</label>
-                        <input type="number" id="perRollFee" step="0.01" placeholder="e.g. surcharge" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
-                    </div>
+                <div>
+                    <label for="perRollFee" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Per-roll Fee ($)</label>
+                    <input type="number" id="perRollFee" step="0.01" placeholder="e.g. surcharge" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
                 </div>
             </div>
 
@@ -320,12 +345,11 @@
         settingsModal.addEventListener('click', (e) => { if (e.target === settingsModal) closeSettings(); });
 
         // ---------- Collapsible Quick Calculate ----------
-        // Expanded by default since it's the primary calculator, but collapsible
-        // to save space once you've got your numbers in and just want to browse.
+        // Collapsed by default now that Target Speed at the top of the page
+        // drives the primary workflow — this is for manual overrides / browsing.
         const quickCalcToggle = document.getElementById('quickCalcToggle');
         const quickCalcContent = document.getElementById('quickCalcContent');
         const quickCalcChevron = document.getElementById('quickCalcChevron');
-        quickCalcChevron.classList.add('rotate-180');
         quickCalcToggle.addEventListener('click', () => {
             const isHidden = quickCalcContent.classList.toggle('hidden');
             quickCalcChevron.classList.toggle('rotate-180', !isHidden);
@@ -423,6 +447,52 @@
         filmExpiryDate.addEventListener('change', updateExpiredRecommendation);
         document.getElementById('boxSpeed').addEventListener('input', updateExpiredRecommendation);
         document.getElementById('devSpeed').addEventListener('input', updateExpiredRecommendation);
+
+        // ---------- Currency symbol ----------
+        // Purely a display label swap — no conversion math. Read by every cost
+        // display throughout the app via CUR().
+        function CUR() {
+            return localStorage.getItem('currencySymbol') || '$';
+        }
+
+        const KNOWN_CURRENCY_SYMBOLS = ['$', '€', '£', '¥', 'A$', 'NZ$', 'C$', 'R'];
+        const currencySelect = document.getElementById('currencySelect');
+        const currencyCustomInput = document.getElementById('currencyCustomInput');
+
+        function initCurrencySelector() {
+            const stored = CUR();
+            if (KNOWN_CURRENCY_SYMBOLS.includes(stored)) {
+                currencySelect.value = stored;
+                currencyCustomInput.classList.add('hidden');
+            } else {
+                currencySelect.value = 'custom';
+                currencyCustomInput.value = stored;
+                currencyCustomInput.classList.remove('hidden');
+            }
+        }
+        initCurrencySelector();
+
+        function refreshAllCurrencyDisplays() {
+            updateLabComparison();
+            updateFilmSpeedComparison();
+            updateFilmComparison();
+        }
+
+        currencySelect.addEventListener('change', () => {
+            if (currencySelect.value === 'custom') {
+                currencyCustomInput.classList.remove('hidden');
+                currencyCustomInput.focus();
+                return;
+            }
+            currencyCustomInput.classList.add('hidden');
+            localStorage.setItem('currencySymbol', currencySelect.value);
+            refreshAllCurrencyDisplays();
+        });
+
+        currencyCustomInput.addEventListener('input', () => {
+            localStorage.setItem('currencySymbol', currencyCustomInput.value.trim() || '$');
+            refreshAllCurrencyDisplays();
+        });
 
         // ---------- Cheapest Total upgrade threshold ----------
         const upgradeThresholdInput = document.getElementById('upgradeThresholdInput');
@@ -739,11 +809,11 @@
             if (currentCheapest) {
                 const diff = currentCheapest.costPerPhoto - pinned.costPerPhoto;
                 if (Math.abs(diff) < 0.005) {
-                    diffHtml = `<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Same as current cheapest ($${currentCheapest.costPerPhoto.toFixed(2)}/photo)</p>`;
+                    diffHtml = `<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Same as current cheapest (${CUR()}${currentCheapest.costPerPhoto.toFixed(2)}/photo)</p>`;
                 } else if (diff > 0) {
-                    diffHtml = `<p class="text-xs text-green-600 dark:text-green-400 mt-1">Current cheapest is $${diff.toFixed(2)}/photo less (${currentCheapest.name} at $${currentCheapest.costPerPhoto.toFixed(2)}/photo)</p>`;
+                    diffHtml = `<p class="text-xs text-green-600 dark:text-green-400 mt-1">Current cheapest is ${CUR()}${diff.toFixed(2)}/photo less (${currentCheapest.name} at ${CUR()}${currentCheapest.costPerPhoto.toFixed(2)}/photo)</p>`;
                 } else {
-                    diffHtml = `<p class="text-xs text-red-600 dark:text-red-400 mt-1">Current cheapest is $${Math.abs(diff).toFixed(2)}/photo more (${currentCheapest.name} at $${currentCheapest.costPerPhoto.toFixed(2)}/photo)</p>`;
+                    diffHtml = `<p class="text-xs text-red-600 dark:text-red-400 mt-1">Current cheapest is ${CUR()}${Math.abs(diff).toFixed(2)}/photo more (${currentCheapest.name} at ${CUR()}${currentCheapest.costPerPhoto.toFixed(2)}/photo)</p>`;
                 }
             }
 
@@ -752,8 +822,8 @@
                 <div class="text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">📌 Pinned Comparison</div>
                 <div class="font-semibold text-indigo-800 dark:text-indigo-300">${pinned.name}${hiResBadge}${turnaroundBadge}</div>
                 <div class="font-mono text-indigo-800 dark:text-indigo-300 mt-1">
-                    <span class="font-semibold">$${pinned.costPerPhoto.toFixed(2)}/photo</span>
-                    <span class="text-xs opacity-80"> · $${pinned.devCostPerRoll.toFixed(2)}/dev · $${pinned.costPerRoll.toFixed(2)}/total</span>
+                    <span class="font-semibold">${CUR()}${pinned.costPerPhoto.toFixed(2)}/photo</span>
+                    <span class="text-xs opacity-80"> · ${CUR()}${pinned.devCostPerRoll.toFixed(2)}/dev · ${CUR()}${pinned.costPerRoll.toFixed(2)}/total</span>
                 </div>
                 ${diffHtml}
             </div>`;
@@ -852,7 +922,7 @@
             const stops = warningStops;
 
             const allLabs = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') };
-            const names = Object.keys(allLabs);
+            const names = Object.keys(allLabs).filter(n => !allLabs[n].hidden);
 
             if (names.length === 0) {
                 bestPicksContainer.innerHTML = '';
@@ -918,7 +988,7 @@
                 const premium = (cheapestHiResFastest.costPerPhoto - rawCheapestTotal.costPerPhoto) / rawCheapestTotal.costPerPhoto;
                 if (premium >= 0 && premium < UPGRADE_THRESHOLD) {
                     hiResFastestRecommended = true;
-                    hiResFastestNote = `Only ${(premium * 100).toFixed(1)}% more than the absolute cheapest ($${rawCheapestTotal.costPerPhoto.toFixed(2)}/photo) — this one includes hi-res + next day.`;
+                    hiResFastestNote = `Only ${(premium * 100).toFixed(1)}% more than the absolute cheapest (${CUR()}${rawCheapestTotal.costPerPhoto.toFixed(2)}/photo) — this one includes hi-res + next day.`;
                 }
             }
 
@@ -987,8 +1057,8 @@
                     </div>
                     <div class="font-semibold ${recommended ? 'text-amber-800 dark:text-amber-300' : 'text-green-800 dark:text-green-400'}">${pick.name}${renderBadges(pick)}</div>
                     <div class="font-mono ${recommended ? 'text-amber-800 dark:text-amber-300' : 'text-green-800 dark:text-green-400'} mt-1">
-                        <span class="font-semibold">$${pick.costPerPhoto.toFixed(2)}/photo</span>
-                        <span class="text-xs opacity-80"> · $${pick.devCostPerRoll.toFixed(2)}/dev · $${pick.costPerRoll.toFixed(2)}/total</span>
+                        <span class="font-semibold">${CUR()}${pick.costPerPhoto.toFixed(2)}/photo</span>
+                        <span class="text-xs opacity-80"> · ${CUR()}${pick.devCostPerRoll.toFixed(2)}/dev · ${CUR()}${pick.costPerRoll.toFixed(2)}/total</span>
                     </div>
                     ${noteHtml}
                 </div>`;
@@ -1009,9 +1079,9 @@
                 return `<div class="flex justify-between items-start px-3 py-2 rounded-lg text-sm bg-white dark:bg-gray-800/50 ${isCurrent ? 'ring-2 ring-blue-400' : ''} ${r.highResScan ? 'border border-indigo-300 dark:border-indigo-700' : ''}">
                     <span class="text-gray-700 dark:text-gray-300">${r.name}${renderBadges(r)}${renderPinBtn(r.id)}</span>
                     <span class="font-mono text-right leading-tight text-gray-600 dark:text-gray-400">
-                        <div class="font-semibold">$${r.costPerPhoto.toFixed(2)}/photo</div>
-                        <div class="text-xs opacity-80">$${r.devCostPerRoll.toFixed(2)}/dev</div>
-                        <div class="text-xs opacity-80">$${r.costPerRoll.toFixed(2)}/total</div>
+                        <div class="font-semibold">${CUR()}${r.costPerPhoto.toFixed(2)}/photo</div>
+                        <div class="text-xs opacity-80">${CUR()}${r.devCostPerRoll.toFixed(2)}/dev</div>
+                        <div class="text-xs opacity-80">${CUR()}${r.costPerRoll.toFixed(2)}/total</div>
                     </span>
                 </div>`;
             }).join('');
@@ -1061,7 +1131,7 @@
             const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
 
             const matches = Object.values(allFilms)
-                .filter(f => (parseInt(f.boxSpeed) || 0) === boxSpeed)
+                .filter(f => !f.hidden && (parseInt(f.boxSpeed) || 0) === boxSpeed)
                 .flatMap(f => normalizeFilmBundles(f).map(b => ({
                     name: f.name,
                     rolls: b.rolls,
@@ -1093,7 +1163,7 @@
                     summary = `<p class="text-xs text-green-700 dark:text-green-400 font-medium mb-2">🏆 This beats every saved ${boxSpeed} ISO film</p>`;
                 } else {
                     const diff = currentCost - cheapest.costPerPhoto;
-                    summary = `<p class="text-xs text-gray-500 dark:text-gray-400 mb-2"><span class="font-semibold text-blue-700 dark:text-blue-400">${cheapest.name}</span> is cheaper at $${cheapest.costPerPhoto.toFixed(2)}/photo <span class="opacity-75">(+$${diff.toFixed(2)}/photo vs this one)</span></p>`;
+                    summary = `<p class="text-xs text-gray-500 dark:text-gray-400 mb-2"><span class="font-semibold text-blue-700 dark:text-blue-400">${cheapest.name}</span> is cheaper at ${CUR()}${cheapest.costPerPhoto.toFixed(2)}/photo <span class="opacity-75">(+${CUR()}${diff.toFixed(2)}/photo vs this one)</span></p>`;
                 }
             }
 
@@ -1101,7 +1171,7 @@
                 const isCheapest = i === 0;
                 return `<div class="flex justify-between items-center px-2 py-1 rounded text-xs mb-1 ${isCheapest ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-white/60 dark:bg-gray-800/40'}">
                     <span class="${isCheapest ? 'font-semibold text-amber-800 dark:text-amber-300' : 'text-gray-600 dark:text-gray-300'}">${isCheapest ? '⭐ ' : ''}${m.name} <span class="text-xs opacity-70">(${m.rolls}×${m.exposures}exp)</span>${renderBuyLink(m)}</span>
-                    <span class="font-mono ${isCheapest ? 'text-amber-800 dark:text-amber-300 font-semibold' : 'text-gray-500 dark:text-gray-400'}">$${m.costPerPhoto.toFixed(2)}/photo</span>
+                    <span class="font-mono ${isCheapest ? 'text-amber-800 dark:text-amber-300 font-semibold' : 'text-gray-500 dark:text-gray-400'}">${CUR()}${m.costPerPhoto.toFixed(2)}/photo</span>
                 </div>`;
             }).join('');
 
@@ -1119,36 +1189,64 @@
         // is filled in — considers every saved film regardless of native box
         // speed, since the purchase cost doesn't change based on what EI you
         // rate it at. Native-speed matches (no push/pull needed) are flagged
-        // separately from ones that would need pushing or pulling.
+        // separately from ones that would need pushing or pulling. The cheapest
+        // film that doesn't exceed its own Max Push/Pull limit is auto-loaded
+        // into the calculator so Labs For This Roll populates without needing
+        // to expand Quick Calculate or click anything.
         function renderDevSpeedRecommendation(devSpeed, container) {
             const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
 
             let idCounter = 0;
-            const matches = Object.values(allFilms).flatMap(f => {
-                const filmBoxSpeed = parseInt(f.boxSpeed) || 0;
-                if (!filmBoxSpeed) return [];
-                const stops = Math.round(Math.log2(devSpeed / filmBoxSpeed) * 10) / 10;
-                return normalizeFilmBundles(f).map(b => ({
-                    id: idCounter++,
-                    name: f.name,
-                    boxSpeed: filmBoxSpeed,
-                    maxPushPull: parseFloat(f.maxPushPull) || 1,
-                    stops,
-                    rolls: b.rolls,
-                    exposures: b.exposures,
-                    filmCost: b.filmCost,
-                    storeName: b.storeName,
-                    buyLink: b.buyLink,
-                    costPerPhoto: computeCostPerPhoto(b.filmCost, b.rolls, b.exposures)
-                }));
-            }).filter(m => m.costPerPhoto !== null && m.costPerPhoto > 0)
-              .sort((a, b) => a.costPerPhoto - b.costPerPhoto);
+            const matches = Object.values(allFilms)
+                .filter(f => !f.hidden)
+                .flatMap(f => {
+                    const filmBoxSpeed = parseInt(f.boxSpeed) || 0;
+                    if (!filmBoxSpeed) return [];
+                    const stops = Math.round(Math.log2(devSpeed / filmBoxSpeed) * 10) / 10;
+                    const maxPushPull = parseFloat(f.maxPushPull) || 1;
+                    return normalizeFilmBundles(f).map(b => ({
+                        id: idCounter++,
+                        name: f.name,
+                        boxSpeed: filmBoxSpeed,
+                        maxPushPull,
+                        eligible: Math.abs(stops) <= maxPushPull,
+                        stops,
+                        rolls: b.rolls,
+                        exposures: b.exposures,
+                        filmCost: b.filmCost,
+                        storeName: b.storeName,
+                        buyLink: b.buyLink,
+                        costPerPhoto: computeCostPerPhoto(b.filmCost, b.rolls, b.exposures)
+                    }));
+                }).filter(m => m.costPerPhoto !== null && m.costPerPhoto > 0)
+                  .sort((a, b) => a.costPerPhoto - b.costPerPhoto);
 
             if (matches.length === 0) {
                 container.innerHTML = `<p class="text-xs text-gray-400 mt-2">No saved films in your Film Library yet</p>`;
                 return;
             }
 
+            function applyMatch(m) {
+                document.getElementById('boxSpeed').value = m.boxSpeed;
+                document.getElementById('filmCost').value = m.filmCost || '';
+                document.getElementById('rolls').value = m.rolls || '1';
+                document.getElementById('exposures').value = m.exposures || '36';
+                devSpeedOverridden = true;
+                loadedFilmMaxPushPull = m.maxPushPull;
+                updateCalcBuyLinkInfo({ buyLink: m.buyLink, storeName: m.storeName });
+                updateLabComparison();
+                updateFilmSpeedComparison();
+            }
+
+            const cheapestEligible = matches.find(m => m.eligible);
+            if (cheapestEligible) {
+                applyMatch(cheapestEligible);
+                return;
+            }
+
+            // Nothing qualifies within its own push/pull limit — show the list
+            // for reference (all marked as exceeding their limit) instead of
+            // silently picking something that shouldn't be pushed/pulled that far.
             function renderBuyLink(m) {
                 if (!m.buyLink) return '';
                 const label = m.storeName ? `🛒 Buy from ${m.storeName}` : '🛒 Buy';
@@ -1161,41 +1259,20 @@
                 return `<span class="text-xs text-amber-600 dark:text-amber-400">${dir} ${Math.abs(stops)} stop${Math.abs(stops) === 1 ? '' : 's'}</span>`;
             }
 
-            const rows = matches.slice(0, 6).map((m, i) => {
-                const isCheapest = i === 0;
-                return `<button type="button" data-devrec-id="${m.id}" class="w-full flex justify-between items-center px-2 py-1 rounded text-xs mb-1 text-left transition-colors ${isCheapest ? 'bg-amber-100 dark:bg-amber-900/30 hover:bg-amber-200 dark:hover:bg-amber-900/50' : 'bg-white/60 dark:bg-gray-800/40 hover:bg-blue-100 dark:hover:bg-blue-900/30'}">
-                    <span class="${isCheapest ? 'font-semibold text-amber-800 dark:text-amber-300' : 'text-gray-600 dark:text-gray-300'}">${isCheapest ? '⭐ ' : ''}${m.name} <span class="opacity-70">(${m.boxSpeed} ISO native)</span> ${stopsLabel(m.stops)}${renderBuyLink(m)}</span>
-                    <span class="font-mono ${isCheapest ? 'text-amber-800 dark:text-amber-300 font-semibold' : 'text-gray-500 dark:text-gray-400'}">$${m.costPerPhoto.toFixed(2)}/photo</span>
-                </button>`;
+            const rows = matches.slice(0, 6).map((m) => {
+                return `<div class="flex justify-between items-center px-2 py-1 rounded text-xs mb-1 bg-white/60 dark:bg-gray-800/40 opacity-70">
+                    <span class="text-gray-600 dark:text-gray-300">${m.name} <span class="opacity-70">(${m.boxSpeed} ISO native, max ${m.maxPushPull} stop${m.maxPushPull === 1 ? '' : 's'})</span> ${stopsLabel(m.stops)}${renderBuyLink(m)}</span>
+                    <span class="font-mono text-gray-500 dark:text-gray-400">${CUR()}${m.costPerPhoto.toFixed(2)}/photo</span>
+                </div>`;
             }).join('');
 
-            const moreLabel = matches.length > 6 ? `<p class="text-xs text-gray-400 mt-1">+${matches.length - 6} more in your library</p>` : '';
-
             container.innerHTML = `<div class="mt-2 text-left">
-                <p class="text-xs text-blue-700/70 dark:text-blue-400/70 mb-1">Cheapest film to shoot at ${devSpeed} ISO (native or pushed/pulled) — tap to load:</p>
+                <div class="flex items-start gap-2 bg-orange-100 dark:bg-orange-900/30 border border-orange-300 dark:border-orange-700 rounded-lg px-3 py-2 mb-2">
+                    <span class="text-orange-500 dark:text-orange-400">⚠️</span>
+                    <p class="text-sm text-orange-800 dark:text-orange-300 font-medium">No saved film can be shot at ${devSpeed} ISO without exceeding its own Max Push/Pull limit</p>
+                </div>
                 ${rows}
-                ${moreLabel}
             </div>`;
-
-            const matchesById = new Map(matches.map(m => [m.id, m]));
-            container.querySelectorAll('[data-devrec-id]').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const m = matchesById.get(parseInt(btn.dataset.devrecId));
-                    if (!m) return;
-                    // Box Speed loads the film's native speed; Dev Speed stays as
-                    // the shooting EI the person typed in, so the push/pull this
-                    // recommendation was based on carries through to Labs For This Roll.
-                    document.getElementById('boxSpeed').value = m.boxSpeed;
-                    document.getElementById('filmCost').value = m.filmCost || '';
-                    document.getElementById('rolls').value = m.rolls || '1';
-                    document.getElementById('exposures').value = m.exposures || '36';
-                    devSpeedOverridden = true;
-                    loadedFilmMaxPushPull = m.maxPushPull;
-                    updateCalcBuyLinkInfo({ buyLink: m.buyLink, storeName: m.storeName });
-                    updateLabComparison();
-                    updateFilmSpeedComparison();
-                });
-            });
         }
 
         // ---------- Film Library (cheapest per ISO) ----------
@@ -1259,8 +1336,8 @@
                     <div class="text-xs font-semibold ${labelColor} uppercase tracking-wide mb-1">${label}</div>
                     <div class="font-semibold ${textColor}">${cheapest.name}${renderBuyLink(cheapest)}</div>
                     <div class="font-mono ${textColor} mt-1">
-                        <span class="font-semibold">$${cheapest.costPerPhoto.toFixed(2)}/photo</span>
-                        <span class="text-xs opacity-80"> · $${cheapest.packTotalCost.toFixed(2)} pack total · ${cheapest.rolls} Roll${cheapest.rolls == 1 ? '' : 's'} × ${cheapest.exposures}exp</span>
+                        <span class="font-semibold">${CUR()}${cheapest.costPerPhoto.toFixed(2)}/photo</span>
+                        <span class="text-xs opacity-80"> · ${CUR()}${cheapest.packTotalCost.toFixed(2)} pack total · ${cheapest.rolls} Roll${cheapest.rolls == 1 ? '' : 's'} × ${cheapest.exposures}exp</span>
                     </div>
                 </div>`;
             }).join('');
@@ -1274,8 +1351,8 @@
                 allContainer.innerHTML = others.map(e => `<div class="flex justify-between items-start px-3 py-2 rounded-lg text-sm bg-white dark:bg-gray-800/50">
                     <span class="text-gray-700 dark:text-gray-300">${e.name}${renderBuyLink(e)} <span class="text-xs text-gray-400">(${e.boxSpeed} ISO)</span></span>
                     <span class="font-mono text-right leading-tight text-gray-600 dark:text-gray-400">
-                        <div class="font-semibold">$${e.costPerPhoto.toFixed(2)}/photo</div>
-                        <div class="text-xs opacity-80">$${e.packTotalCost.toFixed(2)} pack total · ${e.rolls} Roll${e.rolls == 1 ? '' : 's'} × ${e.exposures}exp</div>
+                        <div class="font-semibold">${CUR()}${e.costPerPhoto.toFixed(2)}/photo</div>
+                        <div class="text-xs opacity-80">${CUR()}${e.packTotalCost.toFixed(2)} pack total · ${e.rolls} Roll${e.rolls == 1 ? '' : 's'} × ${e.exposures}exp</div>
                     </span>
                 </div>`).join('');
             }
@@ -1299,13 +1376,13 @@
         });
 
         // ---------- Profile dropdowns ----------
-        function updateDropdown(id, data, storageKey, labelFn) {
+        function updateDropdown(id, data, storageKey, labelFn, filterFn) {
             const dropdown = document.getElementById(id);
             const current = dropdown.value;
             const saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
             const all = { ...data, ...saved };
             dropdown.innerHTML = '<option value="">-- Load profile --</option>';
-            Object.keys(all).sort().forEach(n => {
+            Object.keys(all).filter(n => !filterFn || filterFn(all[n])).sort().forEach(n => {
                 const label = labelFn ? labelFn(all[n]) : n;
                 dropdown.innerHTML += `<option value="${n}">${label}</option>`;
             });
@@ -1319,12 +1396,14 @@
         // selecting one loads its cheapest bundle by default. The live Film
         // Library comparison below already shows every pack size at that ISO,
         // so browsing bundle sizes doesn't need its own dropdown entries.
+        // Films marked "Hide from Calculator" are excluded here, but still show
+        // in the Film Library tab's own management dropdown.
         function updateCalculatorFilmDropdown() {
             updateDropdown('savedFilmsDropdown', defaultFilms, 'filmProfiles', f => {
                 const bundles = normalizeFilmBundles(f);
                 const countLabel = bundles.length > 1 ? ` — ${bundles.length} bundles` : '';
                 return `${f.name} (${f.boxSpeed || '?'} ISO${countLabel})`;
-            });
+            }, f => !f.hidden);
         }
 
         // Read-only "Buy this film" info shown after loading a saved bundle here
@@ -1394,23 +1473,27 @@
                 document.getElementById('libraryFilmName').value = '';
                 document.getElementById('libraryBoxSpeed').value = '';
                 document.getElementById('libraryMaxPushPull').value = '1';
+                document.getElementById('filmHiddenCheckbox').checked = false;
                 resetBundles([{}]);
                 return;
             }
             document.getElementById('libraryFilmName').value = film.name;
             document.getElementById('libraryBoxSpeed').value = film.boxSpeed || '';
             document.getElementById('libraryMaxPushPull').value = film.maxPushPull ?? 1;
+            document.getElementById('filmHiddenCheckbox').checked = !!film.hidden;
             resetBundles(normalizeFilmBundles(film));
         });
 
         document.getElementById('savedLabsDropdown').addEventListener('change', (e) => {
             const p = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') }[e.target.value];
             if (!p) {
+                document.getElementById('labHiddenCheckbox').checked = false;
                 resetTiers([{}]);
                 updateLabComparison();
                 return;
             }
             document.getElementById('labName').value = p.name;
+            document.getElementById('labHiddenCheckbox').checked = !!p.hidden;
             resetTiers(normalizeLabServices(p));
             updateLabComparison();
         });
@@ -1475,7 +1558,7 @@
                 buyLink: block.querySelector('.bundle-buyLink').value.trim()
             }));
             let saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
-            saved[name] = { name, boxSpeed, maxPushPull, bundles };
+            saved[name] = { name, boxSpeed, maxPushPull, hidden: document.getElementById('filmHiddenCheckbox').checked, bundles };
             localStorage.setItem('filmProfiles', JSON.stringify(saved));
             updateFilmDropdowns();
             document.getElementById('libraryFilmsDropdown').value = name;
@@ -1494,7 +1577,7 @@
                 highResScan: block.querySelector('.tier-highResScan').checked
             }));
             let saved = JSON.parse(localStorage.getItem('labProfiles') || '{}');
-            saved[name] = { name, services };
+            saved[name] = { name, hidden: document.getElementById('labHiddenCheckbox').checked, services };
             localStorage.setItem('labProfiles', JSON.stringify(saved));
             updateLabDropdown();
             document.getElementById('savedLabsDropdown').value = name;
@@ -1537,6 +1620,7 @@
                 name: f.name,
                 boxSpeed: Number(f.boxSpeed) || 0,
                 maxPushPull: Number(f.maxPushPull ?? 1),
+                hidden: !!f.hidden,
                 bundles: normalizeFilmBundles(f)
             }));
         }
@@ -1546,6 +1630,7 @@
             const all = { ...defaultLabs, ...saved };
             return Object.values(all).map(l => ({
                 name: l.name,
+                hidden: !!l.hidden,
                 services: normalizeLabServices(l)
             }));
         }
