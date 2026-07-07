@@ -43,12 +43,12 @@
                 <div class="space-y-4">
                     <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3">
                         <h3 class="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide">Export Data</h3>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Downloads <code>films.yaml</code> and <code>labs.yml</code> with all your saved profiles, in the same format the app reads them in — so they can be dropped straight back into the project's repo with no editing.</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Downloads <code>films.yaml</code> and <code>labs.yaml</code> with all your saved profiles, in the same format the app reads them in — so they can be dropped straight back into the project's repo with no editing.</p>
                         <button id="exportBtn" type="button" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-medium">Export as YAML</button>
                     </div>
                     <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3">
                         <h3 class="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide">Import Data</h3>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Select one or both YAML files (<code>films.yaml</code> / <code>labs.yml</code>) to load them as saved profiles.</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Select one or both YAML files (<code>films.yaml</code> / <code>labs.yaml</code>) to load them as saved profiles.</p>
                         <button id="importBtn" type="button" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-medium">Import YAML</button>
                         <input type="file" id="importFile" class="hidden" accept=".yaml,.yml" multiple>
                     </div>
@@ -74,15 +74,33 @@
 
                 <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg space-y-3">
                     <h2 class="font-semibold text-blue-800 dark:text-blue-400 text-sm uppercase tracking-wide">Film Setup</h2>
-                    <input type="text" id="filmName" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" placeholder="Film Name">
-                    <div class="grid grid-cols-2 gap-2">
-                        <input type="number" id="boxSpeed" placeholder="Box Speed" class="border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                        <input type="number" id="devSpeed" placeholder="Dev Speed" class="border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                    <div>
+                        <label for="filmName" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Film Name</label>
+                        <input type="text" id="filmName" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" placeholder="e.g. Kodak Gold 200">
                     </div>
-                    <input type="number" id="filmCost" step="0.01" placeholder="Total cost ($)" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                     <div class="grid grid-cols-2 gap-2">
-                        <input type="number" id="rolls" placeholder="Rolls" class="border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                        <input type="number" id="exposures" placeholder="Exposures" class="border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                        <div>
+                            <label for="boxSpeed" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Box Speed (ISO)</label>
+                            <input type="number" id="boxSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                        </div>
+                        <div>
+                            <label for="devSpeed" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Dev Speed (ISO)</label>
+                            <input type="number" id="devSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="filmCost" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Total Cost incl. Postage ($)</label>
+                        <input type="number" id="filmCost" step="0.01" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label for="rolls" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Rolls</label>
+                            <input type="number" id="rolls" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                        </div>
+                        <div>
+                            <label for="exposures" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Exposures per Roll</label>
+                            <input type="number" id="exposures" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                        </div>
                     </div>
                     <button id="saveFilmBtn" type="button" class="w-full bg-blue-600 text-white py-2 rounded font-medium hover:bg-blue-700">Save as Film Profile</button>
                 </div>
@@ -97,19 +115,41 @@
 
                 <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg space-y-3">
                     <h2 class="font-semibold text-green-800 dark:text-green-400 text-sm uppercase tracking-wide">Lab Setup</h2>
-                    <input type="text" id="labName" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" placeholder="Lab Name">
-                    <div class="grid grid-cols-2 gap-2">
-                        <input type="number" id="devCost" placeholder="Dev" class="border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                        <input type="number" id="scanCost" placeholder="Scan" class="border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                    <div>
+                        <label for="labName" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Lab Name</label>
+                        <input type="text" id="labName" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" placeholder="e.g. Irohas Melbourne">
                     </div>
                     <div class="grid grid-cols-2 gap-2">
-                        <input type="number" id="printCost" placeholder="Print" class="border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                        <input type="number" id="pushPullCost" placeholder="P/P Fee" class="border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                        <div>
+                            <label for="devCost" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Dev Cost ($)</label>
+                            <input type="number" id="devCost" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                        </div>
+                        <div>
+                            <label for="scanCost" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Scan Cost ($)</label>
+                            <input type="number" id="scanCost" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                        </div>
                     </div>
-                    <select id="pushPullType" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                        <option value="per_stop">Per Stop</option>
-                        <option value="flat">Flat Fee</option>
-                    </select>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label for="printCost" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Print Cost ($)</label>
+                            <input type="number" id="printCost" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                        </div>
+                        <div>
+                            <label for="pushPullCost" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Push/Pull Fee ($)</label>
+                            <input type="number" id="pushPullCost" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="pushPullType" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Push/Pull Fee Type</label>
+                        <select id="pushPullType" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                            <option value="per_stop">Per Stop</option>
+                            <option value="flat">Flat Fee</option>
+                        </select>
+                    </div>
+                    <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                        <input type="checkbox" id="highResScan" class="rounded border-gray-300 dark:border-gray-600 text-green-600 focus:ring-green-500">
+                        High Res Scans
+                    </label>
                     <button id="saveLabBtn" type="button" class="w-full bg-green-600 text-white py-2 rounded font-medium hover:bg-green-700">Save as Lab Profile</button>
                 </div>
             </div>
@@ -196,13 +236,13 @@
 
         Object.keys(tabs).forEach(key => tabs[key].btn.addEventListener('click', () => switchTab(key)));
 
-        // ---------- Default profiles (loaded from films.yaml / labs.yml) ----------
+        // ---------- Default profiles (loaded from films.yaml / labs.yaml) ----------
         let defaultFilms = {};
         let defaultLabs = {};
 
         async function loadDefaults() {
             try {
-                const [fRes, lRes] = await Promise.all([fetch('films.yaml'), fetch('labs.yml')]);
+                const [fRes, lRes] = await Promise.all([fetch('films.yaml'), fetch('labs.yaml')]);
                 if (fRes.ok) {
                     const parsed = jsyaml.load(await fRes.text()) || [];
                     parsed.forEach(f => { defaultFilms[f.name] = f; });
@@ -275,7 +315,7 @@
                 const costPerRoll = rolls > 0 ? grandTotal / rolls : 0;
                 const costPerPhoto = totalPhotos > 0 ? grandTotal / totalPhotos : 0;
 
-                return { name, stops, devCostPerRoll: labCostPerRoll, costPerRoll, costPerPhoto };
+                return { name, stops, devCostPerRoll: labCostPerRoll, costPerRoll, costPerPhoto, highResScan: !!lab.highResScan };
             }).sort((a, b) => a.costPerPhoto - b.costPerPhoto);
 
             const currentLabName = document.getElementById('labName').value.trim();
@@ -284,8 +324,9 @@
                 const isCheapest = i === 0;
                 const isCurrent = r.name === currentLabName;
                 const stopsLabel = r.stops > 0 ? ` <span class="text-xs text-gray-400">(${r.stops} stop push/pull)</span>` : '';
-                return `<div class="flex justify-between items-start px-3 py-2 rounded-lg text-sm ${isCheapest ? 'bg-green-100 dark:bg-green-900/30' : 'bg-white dark:bg-gray-800/50'} ${isCurrent ? 'ring-2 ring-blue-400' : ''}">
-                    <span class="${isCheapest ? 'font-semibold text-green-800 dark:text-green-400' : 'text-gray-700 dark:text-gray-300'}">${isCheapest ? '🏆 ' : ''}${r.name}${stopsLabel}</span>
+                const hiResBadge = r.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">HI-RES</span>` : '';
+                return `<div class="flex justify-between items-start px-3 py-2 rounded-lg text-sm ${isCheapest ? 'bg-green-100 dark:bg-green-900/30' : 'bg-white dark:bg-gray-800/50'} ${isCurrent ? 'ring-2 ring-blue-400' : ''} ${r.highResScan ? 'border border-indigo-300 dark:border-indigo-700' : ''}">
+                    <span class="${isCheapest ? 'font-semibold text-green-800 dark:text-green-400' : 'text-gray-700 dark:text-gray-300'}">${isCheapest ? '🏆 ' : ''}${r.name}${hiResBadge}${stopsLabel}</span>
                     <span class="font-mono text-right leading-tight ${isCheapest ? 'text-green-800 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}">
                         <div class="font-semibold">$${r.costPerPhoto.toFixed(2)}/photo</div>
                         <div class="text-xs opacity-80">$${r.devCostPerRoll.toFixed(2)}/dev</div>
@@ -342,6 +383,7 @@
             document.getElementById('printCost').value = p.printCost || 0;
             document.getElementById('pushPullCost').value = p.pushPullCost || 0;
             document.getElementById('pushPullType').value = p.pushPullType || 'per_stop';
+            document.getElementById('highResScan').checked = !!p.highResScan;
             updateLabComparison();
         });
 
@@ -372,7 +414,8 @@
                 scanCost: document.getElementById('scanCost').value,
                 printCost: document.getElementById('printCost').value,
                 pushPullCost: document.getElementById('pushPullCost').value,
-                pushPullType: document.getElementById('pushPullType').value
+                pushPullType: document.getElementById('pushPullType').value,
+                highResScan: document.getElementById('highResScan').checked
             };
             localStorage.setItem('labProfiles', JSON.stringify(saved));
             updateLabDropdown();
@@ -406,7 +449,7 @@
             updateLabDropdown();
         });
 
-        // ---------- Export / Import (YAML, matching films.yaml / labs.yml schema) ----------
+        // ---------- Export / Import (YAML, matching films.yaml / labs.yaml schema) ----------
         function buildFilmsArray() {
             const saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
             const all = { ...defaultFilms, ...saved };
@@ -428,7 +471,8 @@
                 scanCost: Number(l.scanCost) || 0,
                 printCost: Number(l.printCost) || 0,
                 pushPullCost: Number(l.pushPullCost) || 0,
-                pushPullType: l.pushPullType || 'per_stop'
+                pushPullType: l.pushPullType || 'per_stop',
+                highResScan: !!l.highResScan
             }));
         }
 
@@ -444,7 +488,7 @@
 
         document.getElementById('exportBtn').addEventListener('click', () => {
             downloadYaml('films.yaml', buildFilmsArray());
-            downloadYaml('labs.yml', buildLabsArray());
+            downloadYaml('labs.yaml', buildLabsArray());
         });
 
         document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
@@ -488,7 +532,7 @@
                 updateFilmDropdown();
                 updateLabDropdown();
                 if (errors > 0 && filmsImported === 0 && labsImported === 0) {
-                    alert('Could not read those files — are they valid films.yaml / labs.yml files?');
+                    alert('Could not read those files — are they valid films.yaml / labs.yaml files?');
                 } else {
                     alert(`Imported ${filmsImported} film profile(s) and ${labsImported} lab profile(s).`);
                 }
