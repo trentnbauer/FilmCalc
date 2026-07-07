@@ -93,12 +93,12 @@
             <div id="settingsTabContent" class="space-y-6 hidden">
                 <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3">
                     <h2 class="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide">Export Data</h2>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">Downloads <code>films.yaml</code> and <code>labs.yml</code> with all your saved profiles, in the same format the app reads them in — so they can be dropped straight back into the project's repo with no editing.</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Downloads <code>films.yaml</code> and <code>labs.yaml</code> with all your saved profiles, in the same format the app reads them in — so they can be dropped straight back into the project's repo with no editing.</p>
                     <button id="exportBtn" type="button" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-medium">Export as YAML</button>
                 </div>
                 <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3">
                     <h2 class="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide">Import Data</h2>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">Select one or both YAML files (<code>films.yaml</code> / <code>labs.yml</code>) to load them as saved profiles.</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Select one or both YAML files (<code>films.yaml</code> / <code>labs.yaml</code>) to load them as saved profiles.</p>
                     <button id="importBtn" type="button" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-medium">Import YAML</button>
                     <input type="file" id="importFile" class="hidden" accept=".yaml,.yml" multiple>
                 </div>
@@ -163,13 +163,13 @@
 
         Object.keys(tabs).forEach(key => tabs[key].btn.addEventListener('click', () => switchTab(key)));
 
-        // ---------- Default profiles (loaded from films.yaml / labs.yml) ----------
+        // ---------- Default profiles (loaded from films.yaml / labs.yaml) ----------
         let defaultFilms = {};
         let defaultLabs = {};
 
         async function loadDefaults() {
             try {
-                const [fRes, lRes] = await Promise.all([fetch('films.yaml'), fetch('labs.yml')]);
+                const [fRes, lRes] = await Promise.all([fetch('films.yaml'), fetch('labs.yaml')]);
                 if (fRes.ok) {
                     const parsed = jsyaml.load(await fRes.text()) || [];
                     parsed.forEach(f => { defaultFilms[f.name] = f; });
@@ -364,7 +364,7 @@
             updateLabDropdown();
         });
 
-        // ---------- Export / Import (YAML, matching films.yaml / labs.yml schema) ----------
+        // ---------- Export / Import (YAML, matching films.yaml / labs.yaml schema) ----------
         function buildFilmsArray() {
             const saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
             const all = { ...defaultFilms, ...saved };
@@ -404,7 +404,7 @@
 
         document.getElementById('exportBtn').addEventListener('click', () => {
             downloadYaml('films.yaml', buildFilmsArray());
-            downloadYaml('labs.yml', buildLabsArray());
+            downloadYaml('labs.yaml', buildLabsArray());
         });
 
         document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
@@ -448,7 +448,7 @@
                 updateFilmDropdown();
                 updateLabDropdown();
                 if (errors > 0 && filmsImported === 0 && labsImported === 0) {
-                    alert('Could not read those files — are they valid films.yaml / labs.yml files?');
+                    alert('Could not read those files — are they valid films.yaml / labs.yaml files?');
                 } else {
                     alert(`Imported ${filmsImported} film profile(s) and ${labsImported} lab profile(s).`);
                 }
