@@ -10,6 +10,8 @@ COPY favicon.ico /usr/share/nginx/html/favicon.ico
 COPY icon.ico /usr/share/nginx/html/icon.ico
 COPY icon.svg /usr/share/nginx/html/icon.svg
 COPY apple-touch-icon.png /usr/share/nginx/html/apple-touch-icon.png
+COPY manifest.json /usr/share/nginx/html/manifest.json
+COPY sw.js /usr/share/nginx/html/sw.js
 COPY default.conf /etc/nginx/conf.d/default.conf
 
 # The nginx worker process runs as the 'nginx' user, not root — it needs write
