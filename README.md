@@ -9,9 +9,8 @@ A lightweight, responsive, mobile-friendly web app for analog photographers to w
 - **Buy links** — Save a store name and purchase link against a bundle; a "🛒 Buy from {store}" link shows up when that bundle is loaded in the Calculator, and again in the Film Library.
 - **Film Library tab** — Manage every film stock and its bundles (add, edit, delete), and see every saved bundle grouped by Box Speed, with the cheapest cost-per-photo bundle at each ISO highlighted, and the single cheapest bundle overall highlighted in gold.
 - **Labs for this roll** — Every saved lab profile is automatically compared against your current film and push/pull settings, sorted by cost per photo. A lab that's cheaper at box speed isn't always cheaper once you push 2 stops — this handles that. Each lab shows its turnaround time (Next Day / Same Week / Longer), and labs offering high-res scans get a "HI-RES" badge. Filter toggles let you narrow the list to Next Day and/or Hi-Res labs only. "Cheapest Total" always shows the actual cheapest option; if the cheapest Hi-Res + Fastest option is within a configurable percentage of that, its own card is highlighted gold as the recommended pick instead.
-- **Target Speed first** — Enter the ISO you're shooting at right at the top of the Calculator tab. If you leave Box Speed blank, the app automatically loads the cheapest saved film that can be shot at that speed without exceeding its own push/pull limit — no need to expand Quick Calculate or click anything.
-- **Push/pull aware** — Automatically works out stops pushed or pulled from Box Speed vs. Target Speed (using log2 of the ratio), and applies each lab's push/pull fee — either a flat fee or a per-stop rate.
-- **Max push/pull limits** — Set a max push/pull (in stops) per film stock in the Film Library. Films that would need pushing/pulling beyond their own limit are skipped by the auto-recommendation, and a warning shows next to Target Speed if a loaded film is pushed/pulled beyond its limit anyway.
+- **Target Speed first** — Enter the ISO you're shooting at right at the top of the Calculator tab. If you leave Box Speed blank, the app automatically loads the cheapest saved film for that speed — no need to expand Quick Calculate or click anything.
+- **Push/pull aware** — Automatically works out stops pushed or pulled from Box Speed vs. Target Speed (using log2 of the ratio), and applies each lab's push/pull fee — either a flat fee or a per-stop rate. A warning shows next to Target Speed any time that gap is more than 1 stop, regardless of which film is loaded.
 - **No-push/pull service tiers** — Mark an individual lab service tier as not offering push/pull at all (e.g. a same-day mini-lab); it's automatically excluded from comparisons whenever the roll actually needs pushing or pulling, but still shows up normally for box-speed rolls.
 - **Hide from Calculator** — Mark individual labs or film stocks as hidden from the Calculator (in Lab Setup / Film Setup) to exclude them from Labs For This Roll and film recommendations, while keeping them manageable in their own tab.
 - **Lab contact details** — Optionally save a lab's address, phone, email, and website. The address gets a one-tap "📍 Directions" link straight to your phone's maps app.
@@ -98,7 +97,6 @@ settings:
 films:
   - name: "Kodak Gold"
     boxSpeed: 400
-    maxPushPull: 1                                            # optional; defaults to 1. Warns in the Calculator if pushed/pulled further than this
     bundles:
       - rolls: 1
         exposures: 36

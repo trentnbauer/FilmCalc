@@ -14,6 +14,15 @@ COPY manifest.json /usr/share/nginx/html/manifest.json
 COPY sw.js /usr/share/nginx/html/sw.js
 COPY default.conf /etc/nginx/conf.d/default.conf
 
+# docker-compose.yml mounts a named volume at exactly this path so
+# config.yaml survives container recreation. That mount only works
+# correctly if config.yaml already exists here as a regular file at
+# build time — otherwise Docker creates the mountpoint as a directory
+# instead, and the PUT endpoint below breaks. touch creates that empty
+# placeholder so the (empty, on first run) named volume initializes from
+# it as a file.
+RUN touch /usr/share/nginx/html/config.yaml
+
 # The nginx worker process runs as the 'nginx' user, not root — it needs write
 # access to /usr/share/nginx/html for the config.yaml PUT endpoint (see
 # default.conf) to work, and to /tmp/client_temp for nginx's DAV module to
