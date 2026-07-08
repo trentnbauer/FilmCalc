@@ -78,6 +78,14 @@
                                 <input type="number" id="boxSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                             </div>
                             <div>
+                                <label for="processSelect" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Process</label>
+                                <select id="processSelect" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                                    <option value="C41">C41 (Color)</option>
+                                    <option value="BW">B&amp;W</option>
+                                    <option value="E6">E6</option>
+                                </select>
+                            </div>
+                            <div>
                                 <label for="filmCost" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Total Cost incl. Postage ($)</label>
                                 <input type="number" id="filmCost" step="0.01" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                             </div>
@@ -139,12 +147,16 @@
                 <div class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-300">
                     <span class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">Show:</span>
                     <label class="flex items-center gap-1.5">
-                        <input type="checkbox" id="cheapestFilterColor" checked class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500">
-                        Color
+                        <input type="checkbox" id="cheapestFilterC41" checked class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500">
+                        C41
                     </label>
                     <label class="flex items-center gap-1.5">
                         <input type="checkbox" id="cheapestFilterBw" checked class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500">
                         B&amp;W
+                    </label>
+                    <label class="flex items-center gap-1.5">
+                        <input type="checkbox" id="cheapestFilterE6" checked class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500">
+                        E6
                     </label>
                 </div>
 
@@ -242,15 +254,14 @@
                         <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Applies to the whole film stock, not individual bundles. The Compare tab warns if this film is loaded and pushed/pulled further than this.</p>
                     </div>
 
-                    <div class="flex items-center gap-4">
-                        <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                            <input type="checkbox" id="filmColorCheckbox" class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500">
-                            Color
-                        </label>
-                        <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                            <input type="checkbox" id="filmBwCheckbox" class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500">
-                            B&amp;W
-                        </label>
+                    <div>
+                        <label for="libraryProcessSelect" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Process</label>
+                        <select id="libraryProcessSelect" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                            <option value="C41">C41 (Color)</option>
+                            <option value="BW">B&amp;W</option>
+                            <option value="E6">E6</option>
+                        </select>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Only lab service tiers set to the same process are considered for this film.</p>
                     </div>
 
                     <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
@@ -453,17 +464,26 @@
         // "Kodak Foo" at 400 after loading "Kodak Foo" at 200 silently
         // overwrote the 200 entry instead of creating a second one.
         function filmKey(name, boxSpeed) {
-            return `${name}__${boxSpeed || 0}`;
+            return `${name}${boxSpeed || 0}`;
         }
 
-        // Color/B&W filter used by the Cheapest tab — a film with neither box
-        // ticked is untagged and always shows regardless of filter state, so
-        // existing saved films aren't hidden just because this feature is new.
-        function filmPassesTypeFilter(f) {
-            if (!f.isColor && !f.isBw) return true;
-            const showColor = document.getElementById('cheapestFilterColor').checked;
+        // Process filter used by the Cheapest tab (C41 / B&W / E6 checkboxes).
+        function filmPassesProcessFilter(f) {
+            const process = f.process || 'C41';
+            const showC41 = document.getElementById('cheapestFilterC41').checked;
             const showBw = document.getElementById('cheapestFilterBw').checked;
-            return (f.isColor && showColor) || (f.isBw && showBw);
+            const showE6 = document.getElementById('cheapestFilterE6').checked;
+            if (process === 'C41') return showC41;
+            if (process === 'BW') return showBw;
+            if (process === 'E6') return showE6;
+            return true;
+        }
+
+        // A lab service tier can only process one film process (C41/B&W/E6) —
+        // pairing a film with a tier that processes something else isn't a
+        // real option, so this is an exclusion, not just a visual filter.
+        function tierMatchesFilmProcess(tier, film) {
+            return (tier.process || 'C41') === (film.process || 'C41');
         }
 
         const themeToggle = document.getElementById('themeToggle');
@@ -758,8 +778,9 @@
 
         Object.keys(cheapestSubTabs).forEach(key => cheapestSubTabs[key].btn.addEventListener('click', () => switchCheapestSubTab(key)));
 
-        document.getElementById('cheapestFilterColor').addEventListener('change', refreshActiveCheapestSubTab);
+        document.getElementById('cheapestFilterC41').addEventListener('change', refreshActiveCheapestSubTab);
         document.getElementById('cheapestFilterBw').addEventListener('change', refreshActiveCheapestSubTab);
+        document.getElementById('cheapestFilterE6').addEventListener('change', refreshActiveCheapestSubTab);
 
 
         Object.keys(tabs).forEach(key => tabs[key].btn.addEventListener('click', () => switchTab(key)));
@@ -844,7 +865,8 @@
                     pushPullType: s.pushPullType || 'per_stop',
                     turnaroundTime: s.turnaroundTime || 'same_week',
                     highResScan: !!s.highResScan,
-                    noPushPull: !!s.noPushPull
+                    noPushPull: !!s.noPushPull,
+                    process: s.process || 'C41'
                 }));
             }
             // Legacy flat schema fallback (pre-service-tiers saved profiles)
@@ -854,7 +876,8 @@
                 pushPullType: lab.pushPullType || 'per_stop',
                 turnaroundTime: lab.turnaroundTime || 'same_week',
                 highResScan: !!lab.highResScan,
-                noPushPull: !!lab.noPushPull
+                noPushPull: !!lab.noPushPull,
+                process: lab.process || 'C41'
             }];
         }
 
@@ -866,6 +889,7 @@
             const turnaroundTime = tier.turnaroundTime || 'same_week';
             const highResScan = !!tier.highResScan;
             const noPushPull = !!tier.noPushPull;
+            const process = tier.process || 'C41';
             return `
                 <div class="tier-block bg-white dark:bg-gray-800/60 border border-green-200 dark:border-green-800 rounded-lg p-3 space-y-2 relative">
                     <button type="button" class="removeTierBtn absolute top-2 right-2 text-red-400 hover:text-red-600 text-xs font-bold" aria-label="Remove Tier">✕</button>
@@ -874,6 +898,16 @@
                             <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Dev Cost ($)</label>
                             <input type="number" class="tier-devCost w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" value="${devCost}">
                         </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Process</label>
+                            <select class="tier-process w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                                <option value="C41" ${process === 'C41' ? 'selected' : ''}>C41 (Color)</option>
+                                <option value="BW" ${process === 'BW' ? 'selected' : ''}>B&amp;W</option>
+                                <option value="E6" ${process === 'E6' ? 'selected' : ''}>E6</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 pr-6">
                         <div>
                             <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Turnaround Time</label>
                             <select class="tier-turnaroundTime w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
@@ -1168,6 +1202,7 @@
             const perRollFee = parseFloat(document.getElementById('perRollFee').value) || 0;
 
             const stops = warningStops;
+            const currentProcess = document.getElementById('processSelect').value || 'C41';
 
             const allLabs = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') };
             const names = Object.keys(allLabs).filter(n => !allLabs[n].hidden);
@@ -1185,7 +1220,7 @@
                 const services = normalizeLabServices(lab);
 
                 return services
-                    .filter(tier => !(tier.noPushPull && stops > 0))
+                    .filter(tier => !(tier.noPushPull && stops > 0) && (tier.process || 'C41') === currentProcess)
                     .map(tier => {
                     let activePushPullCost = 0;
                     if (stops > 0) {
@@ -1212,7 +1247,7 @@
 
             if (allResults.length === 0) {
                 bestPicksContainer.innerHTML = '';
-                container.innerHTML = '<p class="text-sm text-gray-400 text-center">Save a lab profile to compare prices</p>';
+                container.innerHTML = '<p class="text-sm text-gray-400 text-center">No saved lab has a service tier set to this film\'s process — check Lab Setup, or save a lab profile</p>';
                 renderPinnedResult(null);
                 return;
             }
@@ -1499,7 +1534,7 @@
             const pull = [];
             if (labNames.length === 0) return { native, push, pull };
 
-            Object.values(allFilms).filter(f => !f.hidden && filmPassesTypeFilter(f)).forEach(f => {
+            Object.values(allFilms).filter(f => !f.hidden && filmPassesProcessFilter(f)).forEach(f => {
                 const boxSpeed = parseInt(f.boxSpeed) || 0;
                 if (!boxSpeed) return;
 
@@ -1525,7 +1560,7 @@
                 let best = null;
                 labNames.forEach(labName => {
                     normalizeLabServices(allLabs[labName])
-                        .filter(tier => !(tier.noPushPull && stopsAbs > 0))
+                        .filter(tier => !(tier.noPushPull && stopsAbs > 0) && tierMatchesFilmProcess(tier, f))
                         .forEach(tier => {
                             const pushPullFee = stopsAbs > 0
                                 ? ((tier.pushPullType === 'per_stop') ? tier.pushPullCost * stopsAbs : tier.pushPullCost)
@@ -1638,7 +1673,7 @@
             const labNames = Object.keys(allLabs).filter(n => !allLabs[n].hidden);
 
             const results = [];
-            Object.values(allFilms).filter(f => !f.hidden && filmPassesTypeFilter(f)).forEach(f => {
+            Object.values(allFilms).filter(f => !f.hidden && filmPassesProcessFilter(f)).forEach(f => {
                 const boxSpeed = parseInt(f.boxSpeed) || 0;
                 if (!boxSpeed) return;
 
@@ -1653,7 +1688,7 @@
                 if (!bestBundle || !bestBundle.exposures) return;
 
                 labNames.forEach(labName => {
-                    normalizeLabServices(allLabs[labName]).forEach(tier => {
+                    normalizeLabServices(allLabs[labName]).filter(tier => tierMatchesFilmProcess(tier, f)).forEach(tier => {
                         const devCostPerPhoto = tier.devCost / bestBundle.exposures;
                         results.push({
                             filmName: f.name,
@@ -1684,7 +1719,7 @@
             const labNames = Object.keys(allLabs).filter(n => !allLabs[n].hidden);
 
             const results = [];
-            Object.values(allFilms).filter(f => !f.hidden && filmPassesTypeFilter(f)).forEach(f => {
+            Object.values(allFilms).filter(f => !f.hidden && filmPassesProcessFilter(f)).forEach(f => {
                 const boxSpeed = parseInt(f.boxSpeed) || 0;
                 if (!boxSpeed) return;
 
@@ -1700,7 +1735,7 @@
 
                 labNames.forEach(labName => {
                     normalizeLabServices(allLabs[labName])
-                        .filter(tier => !tier.noPushPull)
+                        .filter(tier => !tier.noPushPull && tierMatchesFilmProcess(tier, f))
                         .forEach(tier => {
                             const devCostPerPhoto = (tier.devCost + tier.pushPullCost) / bestBundle.exposures;
                             results.push({
@@ -1960,6 +1995,7 @@
             if (!name) {
                 updateCalcBuyLinkInfo(null);
                 loadedFilmMaxPushPull = 1;
+                document.getElementById('processSelect').value = 'C41';
                 updateLabComparison();
                 return;
             }
@@ -1979,6 +2015,7 @@
             document.getElementById('filmCost').value = bundle.filmCost || '';
             document.getElementById('rolls').value = bundle.rolls || '1';
             document.getElementById('exposures').value = bundle.exposures || '36';
+            document.getElementById('processSelect').value = film.process || 'C41';
             loadedFilmMaxPushPull = parseFloat(film.maxPushPull) || 1;
             updateCalcBuyLinkInfo(bundle);
             updateLabComparison();
@@ -1993,8 +2030,7 @@
                 document.getElementById('libraryFilmName').value = '';
                 document.getElementById('libraryBoxSpeed').value = '';
                 document.getElementById('libraryMaxPushPull').value = '1';
-                document.getElementById('filmColorCheckbox').checked = false;
-                document.getElementById('filmBwCheckbox').checked = false;
+                document.getElementById('libraryProcessSelect').value = 'C41';
                 document.getElementById('filmHiddenCheckbox').checked = false;
                 resetBundles([{}]);
                 return;
@@ -2002,8 +2038,7 @@
             document.getElementById('libraryFilmName').value = film.name;
             document.getElementById('libraryBoxSpeed').value = film.boxSpeed || '';
             document.getElementById('libraryMaxPushPull').value = film.maxPushPull ?? 1;
-            document.getElementById('filmColorCheckbox').checked = !!film.isColor;
-            document.getElementById('filmBwCheckbox').checked = !!film.isBw;
+            document.getElementById('libraryProcessSelect').value = film.process || 'C41';
             document.getElementById('filmHiddenCheckbox').checked = !!film.hidden;
             resetBundles(normalizeFilmBundles(film));
         });
@@ -2042,6 +2077,7 @@
             document.getElementById('rolls').value = '';
             document.getElementById('exposures').value = '';
             document.getElementById('savedFilmsDropdown').value = '';
+            document.getElementById('processSelect').value = 'C41';
             loadedFilmMaxPushPull = 1;
             updateCalcBuyLinkInfo(null);
             updateLabComparison();
@@ -2073,8 +2109,7 @@
             document.getElementById('libraryFilmName').value = '';
             document.getElementById('libraryBoxSpeed').value = boxSpeed || '';
             document.getElementById('libraryMaxPushPull').value = '1';
-            document.getElementById('filmColorCheckbox').checked = false;
-            document.getElementById('filmBwCheckbox').checked = false;
+            document.getElementById('libraryProcessSelect').value = document.getElementById('processSelect').value;
             resetBundles([{ rolls, exposures, filmCost, storeName: '', buyLink: '' }]);
             document.getElementById('libraryFilmName').focus();
         });
@@ -2084,8 +2119,7 @@
             if (!name) return alert('Enter Film Name');
             const boxSpeed = document.getElementById('libraryBoxSpeed').value;
             const maxPushPull = parseFloat(document.getElementById('libraryMaxPushPull').value) || 1;
-            const isColor = document.getElementById('filmColorCheckbox').checked;
-            const isBw = document.getElementById('filmBwCheckbox').checked;
+            const process = document.getElementById('libraryProcessSelect').value || 'C41';
             const bundleBlocks = document.querySelectorAll('#filmBundlesContainer .bundle-block');
             if (bundleBlocks.length === 0) return alert('Add at least one bundle');
             const bundles = Array.from(bundleBlocks).map(block => ({
@@ -2101,19 +2135,17 @@
             let saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
 
             // Name + Box Speed together are this film's identity. If we were
-            // editing an existing saved film and either changed, ask whether
-            // that's a correction to the same film (replace the old entry)
-            // or a genuinely different film stock that should be saved
-            // alongside it — otherwise a changed Box Speed would either
-            // silently collide with another entry at the new identity, or
-            // leave a stale duplicate behind under the old one.
+            // editing an existing saved film and either changed, this just
+            // moves it to the new identity — the old entry is removed so
+            // editing a loaded film always behaves like a normal edit-and-save
+            // rather than leaving a stale duplicate behind. To keep both,
+            // save a fresh one instead of editing an existing entry (e.g. via
+            // "Save to Library" from Quick Calculate).
             if (previousKey && previousKey !== newKey && saved[previousKey]) {
-                const old = saved[previousKey];
-                const replace = confirm(`This changes "${old.name}" (${old.boxSpeed} ISO) to "${name}" (${boxSpeed} ISO).\n\nOK — update that saved film in place (remove the old entry)\nCancel — save this as a separate, new film`);
-                if (replace) delete saved[previousKey];
+                delete saved[previousKey];
             }
 
-            saved[newKey] = { name, boxSpeed, maxPushPull, isColor, isBw, hidden: document.getElementById('filmHiddenCheckbox').checked, bundles };
+            saved[newKey] = { name, boxSpeed, maxPushPull, process, hidden: document.getElementById('filmHiddenCheckbox').checked, bundles };
             localStorage.setItem('filmProfiles', JSON.stringify(saved));
             updateFilmDropdowns();
             document.getElementById('libraryFilmsDropdown').value = newKey;
@@ -2130,7 +2162,8 @@
                 pushPullType: block.querySelector('.tier-pushPullType').value,
                 turnaroundTime: block.querySelector('.tier-turnaroundTime').value,
                 highResScan: block.querySelector('.tier-highResScan').checked,
-                noPushPull: block.querySelector('.tier-noPushPull').checked
+                noPushPull: block.querySelector('.tier-noPushPull').checked,
+                process: block.querySelector('.tier-process').value
             }));
             let saved = JSON.parse(localStorage.getItem('labProfiles') || '{}');
             saved[name] = {
@@ -2184,8 +2217,7 @@
                 name: f.name,
                 boxSpeed: Number(f.boxSpeed) || 0,
                 maxPushPull: Number(f.maxPushPull ?? 1),
-                isColor: !!f.isColor,
-                isBw: !!f.isBw,
+                process: f.process || 'C41',
                 hidden: !!f.hidden,
                 bundles: normalizeFilmBundles(f)
             }));
@@ -2358,7 +2390,7 @@
                     if (result[key]) {
                         result[key].bundles.push(bundle);
                     } else {
-                        result[key] = { name: f.name, boxSpeed: f.boxSpeed, maxPushPull: f.maxPushPull ?? 1, isColor: !!f.isColor, isBw: !!f.isBw, bundles: [bundle] };
+                        result[key] = { name: f.name, boxSpeed: f.boxSpeed, maxPushPull: f.maxPushPull ?? 1, process: f.process || 'C41', bundles: [bundle] };
                     }
                 });
             }

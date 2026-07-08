@@ -13,7 +13,7 @@ A lightweight, responsive, mobile-friendly web app for analog photographers to w
 - **Push/pull aware** — Automatically works out stops pushed or pulled from Box Speed vs. Target Speed (using log2 of the ratio), and applies each lab's push/pull fee — either a flat fee or a per-stop rate.
 - **Max push/pull limits** — Set a max push/pull (in stops) per film stock in the Film Library — defaults to 1. A warning shows next to Target Speed if a loaded film is pushed/pulled beyond its own limit; manual entries with no film loaded use the same 1-stop default.
 - **Film stocks are identified by name + Box Speed together** — the same name can exist at more than one Box Speed (e.g. a reformulated stock), and each is treated as a separate saved film. Changing a film's Box Speed and saving asks whether that's correcting the same entry or creating a new, separate one.
-- **Color / B&W tagging** — Mark each film stock as Color and/or B&W in Film Setup. The Cheapest tab has "Show Color" / "Show B&W" checkboxes to filter its lists down to one or the other; an untagged film always shows regardless of the filter.
+- **Process (C41 / B&W / E6)** — Every film stock and every lab service tier has a Process — C41 (color negative), B&W, or E6, defaulting to C41. A film is only ever paired with a lab tier of the same process — a B&W film won't be compared against a lab's C41-only tier, anywhere in the app. The Cheapest tab has C41/B&W/E6 checkboxes to further narrow its lists to specific processes.
 - **No-push/pull service tiers** — Mark an individual lab service tier as not offering push/pull at all (e.g. a same-day mini-lab); it's automatically excluded from comparisons whenever the roll actually needs pushing or pulling, but still shows up normally for box-speed rolls.
 - **Hide from Calculator** — Mark individual labs or film stocks as hidden from the Calculator (in Lab Setup / Film Setup) to exclude them from Labs For This Roll and film recommendations, while keeping them manageable in their own tab.
 - **Lab contact details** — Optionally save a lab's address, phone, email, and website. The address gets a one-tap "📍 Directions" link straight to your phone's maps app.
@@ -101,8 +101,7 @@ films:
   - name: "Kodak Gold"
     boxSpeed: 400
     maxPushPull: 1                                            # optional; defaults to 1. Warns in the Calculator if pushed/pulled further than this
-    isColor: true                                             # optional; used by the Cheapest tab's Color/B&W filter
-    isBw: false                                               # optional; a film can be neither, in which case it always shows regardless of the filter
+    process: "C41"                                            # optional; "C41" (default), "BW", or "E6" — only matched against lab tiers of the same process
     bundles:
       - rolls: 1
         exposures: 36
@@ -119,6 +118,7 @@ labs:
   - name: "Irohas Melbourne"
     services:
       - devCost: 17
+        process: "C41"               # optional; "C41" (default), "BW", or "E6" — only matched against films of the same process
         pushPullCost: 5
         pushPullType: "per_stop"    # or "flat"
         turnaroundTime: "next_day"  # "next_day" | "same_week" | "longer"
