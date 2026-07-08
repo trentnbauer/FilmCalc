@@ -141,11 +141,10 @@
                 </div>
 
                 <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                    <button id="quickCalcToggle" type="button" class="w-full flex items-center justify-between p-4 text-left">
+                    <div class="p-4 pb-0">
                         <span class="font-semibold text-blue-800 dark:text-blue-400 text-sm uppercase tracking-wide">Quick Calculate</span>
-                        <svg id="quickCalcChevron" class="w-4 h-4 text-blue-700 dark:text-blue-400 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-                    </button>
-                    <div id="quickCalcContent" class="hidden px-4 pb-4 space-y-3">
+                    </div>
+                    <div id="quickCalcContent" class="px-4 pb-4 space-y-3">
                         <div class="space-y-2">
                             <select id="savedFilmsDropdown" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm"><option value="">-- Load a saved film --</option></select>
                             <div id="calcBuyLinkInfo"></div>
@@ -412,16 +411,6 @@
             }
         });
 
-        // ---------- Collapsible Quick Calculate ----------
-        // Collapsed by default now that Target Speed at the top of the page
-        // drives the primary workflow — this is for manual overrides / browsing.
-        const quickCalcToggle = document.getElementById('quickCalcToggle');
-        const quickCalcContent = document.getElementById('quickCalcContent');
-        const quickCalcChevron = document.getElementById('quickCalcChevron');
-        quickCalcToggle.addEventListener('click', () => {
-            const isHidden = quickCalcContent.classList.toggle('hidden');
-            quickCalcChevron.classList.toggle('rotate-180', !isHidden);
-        });
 
         // ---------- Expired film shooting-speed recommendation ----------
         // Rule-of-thumb estimate only: well-stored (cold) film loses sensitivity
