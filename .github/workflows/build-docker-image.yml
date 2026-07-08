@@ -11,6 +11,8 @@ on:
       - "icon.ico"
       - "icon.svg"
       - "apple-touch-icon.png"
+      - "manifest.json"
+      - "sw.js"
       - ".github/workflows/docker-publish.yml"
   workflow_dispatch: {}
 
