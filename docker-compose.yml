@@ -4,7 +4,10 @@ services:
     ports:
       - ${WEBPORT:-8080}:80
     volumes:
-      - data:/usr/share/nginx/html
+      # Only config.yaml lives in the named volume — mounting the whole
+      # html directory here would shadow index.html and the other files
+      # baked into the image with an empty volume on first run.
+      - config:/usr/share/nginx/html/config.yaml
     restart: unless-stopped
     labels:
       - filmcalcheal=true

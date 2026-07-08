@@ -30,11 +30,17 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup Pages
         uses: actions/configure-pages@v5
+      - name: Stage site files
+        # Only the actual static app belongs on the live site — not the
+        # Docker/self-hosting files, README, or the films/labs seed data,
+        # which have no reason to be served at filmcalc.trentbauer.com.
+        run: |
+          mkdir -p _site
+          cp index.html favicon.ico icon.ico icon.svg apple-touch-icon.png manifest.json sw.js _site/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository
-          path: '.'
+          path: '_site'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

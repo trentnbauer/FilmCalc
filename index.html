@@ -41,94 +41,17 @@
             </button>
         </div>
 
-        <div id="settingsModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 max-w-md w-full relative">
-                <button id="settingsCloseBtn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-xl leading-none" aria-label="Close Settings">✕</button>
-                <h2 class="text-lg font-bold mb-4 text-gray-900 dark:text-white">Settings</h2>
 
-                <div class="space-y-5">
-                    <div>
-                        <h3 class="font-semibold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest mb-2">Calculator Settings</h3>
-                        <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3 mb-3">
-                            <h4 class="font-semibold text-gray-700 dark:text-gray-300 text-sm">Currency</h4>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">Symbol shown in front of every cost throughout the app. This just changes the label — it doesn't convert any numbers.</p>
-                            <select id="currencySelect" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
-                                <option value="$">$ (default)</option>
-                                <option value="€">€</option>
-                                <option value="£">£</option>
-                                <option value="¥">¥</option>
-                                <option value="A$">A$</option>
-                                <option value="NZ$">NZ$</option>
-                                <option value="C$">C$</option>
-                                <option value="R">R</option>
-                                <option value="custom">Custom…</option>
-                            </select>
-                            <input type="text" id="currencyCustomInput" maxlength="5" placeholder="e.g. kr" class="hidden w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
-                        </div>
-                        <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3">
-                            <h4 class="font-semibold text-gray-700 dark:text-gray-300 text-sm">Recommended Pick Threshold</h4>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">In "Labs For This Roll", if the cheapest Hi-Res + Fastest option costs less than this percentage more than the absolute cheapest, its card is highlighted gold as the recommended pick — since a small premium is usually worth both perks. "Cheapest Total" always shows the actual cheapest option, unchanged.</p>
-                            <div class="flex items-center gap-2">
-                                <input type="number" id="upgradeThresholdInput" min="0" max="100" step="1" class="w-24 border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
-                                <span class="text-sm text-gray-600 dark:text-gray-300">% price premium allowed</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <h3 class="font-semibold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest mb-2">App</h3>
-                        <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3">
-                            <h4 class="font-semibold text-gray-700 dark:text-gray-300 text-sm">Install App</h4>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">Add this to your home screen or app list for quicker access, like a native app.</p>
-                            <button id="installAppBtn" type="button" class="hidden w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-medium">📲 Install App</button>
-                            <p id="installAppFallback" class="hidden text-xs text-gray-500 dark:text-gray-400">On iPhone/iPad: tap the Share button in Safari, then "Add to Home Screen". On Android/Chrome: use the browser menu → "Install app" or "Add to Home screen".</p>
-                        </div>
-                    </div>
-
-                    <div>
-                        <h3 class="font-semibold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest mb-2">Data</h3>
-                        <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-4">
-                            <div class="space-y-2">
-                                <h4 class="font-semibold text-gray-700 dark:text-gray-300 text-sm">Export Data</h4>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Downloads <code>config.yaml</code> with all your saved film & lab profiles plus your settings, in the same format the app reads it in — so it can be dropped straight back into the project's repo with no editing.</p>
-                                <button id="exportBtn" type="button" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-medium">Export as YAML</button>
-                            </div>
-
-                            <div class="border-t border-gray-200 dark:border-gray-600"></div>
-
-                            <div class="space-y-2">
-                                <h4 class="font-semibold text-gray-700 dark:text-gray-300 text-sm">Import Data</h4>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Select a <code>config.yaml</code> file to load its films, labs, and settings.</p>
-                                <button id="importBtn" type="button" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-medium">Import YAML</button>
-                                <input type="file" id="importFile" class="hidden" accept=".yaml,.yml" multiple>
-                            </div>
-
-                            <div id="writeConfigSection" class="hidden space-y-2">
-                                <div class="border-t border-gray-200 dark:border-gray-600 mb-2"></div>
-                                <h4 class="font-semibold text-gray-700 dark:text-gray-300 text-sm">Write Live Config to Server</h4>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Self-hosted only. Overwrites <code>config.yaml</code> on the server directly with your current saved films, labs, and settings — no download/upload round-trip needed.</p>
-                                <button id="writeConfigBtn" type="button" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-medium">Write Live Config to File</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200 dark:border-red-800/40 space-y-3">
-                        <h4 class="font-semibold text-red-700 dark:text-red-400 text-sm uppercase tracking-wide">Delete All Data</h4>
-                        <p class="text-xs text-red-600/80 dark:text-red-400/70">Permanently deletes every saved film, lab, and setting from this browser. Built-in defaults from <code>config.yaml</code> aren't affected. Consider exporting a backup first — this can't be undone.</p>
-                        <button id="deleteAllDataBtn" type="button" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded font-medium">Delete All Saved Data</button>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <h1 class="text-3xl font-bold text-center mb-6 text-gray-900 dark:text-white pr-8">Film Cost Calculator</h1>
 
         <form id="calculatorForm" class="space-y-6">
 
             <div class="flex gap-2 border-b border-gray-200 dark:border-gray-700">
-                <button id="tabFilmBtn" type="button" class="flex-1 px-4 py-2.5 font-semibold text-sm uppercase tracking-wide border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 transition-colors">Calculator</button>
-                <button id="tabLabBtn" type="button" class="flex-1 px-4 py-2.5 font-semibold text-sm uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">Lab</button>
-                <button id="tabCheapestFilmsBtn" type="button" class="flex-1 px-4 py-2.5 font-semibold text-sm uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">Film Library</button>
+                <button id="tabFilmBtn" type="button" class="flex-1 px-3 py-2.5 font-semibold text-xs sm:text-sm uppercase tracking-wide border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 transition-colors">Calculator</button>
+                <button id="tabLabBtn" type="button" class="flex-1 px-3 py-2.5 font-semibold text-xs sm:text-sm uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">Lab</button>
+                <button id="tabCheapestFilmsBtn" type="button" class="flex-1 px-3 py-2.5 font-semibold text-xs sm:text-sm uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">Film Library</button>
+                <button id="tabSettingsBtn" type="button" class="flex-1 px-3 py-2.5 font-semibold text-xs sm:text-sm uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">Settings</button>
             </div>
 
             <div id="filmTabContent" class="space-y-6">
@@ -295,7 +218,107 @@
                 </div>
                 <div id="filmAllOptions" class="space-y-1.5"></div>
             </div>
+
+            <div id="settingsTabContent" class="space-y-5 hidden">
+                <div>
+                    <h3 class="font-semibold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest mb-2">Calculator Settings</h3>
+                    <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3 mb-3">
+                        <h4 class="font-semibold text-gray-700 dark:text-gray-300 text-sm">Currency</h4>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Symbol shown in front of every cost throughout the app. This just changes the label — it doesn't convert any numbers.</p>
+                        <select id="currencySelect" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
+                            <option value="$">$ (default)</option>
+                            <option value="€">€</option>
+                            <option value="£">£</option>
+                            <option value="¥">¥</option>
+                            <option value="A$">A$</option>
+                            <option value="NZ$">NZ$</option>
+                            <option value="C$">C$</option>
+                            <option value="R">R</option>
+                            <option value="custom">Custom…</option>
+                        </select>
+                        <input type="text" id="currencyCustomInput" maxlength="5" placeholder="e.g. kr" class="hidden w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3">
+                        <h4 class="font-semibold text-gray-700 dark:text-gray-300 text-sm">Recommended Pick Threshold</h4>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">In "Labs For This Roll", if the cheapest Hi-Res + Fastest option costs less than this percentage more than the absolute cheapest, its card is highlighted gold as the recommended pick — since a small premium is usually worth both perks. "Cheapest Total" always shows the actual cheapest option, unchanged.</p>
+                        <div class="flex items-center gap-2">
+                            <input type="number" id="upgradeThresholdInput" min="0" max="100" step="1" class="w-24 border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
+                            <span class="text-sm text-gray-600 dark:text-gray-300">% price premium allowed</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="font-semibold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest mb-2">App</h3>
+                    <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3">
+                        <h4 class="font-semibold text-gray-700 dark:text-gray-300 text-sm">Install App</h4>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Add this to your home screen or app list for quicker access, like a native app.</p>
+                        <button id="installAppBtn" type="button" class="hidden w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-medium">📲 Install App</button>
+                        <p id="installAppFallback" class="hidden text-xs text-gray-500 dark:text-gray-400">On iPhone/iPad: tap the Share button in Safari, then "Add to Home Screen". On Android/Chrome: use the browser menu → "Install app" or "Add to Home screen".</p>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="font-semibold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest mb-2">Data</h3>
+                    <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-4">
+                        <div class="space-y-2">
+                            <h4 class="font-semibold text-gray-700 dark:text-gray-300 text-sm">Export Data</h4>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Download your saved films/labs/settings as YAML, in the same format the app reads — so it can be dropped straight into <code>config.yaml</code>, or into the project's <code>films/</code> or <code>labs/</code> folders to share as a preset.</p>
+                            <button id="exportBtn" type="button" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-medium">Export Everything (config.yaml)</button>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button id="exportFilmsBtn" type="button" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-medium text-sm">Export Films Only</button>
+                                <button id="exportLabsBtn" type="button" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded font-medium text-sm">Export Labs Only</button>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-gray-200 dark:border-gray-600"></div>
+
+                        <div class="space-y-2">
+                            <h4 class="font-semibold text-gray-700 dark:text-gray-300 text-sm">Import Data</h4>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Pick from the project's built-in film/lab presets, or upload your own <code>config.yaml</code>, <code>films.yaml</code>, or <code>labs.yaml</code>.</p>
+                            <button id="importBtn" type="button" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-medium">Import…</button>
+                        </div>
+
+                        <div id="writeConfigSection" class="hidden space-y-2">
+                            <div class="border-t border-gray-200 dark:border-gray-600 mb-2"></div>
+                            <h4 class="font-semibold text-gray-700 dark:text-gray-300 text-sm">Write Live Config to Server</h4>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Self-hosted only. Overwrites <code>config.yaml</code> on the server directly with your current saved films, labs, and settings — no download/upload round-trip needed.</p>
+                            <button id="writeConfigBtn" type="button" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-medium">Write Live Config to File</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200 dark:border-red-800/40 space-y-3">
+                    <h4 class="font-semibold text-red-700 dark:text-red-400 text-sm uppercase tracking-wide">Delete All Data</h4>
+                    <p class="text-xs text-red-600/80 dark:text-red-400/70">Permanently deletes every saved film, lab, and setting from this browser. Built-in defaults from <code>config.yaml</code> aren't affected. Consider exporting a backup first — this can't be undone.</p>
+                    <button id="deleteAllDataBtn" type="button" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded font-medium">Delete All Saved Data</button>
+                </div>
+            </div>
         </form>
+
+        <div id="importModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 max-w-lg w-full relative max-h-[85vh] overflow-y-auto">
+                <button id="importModalCloseBtn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-xl leading-none" aria-label="Close">✕</button>
+                <h2 class="text-lg font-bold mb-4 text-gray-900 dark:text-white">Import Data</h2>
+
+                <div class="space-y-2 mb-5">
+                    <h3 class="font-semibold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest">From the Project Library</h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Preset films/labs shipped with this project (from its <code>films/</code> and <code>labs/</code> folders) — tick any to add them to your saved profiles.</p>
+                    <div id="importPresetList" class="space-y-1 max-h-56 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg p-2">
+                        <p class="text-xs text-gray-400 text-center py-2">Loading…</p>
+                    </div>
+                    <button id="importSelectedPresetsBtn" type="button" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-medium disabled:opacity-50 disabled:cursor-not-allowed" disabled>Import Selected</button>
+                </div>
+
+                <div class="border-t border-gray-200 dark:border-gray-600 pt-4 space-y-2">
+                    <h3 class="font-semibold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest">Or Upload a File</h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Select your own <code>config.yaml</code>, or a <code>films.yaml</code>/<code>labs.yaml</code> export. Multiple files at once are fine.</p>
+                    <button id="importUploadBtn" type="button" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-medium">Choose File(s)…</button>
+                    <input type="file" id="importFile" class="hidden" accept=".yaml,.yml" multiple>
+                </div>
+            </div>
+        </div>
+
 
         <div id="labsForThisRollSection">
             <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Lab Settings</span>
@@ -340,6 +363,31 @@
     </div>
 
     <script>
+        // ---------- HTML/URL escaping ----------
+        // Film names, lab names, store names, and buy links all come from
+        // saved profiles — which can be imported from someone else's shared
+        // config.yaml. Every one of them gets rendered via innerHTML below,
+        // so anything user-editable MUST be escaped before interpolation.
+        // escapeHtml() is safe for both text nodes and quoted attribute
+        // values (it also escapes quotes).
+        function escapeHtml(str) {
+            return String(str ?? '').replace(/[&<>"']/g, c => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[c]));
+        }
+
+        // Only allow http(s) URLs in buy links / href attributes — blocks
+        // javascript:, data:, and other schemes that could execute on click,
+        // e.g. from a maliciously crafted imported config.yaml.
+        function sanitizeUrl(url) {
+            try {
+                const u = new URL(String(url ?? ''), window.location.href);
+                return (u.protocol === 'http:' || u.protocol === 'https:') ? u.href : '';
+            } catch {
+                return '';
+            }
+        }
+
         const themeToggle = document.getElementById('themeToggle');
         const lightIcon = document.getElementById('themeToggleLightIcon');
         const darkIcon = document.getElementById('themeToggleDarkIcon');
@@ -360,17 +408,13 @@
 
         updateThemeIcons();
 
-        // ---------- Settings modal ----------
+        // ---------- Settings ----------
+        // The gear icon is a shortcut into the same Settings tab used in the
+        // main tab row below — Settings used to be a popup modal, but its
+        // fixed-size box could overflow the viewport on small screens with
+        // long content, so it's a normal scrolling tab/page instead now.
         const settingsToggle = document.getElementById('settingsToggle');
-        const settingsModal = document.getElementById('settingsModal');
-        const settingsCloseBtn = document.getElementById('settingsCloseBtn');
-
-        function openSettings() { settingsModal.classList.remove('hidden'); }
-        function closeSettings() { settingsModal.classList.add('hidden'); }
-
-        settingsToggle.addEventListener('click', openSettings);
-        settingsCloseBtn.addEventListener('click', closeSettings);
-        settingsModal.addEventListener('click', (e) => { if (e.target === settingsModal) closeSettings(); });
+        settingsToggle.addEventListener('click', () => switchTab('settings'));
 
         // ---------- PWA install ----------
         if ('serviceWorker' in navigator) {
@@ -586,7 +630,8 @@
         const tabs = {
             film: { btn: document.getElementById('tabFilmBtn'), content: document.getElementById('filmTabContent') },
             lab: { btn: document.getElementById('tabLabBtn'), content: document.getElementById('labTabContent') },
-            cheapestFilms: { btn: document.getElementById('tabCheapestFilmsBtn'), content: document.getElementById('cheapestFilmsTabContent') }
+            cheapestFilms: { btn: document.getElementById('tabCheapestFilmsBtn'), content: document.getElementById('cheapestFilmsTabContent') },
+            settings: { btn: document.getElementById('tabSettingsBtn'), content: document.getElementById('settingsTabContent') }
         };
 
         function setTabActive(btn, active) {
@@ -705,8 +750,8 @@
 
         function tierBlockHTML(tier) {
             tier = tier || {};
-            const devCost = tier.devCost ?? '';
-            const pushPullCost = tier.pushPullCost ?? '';
+            const devCost = escapeHtml(tier.devCost ?? '');
+            const pushPullCost = escapeHtml(tier.pushPullCost ?? '');
             const pushPullType = tier.pushPullType || 'per_stop';
             const turnaroundTime = tier.turnaroundTime || 'same_week';
             const highResScan = !!tier.highResScan;
@@ -802,11 +847,11 @@
 
         function bundleBlockHTML(bundle) {
             bundle = bundle || {};
-            const rolls = bundle.rolls ?? '';
-            const exposures = bundle.exposures ?? '';
-            const filmCost = bundle.filmCost ?? '';
-            const storeName = bundle.storeName || '';
-            const buyLink = bundle.buyLink || '';
+            const rolls = escapeHtml(bundle.rolls ?? '');
+            const exposures = escapeHtml(bundle.exposures ?? '');
+            const filmCost = escapeHtml(bundle.filmCost ?? '');
+            const storeName = escapeHtml(bundle.storeName || '');
+            const buyLink = escapeHtml(bundle.buyLink || '');
             return `
                 <div class="bundle-block bg-white dark:bg-gray-800/60 border border-blue-200 dark:border-blue-800 rounded-lg p-3 space-y-2 relative">
                     <button type="button" class="removeBundleBtn absolute top-2 right-2 text-red-400 hover:text-red-600 text-xs font-bold" aria-label="Remove Bundle">✕</button>
@@ -890,16 +935,16 @@
                 if (Math.abs(diff) < 0.005) {
                     diffHtml = `<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Same as current cheapest (${CUR()}${currentCheapest.costPerPhoto.toFixed(2)}/photo)</p>`;
                 } else if (diff > 0) {
-                    diffHtml = `<p class="text-xs text-green-600 dark:text-green-400 mt-1">Current cheapest is ${CUR()}${diff.toFixed(2)}/photo less (${currentCheapest.name} at ${CUR()}${currentCheapest.costPerPhoto.toFixed(2)}/photo)</p>`;
+                    diffHtml = `<p class="text-xs text-green-600 dark:text-green-400 mt-1">Current cheapest is ${CUR()}${diff.toFixed(2)}/photo less (${escapeHtml(currentCheapest.name)} at ${CUR()}${currentCheapest.costPerPhoto.toFixed(2)}/photo)</p>`;
                 } else {
-                    diffHtml = `<p class="text-xs text-red-600 dark:text-red-400 mt-1">Current cheapest is ${CUR()}${Math.abs(diff).toFixed(2)}/photo more (${currentCheapest.name} at ${CUR()}${currentCheapest.costPerPhoto.toFixed(2)}/photo)</p>`;
+                    diffHtml = `<p class="text-xs text-red-600 dark:text-red-400 mt-1">Current cheapest is ${CUR()}${Math.abs(diff).toFixed(2)}/photo more (${escapeHtml(currentCheapest.name)} at ${CUR()}${currentCheapest.costPerPhoto.toFixed(2)}/photo)</p>`;
                 }
             }
 
             container.innerHTML = `<div class="px-3 py-3 rounded-lg text-sm bg-indigo-100 dark:bg-indigo-900/30 border border-indigo-300 dark:border-indigo-700 relative mb-3 text-left">
                 <button type="button" id="unpinResultBtn" class="absolute top-2 right-2 text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-200 text-xs font-bold" aria-label="Unpin">✕</button>
                 <div class="text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">📌 Pinned Comparison</div>
-                <div class="font-semibold text-indigo-800 dark:text-indigo-300">${pinned.name}${hiResBadge}${turnaroundBadge}</div>
+                <div class="font-semibold text-indigo-800 dark:text-indigo-300">${escapeHtml(pinned.name)}${hiResBadge}${turnaroundBadge}</div>
                 <div class="font-mono text-indigo-800 dark:text-indigo-300 mt-1">
                     <span class="font-semibold">${CUR()}${pinned.costPerPhoto.toFixed(2)}/photo</span>
                     <span class="text-xs opacity-80"> · ${CUR()}${pinned.devCostPerRoll.toFixed(2)}/dev · ${CUR()}${pinned.costPerRoll.toFixed(2)}/total</span>
@@ -1136,7 +1181,7 @@
                         <div class="text-xs font-semibold ${recommended ? 'text-amber-700 dark:text-amber-400' : 'text-green-700 dark:text-green-400'} uppercase tracking-wide mb-1">${label}</div>
                         ${renderPinBtn(pick.id)}
                     </div>
-                    <div class="font-semibold ${recommended ? 'text-amber-800 dark:text-amber-300' : 'text-green-800 dark:text-green-400'}">${pick.name}${renderBadges(pick)}</div>
+                    <div class="font-semibold ${recommended ? 'text-amber-800 dark:text-amber-300' : 'text-green-800 dark:text-green-400'}">${escapeHtml(pick.name)}${renderBadges(pick)}</div>
                     <div class="font-mono ${recommended ? 'text-amber-800 dark:text-amber-300' : 'text-green-800 dark:text-green-400'} mt-1">
                         <span class="font-semibold">${CUR()}${pick.costPerPhoto.toFixed(2)}/photo</span>
                         <span class="text-xs opacity-80"> · ${CUR()}${pick.devCostPerRoll.toFixed(2)}/dev · ${CUR()}${pick.costPerRoll.toFixed(2)}/total</span>
@@ -1158,7 +1203,7 @@
             container.innerHTML = otherResults.map(r => {
                 const isCurrent = r.name === currentLabName;
                 return `<div class="flex justify-between items-start px-3 py-2 rounded-lg text-sm bg-white dark:bg-gray-800/50 ${isCurrent ? 'ring-2 ring-blue-400' : ''} ${r.highResScan ? 'border border-indigo-300 dark:border-indigo-700' : ''}">
-                    <span class="text-gray-700 dark:text-gray-300">${r.name}${renderBadges(r)}${renderPinBtn(r.id)}</span>
+                    <span class="text-gray-700 dark:text-gray-300">${escapeHtml(r.name)}${renderBadges(r)}${renderPinBtn(r.id)}</span>
                     <span class="font-mono text-right leading-tight text-gray-600 dark:text-gray-400">
                         <div class="font-semibold">${CUR()}${r.costPerPhoto.toFixed(2)}/photo</div>
                         <div class="text-xs opacity-80">${CUR()}${r.devCostPerRoll.toFixed(2)}/dev</div>
@@ -1233,9 +1278,10 @@
             const cheapest = matches[0];
 
             function renderBuyLink(m) {
-                if (!m.buyLink) return '';
-                const label = m.storeName ? `🛒 Buy from ${m.storeName}` : '🛒 Buy';
-                return ` <a href="${m.buyLink}" target="_blank" rel="noopener noreferrer" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">${label}</a>`;
+                const safeUrl = sanitizeUrl(m.buyLink);
+                if (!safeUrl) return '';
+                const label = m.storeName ? `🛒 Buy from ${escapeHtml(m.storeName)}` : '🛒 Buy';
+                return ` <a href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener noreferrer" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">${label}</a>`;
             }
 
             let summary = '';
@@ -1244,14 +1290,14 @@
                     summary = `<p class="text-xs text-green-700 dark:text-green-400 font-medium mb-2">🏆 This beats every saved ${boxSpeed} ISO film</p>`;
                 } else {
                     const diff = currentCost - cheapest.costPerPhoto;
-                    summary = `<p class="text-xs text-gray-500 dark:text-gray-400 mb-2"><span class="font-semibold text-blue-700 dark:text-blue-400">${cheapest.name}</span> is cheaper at ${CUR()}${cheapest.costPerPhoto.toFixed(2)}/photo <span class="opacity-75">(+${CUR()}${diff.toFixed(2)}/photo vs this one)</span></p>`;
+                    summary = `<p class="text-xs text-gray-500 dark:text-gray-400 mb-2"><span class="font-semibold text-blue-700 dark:text-blue-400">${escapeHtml(cheapest.name)}</span> is cheaper at ${CUR()}${cheapest.costPerPhoto.toFixed(2)}/photo <span class="opacity-75">(+${CUR()}${diff.toFixed(2)}/photo vs this one)</span></p>`;
                 }
             }
 
             const rows = matches.slice(0, 5).map((m, i) => {
                 const isCheapest = i === 0;
                 return `<div class="flex justify-between items-center px-2 py-1 rounded text-xs mb-1 ${isCheapest ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-white/60 dark:bg-gray-800/40'}">
-                    <span class="${isCheapest ? 'font-semibold text-amber-800 dark:text-amber-300' : 'text-gray-600 dark:text-gray-300'}">${isCheapest ? '⭐ ' : ''}${m.name} <span class="text-xs opacity-70">(${m.rolls}×${m.exposures}exp)</span>${renderBuyLink(m)}</span>
+                    <span class="${isCheapest ? 'font-semibold text-amber-800 dark:text-amber-300' : 'text-gray-600 dark:text-gray-300'}">${isCheapest ? '⭐ ' : ''}${escapeHtml(m.name)} <span class="text-xs opacity-70">(${m.rolls}×${m.exposures}exp)</span>${renderBuyLink(m)}</span>
                     <span class="font-mono ${isCheapest ? 'text-amber-800 dark:text-amber-300 font-semibold' : 'text-gray-500 dark:text-gray-400'}">${CUR()}${m.costPerPhoto.toFixed(2)}/photo</span>
                 </div>`;
             }).join('');
@@ -1329,9 +1375,10 @@
             // for reference (all marked as exceeding their limit) instead of
             // silently picking something that shouldn't be pushed/pulled that far.
             function renderBuyLink(m) {
-                if (!m.buyLink) return '';
-                const label = m.storeName ? `🛒 Buy from ${m.storeName}` : '🛒 Buy';
-                return ` <a href="${m.buyLink}" target="_blank" rel="noopener noreferrer" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">${label}</a>`;
+                const safeUrl = sanitizeUrl(m.buyLink);
+                if (!safeUrl) return '';
+                const label = m.storeName ? `🛒 Buy from ${escapeHtml(m.storeName)}` : '🛒 Buy';
+                return ` <a href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener noreferrer" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">${label}</a>`;
             }
 
             function stopsLabel(stops) {
@@ -1342,7 +1389,7 @@
 
             const rows = matches.slice(0, 6).map((m) => {
                 return `<div class="flex justify-between items-center px-2 py-1 rounded text-xs mb-1 bg-white/60 dark:bg-gray-800/40 opacity-70">
-                    <span class="text-gray-600 dark:text-gray-300">${m.name} <span class="opacity-70">(${m.boxSpeed} ISO native, max ${m.maxPushPull} stop${m.maxPushPull === 1 ? '' : 's'})</span> ${stopsLabel(m.stops)}${renderBuyLink(m)}</span>
+                    <span class="text-gray-600 dark:text-gray-300">${escapeHtml(m.name)} <span class="opacity-70">(${m.boxSpeed} ISO native, max ${m.maxPushPull} stop${m.maxPushPull === 1 ? '' : 's'})</span> ${stopsLabel(m.stops)}${renderBuyLink(m)}</span>
                     <span class="font-mono text-gray-500 dark:text-gray-400">${CUR()}${m.costPerPhoto.toFixed(2)}/photo</span>
                 </div>`;
             }).join('');
@@ -1401,9 +1448,10 @@
             const isoSpeeds = Object.keys(byIso).map(Number).sort((a, b) => a - b);
 
             function renderBuyLink(e) {
-                if (!e.buyLink) return '';
-                const label = e.storeName ? `🛒 Buy from ${e.storeName}` : '🛒 Buy';
-                return ` <a href="${e.buyLink}" target="_blank" rel="noopener noreferrer" class="inline-block text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline align-middle">${label}</a>`;
+                const safeUrl = sanitizeUrl(e.buyLink);
+                if (!safeUrl) return '';
+                const label = e.storeName ? `🛒 Buy from ${escapeHtml(e.storeName)}` : '🛒 Buy';
+                return ` <a href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener noreferrer" class="inline-block text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline align-middle">${label}</a>`;
             }
 
             bestContainer.innerHTML = isoSpeeds.map(iso => {
@@ -1415,7 +1463,7 @@
                 const label = isOverallCheapest ? `⭐ Cheapest Overall (${iso} ISO)` : `🏆 Cheapest ${iso} ISO`;
                 return `<div class="px-3 py-3 rounded-lg text-sm ${bg}">
                     <div class="text-xs font-semibold ${labelColor} uppercase tracking-wide mb-1">${label}</div>
-                    <div class="font-semibold ${textColor}">${cheapest.name}${renderBuyLink(cheapest)}</div>
+                    <div class="font-semibold ${textColor}">${escapeHtml(cheapest.name)}${renderBuyLink(cheapest)}</div>
                     <div class="font-mono ${textColor} mt-1">
                         <span class="font-semibold">${CUR()}${cheapest.costPerPhoto.toFixed(2)}/photo</span>
                         <span class="text-xs opacity-80"> · ${CUR()}${cheapest.packTotalCost.toFixed(2)} pack total · ${cheapest.rolls} Roll${cheapest.rolls == 1 ? '' : 's'} × ${cheapest.exposures}exp</span>
@@ -1430,7 +1478,7 @@
                 allContainer.innerHTML = '<p class="text-sm text-gray-400 text-center">No other saved films</p>';
             } else {
                 allContainer.innerHTML = others.map(e => `<div class="flex justify-between items-start px-3 py-2 rounded-lg text-sm bg-white dark:bg-gray-800/50">
-                    <span class="text-gray-700 dark:text-gray-300">${e.name}${renderBuyLink(e)} <span class="text-xs text-gray-400">(${e.boxSpeed} ISO)</span></span>
+                    <span class="text-gray-700 dark:text-gray-300">${escapeHtml(e.name)}${renderBuyLink(e)} <span class="text-xs text-gray-400">(${e.boxSpeed} ISO)</span></span>
                     <span class="font-mono text-right leading-tight text-gray-600 dark:text-gray-400">
                         <div class="font-semibold">${CUR()}${e.costPerPhoto.toFixed(2)}/photo</div>
                         <div class="text-xs opacity-80">${CUR()}${e.packTotalCost.toFixed(2)} pack total · ${e.rolls} Roll${e.rolls == 1 ? '' : 's'} × ${e.exposures}exp</div>
@@ -1465,7 +1513,7 @@
             dropdown.innerHTML = '<option value="">-- Load profile --</option>';
             Object.keys(all).filter(n => !filterFn || filterFn(all[n])).sort().forEach(n => {
                 const label = labelFn ? labelFn(all[n]) : n;
-                dropdown.innerHTML += `<option value="${n}">${label}</option>`;
+                dropdown.innerHTML += `<option value="${escapeHtml(n)}">${escapeHtml(label)}</option>`;
             });
             if (all[current]) dropdown.value = current;
         }
@@ -1493,9 +1541,10 @@
         function updateCalcBuyLinkInfo(bundle) {
             const el = document.getElementById('calcBuyLinkInfo');
             if (!el) return;
-            if (bundle && bundle.buyLink) {
-                const label = bundle.storeName ? `🛒 Buy from ${bundle.storeName}` : '🛒 Buy this film';
-                el.innerHTML = `<a href="${bundle.buyLink}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">${label}</a>`;
+            const safeUrl = bundle ? sanitizeUrl(bundle.buyLink) : '';
+            if (safeUrl) {
+                const label = bundle.storeName ? `🛒 Buy from ${escapeHtml(bundle.storeName)}` : '🛒 Buy this film';
+                el.innerHTML = `<a href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">${label}</a>`;
             } else {
                 el.innerHTML = '';
             }
@@ -1759,6 +1808,14 @@
             downloadYaml('config.yaml', buildConfig());
         });
 
+        document.getElementById('exportFilmsBtn').addEventListener('click', () => {
+            downloadYaml('films.yaml', buildFilmsArray());
+        });
+
+        document.getElementById('exportLabsBtn').addEventListener('click', () => {
+            downloadYaml('labs.yaml', buildLabsArray());
+        });
+
         // ---------- Write live config to server (self-hosted / Docker only) ----------
         // The GitHub Pages build serves purely static files with no write support,
         // so this button only appears if the server actually accepts PUT on
@@ -1803,6 +1860,68 @@
 
         initWriteConfigButton();
 
+        // ---------- Import modal ----------
+        // Two ways in: pick from preset films/labs shipped in this project's
+        // films/ and labs/ folders (listed via a small index.json manifest,
+        // since static hosting has no real directory listing), or upload your
+        // own file(s) — both end up going through the same parsing/merge path.
+        const importModal = document.getElementById('importModal');
+        const importModalCloseBtn = document.getElementById('importModalCloseBtn');
+        const importPresetList = document.getElementById('importPresetList');
+        const importSelectedPresetsBtn = document.getElementById('importSelectedPresetsBtn');
+
+        function openImportModal() {
+            importModal.classList.remove('hidden');
+            loadPresetList();
+        }
+        function closeImportModal() { importModal.classList.add('hidden'); }
+
+        document.getElementById('importBtn').addEventListener('click', openImportModal);
+        importModalCloseBtn.addEventListener('click', closeImportModal);
+        importModal.addEventListener('click', (e) => { if (e.target === importModal) closeImportModal(); });
+
+        // { file: "australian-retailers.yaml", label: "Australian Retailers" }
+        // entries per folder — label is optional and falls back to the
+        // filename if the manifest doesn't provide one.
+        async function fetchManifest(folder) {
+            try {
+                const res = await fetch(`${folder}/index.json`);
+                if (!res.ok) return [];
+                const list = await res.json();
+                return Array.isArray(list) ? list : [];
+            } catch {
+                return [];
+            }
+        }
+
+        let presetEntries = [];
+        let presetListLoaded = false;
+        async function loadPresetList() {
+            if (presetListLoaded) return;
+            presetListLoaded = true;
+            const [films, labs] = await Promise.all([fetchManifest('films'), fetchManifest('labs')]);
+            presetEntries = [
+                ...films.map(f => ({ folder: 'films', file: f.file, label: f.label || f.file, type: 'Film' })),
+                ...labs.map(l => ({ folder: 'labs', file: l.file, label: l.label || l.file, type: 'Lab' }))
+            ];
+            if (presetEntries.length === 0) {
+                importPresetList.innerHTML = '<p class="text-xs text-gray-400 text-center py-2">No presets found — upload a file instead.</p>';
+                return;
+            }
+            importPresetList.innerHTML = presetEntries.map((e, i) => `
+                <label class="flex items-center gap-2 text-sm px-2 py-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-700/40 cursor-pointer">
+                    <input type="checkbox" class="import-preset-checkbox rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500" data-index="${i}">
+                    <span class="flex-1 text-gray-700 dark:text-gray-300">${escapeHtml(e.label)}</span>
+                    <span class="text-xs px-1.5 py-0.5 rounded font-semibold uppercase ${e.type === 'Film' ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' : 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300'}">${e.type}</span>
+                </label>`).join('');
+            importPresetList.querySelectorAll('.import-preset-checkbox').forEach(cb => {
+                cb.addEventListener('change', () => {
+                    const anyChecked = [...importPresetList.querySelectorAll('.import-preset-checkbox')].some(c => c.checked);
+                    importSelectedPresetsBtn.disabled = !anyChecked;
+                });
+            });
+        }
+
         // Builds a { name -> film } map from an imported array of film entries.
         // If entries already use the nested { bundles: [...] } schema, each is
         // kept as its own profile (like labs). If they're the older flat schema
@@ -1828,79 +1947,119 @@
             return result;
         }
 
-        document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
+        // Merges one parsed YAML document (combined config.yaml shape, or a
+        // standalone films.yaml/labs.yaml array) into localStorage. Shared by
+        // both the preset-picker and file-upload import paths below.
+        function applyParsedImport(parsed) {
+            const result = { films: 0, labs: 0, settings: false, ok: true };
+            if (parsed && !Array.isArray(parsed) && (parsed.films || parsed.labs || parsed.settings)) {
+                // Combined config.yaml shape
+                if (Array.isArray(parsed.films)) {
+                    let saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
+                    const incoming = buildFilmProfilesFromEntries(parsed.films);
+                    Object.assign(saved, incoming);
+                    result.films += Object.keys(incoming).length;
+                    localStorage.setItem('filmProfiles', JSON.stringify(saved));
+                }
+                if (Array.isArray(parsed.labs)) {
+                    let saved = JSON.parse(localStorage.getItem('labProfiles') || '{}');
+                    parsed.labs.forEach(l => { if (l.name) { saved[l.name] = l; result.labs++; } });
+                    localStorage.setItem('labProfiles', JSON.stringify(saved));
+                }
+                if (parsed.settings && parsed.settings.upgradeThresholdPercent !== undefined) {
+                    localStorage.setItem('upgradeThresholdPercent', parsed.settings.upgradeThresholdPercent);
+                    result.settings = true;
+                }
+            } else if (Array.isArray(parsed)) {
+                // Standalone films.yaml / labs.yaml — an empty array/file is
+                // valid (just nothing to import), not an error.
+                if (parsed.length > 0) {
+                    const isLabFile = 'services' in parsed[0] || 'devCost' in parsed[0];
+                    const isFilmFile = 'boxSpeed' in parsed[0] || 'filmCost' in parsed[0] || 'bundles' in parsed[0];
+                    if (isLabFile) {
+                        let saved = JSON.parse(localStorage.getItem('labProfiles') || '{}');
+                        parsed.forEach(l => { if (l.name) { saved[l.name] = l; result.labs++; } });
+                        localStorage.setItem('labProfiles', JSON.stringify(saved));
+                    } else if (isFilmFile) {
+                        let saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
+                        const incoming = buildFilmProfilesFromEntries(parsed);
+                        Object.assign(saved, incoming);
+                        result.films += Object.keys(incoming).length;
+                        localStorage.setItem('filmProfiles', JSON.stringify(saved));
+                    } else {
+                        result.ok = false;
+                    }
+                }
+            } else if (parsed != null) {
+                result.ok = false;
+            }
+            // parsed == null (empty file/document) — nothing to import, not an error.
+            return result;
+        }
+
+        function readYamlFile(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try { resolve({ ok: true, parsed: jsyaml.load(event.target.result) }); }
+                    catch { resolve({ ok: false }); }
+                };
+                reader.onerror = () => resolve({ ok: false });
+                reader.readAsText(file);
+            });
+        }
+
+        async function fetchYamlPreset(folder, file) {
+            try {
+                const res = await fetch(`${folder}/${file}`);
+                if (!res.ok) return { ok: false };
+                return { ok: true, parsed: jsyaml.load(await res.text()) };
+            } catch {
+                return { ok: false };
+            }
+        }
+
+        function finishImport(results) {
+            let filmsImported = 0, labsImported = 0, settingsImported = false, errors = 0;
+            results.forEach(r => {
+                if (!r.ok) { errors++; return; }
+                const applied = applyParsedImport(r.parsed);
+                if (!applied.ok) { errors++; return; }
+                filmsImported += applied.films;
+                labsImported += applied.labs;
+                if (applied.settings) settingsImported = true;
+            });
+            updateFilmDropdowns();
+            updateLabDropdown();
+            if (settingsImported) upgradeThresholdInput.value = localStorage.getItem('upgradeThresholdPercent');
+            updateLabComparison();
+            if (errors > 0 && filmsImported === 0 && labsImported === 0 && !settingsImported) {
+                alert('Could not read the selected file(s) — are they valid YAML?');
+            } else {
+                alert(`Imported ${filmsImported} film profile(s), ${labsImported} lab profile(s)${settingsImported ? ', and settings' : ''}.`);
+            }
+            closeImportModal();
+        }
+
+        document.getElementById('importUploadBtn').addEventListener('click', () => document.getElementById('importFile').click());
         document.getElementById('importFile').addEventListener('change', (e) => {
             const files = Array.from(e.target.files || []);
             if (!files.length) return;
-
-            let filmsImported = 0, labsImported = 0, settingsImported = false, errors = 0;
-
-            const readFile = (file) => new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    try {
-                        const parsed = jsyaml.load(event.target.result);
-
-                        if (parsed && !Array.isArray(parsed) && (parsed.films || parsed.labs || parsed.settings)) {
-                            // Combined config.yaml (current format)
-                            if (Array.isArray(parsed.films)) {
-                                let saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
-                                const incoming = buildFilmProfilesFromEntries(parsed.films);
-                                Object.assign(saved, incoming);
-                                filmsImported += Object.keys(incoming).length;
-                                localStorage.setItem('filmProfiles', JSON.stringify(saved));
-                            }
-                            if (Array.isArray(parsed.labs)) {
-                                let saved = JSON.parse(localStorage.getItem('labProfiles') || '{}');
-                                parsed.labs.forEach(l => { if (l.name) { saved[l.name] = l; labsImported++; } });
-                                localStorage.setItem('labProfiles', JSON.stringify(saved));
-                            }
-                            if (parsed.settings && parsed.settings.upgradeThresholdPercent !== undefined) {
-                                localStorage.setItem('upgradeThresholdPercent', parsed.settings.upgradeThresholdPercent);
-                                settingsImported = true;
-                            }
-                        } else if (Array.isArray(parsed) && parsed.length > 0) {
-                            // Legacy standalone films.yaml / labs.yaml (pre-combined-config)
-                            const isLabFile = 'services' in parsed[0] || 'devCost' in parsed[0];
-                            const isFilmFile = 'boxSpeed' in parsed[0] || 'filmCost' in parsed[0] || 'bundles' in parsed[0];
-
-                            if (isLabFile) {
-                                let saved = JSON.parse(localStorage.getItem('labProfiles') || '{}');
-                                parsed.forEach(l => { if (l.name) { saved[l.name] = l; labsImported++; } });
-                                localStorage.setItem('labProfiles', JSON.stringify(saved));
-                            } else if (isFilmFile) {
-                                let saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
-                                const incoming = buildFilmProfilesFromEntries(parsed);
-                                Object.assign(saved, incoming);
-                                filmsImported += Object.keys(incoming).length;
-                                localStorage.setItem('filmProfiles', JSON.stringify(saved));
-                            } else {
-                                errors++;
-                            }
-                        } else {
-                            errors++;
-                        }
-                    } catch (err) {
-                        errors++;
-                    }
-                    resolve();
-                };
-                reader.onerror = () => { errors++; resolve(); };
-                reader.readAsText(file);
-            });
-
-            Promise.all(files.map(readFile)).then(() => {
-                updateFilmDropdowns();
-                updateLabDropdown();
-                if (settingsImported) upgradeThresholdInput.value = localStorage.getItem('upgradeThresholdPercent');
-                updateLabComparison();
-                if (errors > 0 && filmsImported === 0 && labsImported === 0 && !settingsImported) {
-                    alert('Could not read that file — is it a valid config.yaml?');
-                } else {
-                    alert(`Imported ${filmsImported} film profile(s), ${labsImported} lab profile(s)${settingsImported ? ', and settings' : ''}.`);
-                }
+            Promise.all(files.map(readYamlFile)).then(results => {
+                finishImport(results);
                 e.target.value = '';
             });
+        });
+
+        importSelectedPresetsBtn.addEventListener('click', async () => {
+            const checked = [...importPresetList.querySelectorAll('.import-preset-checkbox:checked')];
+            if (!checked.length) return;
+            const chosen = checked.map(cb => presetEntries[parseInt(cb.dataset.index)]);
+            importSelectedPresetsBtn.disabled = true;
+            importSelectedPresetsBtn.textContent = 'Importing…';
+            const results = await Promise.all(chosen.map(e => fetchYamlPreset(e.folder, e.file)));
+            finishImport(results);
+            importSelectedPresetsBtn.textContent = 'Import Selected';
         });
 
         loadDefaults();
