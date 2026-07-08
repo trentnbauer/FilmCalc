@@ -1,82 +1,178 @@
+- name: Hillvale Photo Melbourne
+  hidden: false
+  services:
+    - devCost: 19
+      pushPullCost: 3
+      pushPullType: per_stop
+      turnaroundTime: same_week
+      highResScan: false
+      noPushPull: false
+      processes:
+        - C41
+    - devCost: 30
+      pushPullCost: 3
+      pushPullType: per_stop
+      turnaroundTime: same_week
+      highResScan: true
+      noPushPull: false
+      processes:
+        - C41
+    - devCost: 28.5
+      pushPullCost: 3
+      pushPullType: per_stop
+      turnaroundTime: next_day
+      highResScan: false
+      noPushPull: false
+      processes:
+        - C41
+    - devCost: 45
+      pushPullCost: 3
+      pushPullType: per_stop
+      turnaroundTime: next_day
+      highResScan: true
+      noPushPull: false
+      processes:
+        - C41
+    - devCost: 22
+      pushPullCost: 3
+      pushPullType: per_stop
+      turnaroundTime: same_week
+      highResScan: false
+      noPushPull: false
+      processes:
+        - BW
+    - devCost: 30
+      pushPullCost: 3
+      pushPullType: per_stop
+      turnaroundTime: same_week
+      highResScan: true
+      noPushPull: false
+      processes:
+        - BW
+    - devCost: 25
+      pushPullCost: 3
+      pushPullType: per_stop
+      turnaroundTime: longer
+      highResScan: false
+      noPushPull: false
+      processes:
+        - E6
+    - devCost: 35
+      pushPullCost: 3
+      pushPullType: per_stop
+      turnaroundTime: longer
+      highResScan: true
+      noPushPull: false
+      processes:
+        - E6
+- name: Walkens Melbourne
+  hidden: false
+  services:
+    - devCost: 16
+      pushPullCost: 0
+      pushPullType: flat
+      turnaroundTime: same_week
+      highResScan: false
+      noPushPull: true
+      processes:
+        - C41
+    - devCost: 23
+      pushPullCost: 0
+      pushPullType: flat
+      turnaroundTime: same_week
+      highResScan: true
+      noPushPull: true
+      processes:
+        - C41
+    - devCost: 26
+      pushPullCost: 0
+      pushPullType: flat
+      turnaroundTime: next_day
+      highResScan: false
+      noPushPull: true
+      processes:
+        - C41
+    - devCost: 33
+      pushPullCost: 0
+      pushPullType: flat
+      turnaroundTime: next_day
+      highResScan: true
+      noPushPull: true
+      processes:
+        - C41
+    - devCost: 23
+      pushPullCost: 3
+      pushPullType: flat
+      turnaroundTime: same_week
+      highResScan: false
+      noPushPull: false
+      processes:
+        - BW
+    - devCost: 30
+      pushPullCost: 3
+      pushPullType: flat
+      turnaroundTime: same_week
+      highResScan: true
+      noPushPull: false
+      processes:
+        - BW
+    - devCost: 33
+      pushPullCost: 3
+      pushPullType: flat
+      turnaroundTime: next_day
+      highResScan: false
+      noPushPull: false
+      processes:
+        - BW
+    - devCost: 40
+      pushPullCost: 3
+      pushPullType: flat
+      turnaroundTime: next_day
+      highResScan: true
+      noPushPull: false
+      processes:
+        - BW
+    - devCost: 23
+      pushPullCost: 10
+      pushPullType: flat
+      turnaroundTime: same_week
+      highResScan: false
+      noPushPull: false
+      processes:
+        - E6
+    - devCost: 30
+      pushPullCost: 10
+      pushPullType: flat
+      turnaroundTime: same_week
+      highResScan: true
+      noPushPull: false
+      processes:
+        - E6
 - name: Irohas Melbourne
   hidden: false
   services:
     - devCost: 17
-      process: C41
       pushPullCost: 5
       pushPullType: per_stop
       turnaroundTime: next_day
       highResScan: true
       noPushPull: false
-- name: Obscura Ballarat
-  hidden: false
-  services:
-    - devCost: 35
-      process: C41
-      pushPullCost: 0
-      pushPullType: per_stop
-      turnaroundTime: longer
-      highResScan: false
-      noPushPull: false
-- name: Walkens Melbourne
-  hidden: false
-  services:
-    - devCost: 16
-      process: C41
-      pushPullCost: 10
-      pushPullType: flat
-      turnaroundTime: same_week
-      highResScan: false
-      noPushPull: false
-    - devCost: 23
-      process: C41
-      pushPullCost: 10
-      pushPullType: flat
-      turnaroundTime: same_week
-      highResScan: true
-      noPushPull: false
-    - devCost: 26
-      process: C41
-      pushPullCost: 10
-      pushPullType: flat
-      turnaroundTime: next_day
-      highResScan: true
-      noPushPull: false
-    - devCost: 33
-      process: C41
-      pushPullCost: 10
-      pushPullType: flat
-      turnaroundTime: next_day
-      highResScan: true
-      noPushPull: false
-- name: Hillvale Photo Melbourne
-  hidden: false
-  services:
+      processes:
+        - C41
     - devCost: 19
-      process: C41
-      pushPullCost: 3
-      pushPullType: per_stop
-      turnaroundTime: same_week
-      highResScan: false
-      noPushPull: false
-    - devCost: 30
-      process: C41
-      pushPullCost: 3
+      pushPullCost: 5
       pushPullType: per_stop
       turnaroundTime: same_week
       highResScan: true
       noPushPull: false
-    - devCost: 28.5
-      process: C41
-      pushPullCost: 3
-      pushPullType: per_stop
-      turnaroundTime: next_day
-      highResScan: false
-      noPushPull: false
-    - devCost: 45
-      process: C41
-      pushPullCost: 3
+      processes:
+        - BW
+    - devCost: 21
+      pushPullCost: 5
       pushPullType: per_stop
       turnaroundTime: same_week
       highResScan: true
       noPushPull: false
+      processes:
+        - E6
+
