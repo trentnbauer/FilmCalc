@@ -39,14 +39,25 @@
 
         <h1 class="text-3xl font-bold text-center mb-6 text-gray-900 dark:text-white pr-8">Film Price Calculator</h1>
 
+        <div id="firstLaunchImportBanner" class="hidden mb-4 flex items-start gap-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/40 rounded-lg px-3 py-2 text-left">
+            <span class="text-blue-500 dark:text-blue-400">💡</span>
+            <div class="flex-1">
+                <p class="text-sm text-blue-800 dark:text-blue-300">New here? Import this project's built-in film & lab presets to get started faster.</p>
+                <div class="flex gap-2 mt-2">
+                    <button id="firstLaunchImportBtn" type="button" class="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold">Import Presets…</button>
+                    <button id="firstLaunchDismissBtn" type="button" class="px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-semibold">Not now</button>
+                </div>
+            </div>
+        </div>
+
         <form id="calculatorForm" class="space-y-6">
 
-            <div class="flex gap-2 border-b border-gray-200 dark:border-gray-700">
-                <button id="tabFilmBtn" type="button" class="flex-1 px-1.5 sm:px-3 py-2.5 font-semibold text-[11px] sm:text-sm uppercase tracking-wide border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 transition-colors">Calculator</button>
-                <button id="tabIsoCalcBtn" type="button" class="flex-1 px-1.5 sm:px-3 py-2.5 font-semibold text-[11px] sm:text-sm uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">ISO Calc</button>
-                <button id="tabLabBtn" type="button" class="flex-1 px-1.5 sm:px-3 py-2.5 font-semibold text-[11px] sm:text-sm uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">Lab</button>
-                <button id="tabCheapestFilmsBtn" type="button" class="flex-1 px-1.5 sm:px-3 py-2.5 font-semibold text-[11px] sm:text-sm uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">Film Library</button>
-                <button id="tabSettingsBtn" type="button" class="flex-1 px-1.5 sm:px-3 py-2.5 font-semibold text-[11px] sm:text-sm uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">Settings</button>
+            <div class="flex gap-1 border-b border-gray-200 dark:border-gray-700">
+                <button id="tabFilmBtn" type="button" class="flex-1 px-2 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 transition-colors">Compare</button>
+                <button id="tabCheapestBtn" type="button" class="flex-1 px-2 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">Cheapest</button>
+                <button id="tabLabBtn" type="button" class="flex-1 px-2 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">Lab Mgmt</button>
+                <button id="tabCheapestFilmsBtn" type="button" class="flex-1 px-2 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">Film Mgmt</button>
+                <button id="tabSettingsBtn" type="button" class="flex-1 px-2 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">Settings</button>
             </div>
 
             <div id="filmTabContent" class="space-y-6">
@@ -124,14 +135,32 @@
                 </div>
             </div>
 
-            <div id="isoCalcTabContent" class="space-y-6 hidden">
-                <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800/30 p-4 text-left">
-                    <label for="isoCalcTargetSpeed" class="block text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">Shooting ISO</label>
-                    <input type="number" id="isoCalcTargetSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Enter the ISO you're shooting at. Shows the cheapest film + dev cost per photo three ways: shot at box speed (native), pushed up from a slower film, and pulled down from a faster one — since push/pull doesn't change what the film itself costs.</p>
+            <div id="cheapestTabContent" class="space-y-6 hidden">
+                <div class="flex gap-1 bg-gray-100 dark:bg-gray-700/50 rounded-lg p-1">
+                    <button id="cheapestSubIsoBtn" type="button" class="flex-1 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide bg-white dark:bg-gray-800 text-indigo-700 dark:text-indigo-400 shadow-sm transition-colors">Per ISO</button>
+                    <button id="cheapestSubPhotoBtn" type="button" class="flex-1 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 transition-colors">Per Photo</button>
+                    <button id="cheapestSubLabBtn" type="button" class="flex-1 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 transition-colors">Per Lab</button>
                 </div>
-                <div id="isoCalcResults">
-                    <p class="text-sm text-gray-400 text-center">Enter a shooting ISO to compare</p>
+
+                <div id="cheapestSubIsoContent" class="space-y-6">
+                    <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800/30 p-4 text-left">
+                        <label for="isoCalcTargetSpeed" class="block text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">Shooting ISO</label>
+                        <input type="number" id="isoCalcTargetSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Enter the ISO you're shooting at. Shows the cheapest film + dev cost per photo shot at box speed (native), and the cheapest option pushed up from a slower film.</p>
+                    </div>
+                    <div id="isoCalcResults">
+                        <p class="text-sm text-gray-400 text-center">Enter a shooting ISO to compare</p>
+                    </div>
+                </div>
+
+                <div id="cheapestSubPhotoContent" class="space-y-6 hidden">
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Every saved film stock ranked by its cheapest box-speed (native) pairing with a lab — film + dev cost, cheapest first. Each film also shows its cheapest 1-stop push/pull alternative underneath.</p>
+                    <div id="costPerPhotoResults" class="space-y-2"></div>
+                </div>
+
+                <div id="cheapestSubLabContent" class="space-y-6 hidden">
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Every saved lab ranked by its cheapest box-speed (native) pairing with a film — film + dev cost, cheapest first. Each lab also shows its cheapest 1-stop push/pull alternative underneath.</p>
+                    <div id="costPerLabResults" class="space-y-2"></div>
                 </div>
             </div>
 
@@ -194,6 +223,11 @@
                     <div>
                         <label for="libraryBoxSpeed" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Box Speed (ISO)</label>
                         <input type="number" id="libraryBoxSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                    </div>
+                    <div>
+                        <label for="libraryMaxPushPull" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Max Push/Pull (stops)</label>
+                        <input type="number" id="libraryMaxPushPull" min="0" step="0.5" value="1" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Applies to the whole film stock, not individual bundles. The Film Calc tab warns if this film is loaded and pushed/pulled further than this.</p>
                     </div>
 
                     <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
@@ -622,7 +656,7 @@
         // ---------- Tab switching ----------
         const tabs = {
             film: { btn: document.getElementById('tabFilmBtn'), content: document.getElementById('filmTabContent') },
-            isoCalc: { btn: document.getElementById('tabIsoCalcBtn'), content: document.getElementById('isoCalcTabContent') },
+            cheapest: { btn: document.getElementById('tabCheapestBtn'), content: document.getElementById('cheapestTabContent') },
             lab: { btn: document.getElementById('tabLabBtn'), content: document.getElementById('labTabContent') },
             cheapestFilms: { btn: document.getElementById('tabCheapestFilmsBtn'), content: document.getElementById('cheapestFilmsTabContent') },
             settings: { btn: document.getElementById('tabSettingsBtn'), content: document.getElementById('settingsTabContent') }
@@ -644,7 +678,43 @@
                 setTabActive(tabs[key].btn, active);
             });
             document.getElementById('labsForThisRollSection').classList.toggle('hidden', tab !== 'film');
+            if (tab === 'cheapest') refreshActiveCheapestSubTab();
         }
+
+        // ---------- Cheapest tab's Per ISO / Per Photo / Per Lab sub-nav ----------
+        const cheapestSubTabs = {
+            iso: { btn: document.getElementById('cheapestSubIsoBtn'), content: document.getElementById('cheapestSubIsoContent'), update: () => updateIsoPriceCalculator() },
+            photo: { btn: document.getElementById('cheapestSubPhotoBtn'), content: document.getElementById('cheapestSubPhotoContent'), update: () => updateCostPerPhotoTab() },
+            lab: { btn: document.getElementById('cheapestSubLabBtn'), content: document.getElementById('cheapestSubLabContent'), update: () => updateCostPerLabTab() }
+        };
+        let activeCheapestSubTab = 'iso';
+
+        function setSubTabActive(btn, active) {
+            btn.classList.toggle('bg-white', active);
+            btn.classList.toggle('dark:bg-gray-800', active);
+            btn.classList.toggle('text-indigo-700', active);
+            btn.classList.toggle('dark:text-indigo-400', active);
+            btn.classList.toggle('shadow-sm', active);
+            btn.classList.toggle('text-gray-500', !active);
+            btn.classList.toggle('dark:text-gray-400', !active);
+        }
+
+        function switchCheapestSubTab(sub) {
+            activeCheapestSubTab = sub;
+            Object.keys(cheapestSubTabs).forEach(key => {
+                const active = key === sub;
+                cheapestSubTabs[key].content.classList.toggle('hidden', !active);
+                setSubTabActive(cheapestSubTabs[key].btn, active);
+            });
+            cheapestSubTabs[sub].update();
+        }
+
+        function refreshActiveCheapestSubTab() {
+            cheapestSubTabs[activeCheapestSubTab].update();
+        }
+
+        Object.keys(cheapestSubTabs).forEach(key => cheapestSubTabs[key].btn.addEventListener('click', () => switchCheapestSubTab(key)));
+
 
         Object.keys(tabs).forEach(key => tabs[key].btn.addEventListener('click', () => switchTab(key)));
 
@@ -997,21 +1067,21 @@
             </div>`;
         }
 
-        // Flat warning (not per-film) any time Box Speed and Target Speed are
-        // more than 1 stop apart — most labs and films handle a single stop
-        // of push/pull without issue, but anything beyond that is worth a
-        // heads-up regardless of which film stock is loaded.
-        const PUSH_PULL_WARNING_THRESHOLD = 1;
+        // Warns any time Box Speed and Target Speed are more than the
+        // effective Max Push/Pull limit apart. Defaults to 1 stop for manual
+        // entries, but uses the loaded film's own Max Push/Pull (set in Film
+        // Setup) whenever one's been loaded via Quick Calculate — a film with
+        // a wider or narrower tolerance overrides the default.
         function renderPushPullWarning(stops) {
             const el = document.getElementById('pushPullWarning');
             if (!el) return;
-            if (stops <= PUSH_PULL_WARNING_THRESHOLD) {
+            if (stops <= loadedFilmMaxPushPull) {
                 el.innerHTML = '';
                 return;
             }
             el.innerHTML = `<div class="flex items-start gap-2 bg-orange-100 dark:bg-orange-900/30 border border-orange-300 dark:border-orange-700 rounded-lg px-3 py-2">
                 <span class="text-orange-500 dark:text-orange-400">⚠️</span>
-                <p class="text-sm text-orange-800 dark:text-orange-300 font-medium">This pushes/pulls ${stops} stop${stops === 1 ? '' : 's'} — more than ${PUSH_PULL_WARNING_THRESHOLD} stop is worth double-checking with your lab and film stock.</p>
+                <p class="text-sm text-orange-800 dark:text-orange-300 font-medium">This pushes/pulls ${stops} stop${stops === 1 ? '' : 's'}, beyond this film's max of ${loadedFilmMaxPushPull} stop${loadedFilmMaxPushPull === 1 ? '' : 's'}</p>
             </div>`;
         }
 
@@ -1467,18 +1537,190 @@
             }
 
             const pushEntry = buckets.push[0];
-            const pullEntry = buckets.pull[0];
             const pushNote = pushEntry ? `Push ${Math.abs(pushEntry.stops)} stop${Math.abs(pushEntry.stops) === 1 ? '' : 's'} from box speed` : null;
-            const pullNote = pullEntry ? `Pull ${Math.abs(pullEntry.stops)} stop${Math.abs(pullEntry.stops) === 1 ? '' : 's'} from box speed` : null;
 
             container.innerHTML = `<div class="space-y-3">
                 ${renderCard(`Native (${targetIso} ISO)`, 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300', buckets.native[0])}
                 ${renderCard(`Pushed to ${targetIso} ISO`, 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300', pushEntry, pushNote)}
-                ${renderCard(`Pulled to ${targetIso} ISO`, 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300', pullEntry, pullNote)}
             </div>`;
         }
 
         document.getElementById('isoCalcTargetSpeed').addEventListener('input', updateIsoPriceCalculator);
+
+        // ---------- Cost Per Photo / Cost Per Lab (native, no push/pull) ----------
+        // Builds every saved film's cheapest bundle paired with every saved
+        // lab's every service tier, at native box speed (no push/pull fee
+        // involved) — the shared dataset behind both the "Cost Per Photo"
+        // (grouped/ranked by film) and "Cost Per Lab" (grouped/ranked by lab)
+        // tabs below.
+        function computeNativeFilmLabMatrix() {
+            const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
+            const allLabs = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') };
+            const labNames = Object.keys(allLabs).filter(n => !allLabs[n].hidden);
+
+            const results = [];
+            Object.values(allFilms).filter(f => !f.hidden).forEach(f => {
+                const boxSpeed = parseInt(f.boxSpeed) || 0;
+                if (!boxSpeed) return;
+
+                let bestBundle = null, bestFilmCostPerPhoto = null;
+                normalizeFilmBundles(f).forEach(b => {
+                    const cpp = computeCostPerPhoto(b.filmCost, b.rolls, b.exposures);
+                    if (cpp !== null && cpp > 0 && (bestFilmCostPerPhoto === null || cpp < bestFilmCostPerPhoto)) {
+                        bestFilmCostPerPhoto = cpp;
+                        bestBundle = b;
+                    }
+                });
+                if (!bestBundle || !bestBundle.exposures) return;
+
+                labNames.forEach(labName => {
+                    normalizeLabServices(allLabs[labName]).forEach(tier => {
+                        const devCostPerPhoto = tier.devCost / bestBundle.exposures;
+                        results.push({
+                            filmName: f.name,
+                            boxSpeed,
+                            labName,
+                            filmCostPerPhoto: bestFilmCostPerPhoto,
+                            devCostPerPhoto,
+                            totalCostPerPhoto: bestFilmCostPerPhoto + devCostPerPhoto,
+                            highResScan: tier.highResScan,
+                            turnaroundTime: tier.turnaroundTime
+                        });
+                    });
+                });
+            });
+            return results;
+        }
+
+        // Same shape as computeNativeFilmLabMatrix(), but every pairing is
+        // priced with exactly 1 stop of push/pull applied. 1 stop is used as
+        // the representative "cheapest possible push or pull" distance since
+        // this app's fee model (flat fee, or per-stop fee that only grows
+        // with distance) never gets cheaper at a larger push/pull — and push
+        // vs. pull cost exactly the same here, since fees are keyed on stop
+        // magnitude only, not direction.
+        function computeOneStopFilmLabMatrix() {
+            const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
+            const allLabs = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') };
+            const labNames = Object.keys(allLabs).filter(n => !allLabs[n].hidden);
+
+            const results = [];
+            Object.values(allFilms).filter(f => !f.hidden).forEach(f => {
+                const boxSpeed = parseInt(f.boxSpeed) || 0;
+                if (!boxSpeed) return;
+
+                let bestBundle = null, bestFilmCostPerPhoto = null;
+                normalizeFilmBundles(f).forEach(b => {
+                    const cpp = computeCostPerPhoto(b.filmCost, b.rolls, b.exposures);
+                    if (cpp !== null && cpp > 0 && (bestFilmCostPerPhoto === null || cpp < bestFilmCostPerPhoto)) {
+                        bestFilmCostPerPhoto = cpp;
+                        bestBundle = b;
+                    }
+                });
+                if (!bestBundle || !bestBundle.exposures) return;
+
+                labNames.forEach(labName => {
+                    normalizeLabServices(allLabs[labName])
+                        .filter(tier => !tier.noPushPull)
+                        .forEach(tier => {
+                            const devCostPerPhoto = (tier.devCost + tier.pushPullCost) / bestBundle.exposures;
+                            results.push({
+                                filmName: f.name,
+                                labName,
+                                filmCostPerPhoto: bestFilmCostPerPhoto,
+                                devCostPerPhoto,
+                                totalCostPerPhoto: bestFilmCostPerPhoto + devCostPerPhoto
+                            });
+                        });
+                });
+            });
+            return results;
+        }
+
+        function renderNativeMatchRow(entry, rank) {
+            const hiResBadge = entry.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">HI-RES</span>` : '';
+            const turnaroundBadge = entry.turnaroundTime ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 align-middle">${turnaroundLabels[entry.turnaroundTime] || entry.turnaroundTime}</span>` : '';
+            const isCheapest = rank === 0;
+            return `<div class="flex justify-between items-start px-3 py-2 rounded-lg text-sm ${isCheapest ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-white dark:bg-gray-800/50'}">
+                <span class="${isCheapest ? 'font-semibold text-amber-800 dark:text-amber-300' : 'text-gray-700 dark:text-gray-300'}">${isCheapest ? '⭐ ' : ''}${escapeHtml(entry.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(entry.labName)}</span> <span class="text-xs opacity-70">(${entry.boxSpeed} ISO)</span>${hiResBadge}${turnaroundBadge}</span>
+                <span class="font-mono text-right leading-tight ${isCheapest ? 'text-amber-800 dark:text-amber-300 font-semibold' : 'text-gray-600 dark:text-gray-400'}">
+                    <div class="font-semibold">${CUR()}${entry.totalCostPerPhoto.toFixed(2)}/photo</div>
+                    <div class="text-xs opacity-80">${CUR()}${entry.filmCostPerPhoto.toFixed(2)} film + ${CUR()}${entry.devCostPerPhoto.toFixed(2)} dev</div>
+                </span>
+            </div>`;
+        }
+
+        // contextLabel is the lab name (Per Photo tab) or film name (Per Lab
+        // tab) that achieves this 1-stop push/pull price — whichever wasn't
+        // already the grouping key for the row above it.
+        function renderPushPullSubLine(entry, contextLabel) {
+            if (!entry) return '';
+            return `<div class="flex justify-between items-center px-3 py-1.5 rounded-lg text-xs bg-gray-50 dark:bg-gray-800/30 ml-3">
+                <span class="text-gray-500 dark:text-gray-400">↕ Push/pull 1 stop <span class="opacity-70">@ ${escapeHtml(contextLabel)}</span></span>
+                <span class="font-mono text-gray-500 dark:text-gray-400">${CUR()}${entry.totalCostPerPhoto.toFixed(2)}/photo</span>
+            </div>`;
+        }
+
+        // Cheapest lab pairing for every film, ranked film-first (which film
+        // stock gives the best value overall). Each row's cheapest 1-stop
+        // push/pull alternative for that same film shows underneath it.
+        function updateCostPerPhotoTab() {
+            const container = document.getElementById('costPerPhotoResults');
+            const nativeMatrix = computeNativeFilmLabMatrix();
+            if (nativeMatrix.length === 0) {
+                container.innerHTML = '<p class="text-sm text-gray-400 text-center">Save at least one film and one lab profile to compare</p>';
+                return;
+            }
+            const oneStopMatrix = computeOneStopFilmLabMatrix();
+
+            const byFilmNative = new Map();
+            nativeMatrix.forEach(e => {
+                const existing = byFilmNative.get(e.filmName);
+                if (!existing || e.totalCostPerPhoto < existing.totalCostPerPhoto) byFilmNative.set(e.filmName, e);
+            });
+            const byFilmOneStop = new Map();
+            oneStopMatrix.forEach(e => {
+                const existing = byFilmOneStop.get(e.filmName);
+                if (!existing || e.totalCostPerPhoto < existing.totalCostPerPhoto) byFilmOneStop.set(e.filmName, e);
+            });
+
+            const rows = [...byFilmNative.values()].sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto);
+            container.innerHTML = rows.map((e, i) => {
+                const oneStop = byFilmOneStop.get(e.filmName);
+                return renderNativeMatchRow(e, i) + renderPushPullSubLine(oneStop, oneStop ? oneStop.labName : '');
+            }).join('');
+        }
+
+        // Cheapest film pairing for every lab, ranked lab-first (which lab
+        // gives the best value overall). Each row's cheapest 1-stop push/pull
+        // alternative at that same lab shows underneath it.
+        function updateCostPerLabTab() {
+            const container = document.getElementById('costPerLabResults');
+            const nativeMatrix = computeNativeFilmLabMatrix();
+            if (nativeMatrix.length === 0) {
+                container.innerHTML = '<p class="text-sm text-gray-400 text-center">Save at least one film and one lab profile to compare</p>';
+                return;
+            }
+            const oneStopMatrix = computeOneStopFilmLabMatrix();
+
+            const byLabNative = new Map();
+            nativeMatrix.forEach(e => {
+                const existing = byLabNative.get(e.labName);
+                if (!existing || e.totalCostPerPhoto < existing.totalCostPerPhoto) byLabNative.set(e.labName, e);
+            });
+            const byLabOneStop = new Map();
+            oneStopMatrix.forEach(e => {
+                const existing = byLabOneStop.get(e.labName);
+                if (!existing || e.totalCostPerPhoto < existing.totalCostPerPhoto) byLabOneStop.set(e.labName, e);
+            });
+
+            const rows = [...byLabNative.values()].sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto);
+            container.innerHTML = rows.map((e, i) => {
+                const oneStop = byLabOneStop.get(e.labName);
+                return renderNativeMatchRow(e, i) + renderPushPullSubLine(oneStop, oneStop ? oneStop.filmName : '');
+            }).join('');
+        }
+
 
         // ---------- Film Library (cheapest per ISO) ----------
         // Groups every saved film's bundles (built-in + custom) by Box Speed and
@@ -1570,6 +1812,10 @@
 
         // Dev Speed defaults to Box Speed unless the user has explicitly typed a different value
         let devSpeedOverridden = false;
+        // Effective Max Push/Pull limit used by the warning above — 1 stop by
+        // default, overridden by the loaded film's own limit (Film Setup)
+        // whenever one's been loaded via Quick Calculate.
+        let loadedFilmMaxPushPull = 1;
         const boxSpeedInput = document.getElementById('boxSpeed');
         const devSpeedInput = document.getElementById('devSpeed');
         devSpeedInput.addEventListener('input', () => { devSpeedOverridden = true; });
@@ -1642,6 +1888,7 @@
             const name = e.target.value;
             if (!name) {
                 updateCalcBuyLinkInfo(null);
+                loadedFilmMaxPushPull = 1;
                 updateLabComparison();
                 return;
             }
@@ -1661,6 +1908,7 @@
             document.getElementById('filmCost').value = bundle.filmCost || '';
             document.getElementById('rolls').value = bundle.rolls || '1';
             document.getElementById('exposures').value = bundle.exposures || '36';
+            loadedFilmMaxPushPull = parseFloat(film.maxPushPull) || 1;
             updateCalcBuyLinkInfo(bundle);
             updateLabComparison();
             updateFilmSpeedComparison();
@@ -1673,12 +1921,14 @@
             if (!film) {
                 document.getElementById('libraryFilmName').value = '';
                 document.getElementById('libraryBoxSpeed').value = '';
+                document.getElementById('libraryMaxPushPull').value = '1';
                 document.getElementById('filmHiddenCheckbox').checked = false;
                 resetBundles([{}]);
                 return;
             }
             document.getElementById('libraryFilmName').value = film.name;
             document.getElementById('libraryBoxSpeed').value = film.boxSpeed || '';
+            document.getElementById('libraryMaxPushPull').value = film.maxPushPull ?? 1;
             document.getElementById('filmHiddenCheckbox').checked = !!film.hidden;
             resetBundles(normalizeFilmBundles(film));
         });
@@ -1717,6 +1967,7 @@
             document.getElementById('rolls').value = '';
             document.getElementById('exposures').value = '';
             document.getElementById('savedFilmsDropdown').value = '';
+            loadedFilmMaxPushPull = 1;
             updateCalcBuyLinkInfo(null);
             updateLabComparison();
             updateFilmSpeedComparison();
@@ -1746,6 +1997,7 @@
             document.getElementById('libraryFilmsDropdown').value = '';
             document.getElementById('libraryFilmName').value = '';
             document.getElementById('libraryBoxSpeed').value = boxSpeed || '';
+            document.getElementById('libraryMaxPushPull').value = '1';
             resetBundles([{ rolls, exposures, filmCost, storeName: '', buyLink: '' }]);
             document.getElementById('libraryFilmName').focus();
         });
@@ -1754,6 +2006,7 @@
             const name = document.getElementById('libraryFilmName').value.trim();
             if (!name) return alert('Enter Film Name');
             const boxSpeed = document.getElementById('libraryBoxSpeed').value;
+            const maxPushPull = parseFloat(document.getElementById('libraryMaxPushPull').value) || 1;
             const bundleBlocks = document.querySelectorAll('#filmBundlesContainer .bundle-block');
             if (bundleBlocks.length === 0) return alert('Add at least one bundle');
             const bundles = Array.from(bundleBlocks).map(block => ({
@@ -1764,7 +2017,7 @@
                 buyLink: block.querySelector('.bundle-buyLink').value.trim()
             }));
             let saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
-            saved[name] = { name, boxSpeed, hidden: document.getElementById('filmHiddenCheckbox').checked, bundles };
+            saved[name] = { name, boxSpeed, maxPushPull, hidden: document.getElementById('filmHiddenCheckbox').checked, bundles };
             localStorage.setItem('filmProfiles', JSON.stringify(saved));
             updateFilmDropdowns();
             document.getElementById('libraryFilmsDropdown').value = name;
@@ -1834,6 +2087,7 @@
             return Object.values(all).map(f => ({
                 name: f.name,
                 boxSpeed: Number(f.boxSpeed) || 0,
+                maxPushPull: Number(f.maxPushPull ?? 1),
                 hidden: !!f.hidden,
                 bundles: normalizeFilmBundles(f)
             }));
@@ -2005,7 +2259,7 @@
                     if (result[f.name]) {
                         result[f.name].bundles.push(bundle);
                     } else {
-                        result[f.name] = { name: f.name, boxSpeed: f.boxSpeed, bundles: [bundle] };
+                        result[f.name] = { name: f.name, boxSpeed: f.boxSpeed, maxPushPull: f.maxPushPull ?? 1, bundles: [bundle] };
                     }
                 });
             }
@@ -2126,6 +2380,35 @@
             finishImport(results);
             importSelectedPresetsBtn.textContent = 'Import Selected';
         });
+
+        // ---------- First-launch import prompt ----------
+        // Shown once, only if the person has never saved a film or lab
+        // profile and hasn't already dismissed it — offers a shortcut
+        // straight into the Import modal's preset picker instead of leaving
+        // new visitors to find Settings → Import on their own. Dismissing
+        // either way (import or "Not now") marks it seen for good, even if
+        // they later delete all their data.
+        (function initFirstLaunchImportBanner() {
+            const alreadySeen = localStorage.getItem('hasSeenImportPrompt') === 'true';
+            const hasFilmProfiles = localStorage.getItem('filmProfiles') !== null;
+            const hasLabProfiles = localStorage.getItem('labProfiles') !== null;
+            if (alreadySeen || hasFilmProfiles || hasLabProfiles) return;
+
+            const banner = document.getElementById('firstLaunchImportBanner');
+            if (!banner) return;
+            banner.classList.remove('hidden');
+
+            function dismiss() {
+                localStorage.setItem('hasSeenImportPrompt', 'true');
+                banner.classList.add('hidden');
+            }
+
+            document.getElementById('firstLaunchImportBtn').addEventListener('click', () => {
+                dismiss();
+                openImportModal();
+            });
+            document.getElementById('firstLaunchDismissBtn').addEventListener('click', dismiss);
+        })();
 
         loadDefaults();
     </script>
