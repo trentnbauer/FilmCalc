@@ -14,6 +14,12 @@ COPY manifest.json /usr/share/nginx/html/manifest.json
 COPY sw.js /usr/share/nginx/html/sw.js
 COPY default.conf /etc/nginx/conf.d/default.conf
 
+# Settings → Import fetches films/index.json and labs/index.json (and
+# whatever preset files they list) at runtime, so these folders need to
+# be served alongside the app, not just live in the git repo.
+COPY films /usr/share/nginx/html/films
+COPY labs /usr/share/nginx/html/labs
+
 # docker-compose.yml mounts a named volume at exactly this path so
 # config.yaml survives container recreation. That mount only works
 # correctly if config.yaml already exists here as a regular file at

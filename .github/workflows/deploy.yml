@@ -31,12 +31,16 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Stage site files
-        # Only the actual static app belongs on the live site — not the
-        # Docker/self-hosting files, README, or the films/labs seed data,
-        # which have no reason to be served at filmcalc.trentbauer.com.
+        # The actual static app, plus films/ and labs/ — the Settings →
+        # Import modal fetches films/index.json and labs/index.json (and
+        # whatever preset files they list) at runtime, so those folders
+        # need to be live on the deployed site, not just the Docker image.
+        # Docker/self-hosting files (Dockerfile, compose, README) still
+        # don't belong here.
         run: |
           mkdir -p _site
           cp index.html favicon.ico icon.ico icon.svg apple-touch-icon.png manifest.json sw.js _site/
+          cp -r films labs _site/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

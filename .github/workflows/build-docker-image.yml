@@ -13,6 +13,8 @@ on:
       - "apple-touch-icon.png"
       - "manifest.json"
       - "sw.js"
+      - "films/**"
+      - "labs/**"
       - ".github/workflows/build-docker-image.yml"
   workflow_dispatch: {}
 
