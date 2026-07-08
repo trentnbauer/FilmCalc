@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#2563eb">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FilmCalc — Film Cost Calculator</title>
+    <title>Film Price Calculator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
     <script>
@@ -37,26 +37,19 @@
 
 
 
-        <h1 class="text-3xl font-bold text-center mb-6 text-gray-900 dark:text-white pr-8">FilmCalc</h1>
+        <h1 class="text-3xl font-bold text-center mb-6 text-gray-900 dark:text-white pr-8">Film Price Calculator</h1>
 
         <form id="calculatorForm" class="space-y-6">
 
             <div class="flex gap-2 border-b border-gray-200 dark:border-gray-700">
-                <button id="tabFilmBtn" type="button" class="flex-1 px-3 py-2.5 font-semibold text-xs sm:text-sm uppercase tracking-wide border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 transition-colors">Calculator</button>
-                <button id="tabLabBtn" type="button" class="flex-1 px-3 py-2.5 font-semibold text-xs sm:text-sm uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">Lab</button>
-                <button id="tabCheapestFilmsBtn" type="button" class="flex-1 px-3 py-2.5 font-semibold text-xs sm:text-sm uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">Film Library</button>
-                <button id="tabSettingsBtn" type="button" class="flex-1 px-3 py-2.5 font-semibold text-xs sm:text-sm uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">Settings</button>
+                <button id="tabFilmBtn" type="button" class="flex-1 px-1.5 sm:px-3 py-2.5 font-semibold text-[11px] sm:text-sm uppercase tracking-wide border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 transition-colors">Calculator</button>
+                <button id="tabIsoCalcBtn" type="button" class="flex-1 px-1.5 sm:px-3 py-2.5 font-semibold text-[11px] sm:text-sm uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">ISO Calc</button>
+                <button id="tabLabBtn" type="button" class="flex-1 px-1.5 sm:px-3 py-2.5 font-semibold text-[11px] sm:text-sm uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">Lab</button>
+                <button id="tabCheapestFilmsBtn" type="button" class="flex-1 px-1.5 sm:px-3 py-2.5 font-semibold text-[11px] sm:text-sm uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">Film Library</button>
+                <button id="tabSettingsBtn" type="button" class="flex-1 px-1.5 sm:px-3 py-2.5 font-semibold text-[11px] sm:text-sm uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">Settings</button>
             </div>
 
             <div id="filmTabContent" class="space-y-6">
-                <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800/30 p-4 text-left">
-                    <label for="devSpeed" class="block text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">Target Speed (ISO)</label>
-                    <input type="number" id="devSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Start here — enter the ISO you're shooting at. If it differs from a film's Box Speed below, the cheapest saved film loads automatically.</p>
-                    <div id="pushPullWarning" class="mt-1"></div>
-                    <div id="expiredStackWarning" class="mt-1"></div>
-                </div>
-
                 <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                     <div class="p-4 pb-0">
                         <span class="font-semibold text-blue-800 dark:text-blue-400 text-sm uppercase tracking-wide">Quick Calculate</span>
@@ -98,6 +91,14 @@
                     </div>
                 </div>
 
+                <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800/30 p-4 text-left">
+                    <label for="devSpeed" class="block text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">Target Speed (ISO)</label>
+                    <input type="number" id="devSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Start here — enter the ISO you're shooting at. If it differs from a film's Box Speed above, the cheapest saved film loads automatically.</p>
+                    <div id="pushPullWarning" class="mt-1"></div>
+                    <div id="expiredStackWarning" class="mt-1"></div>
+                </div>
+
                 <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-100 dark:border-yellow-800/30 p-4">
                     <label class="flex items-center gap-2 text-sm font-semibold text-yellow-800 dark:text-yellow-400 uppercase tracking-wide mb-2">
                         <input type="checkbox" id="filmExpiredCheckbox" class="rounded border-gray-300 dark:border-gray-600 text-yellow-600 focus:ring-yellow-500">
@@ -120,6 +121,17 @@
                         </div>
                         <div id="expiredRecommendation" class="text-xs"></div>
                     </div>
+                </div>
+            </div>
+
+            <div id="isoCalcTabContent" class="space-y-6 hidden">
+                <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800/30 p-4 text-left">
+                    <label for="isoCalcTargetSpeed" class="block text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">Shooting ISO</label>
+                    <input type="number" id="isoCalcTargetSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Enter the ISO you're shooting at. Shows the cheapest film + dev cost per photo three ways: shot at box speed (native), pushed up from a slower film, and pulled down from a faster one — since push/pull doesn't change what the film itself costs.</p>
+                </div>
+                <div id="isoCalcResults">
+                    <p class="text-sm text-gray-400 text-center">Enter a shooting ISO to compare</p>
                 </div>
             </div>
 
@@ -610,6 +622,7 @@
         // ---------- Tab switching ----------
         const tabs = {
             film: { btn: document.getElementById('tabFilmBtn'), content: document.getElementById('filmTabContent') },
+            isoCalc: { btn: document.getElementById('tabIsoCalcBtn'), content: document.getElementById('isoCalcTabContent') },
             lab: { btn: document.getElementById('tabLabBtn'), content: document.getElementById('labTabContent') },
             cheapestFilms: { btn: document.getElementById('tabCheapestFilmsBtn'), content: document.getElementById('cheapestFilmsTabContent') },
             settings: { btn: document.getElementById('tabSettingsBtn'), content: document.getElementById('settingsTabContent') }
@@ -883,13 +896,17 @@
         // Box Speed / Dev Speed, since push/pull cost — not just base dev price —
         // can flip which lab is actually cheapest for a given roll. Sorted by
         // cost per photo since that's the number that actually matters.
-        // ---------- Pinned lab result ----------
-        // Lets the person freeze a specific lab result on screen, then change
-        // film/roll details and see the new numbers compared directly against
-        // the pinned one — persists across reloads since it's a deliberate
-        // "keep this for comparison" action, not incidental state.
+        // ---------- Pinned lab results ----------
+        // Lets the person freeze one or more specific lab results on screen,
+        // then change film/lab details and see the new numbers compared
+        // directly against each pinned one — persists across reloads since
+        // it's a deliberate "keep this for comparison" action, not incidental
+        // state. Multiple pins are supported so you can line up several labs
+        // (e.g. a fast one vs. a cheap one) side by side.
         function pinLabResult(r) {
-            localStorage.setItem('pinnedLabResult', JSON.stringify({
+            const pins = JSON.parse(localStorage.getItem('pinnedLabResults') || '[]');
+            pins.push({
+                pinId: Date.now() + Math.random(),
                 name: r.name,
                 costPerPhoto: r.costPerPhoto,
                 devCostPerRoll: r.devCostPerRoll,
@@ -897,45 +914,54 @@
                 highResScan: r.highResScan,
                 turnaroundTime: r.turnaroundTime,
                 stops: r.stops
-            }));
+            });
+            localStorage.setItem('pinnedLabResults', JSON.stringify(pins));
+            updateLabComparison();
+        }
+
+        function unpinLabResult(pinId) {
+            let pins = JSON.parse(localStorage.getItem('pinnedLabResults') || '[]');
+            pins = pins.filter(p => p.pinId !== pinId);
+            localStorage.setItem('pinnedLabResults', JSON.stringify(pins));
             updateLabComparison();
         }
 
         function renderPinnedResult(currentCheapest) {
             const container = document.getElementById('pinnedResultDisplay');
             if (!container) return;
-            const pinned = JSON.parse(localStorage.getItem('pinnedLabResult') || 'null');
-            if (!pinned) { container.innerHTML = ''; return; }
+            const pins = JSON.parse(localStorage.getItem('pinnedLabResults') || '[]');
+            if (pins.length === 0) { container.innerHTML = ''; return; }
 
-            const hiResBadge = pinned.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">HI-RES</span>` : '';
-            const turnaroundBadge = pinned.turnaroundTime ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 align-middle">${turnaroundLabels[pinned.turnaroundTime] || pinned.turnaroundTime}</span>` : '';
+            container.innerHTML = pins.map(pinned => {
+                const hiResBadge = pinned.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">HI-RES</span>` : '';
+                const turnaroundBadge = pinned.turnaroundTime ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 align-middle">${turnaroundLabels[pinned.turnaroundTime] || pinned.turnaroundTime}</span>` : '';
 
-            let diffHtml = '<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Change Film Setup or labs to compare against a new calculation</p>';
-            if (currentCheapest) {
-                const diff = currentCheapest.costPerPhoto - pinned.costPerPhoto;
-                if (Math.abs(diff) < 0.005) {
-                    diffHtml = `<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Same as current cheapest (${CUR()}${currentCheapest.costPerPhoto.toFixed(2)}/photo)</p>`;
-                } else if (diff > 0) {
-                    diffHtml = `<p class="text-xs text-green-600 dark:text-green-400 mt-1">Current cheapest is ${CUR()}${diff.toFixed(2)}/photo less (${escapeHtml(currentCheapest.name)} at ${CUR()}${currentCheapest.costPerPhoto.toFixed(2)}/photo)</p>`;
-                } else {
-                    diffHtml = `<p class="text-xs text-red-600 dark:text-red-400 mt-1">Current cheapest is ${CUR()}${Math.abs(diff).toFixed(2)}/photo more (${escapeHtml(currentCheapest.name)} at ${CUR()}${currentCheapest.costPerPhoto.toFixed(2)}/photo)</p>`;
+                let diffHtml = '<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Change Film Setup or labs to compare against a new calculation</p>';
+                if (currentCheapest) {
+                    const diff = currentCheapest.costPerPhoto - pinned.costPerPhoto;
+                    if (Math.abs(diff) < 0.005) {
+                        diffHtml = `<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Same as current cheapest (${CUR()}${currentCheapest.costPerPhoto.toFixed(2)}/photo)</p>`;
+                    } else if (diff > 0) {
+                        diffHtml = `<p class="text-xs text-green-600 dark:text-green-400 mt-1">Current cheapest is ${CUR()}${diff.toFixed(2)}/photo less (${escapeHtml(currentCheapest.name)} at ${CUR()}${currentCheapest.costPerPhoto.toFixed(2)}/photo)</p>`;
+                    } else {
+                        diffHtml = `<p class="text-xs text-red-600 dark:text-red-400 mt-1">Current cheapest is ${CUR()}${Math.abs(diff).toFixed(2)}/photo more (${escapeHtml(currentCheapest.name)} at ${CUR()}${currentCheapest.costPerPhoto.toFixed(2)}/photo)</p>`;
+                    }
                 }
-            }
 
-            container.innerHTML = `<div class="px-3 py-3 rounded-lg text-sm bg-indigo-100 dark:bg-indigo-900/30 border border-indigo-300 dark:border-indigo-700 relative mb-3 text-left">
-                <button type="button" id="unpinResultBtn" class="absolute top-2 right-2 text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-200 text-xs font-bold" aria-label="Unpin">✕</button>
-                <div class="text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">📌 Pinned Comparison</div>
-                <div class="font-semibold text-indigo-800 dark:text-indigo-300">${escapeHtml(pinned.name)}${hiResBadge}${turnaroundBadge}</div>
-                <div class="font-mono text-indigo-800 dark:text-indigo-300 mt-1">
-                    <span class="font-semibold">${CUR()}${pinned.costPerPhoto.toFixed(2)}/photo</span>
-                    <span class="text-xs opacity-80"> · ${CUR()}${pinned.devCostPerRoll.toFixed(2)}/dev · ${CUR()}${pinned.costPerRoll.toFixed(2)}/total</span>
-                </div>
-                ${diffHtml}
-            </div>`;
+                return `<div class="px-3 py-3 rounded-lg text-sm bg-indigo-100 dark:bg-indigo-900/30 border border-indigo-300 dark:border-indigo-700 relative mb-3 text-left">
+                    <button type="button" data-unpin-id="${pinned.pinId}" class="unpinResultBtn absolute top-2 right-2 text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-200 text-xs font-bold" aria-label="Unpin">✕</button>
+                    <div class="text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">📌 Pinned Comparison</div>
+                    <div class="font-semibold text-indigo-800 dark:text-indigo-300">${escapeHtml(pinned.name)}${hiResBadge}${turnaroundBadge}</div>
+                    <div class="font-mono text-indigo-800 dark:text-indigo-300 mt-1">
+                        <span class="font-semibold">${CUR()}${pinned.costPerPhoto.toFixed(2)}/photo</span>
+                        <span class="text-xs opacity-80"> · ${CUR()}${pinned.devCostPerRoll.toFixed(2)}/dev · ${CUR()}${pinned.costPerRoll.toFixed(2)}/total</span>
+                    </div>
+                    ${diffHtml}
+                </div>`;
+            }).join('');
 
-            document.getElementById('unpinResultBtn').addEventListener('click', () => {
-                localStorage.removeItem('pinnedLabResult');
-                updateLabComparison();
+            container.querySelectorAll('.unpinResultBtn').forEach(btn => {
+                btn.addEventListener('click', () => unpinLabResult(parseFloat(btn.dataset.unpinId)));
             });
         }
 
@@ -1297,9 +1323,9 @@
         // Recommends the cheapest film to shoot at a given EI when only Dev Speed
         // is filled in — considers every saved film regardless of native box
         // speed, since the purchase cost doesn't change based on what EI you
-        // rate it at. Always loads the single cheapest match into the
-        // calculator so Labs For This Roll populates without needing to
-        // expand Quick Calculate or click anything.
+        // rate it at. Prefers a film actually rated at this ISO natively; only
+        // falls back to a film at a different box speed (pushed/pulled here)
+        // if nothing saved matches this ISO at all.
         function renderDevSpeedRecommendation(devSpeed, container) {
             const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
 
@@ -1326,16 +1352,133 @@
                 return;
             }
 
-            const cheapest = matches[0];
-            document.getElementById('boxSpeed').value = cheapest.boxSpeed;
-            document.getElementById('filmCost').value = cheapest.filmCost || '';
-            document.getElementById('rolls').value = cheapest.rolls || '1';
-            document.getElementById('exposures').value = cheapest.exposures || '36';
+            const nativeMatches = matches.filter(m => m.boxSpeed === devSpeed);
+            const picked = nativeMatches.length > 0 ? nativeMatches[0] : matches[0];
+
+            document.getElementById('boxSpeed').value = picked.boxSpeed;
+            document.getElementById('filmCost').value = picked.filmCost || '';
+            document.getElementById('rolls').value = picked.rolls || '1';
+            document.getElementById('exposures').value = picked.exposures || '36';
             devSpeedOverridden = true;
-            updateCalcBuyLinkInfo({ buyLink: cheapest.buyLink, storeName: cheapest.storeName });
+            updateCalcBuyLinkInfo({ buyLink: picked.buyLink, storeName: picked.storeName });
             updateLabComparison();
             updateFilmSpeedComparison();
         }
+
+        // ---------- ISO Price Calculator ----------
+        // For a given shooting ISO, finds the cheapest film+lab combination
+        // three ways: shot at box speed natively, pushed up from a slower
+        // film, and pulled down from a faster one. Push/pull doesn't change
+        // what the film itself costs, only the lab's dev fee — so this
+        // pairs every saved film's cheapest bundle with every saved lab's
+        // service tiers and finds the true minimum per bucket, rather than
+        // just assuming the native-speed film is the best starting point.
+        function computeIsoPriceOptions(targetIso) {
+            const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
+            const allLabs = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') };
+            const labNames = Object.keys(allLabs).filter(n => !allLabs[n].hidden);
+
+            const buckets = { native: [], push: [], pull: [] };
+            if (labNames.length === 0) return buckets;
+
+            Object.values(allFilms).filter(f => !f.hidden).forEach(f => {
+                const boxSpeed = parseInt(f.boxSpeed) || 0;
+                if (!boxSpeed) return;
+                const stopsSigned = Math.round(Math.log2(targetIso / boxSpeed) * 10) / 10;
+                const stopsAbs = Math.abs(stopsSigned);
+                const bucketKey = stopsSigned === 0 ? 'native' : (stopsSigned > 0 ? 'push' : 'pull');
+
+                // Cheapest bundle for this film stock only — same "pick the
+                // best pack size" approach used everywhere else in the app.
+                let bestBundle = null, bestFilmCostPerPhoto = null;
+                normalizeFilmBundles(f).forEach(b => {
+                    const cpp = computeCostPerPhoto(b.filmCost, b.rolls, b.exposures);
+                    if (cpp !== null && cpp > 0 && (bestFilmCostPerPhoto === null || cpp < bestFilmCostPerPhoto)) {
+                        bestFilmCostPerPhoto = cpp;
+                        bestBundle = b;
+                    }
+                });
+                if (!bestBundle || !bestBundle.exposures) return;
+
+                labNames.forEach(labName => {
+                    normalizeLabServices(allLabs[labName])
+                        .filter(tier => !(tier.noPushPull && stopsAbs > 0))
+                        .forEach(tier => {
+                            const pushPullFee = stopsAbs > 0
+                                ? ((tier.pushPullType === 'per_stop') ? tier.pushPullCost * stopsAbs : tier.pushPullCost)
+                                : 0;
+                            const devCostPerRoll = tier.devCost + pushPullFee;
+                            const devCostPerPhoto = devCostPerRoll / bestBundle.exposures;
+                            buckets[bucketKey].push({
+                                filmName: f.name,
+                                labName,
+                                stops: stopsSigned,
+                                filmCostPerPhoto: bestFilmCostPerPhoto,
+                                devCostPerPhoto,
+                                totalCostPerPhoto: bestFilmCostPerPhoto + devCostPerPhoto,
+                                highResScan: tier.highResScan,
+                                turnaroundTime: tier.turnaroundTime
+                            });
+                        });
+                });
+            });
+
+            Object.keys(buckets).forEach(k => buckets[k].sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto));
+            return buckets;
+        }
+
+        function updateIsoPriceCalculator() {
+            const container = document.getElementById('isoCalcResults');
+            const targetIso = parseInt(document.getElementById('isoCalcTargetSpeed').value) || 0;
+            if (!targetIso) {
+                container.innerHTML = '<p class="text-sm text-gray-400 text-center">Enter a shooting ISO to compare</p>';
+                return;
+            }
+
+            const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
+            const allLabs = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') };
+            const hasFilms = Object.values(allFilms).some(f => !f.hidden && (parseInt(f.boxSpeed) || 0) > 0);
+            const hasLabs = Object.values(allLabs).some(l => !l.hidden);
+            if (!hasFilms || !hasLabs) {
+                container.innerHTML = `<p class="text-sm text-gray-400 text-center">Save at least one film and one lab profile to compare</p>`;
+                return;
+            }
+
+            const buckets = computeIsoPriceOptions(targetIso);
+
+            function renderCard(label, colorClasses, entry, note) {
+                if (!entry) {
+                    return `<div class="px-3 py-3 rounded-lg text-sm bg-white dark:bg-gray-800/50 border border-dashed border-gray-300 dark:border-gray-600">
+                        <div class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">${label}</div>
+                        <div class="text-gray-400 dark:text-gray-500 text-sm">No matching film/lab combination</div>
+                    </div>`;
+                }
+                const hiResBadge = entry.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">HI-RES</span>` : '';
+                const turnaroundBadge = entry.turnaroundTime ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 align-middle">${turnaroundLabels[entry.turnaroundTime] || entry.turnaroundTime}</span>` : '';
+                return `<div class="px-3 py-3 rounded-lg text-sm ${colorClasses}">
+                    <div class="text-xs font-semibold uppercase tracking-wide mb-1">${label}</div>
+                    <div class="font-semibold">${escapeHtml(entry.filmName)} <span class="font-normal opacity-75">@ ${escapeHtml(entry.labName)}</span>${hiResBadge}${turnaroundBadge}</div>
+                    <div class="font-mono mt-1">
+                        <span class="font-semibold">${CUR()}${entry.totalCostPerPhoto.toFixed(2)}/photo</span>
+                        <span class="text-xs opacity-80"> · ${CUR()}${entry.filmCostPerPhoto.toFixed(2)} film + ${CUR()}${entry.devCostPerPhoto.toFixed(2)} dev</span>
+                    </div>
+                    ${note ? `<p class="text-xs opacity-80 mt-1">${note}</p>` : ''}
+                </div>`;
+            }
+
+            const pushEntry = buckets.push[0];
+            const pullEntry = buckets.pull[0];
+            const pushNote = pushEntry ? `Push ${Math.abs(pushEntry.stops)} stop${Math.abs(pushEntry.stops) === 1 ? '' : 's'} from box speed` : null;
+            const pullNote = pullEntry ? `Pull ${Math.abs(pullEntry.stops)} stop${Math.abs(pullEntry.stops) === 1 ? '' : 's'} from box speed` : null;
+
+            container.innerHTML = `<div class="space-y-3">
+                ${renderCard(`Native (${targetIso} ISO)`, 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300', buckets.native[0])}
+                ${renderCard(`Pushed to ${targetIso} ISO`, 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300', pushEntry, pushNote)}
+                ${renderCard(`Pulled to ${targetIso} ISO`, 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300', pullEntry, pullNote)}
+            </div>`;
+        }
+
+        document.getElementById('isoCalcTargetSpeed').addEventListener('input', updateIsoPriceCalculator);
 
         // ---------- Film Library (cheapest per ISO) ----------
         // Groups every saved film's bundles (built-in + custom) by Box Speed and
