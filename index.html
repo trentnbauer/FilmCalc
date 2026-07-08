@@ -144,20 +144,11 @@
             </div>
 
             <div id="cheapestTabContent" class="space-y-6 hidden">
-                <div class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-300">
+                <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                     <span class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">Show:</span>
-                    <label class="flex items-center gap-1.5">
-                        <input type="checkbox" id="cheapestFilterC41" checked class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500">
-                        C41
-                    </label>
-                    <label class="flex items-center gap-1.5">
-                        <input type="checkbox" id="cheapestFilterBw" checked class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500">
-                        B&amp;W
-                    </label>
-                    <label class="flex items-center gap-1.5">
-                        <input type="checkbox" id="cheapestFilterE6" checked class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500">
-                        E6
-                    </label>
+                    <button type="button" id="cheapestFilterC41" data-active="true" class="process-toggle-btn px-3 py-1 rounded-full text-xs font-semibold border transition-colors bg-blue-600 border-blue-600 text-white">C41</button>
+                    <button type="button" id="cheapestFilterBw" data-active="true" class="process-toggle-btn px-3 py-1 rounded-full text-xs font-semibold border transition-colors bg-blue-600 border-blue-600 text-white">B&amp;W</button>
+                    <button type="button" id="cheapestFilterE6" data-active="true" class="process-toggle-btn px-3 py-1 rounded-full text-xs font-semibold border transition-colors bg-blue-600 border-blue-600 text-white">E6</button>
                 </div>
 
                 <div class="flex gap-1 bg-gray-100 dark:bg-gray-700/50 rounded-lg p-1">
@@ -467,12 +458,44 @@
             return `${name}${boxSpeed || 0}`;
         }
 
-        // Process filter used by the Cheapest tab (C41 / B&W / E6 checkboxes).
+        // Toggle helper for the Cheapest tab's C41/B&W/E6 filter buttons.
+        function toggleFilterBtn(btn) {
+            const active = btn.dataset.active !== 'true';
+            btn.dataset.active = active ? 'true' : 'false';
+            btn.classList.toggle('bg-blue-600', active);
+            btn.classList.toggle('border-blue-600', active);
+            btn.classList.toggle('text-white', active);
+            btn.classList.toggle('bg-white', !active);
+            btn.classList.toggle('dark:bg-gray-700', !active);
+            btn.classList.toggle('border-gray-300', !active);
+            btn.classList.toggle('dark:border-gray-600', !active);
+            btn.classList.toggle('text-gray-500', !active);
+            btn.classList.toggle('dark:text-gray-400', !active);
+            return active;
+        }
+
+        // Toggle helper for a lab service tier's C41/B&W/E6 process buttons.
+        function toggleTierProcessBtn(btn) {
+            const active = btn.dataset.active !== 'true';
+            btn.dataset.active = active ? 'true' : 'false';
+            btn.classList.toggle('bg-green-600', active);
+            btn.classList.toggle('border-green-600', active);
+            btn.classList.toggle('text-white', active);
+            btn.classList.toggle('bg-white', !active);
+            btn.classList.toggle('dark:bg-gray-700', !active);
+            btn.classList.toggle('border-gray-300', !active);
+            btn.classList.toggle('dark:border-gray-600', !active);
+            btn.classList.toggle('text-gray-500', !active);
+            btn.classList.toggle('dark:text-gray-400', !active);
+            return active;
+        }
+
+        // Process filter used by the Cheapest tab (C41 / B&W / E6 toggle buttons).
         function filmPassesProcessFilter(f) {
             const process = f.process || 'C41';
-            const showC41 = document.getElementById('cheapestFilterC41').checked;
-            const showBw = document.getElementById('cheapestFilterBw').checked;
-            const showE6 = document.getElementById('cheapestFilterE6').checked;
+            const showC41 = document.getElementById('cheapestFilterC41').dataset.active === 'true';
+            const showBw = document.getElementById('cheapestFilterBw').dataset.active === 'true';
+            const showE6 = document.getElementById('cheapestFilterE6').dataset.active === 'true';
             if (process === 'C41') return showC41;
             if (process === 'BW') return showBw;
             if (process === 'E6') return showE6;
@@ -779,9 +802,12 @@
 
         Object.keys(cheapestSubTabs).forEach(key => cheapestSubTabs[key].btn.addEventListener('click', () => switchCheapestSubTab(key)));
 
-        document.getElementById('cheapestFilterC41').addEventListener('change', refreshActiveCheapestSubTab);
-        document.getElementById('cheapestFilterBw').addEventListener('change', refreshActiveCheapestSubTab);
-        document.getElementById('cheapestFilterE6').addEventListener('change', refreshActiveCheapestSubTab);
+        ['cheapestFilterC41', 'cheapestFilterBw', 'cheapestFilterE6'].forEach(id => {
+            document.getElementById(id).addEventListener('click', (e) => {
+                toggleFilterBtn(e.currentTarget);
+                refreshActiveCheapestSubTab();
+            });
+        });
 
 
         Object.keys(tabs).forEach(key => tabs[key].btn.addEventListener('click', () => switchTab(key)));
@@ -900,19 +926,10 @@
                     </div>
                     <div>
                         <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Process</label>
-                        <div class="flex items-center gap-4">
-                            <label class="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
-                                <input type="checkbox" class="tier-process-c41 rounded border-gray-300 dark:border-gray-600 text-green-600 focus:ring-green-500" ${processes.includes('C41') ? 'checked' : ''}>
-                                C41
-                            </label>
-                            <label class="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
-                                <input type="checkbox" class="tier-process-bw rounded border-gray-300 dark:border-gray-600 text-green-600 focus:ring-green-500" ${processes.includes('BW') ? 'checked' : ''}>
-                                B&amp;W
-                            </label>
-                            <label class="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
-                                <input type="checkbox" class="tier-process-e6 rounded border-gray-300 dark:border-gray-600 text-green-600 focus:ring-green-500" ${processes.includes('E6') ? 'checked' : ''}>
-                                E6
-                            </label>
+                        <div class="flex items-center gap-2">
+                            <button type="button" class="tier-process-c41 process-toggle-btn px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${processes.includes('C41') ? 'bg-green-600 border-green-600 text-white' : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400'}" data-active="${processes.includes('C41') ? 'true' : 'false'}">C41</button>
+                            <button type="button" class="tier-process-bw process-toggle-btn px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${processes.includes('BW') ? 'bg-green-600 border-green-600 text-white' : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400'}" data-active="${processes.includes('BW') ? 'true' : 'false'}">B&amp;W</button>
+                            <button type="button" class="tier-process-e6 process-toggle-btn px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${processes.includes('E6') ? 'bg-green-600 border-green-600 text-white' : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400'}" data-active="${processes.includes('E6') ? 'true' : 'false'}">E6</button>
                         </div>
                         <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Tick every process this tier handles — a film only matches a tier that includes its own process.</p>
                     </div>
@@ -961,6 +978,12 @@
             });
             newBlock.querySelector('.tier-noPushPull').addEventListener('change', (e) => {
                 newBlock.querySelector('.tier-pushpull-fields').classList.toggle('hidden', e.target.checked);
+            });
+            newBlock.querySelectorAll('.tier-process-c41, .tier-process-bw, .tier-process-e6').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    toggleTierProcessBtn(btn);
+                    updateLabComparison();
+                });
             });
         }
 
@@ -2162,9 +2185,9 @@
             if (tierBlocks.length === 0) return alert('Add at least one service tier');
             const services = Array.from(tierBlocks).map(block => {
                 const processes = [];
-                if (block.querySelector('.tier-process-c41').checked) processes.push('C41');
-                if (block.querySelector('.tier-process-bw').checked) processes.push('BW');
-                if (block.querySelector('.tier-process-e6').checked) processes.push('E6');
+                if (block.querySelector('.tier-process-c41').dataset.active === 'true') processes.push('C41');
+                if (block.querySelector('.tier-process-bw').dataset.active === 'true') processes.push('BW');
+                if (block.querySelector('.tier-process-e6').dataset.active === 'true') processes.push('E6');
                 return {
                     devCost: block.querySelector('.tier-devCost').value,
                     pushPullCost: block.querySelector('.tier-pushPullCost').value,
