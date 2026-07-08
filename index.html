@@ -4,6 +4,8 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="icon" type="image/svg+xml" href="/icon.svg">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#2563eb">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Film Cost Calculator</title>
@@ -20,7 +22,11 @@
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans min-h-screen flex items-start justify-center p-4 pt-8 md:pt-12 transition-colors duration-200">
 
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 md:p-8 max-w-2xl w-full relative transition-colors duration-200">
+    <div class="fixed top-0 left-0 w-full bg-amber-400 dark:bg-amber-600 text-amber-950 dark:text-amber-50 text-center text-sm font-semibold py-2 px-4 z-50 shadow-md">
+        ⚠️ This web-app is under active development
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 md:p-8 max-w-2xl w-full relative transition-colors duration-200 mt-8">
         
         <div class="absolute top-6 right-6 flex items-center gap-2">
             <button id="settingsToggle" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Settings">
@@ -70,6 +76,16 @@
                     </div>
 
                     <div>
+                        <h3 class="font-semibold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest mb-2">App</h3>
+                        <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3">
+                            <h4 class="font-semibold text-gray-700 dark:text-gray-300 text-sm">Install App</h4>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Add this to your home screen or app list for quicker access, like a native app.</p>
+                            <button id="installAppBtn" type="button" class="hidden w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-medium">📲 Install App</button>
+                            <p id="installAppFallback" class="hidden text-xs text-gray-500 dark:text-gray-400">On iPhone/iPad: tap the Share button in Safari, then "Add to Home Screen". On Android/Chrome: use the browser menu → "Install app" or "Add to Home screen".</p>
+                        </div>
+                    </div>
+
+                    <div>
                         <h3 class="font-semibold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest mb-2">Data</h3>
                         <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-4">
                             <div class="space-y-2">
@@ -107,14 +123,6 @@
 
         <h1 class="text-3xl font-bold text-center mb-6 text-gray-900 dark:text-white pr-8">Film Cost Calculator</h1>
 
-        <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800/30 p-4 mb-6 text-left">
-            <label for="devSpeed" class="block text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">Target Speed (ISO)</label>
-            <input type="number" id="devSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Start here — enter the ISO you're shooting at. If it differs from a film's Box Speed below, the cheapest eligible film for that push/pull loads automatically.</p>
-            <div id="pushPullWarning" class="mt-1"></div>
-            <div id="expiredStackWarning" class="mt-1"></div>
-        </div>
-        
         <form id="calculatorForm" class="space-y-6">
 
             <div class="flex gap-2 border-b border-gray-200 dark:border-gray-700">
@@ -124,6 +132,14 @@
             </div>
 
             <div id="filmTabContent" class="space-y-6">
+                <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800/30 p-4 text-left">
+                    <label for="devSpeed" class="block text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">Target Speed (ISO)</label>
+                    <input type="number" id="devSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Start here — enter the ISO you're shooting at. If it differs from a film's Box Speed below, the cheapest eligible film for that push/pull loads automatically.</p>
+                    <div id="pushPullWarning" class="mt-1"></div>
+                    <div id="expiredStackWarning" class="mt-1"></div>
+                </div>
+
                 <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                     <button id="quickCalcToggle" type="button" class="w-full flex items-center justify-between p-4 text-left">
                         <span class="font-semibold text-blue-800 dark:text-blue-400 text-sm uppercase tracking-wide">Quick Calculate</span>
@@ -209,6 +225,19 @@
                         <input type="checkbox" id="labHiddenCheckbox" class="rounded border-gray-300 dark:border-gray-600 text-green-600 focus:ring-green-500">
                         Hide this lab from the Calculator
                     </label>
+
+                    <div class="space-y-2">
+                        <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Contact Details (optional)</label>
+                        <div>
+                            <div class="flex gap-2">
+                                <input type="text" id="labAddress" placeholder="Address" class="flex-1 border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
+                                <a id="labDirectionsBtn" href="#" target="_blank" rel="noopener noreferrer" class="hidden shrink-0 px-3 py-2 rounded bg-green-600 hover:bg-green-700 text-white text-sm font-medium whitespace-nowrap">📍 Directions</a>
+                            </div>
+                        </div>
+                        <input type="tel" id="labPhone" placeholder="Phone number" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
+                        <input type="email" id="labEmail" placeholder="Email" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
+                        <input type="url" id="labWebsite" placeholder="Website" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
+                    </div>
 
                     <div>
                         <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Service Tiers</label>
@@ -344,6 +373,45 @@
         settingsCloseBtn.addEventListener('click', closeSettings);
         settingsModal.addEventListener('click', (e) => { if (e.target === settingsModal) closeSettings(); });
 
+        // ---------- PWA install ----------
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(() => {});
+            });
+        }
+
+        let deferredInstallPrompt = null;
+        const installAppBtn = document.getElementById('installAppBtn');
+        const installAppFallback = document.getElementById('installAppFallback');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredInstallPrompt = e;
+            installAppBtn.classList.remove('hidden');
+            installAppFallback.classList.add('hidden');
+        });
+
+        window.addEventListener('appinstalled', () => {
+            deferredInstallPrompt = null;
+            installAppBtn.classList.add('hidden');
+        });
+
+        installAppBtn.addEventListener('click', async () => {
+            if (!deferredInstallPrompt) return;
+            deferredInstallPrompt.prompt();
+            await deferredInstallPrompt.userChoice;
+            deferredInstallPrompt = null;
+            installAppBtn.classList.add('hidden');
+        });
+
+        // Browsers without an install prompt (Safari/iOS, some others) — show
+        // manual instructions instead, once the user opens Settings.
+        settingsToggle.addEventListener('click', () => {
+            if (!deferredInstallPrompt && !window.matchMedia('(display-mode: standalone)').matches) {
+                installAppFallback.classList.remove('hidden');
+            }
+        });
+
         // ---------- Collapsible Quick Calculate ----------
         // Collapsed by default now that Target Speed at the top of the page
         // drives the primary workflow — this is for manual overrides / browsing.
@@ -447,6 +515,18 @@
         filmExpiryDate.addEventListener('change', updateExpiredRecommendation);
         document.getElementById('boxSpeed').addEventListener('input', updateExpiredRecommendation);
         document.getElementById('devSpeed').addEventListener('input', updateExpiredRecommendation);
+
+        // ---------- Lab directions link ----------
+        // Builds a maps search URL from whatever's typed in the address field —
+        // works with the phone's default maps app on mobile, Google Maps in browser.
+        function updateLabDirectionsBtn() {
+            const btn = document.getElementById('labDirectionsBtn');
+            const address = document.getElementById('labAddress').value.trim();
+            if (!address) { btn.classList.add('hidden'); return; }
+            btn.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+            btn.classList.remove('hidden');
+        }
+        document.getElementById('labAddress').addEventListener('input', updateLabDirectionsBtn);
 
         // ---------- Currency symbol ----------
         // Purely a display label swap — no conversion math. Read by every cost
@@ -619,7 +699,8 @@
                     pushPullCost: parseFloat(s.pushPullCost) || 0,
                     pushPullType: s.pushPullType || 'per_stop',
                     turnaroundTime: s.turnaroundTime || 'same_week',
-                    highResScan: !!s.highResScan
+                    highResScan: !!s.highResScan,
+                    noPushPull: !!s.noPushPull
                 }));
             }
             // Legacy flat schema fallback (pre-service-tiers saved profiles)
@@ -628,7 +709,8 @@
                 pushPullCost: parseFloat(lab.pushPullCost) || 0,
                 pushPullType: lab.pushPullType || 'per_stop',
                 turnaroundTime: lab.turnaroundTime || 'same_week',
-                highResScan: !!lab.highResScan
+                highResScan: !!lab.highResScan,
+                noPushPull: !!lab.noPushPull
             }];
         }
 
@@ -639,6 +721,7 @@
             const pushPullType = tier.pushPullType || 'per_stop';
             const turnaroundTime = tier.turnaroundTime || 'same_week';
             const highResScan = !!tier.highResScan;
+            const noPushPull = !!tier.noPushPull;
             return `
                 <div class="tier-block bg-white dark:bg-gray-800/60 border border-green-200 dark:border-green-800 rounded-lg p-3 space-y-2 relative">
                     <button type="button" class="removeTierBtn absolute top-2 right-2 text-red-400 hover:text-red-600 text-xs font-bold" aria-label="Remove Tier">✕</button>
@@ -656,7 +739,7 @@
                             </select>
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-2">
+                    <div class="grid grid-cols-2 gap-2 tier-pushpull-fields ${noPushPull ? 'hidden' : ''}">
                         <div>
                             <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Push/Pull Fee ($)</label>
                             <input type="number" class="tier-pushPullCost w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" value="${pushPullCost}">
@@ -669,6 +752,10 @@
                             </select>
                         </div>
                     </div>
+                    <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                        <input type="checkbox" class="tier-noPushPull rounded border-gray-300 dark:border-gray-600 text-green-600 focus:ring-green-500" ${noPushPull ? 'checked' : ''}>
+                        No push/pull available at this tier
+                    </label>
                     <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                         <input type="checkbox" class="tier-highResScan rounded border-gray-300 dark:border-gray-600 text-green-600 focus:ring-green-500" ${highResScan ? 'checked' : ''}>
                         High Res Scans
@@ -684,6 +771,9 @@
             newBlock.querySelector('.removeTierBtn').addEventListener('click', () => {
                 newBlock.remove();
                 updateLabComparison();
+            });
+            newBlock.querySelector('.tier-noPushPull').addEventListener('change', (e) => {
+                newBlock.querySelector('.tier-pushpull-fields').classList.toggle('hidden', e.target.checked);
             });
         }
 
@@ -936,7 +1026,9 @@
                 const lab = allLabs[name];
                 const services = normalizeLabServices(lab);
 
-                return services.map(tier => {
+                return services
+                    .filter(tier => !(tier.noPushPull && stops > 0))
+                    .map(tier => {
                     let activePushPullCost = 0;
                     if (stops > 0) {
                         activePushPullCost = (tier.pushPullType === 'per_stop') ? (tier.pushPullCost * stops) : tier.pushPullCost;
@@ -1488,12 +1580,22 @@
             const p = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') }[e.target.value];
             if (!p) {
                 document.getElementById('labHiddenCheckbox').checked = false;
+                document.getElementById('labAddress').value = '';
+                document.getElementById('labPhone').value = '';
+                document.getElementById('labEmail').value = '';
+                document.getElementById('labWebsite').value = '';
+                updateLabDirectionsBtn();
                 resetTiers([{}]);
                 updateLabComparison();
                 return;
             }
             document.getElementById('labName').value = p.name;
             document.getElementById('labHiddenCheckbox').checked = !!p.hidden;
+            document.getElementById('labAddress').value = p.address || '';
+            document.getElementById('labPhone').value = p.phone || '';
+            document.getElementById('labEmail').value = p.email || '';
+            document.getElementById('labWebsite').value = p.website || '';
+            updateLabDirectionsBtn();
             resetTiers(normalizeLabServices(p));
             updateLabComparison();
         });
@@ -1574,10 +1676,19 @@
                 pushPullCost: block.querySelector('.tier-pushPullCost').value,
                 pushPullType: block.querySelector('.tier-pushPullType').value,
                 turnaroundTime: block.querySelector('.tier-turnaroundTime').value,
-                highResScan: block.querySelector('.tier-highResScan').checked
+                highResScan: block.querySelector('.tier-highResScan').checked,
+                noPushPull: block.querySelector('.tier-noPushPull').checked
             }));
             let saved = JSON.parse(localStorage.getItem('labProfiles') || '{}');
-            saved[name] = { name, hidden: document.getElementById('labHiddenCheckbox').checked, services };
+            saved[name] = {
+                name,
+                hidden: document.getElementById('labHiddenCheckbox').checked,
+                address: document.getElementById('labAddress').value.trim(),
+                phone: document.getElementById('labPhone').value.trim(),
+                email: document.getElementById('labEmail').value.trim(),
+                website: document.getElementById('labWebsite').value.trim(),
+                services
+            };
             localStorage.setItem('labProfiles', JSON.stringify(saved));
             updateLabDropdown();
             document.getElementById('savedLabsDropdown').value = name;
