@@ -1,6 +1,7 @@
 - name: Kodak Gold
   boxSpeed: 200
   maxPushPull: 1
+  process: C41
   hidden: false
   bundles:
     - rolls: 3
@@ -15,9 +16,15 @@
       storeName: Woolworths
       buyLink: >-
         https://www.woolworths.com.au/shop/productdetails/1120752907/kodak-gold-200-colour-film-35mm-36-exposures-pack-of-10-
+    - rolls: 1
+      exposures: 36
+      filmCost: 24.95
+      storeName: JB HiFi
+      buyLink: ''
 - name: Kodak ColorPlus
   boxSpeed: 200
   maxPushPull: 1
+  process: C41
   hidden: false
   bundles:
     - rolls: 10
@@ -28,6 +35,7 @@
 - name: Kodak Ultramax
   boxSpeed: 400
   maxPushPull: 1
+  process: C41
   hidden: false
   bundles:
     - rolls: 3
@@ -42,20 +50,20 @@
       storeName: eBay
       buyLink: >-
         https://www.ebay.com.au/itm/122400245303?chn=ps&_ul=AU&norover=1&mkevt=1&mkrid=705-139619-5960-0&mkcid=2&mkscid=101&itemid=122400245303&targetid=2365752142950&device=c&mktype=pla&googleloc=9071167&poi=&campaignid=21776459266&mkgroupid=171915223801&rlsatarget=pla-2365752142950&abcId=10047394&merchantid=116303911&gad_source=1&gad_campaignid=21776459266&gbraid=0AAAAAD97CxRo38qfYrY94jnNZyErot9kP&gclid=CjwKCAjwx7LSBhB3EiwAjcodxDQdLq2YLKtJEXNdXYqrVdFTQOQd5WRYnTISffT2TFLIV4_D-DVcUxoCAyEQAvD_BwE
-- name: FujiFilm Color
-  boxSpeed: 400
-  maxPushPull: 1
-  hidden: false
-  bundles:
+    - rolls: 3
+      exposures: 24
+      filmCost: 59
+      storeName: JB HiFi
+      buyLink: ''
     - rolls: 1
       exposures: 36
-      filmCost: 21
-      storeName: Walkens
-      buyLink: >-
-        https://walkens.com.au/products/fujifilm-400-35mm?variant=44813990822077&country=AU&currency=AUD&utm_medium=product_sync&utm_source=google&utm_content=sag_organic&utm_campaign=sag_organic&gad_source=1&gad_campaignid=17181065002&gbraid=0AAAAADBByy702yk-BGUXuaKWjQkZuYXfL&gclid=CjwKCAjwx7LSBhB3EiwAjcodxDJ2vXaM8SgV-l6gppYy65kBi9-JWkVIexfJIYgQF_Ftro60mWzDsBoC45UQAvD_BwE
+      filmCost: 27.95
+      storeName: JB HiFi
+      buyLink: ''
 - name: Kodak Porta
   boxSpeed: 800
   maxPushPull: 1
+  process: C41
   hidden: false
   bundles:
     - rolls: 1
@@ -64,3 +72,63 @@
       storeName: Walkens
       buyLink: >-
         https://walkens.com.au/products/kodak-portra-800-35mm?variant=44814089420989&country=AU&currency=AUD&utm_medium=product_sync&utm_source=google&utm_content=sag_organic&utm_campaign=sag_organic&gad_source=1&gad_campaignid=17181065002&gbraid=0AAAAADBByy702yk-BGUXuaKWjQkZuYXfL&gclid=CjwKCAjwx7LSBhB3EiwAjcodxJoVRduVX3CsCFBgc_FO8MYXKcOuhKOGEbq8iqr6BSzsYI9pAFSZ7hoCCuQQAvD_BwE
+- name: 1 Shot
+  boxSpeed: 400
+  maxPushPull: 1
+  process: C41
+  hidden: false
+  bundles:
+    - rolls: 1
+      exposures: 24
+      filmCost: 25.95
+      storeName: JB HiFi
+      buyLink: ''
+- name: Ilford HP5+
+  boxSpeed: 400
+  maxPushPull: 1
+  process: BW
+  hidden: false
+  bundles:
+    - rolls: 1
+      exposures: 36
+      filmCost: 18
+      storeName: JB HiFi
+      buyLink: ''
+- name: Ilford InfoColor Vintage Tone
+  boxSpeed: 400
+  maxPushPull: 1
+  process: C41
+  hidden: false
+  bundles:
+    - rolls: 1
+      exposures: 36
+      filmCost: 29.95
+      storeName: JB HiFi
+      buyLink: ''
+- name: FujiFilm Color
+  boxSpeed: 400
+  maxPushPull: 1
+  process: C41
+  hidden: false
+  bundles:
+    - rolls: 1
+      exposures: 36
+      filmCost: 24
+      storeName: JB HiFi
+      buyLink: ''
+- name: FujiFilm Color
+  boxSpeed: 200
+  maxPushPull: 1
+  process: C41
+  hidden: false
+  bundles:
+    - rolls: 1
+      exposures: 36
+      filmCost: 22
+      storeName: JB HiFi
+      buyLink: ''
+    - rolls: 1
+      exposures: 36
+      filmCost: 41.1
+      storeName: Woolworths
+      buyLink: ''

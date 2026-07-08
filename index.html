@@ -479,11 +479,12 @@
             return true;
         }
 
-        // A lab service tier can only process one film process (C41/B&W/E6) —
-        // pairing a film with a tier that processes something else isn't a
-        // real option, so this is an exclusion, not just a visual filter.
+        // A lab service tier can support more than one process (e.g. a tier
+        // that handles both C41 and E6 at the same price) — a film only
+        // pairs with tiers whose processes include the film's own.
         function tierMatchesFilmProcess(tier, film) {
-            return (tier.process || 'C41') === (film.process || 'C41');
+            const processes = Array.isArray(tier.processes) && tier.processes.length > 0 ? tier.processes : ['C41'];
+            return processes.includes(film.process || 'C41');
         }
 
         const themeToggle = document.getElementById('themeToggle');
@@ -866,7 +867,7 @@
                     turnaroundTime: s.turnaroundTime || 'same_week',
                     highResScan: !!s.highResScan,
                     noPushPull: !!s.noPushPull,
-                    process: s.process || 'C41'
+                    processes: Array.isArray(s.processes) && s.processes.length > 0 ? s.processes : [s.process || 'C41']
                 }));
             }
             // Legacy flat schema fallback (pre-service-tiers saved profiles)
@@ -877,7 +878,7 @@
                 turnaroundTime: lab.turnaroundTime || 'same_week',
                 highResScan: !!lab.highResScan,
                 noPushPull: !!lab.noPushPull,
-                process: lab.process || 'C41'
+                processes: Array.isArray(lab.processes) && lab.processes.length > 0 ? lab.processes : [lab.process || 'C41']
             }];
         }
 
@@ -889,23 +890,31 @@
             const turnaroundTime = tier.turnaroundTime || 'same_week';
             const highResScan = !!tier.highResScan;
             const noPushPull = !!tier.noPushPull;
-            const process = tier.process || 'C41';
+            const processes = Array.isArray(tier.processes) && tier.processes.length > 0 ? tier.processes : [tier.process || 'C41'];
             return `
                 <div class="tier-block bg-white dark:bg-gray-800/60 border border-green-200 dark:border-green-800 rounded-lg p-3 space-y-2 relative">
                     <button type="button" class="removeTierBtn absolute top-2 right-2 text-red-400 hover:text-red-600 text-xs font-bold" aria-label="Remove Tier">✕</button>
-                    <div class="grid grid-cols-2 gap-2 pr-6">
-                        <div>
-                            <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Dev Cost ($)</label>
-                            <input type="number" class="tier-devCost w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" value="${devCost}">
+                    <div>
+                        <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Dev Cost ($)</label>
+                        <input type="number" class="tier-devCost w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" value="${devCost}">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Process</label>
+                        <div class="flex items-center gap-4">
+                            <label class="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
+                                <input type="checkbox" class="tier-process-c41 rounded border-gray-300 dark:border-gray-600 text-green-600 focus:ring-green-500" ${processes.includes('C41') ? 'checked' : ''}>
+                                C41
+                            </label>
+                            <label class="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
+                                <input type="checkbox" class="tier-process-bw rounded border-gray-300 dark:border-gray-600 text-green-600 focus:ring-green-500" ${processes.includes('BW') ? 'checked' : ''}>
+                                B&amp;W
+                            </label>
+                            <label class="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
+                                <input type="checkbox" class="tier-process-e6 rounded border-gray-300 dark:border-gray-600 text-green-600 focus:ring-green-500" ${processes.includes('E6') ? 'checked' : ''}>
+                                E6
+                            </label>
                         </div>
-                        <div>
-                            <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Process</label>
-                            <select class="tier-process w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                                <option value="C41" ${process === 'C41' ? 'selected' : ''}>C41 (Color)</option>
-                                <option value="BW" ${process === 'BW' ? 'selected' : ''}>B&amp;W</option>
-                                <option value="E6" ${process === 'E6' ? 'selected' : ''}>E6</option>
-                            </select>
-                        </div>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Tick every process this tier handles — a film only matches a tier that includes its own process.</p>
                     </div>
                     <div class="grid grid-cols-2 gap-2 pr-6">
                         <div>
@@ -1220,7 +1229,7 @@
                 const services = normalizeLabServices(lab);
 
                 return services
-                    .filter(tier => !(tier.noPushPull && stops > 0) && (tier.process || 'C41') === currentProcess)
+                    .filter(tier => !(tier.noPushPull && stops > 0) && tierMatchesFilmProcess(tier, { process: currentProcess }))
                     .map(tier => {
                     let activePushPullCost = 0;
                     if (stops > 0) {
@@ -2130,25 +2139,20 @@
                 buyLink: block.querySelector('.bundle-buyLink').value.trim()
             }));
 
-            const newKey = filmKey(name, boxSpeed);
-            const previousKey = document.getElementById('libraryFilmsDropdown').value;
+            // Name + Box Speed together are this film's identity — that's
+            // the only thing that decides which entry gets written. Saving
+            // NEVER deletes a different entry, even if one was loaded before
+            // editing: e.g. loading "Kodak Porta" (800 ISO) and changing Box
+            // Speed to 400 before hitting Save creates a second, separate
+            // "Kodak Porta" (400 ISO) entry — the 800 one is untouched. To
+            // edit an existing entry in place instead, keep its Name and Box
+            // Speed the same while changing anything else.
+            const key = filmKey(name, boxSpeed);
             let saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
-
-            // Name + Box Speed together are this film's identity. If we were
-            // editing an existing saved film and either changed, this just
-            // moves it to the new identity — the old entry is removed so
-            // editing a loaded film always behaves like a normal edit-and-save
-            // rather than leaving a stale duplicate behind. To keep both,
-            // save a fresh one instead of editing an existing entry (e.g. via
-            // "Save to Library" from Quick Calculate).
-            if (previousKey && previousKey !== newKey && saved[previousKey]) {
-                delete saved[previousKey];
-            }
-
-            saved[newKey] = { name, boxSpeed, maxPushPull, process, hidden: document.getElementById('filmHiddenCheckbox').checked, bundles };
+            saved[key] = { name, boxSpeed, maxPushPull, process, hidden: document.getElementById('filmHiddenCheckbox').checked, bundles };
             localStorage.setItem('filmProfiles', JSON.stringify(saved));
             updateFilmDropdowns();
-            document.getElementById('libraryFilmsDropdown').value = newKey;
+            document.getElementById('libraryFilmsDropdown').value = key;
         });
 
         document.getElementById('saveLabBtn').addEventListener('click', () => {
@@ -2156,15 +2160,21 @@
             if (!name) return alert('Enter Lab Name');
             const tierBlocks = document.querySelectorAll('#tiersContainer .tier-block');
             if (tierBlocks.length === 0) return alert('Add at least one service tier');
-            const services = Array.from(tierBlocks).map(block => ({
-                devCost: block.querySelector('.tier-devCost').value,
-                pushPullCost: block.querySelector('.tier-pushPullCost').value,
-                pushPullType: block.querySelector('.tier-pushPullType').value,
-                turnaroundTime: block.querySelector('.tier-turnaroundTime').value,
-                highResScan: block.querySelector('.tier-highResScan').checked,
-                noPushPull: block.querySelector('.tier-noPushPull').checked,
-                process: block.querySelector('.tier-process').value
-            }));
+            const services = Array.from(tierBlocks).map(block => {
+                const processes = [];
+                if (block.querySelector('.tier-process-c41').checked) processes.push('C41');
+                if (block.querySelector('.tier-process-bw').checked) processes.push('BW');
+                if (block.querySelector('.tier-process-e6').checked) processes.push('E6');
+                return {
+                    devCost: block.querySelector('.tier-devCost').value,
+                    pushPullCost: block.querySelector('.tier-pushPullCost').value,
+                    pushPullType: block.querySelector('.tier-pushPullType').value,
+                    turnaroundTime: block.querySelector('.tier-turnaroundTime').value,
+                    highResScan: block.querySelector('.tier-highResScan').checked,
+                    noPushPull: block.querySelector('.tier-noPushPull').checked,
+                    processes: processes.length > 0 ? processes : ['C41']
+                };
+            });
             let saved = JSON.parse(localStorage.getItem('labProfiles') || '{}');
             saved[name] = {
                 name,
