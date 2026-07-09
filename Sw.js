@@ -2,7 +2,7 @@
 // Caches the app shell so it still loads (with stale data) if offline; doesn't
 // try to be a full offline-first cache since this app relies on config.yaml
 // and localStorage rather than a lot of external requests.
-const CACHE_NAME = 'filmcalc-v1';
+const CACHE_NAME = 'filmcalc-v2';
 const APP_SHELL = ['/', '/index.html', '/favicon.ico', '/icon.svg', '/apple-touch-icon.png', '/manifest.json'];
 
 self.addEventListener('install', (event) => {
