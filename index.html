@@ -5,10 +5,11 @@
     <link rel="icon" type="image/svg+xml" href="/icon.svg">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#2563eb">
+    <meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#111827" media="(prefers-color-scheme: dark)">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Film Price Calculator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>FilmCalc — Film Cost Calculator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
     <script>
@@ -19,25 +20,82 @@
             document.documentElement.classList.remove('dark')
         }
     </script>
-</head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans min-h-screen flex items-start justify-center p-4 pt-8 md:pt-12 transition-colors duration-200">
+    <style>
+        /* Native form controls (selects, month picker, number spinners) follow the app theme
+           instead of always rendering light. */
+        html { color-scheme: light; }
+        html.dark { color-scheme: dark; }
 
-    <div class="fixed top-0 left-0 w-full bg-amber-400 dark:bg-amber-600 text-amber-950 dark:text-amber-50 text-center text-sm font-semibold py-2 px-4 z-50 shadow-md">
-        ⚠️ This web-app is under active development
+        /* One consistent keyboard-focus ring everywhere, instead of per-element defaults. */
+        input:focus-visible, select:focus-visible, textarea:focus-visible,
+        button:focus-visible, a:focus-visible, summary:focus-visible {
+            outline: 2px solid #3b82f6;
+            outline-offset: 1px;
+            border-radius: 0.25rem;
+        }
+        input:not([type="checkbox"]):focus, select:focus, textarea:focus { outline: 2px solid #3b82f6; outline-offset: 0; }
+
+        /* Kill the grey tap flash on mobile — hover/active classes handle feedback. */
+        button, summary, a { -webkit-tap-highlight-color: transparent; }
+
+        /* Custom chevron on collapsible sections that rotates when open. */
+        details > summary { list-style: none; position: relative; padding-right: 2rem; }
+        details > summary::-webkit-details-marker { display: none; }
+        details > summary::after {
+            content: '';
+            position: absolute; right: 0.75rem; top: 50%;
+            width: 0.5rem; height: 0.5rem;
+            border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+            transform: translateY(-70%) rotate(45deg);
+            transition: transform 0.15s ease;
+            opacity: 0.6;
+        }
+        details[open] > summary::after { transform: translateY(-30%) rotate(-135deg); }
+
+        /* The "jump to results" button scrolls here — leave room for the sticky tab bar. */
+        #labsForThisRollSection { scroll-margin-top: 4.5rem; }
+
+        /* Respect the PWA safe area on notched phones. */
+        body { padding-left: max(1rem, env(safe-area-inset-left)); padding-right: max(1rem, env(safe-area-inset-right)); }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans min-h-screen flex items-start justify-center p-4 pt-4 md:pt-8 transition-colors duration-200">
+
+    <div class="w-full max-w-2xl space-y-3">
+
+    <div id="devBanner" class="hidden flex items-center justify-between gap-3 bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-200 text-sm font-medium py-2 px-4 rounded-lg">
+        <span>⚠️ This web-app is under active development</span>
+        <button id="devBannerDismissBtn" type="button" class="shrink-0 p-1 rounded hover:bg-amber-200 dark:hover:bg-amber-800/50 transition-colors" aria-label="Dismiss">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
     </div>
 
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 md:p-8 max-w-2xl w-full relative transition-colors duration-200 mt-8">
-        
-        <div class="absolute top-6 right-6 flex items-center gap-2">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 md:p-8 w-full relative transition-colors duration-200">
+
+        <header class="flex items-start justify-between gap-4 mb-6">
+            <div class="flex items-center gap-3">
+                <svg class="w-9 h-9 text-blue-600 dark:text-blue-400 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="2.5" y="5" width="19" height="14" rx="2"/>
+                    <rect x="4.5" y="7.2" width="2.2" height="2.2" rx="0.4" fill="currentColor" stroke="none"/>
+                    <rect x="4.5" y="14.6" width="2.2" height="2.2" rx="0.4" fill="currentColor" stroke="none"/>
+                    <rect x="17.3" y="7.2" width="2.2" height="2.2" rx="0.4" fill="currentColor" stroke="none"/>
+                    <rect x="17.3" y="14.6" width="2.2" height="2.2" rx="0.4" fill="currentColor" stroke="none"/>
+                    <path d="M10 12h4M12 10v4" stroke-linecap="round"/>
+                </svg>
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white leading-tight">FilmCalc</h1>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Compare film + development costs across labs</p>
+                </div>
+            </div>
             <button id="themeToggle" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Toggle Dark Mode">
                 <svg id="themeToggleLightIcon" class="hidden w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4.22 3.22a1 1 0 011.415 0l.708.708a1 1 0 01-1.414 1.414l-.708-.708a1 1 0 010-1.414zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM14.22 15.78a1 1 0 010 1.415l-.708.708a1 1 0 01-1.414-1.414l-.708-.708a1 1 0 011.415 0zM10 16a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-4.22-3.22a1 1 0 01-1.415 0l-.708-.708a1 1 0 011.414-1.414l.708.708a1 1 0 010 1.415zM2 10a1 1 0 011-1h1a1 1 0 110 2H3a1 1 0 01-1-1zm3.22-4.22a1 1 0 010-1.415l.708-.708a1 1 0 011.414 1.414l-.708.708a1 1 0 01-1.415 0zM10 5a5 5 0 100 10 5 5 0 000-10z" clip-rule="evenodd"></path></svg>
                 <svg id="themeToggleDarkIcon" class="hidden w-5 h-5 text-gray-700" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
             </button>
-        </div>
-
-
-
-        <h1 class="text-3xl font-bold text-center mb-6 text-gray-900 dark:text-white pr-8">Film Price Calculator</h1>
+        </header>
 
         <div id="firstLaunchImportBanner" class="hidden mb-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-400 dark:border-blue-600 rounded-xl px-4 py-4 text-left shadow-md">
             <div class="flex items-start gap-3">
@@ -55,18 +113,38 @@
 
         <form id="calculatorForm" class="space-y-6">
 
-            <div class="flex gap-1 border-b border-gray-200 dark:border-gray-700">
-                <button id="tabFilmBtn" type="button" class="flex-1 px-2 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 transition-colors">Compare</button>
-                <button id="tabCheapestBtn" type="button" class="flex-1 px-2 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">Cheapest</button>
-                <button id="tabLabBtn" type="button" class="flex-1 px-2 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">Lab Mgmt</button>
-                <button id="tabCheapestFilmsBtn" type="button" class="flex-1 px-2 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">Film Mgmt</button>
-                <button id="tabSettingsBtn" type="button" class="flex-1 px-2 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">Settings</button>
+            <div role="tablist" aria-label="Main sections" class="flex gap-1 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20 bg-white dark:bg-gray-800 -mx-6 md:-mx-8 px-6 md:px-8">
+                <button id="tabFilmBtn" type="button" role="tab" aria-selected="true" class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 transition-colors">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m-6 4h6m-6 4h3M5 3h14a1 1 0 011 1v16a1 1 0 01-1 1H5a1 1 0 01-1-1V4a1 1 0 011-1z"/></svg>
+                    <span>Compare</span>
+                </button>
+                <button id="tabCheapestBtn" type="button" role="tab" aria-selected="false" class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-2.2 0-4 1.1-4 2.5S9.8 13 12 13s4 1.1 4 2.5-1.8 2.5-4 2.5m0-10V6m0 12v-2m0-10a9 9 0 100 18 9 9 0 000-18z" transform="scale(0.92) translate(1,1)"/></svg>
+                    <span>Cheapest</span>
+                </button>
+                <button id="tabLibraryBtn" type="button" role="tab" aria-selected="false" class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                    <span>Library</span>
+                </button>
+                <button id="tabSettingsBtn" type="button" role="tab" aria-selected="false" class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <span>Settings</span>
+                </button>
             </div>
 
             <div id="filmTabContent" class="space-y-6">
+                <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800/30 p-4 text-left">
+                    <label for="devSpeed" class="block text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">Target Speed (ISO)</label>
+                    <input type="number" inputmode="numeric" id="devSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Start here — enter the ISO you're shooting at. The cheapest saved film for that speed loads automatically, or pick a specific one below.</p>
+                    <div id="quickAnswer"></div>
+                    <div id="pushPullWarning" class="mt-1"></div>
+                    <div id="expiredStackWarning" class="mt-1"></div>
+                </div>
+
                 <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                     <div class="p-4 pb-0">
-                        <span class="font-semibold text-blue-800 dark:text-blue-400 text-sm uppercase tracking-wide">Quick Calculate</span>
+                        <span class="font-semibold text-blue-800 dark:text-blue-400 text-sm uppercase tracking-wide">Film</span>
                     </div>
                     <div id="quickCalcContent" class="px-4 pb-4 space-y-3">
                         <div class="space-y-2">
@@ -78,13 +156,15 @@
                             </div>
                             <select id="savedFilmsDropdown" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm"><option value="">-- Load a saved film --</option></select>
                             <div id="calcBuyLinkInfo"></div>
-                            <p class="text-xs text-gray-400 dark:text-gray-500">Quick lookup only — manage film stocks and bundles in the Film Library tab.</p>
+                            <div id="loadedFilmSummary" class="text-xs text-gray-500 dark:text-gray-400"></div>
                         </div>
 
-                        <div id="manualFilmFields" class="space-y-3">
+                        <details id="manualFilmDetails" class="rounded-lg border border-blue-200/60 dark:border-blue-800/40">
+                            <summary class="cursor-pointer select-none px-3 py-2 text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wide">✏️ Manual entry / edit film details</summary>
+                            <div id="manualFilmFields" class="space-y-3 px-3 pb-3">
                             <div>
                                 <label for="boxSpeed" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Box Speed (ISO)</label>
-                                <input type="number" id="boxSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                                <input type="number" inputmode="numeric" id="boxSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                             </div>
                             <div>
                                 <label for="processSelect" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Process</label>
@@ -96,19 +176,21 @@
                             </div>
                             <div>
                                 <label for="filmCost" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Total Cost incl. Postage ($)</label>
-                                <input type="number" id="filmCost" step="0.01" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                                <input type="number" inputmode="decimal" id="filmCost" step="0.01" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                             </div>
                             <div class="grid grid-cols-2 gap-2">
                                 <div>
                                     <label for="rolls" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Rolls</label>
-                                    <input type="number" id="rolls" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                                    <input type="number" inputmode="numeric" id="rolls" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                                 </div>
                                 <div>
                                     <label for="exposures" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Exposures per Roll</label>
-                                    <input type="number" id="exposures" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                                    <input type="number" inputmode="numeric" id="exposures" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                                 </div>
                             </div>
-                        </div>
+                            <p class="text-xs text-gray-400 dark:text-gray-500">Quick lookup only — manage film stocks and bundles in the Library tab.</p>
+                            </div>
+                        </details>
 
                         <div id="filmSpeedComparison"></div>
 
@@ -119,13 +201,9 @@
                     </div>
                 </div>
 
-                <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800/30 p-4 text-left">
-                    <label for="devSpeed" class="block text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">Target Speed (ISO)</label>
-                    <input type="number" id="devSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Start here — enter the ISO you're shooting at. If it differs from a film's Box Speed above, the cheapest saved film loads automatically.</p>
-                    <div id="pushPullWarning" class="mt-1"></div>
-                    <div id="expiredStackWarning" class="mt-1"></div>
-                </div>
+                <details id="moreOptionsDetails" class="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/30">
+                    <summary class="cursor-pointer select-none px-4 py-2.5 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">⚙️ More options — expired film &amp; extra fees</summary>
+                    <div class="px-4 pb-4 space-y-4">
 
                 <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-100 dark:border-yellow-800/30 p-4">
                     <label class="flex items-center gap-2 text-sm font-semibold text-yellow-800 dark:text-yellow-400 uppercase tracking-wide mb-2">
@@ -150,6 +228,23 @@
                         <div id="expiredRecommendation" class="text-xs"></div>
                     </div>
                 </div>
+
+                <div>
+                    <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Extra Fees</span>
+                    <div class="mt-2 grid grid-cols-2 gap-2 text-left">
+                        <div>
+                            <label for="onceOffFee" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Once-off Fee ($)</label>
+                            <input type="number" inputmode="decimal" id="onceOffFee" step="0.01" placeholder="e.g. shipping" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
+                        </div>
+                        <div>
+                            <label for="perRollFee" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Per-roll Fee ($)</label>
+                            <input type="number" inputmode="decimal" id="perRollFee" step="0.01" placeholder="e.g. surcharge" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                    </div>
+                </details>
             </div>
 
             <div id="cheapestTabContent" class="space-y-6 hidden">
@@ -169,7 +264,7 @@
                 <div id="cheapestSubIsoContent" class="space-y-6">
                     <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800/30 p-4 text-left">
                         <label for="isoCalcTargetSpeed" class="block text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">Shooting ISO</label>
-                        <input type="number" id="isoCalcTargetSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                        <input type="number" inputmode="numeric" id="isoCalcTargetSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Enter the ISO you're shooting at. Lists every saved film shot at box speed (native), pushed up from a slower film, and pulled down from a faster one — ranked cheapest first, with anything beyond a film's own Max Push/Pull limit flagged in red.</p>
                     </div>
                     <div id="isoCalcResults">
@@ -188,11 +283,17 @@
                 </div>
             </div>
 
+            <div id="libraryTabContent" class="space-y-6 hidden">
+                <div class="flex gap-1 bg-gray-100 dark:bg-gray-700/50 rounded-lg p-1">
+                    <button id="librarySubFilmsBtn" type="button" class="flex-1 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide bg-white dark:bg-gray-800 text-indigo-700 dark:text-indigo-400 shadow-sm transition-colors">Films</button>
+                    <button id="librarySubLabsBtn" type="button" class="flex-1 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 transition-colors">Labs</button>
+                </div>
+
             <div id="labTabContent" class="space-y-6 hidden">
-                <div class="bg-teal-50 dark:bg-teal-900/20 p-4 rounded-lg border border-teal-100 dark:border-teal-800/30">
-                    <label class="block text-sm font-semibold text-teal-800 dark:text-teal-400 mb-2 uppercase tracking-wide">Lab Management</label>
+                <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-100 dark:border-green-800/30">
+                    <label class="block text-sm font-semibold text-green-800 dark:text-green-400 mb-2 uppercase tracking-wide">Lab Management</label>
                     <select id="savedLabsDropdown" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 mb-2 text-sm"><option value="">-- Load a saved lab --</option></select>
-                    <button id="deleteLabBtn" type="button" class="w-full bg-red-500 hover:bg-red-600 text-white py-1 rounded text-sm font-bold">Delete Selected Lab</button>
+                    <button id="deleteLabBtn" type="button" class="w-full border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 py-1.5 rounded text-sm font-semibold transition-colors">Delete Selected Lab</button>
                 </div>
 
                 <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg space-y-3">
@@ -231,11 +332,11 @@
                 </div>
             </div>
 
-            <div id="cheapestFilmsTabContent" class="space-y-6 hidden">
-                <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-100 dark:border-purple-800/30">
-                    <label class="block text-sm font-semibold text-purple-800 dark:text-purple-400 mb-2 uppercase tracking-wide">Film Management</label>
+            <div id="cheapestFilmsTabContent" class="space-y-6">
+                <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800/30">
+                    <label class="block text-sm font-semibold text-blue-800 dark:text-blue-400 mb-2 uppercase tracking-wide">Film Management</label>
                     <select id="libraryFilmsDropdown" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 mb-2 text-sm"><option value="">-- Load a saved film --</option></select>
-                    <button id="deleteFilmBtn" type="button" class="w-full bg-red-500 hover:bg-red-600 text-white py-1 rounded text-sm font-bold">Delete Selected Film</button>
+                    <button id="deleteFilmBtn" type="button" class="w-full border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 py-1.5 rounded text-sm font-semibold transition-colors">Delete Selected Film</button>
                 </div>
 
                 <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg space-y-3">
@@ -286,6 +387,7 @@
                     <div class="flex-1 border-t border-gray-200 dark:border-gray-600"></div>
                 </div>
                 <div id="filmAllOptions" class="space-y-1.5"></div>
+            </div>
             </div>
 
             <div id="settingsTabContent" class="space-y-5 hidden">
@@ -390,18 +492,6 @@
 
 
         <div id="labsForThisRollSection">
-            <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Lab Settings</span>
-            <div class="mt-2 grid grid-cols-2 gap-2 text-left">
-                <div>
-                    <label for="onceOffFee" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Once-off Fee ($)</label>
-                    <input type="number" id="onceOffFee" step="0.01" placeholder="e.g. shipping" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
-                </div>
-                <div>
-                    <label for="perRollFee" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Per-roll Fee ($)</label>
-                    <input type="number" id="perRollFee" step="0.01" placeholder="e.g. surcharge" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
-                </div>
-            </div>
-
             <div class="mt-4 text-center bg-gray-50 dark:bg-gray-700/50 p-6 rounded-lg border border-gray-200 dark:border-gray-600">
                 <div id="cameraSettingDisplay" class="mb-3"></div>
 
@@ -425,10 +515,13 @@
             </div>
         </div>
 
-        <p class="mt-8 text-center text-xs text-gray-500 dark:text-gray-500">
-            Originally vibe coded by Gemini, with further features built by Claude (Anthropic). <br>
-            Source code: <a href="https://github.com/trentnbauer/FilmCalc" class="underline hover:text-blue-500">github.com/trentnbauer/FilmCalc</a> 
-        </p>
+    </div>
+
+    <p class="text-center text-xs text-gray-500 dark:text-gray-500 pb-4">
+        Originally vibe coded by Gemini, with further features built by Claude (Anthropic). <br>
+        Source code: <a href="https://github.com/trentnbauer/FilmCalc" class="underline hover:text-blue-500">github.com/trentnbauer/FilmCalc</a>
+    </p>
+
     </div>
 
     <script>
@@ -538,6 +631,18 @@
         });
 
         updateThemeIcons();
+
+        // ---------- Dev banner (dismissible) ----------
+        // Hidden by default in the markup so dismissed users never see a flash;
+        // shown here only if it hasn't been dismissed before.
+        const devBanner = document.getElementById('devBanner');
+        if (localStorage.getItem('devBannerDismissed') !== '1') {
+            devBanner.classList.remove('hidden');
+        }
+        document.getElementById('devBannerDismissBtn').addEventListener('click', () => {
+            devBanner.classList.add('hidden');
+            localStorage.setItem('devBannerDismissed', '1');
+        });
 
         // ---------- PWA install ----------
         if ('serviceWorker' in navigator) {
@@ -753,12 +858,12 @@
         const tabs = {
             film: { btn: document.getElementById('tabFilmBtn'), content: document.getElementById('filmTabContent') },
             cheapest: { btn: document.getElementById('tabCheapestBtn'), content: document.getElementById('cheapestTabContent') },
-            lab: { btn: document.getElementById('tabLabBtn'), content: document.getElementById('labTabContent') },
-            cheapestFilms: { btn: document.getElementById('tabCheapestFilmsBtn'), content: document.getElementById('cheapestFilmsTabContent') },
+            library: { btn: document.getElementById('tabLibraryBtn'), content: document.getElementById('libraryTabContent') },
             settings: { btn: document.getElementById('tabSettingsBtn'), content: document.getElementById('settingsTabContent') }
         };
 
         function setTabActive(btn, active) {
+            btn.setAttribute('aria-selected', active ? 'true' : 'false');
             btn.classList.toggle('border-blue-600', active);
             btn.classList.toggle('text-blue-600', active);
             btn.classList.toggle('dark:text-blue-400', active);
@@ -776,6 +881,22 @@
             document.getElementById('labsForThisRollSection').classList.toggle('hidden', tab !== 'film');
             if (tab === 'cheapest') refreshActiveCheapestSubTab();
         }
+
+        // ---------- Library tab's Films / Labs sub-nav ----------
+        const librarySubTabs = {
+            films: { btn: document.getElementById('librarySubFilmsBtn'), content: document.getElementById('cheapestFilmsTabContent') },
+            labs: { btn: document.getElementById('librarySubLabsBtn'), content: document.getElementById('labTabContent') }
+        };
+
+        function switchLibrarySubTab(sub) {
+            Object.keys(librarySubTabs).forEach(key => {
+                const active = key === sub;
+                librarySubTabs[key].content.classList.toggle('hidden', !active);
+                setSubTabActive(librarySubTabs[key].btn, active);
+            });
+        }
+
+        Object.keys(librarySubTabs).forEach(key => librarySubTabs[key].btn.addEventListener('click', () => switchLibrarySubTab(key)));
 
         // ---------- Cheapest tab's Per ISO / Per Photo / Per Lab sub-nav ----------
         const cheapestSubTabs = {
@@ -1213,9 +1334,46 @@
             </div>`;
         }
 
+        // Compact one-line answer shown directly under Target Speed — the
+        // cheapest lab for this roll at a glance, without scrolling down to
+        // the full "Labs For This Roll" breakdown. Tapping it jumps there.
+        function renderQuickAnswer(pick) {
+            const el = document.getElementById('quickAnswer');
+            if (!el) return;
+            if (!pick) { el.innerHTML = ''; return; }
+            el.innerHTML = `<button type="button" id="quickAnswerJumpBtn" class="mt-2 w-full text-left px-3 py-2 rounded-lg bg-green-100 dark:bg-green-900/30 hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors">
+                <span class="text-xs font-semibold text-green-700 dark:text-green-400 uppercase tracking-wide">🏆 Cheapest:</span>
+                <span class="text-sm font-semibold text-green-800 dark:text-green-300"> ${escapeHtml(pick.name)}</span>
+                <span class="font-mono text-sm text-green-800 dark:text-green-300"> — ${CUR()}${pick.costPerPhoto.toFixed(2)}/photo · ${CUR()}${pick.costPerRoll.toFixed(2)}/roll</span>
+                <span class="block text-xs text-green-700/70 dark:text-green-400/70 mt-0.5">Tap for the full lab comparison ↓</span>
+            </button>`;
+            document.getElementById('quickAnswerJumpBtn').addEventListener('click', () => {
+                document.getElementById('labsForThisRollSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        }
+
+        // One-line recap of whatever film is currently costed out (from the
+        // dropdown, the Target Speed auto-load, or manual entry), so the
+        // manual fields can stay collapsed without hiding the numbers.
+        function renderLoadedFilmSummary() {
+            const el = document.getElementById('loadedFilmSummary');
+            if (!el) return;
+            const boxSpeed = document.getElementById('boxSpeed').value;
+            const filmCost = document.getElementById('filmCost').value;
+            const rolls = document.getElementById('rolls').value;
+            const exposures = document.getElementById('exposures').value;
+            if (!boxSpeed && !filmCost) { el.innerHTML = ''; return; }
+            const bits = [];
+            if (boxSpeed) bits.push(`${escapeHtml(boxSpeed)} ISO`);
+            if (filmCost) bits.push(`${CUR()}${escapeHtml(filmCost)} total`);
+            if (rolls && exposures) bits.push(`${escapeHtml(rolls)} × ${escapeHtml(exposures)}exp`);
+            el.innerHTML = `<span class="font-mono">${bits.join(' · ')}</span>`;
+        }
+
         function updateLabComparison() {
             const bestPicksContainer = document.getElementById('labBestPicks');
             const container = document.getElementById('labComparison');
+            renderLoadedFilmSummary();
 
             const devSpeedRaw = document.getElementById('devSpeed').value;
             const filmCostRaw = document.getElementById('filmCost').value;
@@ -1236,6 +1394,7 @@
                 bestPicksContainer.innerHTML = '';
                 container.innerHTML = '<p class="text-sm text-gray-400 text-center">Fill in Target Speed, Total Cost, Rolls & Exposures to compare labs</p>';
                 renderPinnedResult(null);
+                renderQuickAnswer(null);
                 return;
             }
 
@@ -1259,6 +1418,7 @@
                 bestPicksContainer.innerHTML = '';
                 container.innerHTML = '<p class="text-sm text-gray-400 text-center">Save a lab profile to compare prices</p>';
                 renderPinnedResult(null);
+                renderQuickAnswer(null);
                 return;
             }
 
@@ -1297,6 +1457,7 @@
                 bestPicksContainer.innerHTML = '';
                 container.innerHTML = '<p class="text-sm text-gray-400 text-center">No saved lab has a service tier set to this film\'s process — check Lab Setup, or save a lab profile</p>';
                 renderPinnedResult(null);
+                renderQuickAnswer(null);
                 return;
             }
 
@@ -1361,6 +1522,7 @@
             }
 
             renderPinnedResult(rawCheapestTotal);
+            renderQuickAnswer(rawCheapestTotal);
 
             const resultsById = new Map(allResults.map(r => [r.id, r]));
 
@@ -2079,6 +2241,7 @@
             document.getElementById('processSelect').value = film.process || 'C41';
             loadedFilmMaxPushPull = parseFloat(film.maxPushPull) || 1;
             updateCalcBuyLinkInfo(bundle);
+            document.getElementById('manualFilmDetails').open = false;
             updateLabComparison();
             updateFilmSpeedComparison();
         });
@@ -2141,6 +2304,7 @@
             document.getElementById('processSelect').value = 'C41';
             loadedFilmMaxPushPull = 1;
             updateCalcBuyLinkInfo(null);
+            document.getElementById('manualFilmDetails').open = true;
             updateLabComparison();
             updateFilmSpeedComparison();
         });
@@ -2164,7 +2328,8 @@
                 alert('Heads up: expired film details (storage, expiry date) aren\'t saved to the Film Library — only Box Speed, Rolls, Exposures, and Cost will carry over.');
             }
 
-            switchTab('cheapestFilms');
+            switchTab('library');
+            switchLibrarySubTab('films');
 
             document.getElementById('libraryFilmsDropdown').value = '';
             document.getElementById('libraryFilmName').value = '';
