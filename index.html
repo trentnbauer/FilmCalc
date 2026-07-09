@@ -1770,7 +1770,7 @@
                     : '';
                 altBlock = `<div class="mt-2 rounded-md bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/40 px-3 py-1.5">
                     <p class="text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wide">💡 Cheaper film in library</p>
-                    <p class="text-xs text-blue-800 dark:text-blue-300 mt-0.5"><span class="font-semibold">${escapeHtml(bestAlt.name)}</span> — ${CUR()}${bestAlt.totalCpp.toFixed(2)}/photo <span class="opacity-75">(saves ${CUR()}${saving.toFixed(2)})</span>${buyLink}</p>
+                    <p class="text-xs text-blue-800 dark:text-blue-300 mt-0.5"><span class="font-semibold">${escapeHtml(bestAlt.name)}</span> — ${CUR()}${bestAlt.filmCpp.toFixed(2)}/photo <span class="opacity-75">(+dev ${CUR()}${bestAlt.devCpp.toFixed(2)}/photo · saves ${CUR()}${saving.toFixed(2)})</span>${buyLink}</p>
                 </div>`;
             } else if (bestAlt) {
                 altBlock = `<div class="mt-2 px-1">
