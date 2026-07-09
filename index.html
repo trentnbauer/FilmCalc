@@ -1745,30 +1745,44 @@
             const currentDevCpp = cheapestDevPerPhoto(exposures);
             const currentTotal = currentDevCpp !== null ? currentFilmCostPerPhoto + currentDevCpp : null;
 
-            if (!bestAlt || currentTotal === null) { container.innerHTML = ''; return; }
+            if (currentTotal === null) { container.innerHTML = ''; return; }
 
-            // Only nudge if the alternative is meaningfully cheaper (>1c/photo).
-            if (bestAlt.totalCpp >= currentTotal - 0.01) {
-                container.innerHTML = `<div class="mt-1 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/40 px-3 py-2">
-                    <p class="text-xs text-green-700 dark:text-green-400 font-medium">🏆 This is the cheapest saved ${boxSpeed} ISO ${process} option at ${devSpeed} ISO.</p>
+            // Is there a saved library film meaningfully cheaper (>1c/photo)?
+            const cheaperExists = !!(bestAlt && bestAlt.totalCpp < currentTotal - 0.01);
+
+            // Large primary block: this entry's cost per photo (film + dev).
+            // Orange when a cheaper library film exists, green when this is the
+            // cheapest (or tied) option at this speed.
+            const c = cheaperExists
+                ? { bg: 'bg-orange-100 dark:bg-orange-900/30', label: 'text-orange-700 dark:text-orange-400', big: 'text-orange-800 dark:text-orange-300', sub: 'text-orange-700/80 dark:text-orange-400/80' }
+                : { bg: 'bg-green-100 dark:bg-green-900/30', label: 'text-green-700 dark:text-green-400', big: 'text-green-800 dark:text-green-300', sub: 'text-green-700/80 dark:text-green-400/80' };
+            const costBlock = `<div class="mt-1 rounded-lg ${c.bg} px-4 py-3 text-center">
+                <p class="text-xs font-semibold ${c.label} uppercase tracking-wide">Cost per photo</p>
+                <p class="font-mono text-3xl font-bold ${c.big} mt-0.5">${CUR()}${currentTotal.toFixed(2)}</p>
+                <p class="text-xs ${c.sub} mt-0.5">${CUR()}${currentFilmCostPerPhoto.toFixed(2)} film + ${CUR()}${currentDevCpp.toFixed(2)} dev${stopsAbs > 0 ? ` · at ${devSpeed} ISO` : ''}</p>
+            </div>`;
+
+            // Smaller secondary block: a cheaper library alternative, if one is
+            // meaningfully cheaper (>1c/photo). Otherwise, a quiet "cheapest" note.
+            let altBlock = '';
+            if (cheaperExists) {
+                const saving = currentTotal - bestAlt.totalCpp;
+                const buyUrl = sanitizeUrl(bestAlt.buyLink);
+                const buyLabel = bestAlt.storeName ? `Buy from ${escapeHtml(bestAlt.storeName)}` : 'Buy this film';
+                const buyLink = buyUrl
+                    ? ` · <a href="${escapeHtml(buyUrl)}" target="_blank" rel="noopener noreferrer" class="font-medium text-blue-600 dark:text-blue-400 hover:underline">🛒 ${buyLabel} ↗</a>`
+                    : '';
+                altBlock = `<div class="mt-2 rounded-md bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/40 px-3 py-1.5">
+                    <p class="text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wide">💡 Cheaper film in library</p>
+                    <p class="text-xs text-blue-800 dark:text-blue-300 mt-0.5"><span class="font-semibold">${escapeHtml(bestAlt.name)}</span> — ${CUR()}${bestAlt.totalCpp.toFixed(2)}/photo <span class="opacity-75">(saves ${CUR()}${saving.toFixed(2)})</span>${buyLink}</p>
                 </div>`;
-                return;
+            } else if (bestAlt) {
+                altBlock = `<div class="mt-2 px-1">
+                    <p class="text-xs text-gray-500 dark:text-gray-400">🏆 Cheapest saved ${boxSpeed} ISO ${process} option at this speed.</p>
+                </div>`;
             }
 
-            const saving = currentTotal - bestAlt.totalCpp;
-            const buyUrl = sanitizeUrl(bestAlt.buyLink);
-            const buyLabel = bestAlt.storeName ? `Buy from ${escapeHtml(bestAlt.storeName)}` : 'Buy this film';
-            const buyLink = buyUrl
-                ? `<a href="${escapeHtml(buyUrl)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 mt-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">🛒 ${buyLabel} ↗</a>`
-                : '';
-
-            container.innerHTML = `<div class="mt-1 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/40 px-3 py-2">
-                <p class="text-xs font-semibold text-blue-800 dark:text-blue-300 uppercase tracking-wide">💡 Cheaper film at ${boxSpeed} ISO</p>
-                <p class="text-sm font-semibold text-blue-900 dark:text-blue-200 mt-0.5">${escapeHtml(bestAlt.name)}</p>
-                <p class="font-mono text-sm text-blue-800 dark:text-blue-300 mt-0.5">${CUR()}${bestAlt.totalCpp.toFixed(2)}/photo <span class="text-xs opacity-80">(${CUR()}${bestAlt.filmCpp.toFixed(2)} film + ${CUR()}${bestAlt.devCpp.toFixed(2)} dev)</span></p>
-                <p class="text-xs text-blue-700/80 dark:text-blue-400/80 mt-0.5">Saves ${CUR()}${saving.toFixed(2)}/photo vs your entry (${CUR()}${currentTotal.toFixed(2)}/photo)</p>
-                ${buyLink}
-            </div>`;
+            container.innerHTML = costBlock + altBlock;
         }
 
         // ---------- ISO Price Calculator ----------
