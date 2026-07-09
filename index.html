@@ -243,17 +243,13 @@
             </div>
 
             <div id="cheapestTabContent" class="space-y-6 hidden">
-                <div class="flex flex-col gap-3">
-                    <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 flex-wrap">
-                        <span class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">Film type:</span>
-                        <button type="button" id="cheapestFilterC41" data-active="true" class="process-toggle-btn px-3 py-1 rounded-full text-xs font-semibold border transition-colors bg-blue-600 border-blue-600 text-white">C41</button>
-                        <button type="button" id="cheapestFilterBw" data-active="true" class="process-toggle-btn px-3 py-1 rounded-full text-xs font-semibold border transition-colors bg-blue-600 border-blue-600 text-white">B&amp;W</button>
-                        <button type="button" id="cheapestFilterE6" data-active="true" class="process-toggle-btn px-3 py-1 rounded-full text-xs font-semibold border transition-colors bg-blue-600 border-blue-600 text-white">E6</button>
-                    </div>
-                    <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 flex-wrap">
-                        <span class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">Service:</span>
-                        <button type="button" id="cheapestServiceNextDay" data-active="false" class="px-3 py-1 rounded-full text-xs font-semibold border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-amber-400 transition-colors">⚡ Next Day</button>
-                        <button type="button" id="cheapestServiceHiRes" data-active="false" class="px-3 py-1 rounded-full text-xs font-semibold border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-indigo-400 transition-colors">🔍 Hi-Res</button>
+                <div>
+                    <span class="block text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1.5">Process</span>
+                    <div id="processSegmented" class="grid grid-cols-4 gap-1 bg-gray-100 dark:bg-gray-700/50 rounded-lg p-1" role="tablist" aria-label="Process filter">
+                        <button type="button" data-process="ALL" class="process-seg py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide transition-colors">All</button>
+                        <button type="button" data-process="C41" class="process-seg py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide transition-colors">C41</button>
+                        <button type="button" data-process="BW" class="process-seg py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide transition-colors">B&amp;W</button>
+                        <button type="button" data-process="E6" class="process-seg py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide transition-colors">E6</button>
                     </div>
                 </div>
 
@@ -575,21 +571,6 @@
         }
 
         // Toggle helper for the Cheapest tab's C41/B&W/E6 filter buttons.
-        function toggleFilterBtn(btn) {
-            const active = btn.dataset.active !== 'true';
-            btn.dataset.active = active ? 'true' : 'false';
-            btn.classList.toggle('bg-blue-600', active);
-            btn.classList.toggle('border-blue-600', active);
-            btn.classList.toggle('text-white', active);
-            btn.classList.toggle('bg-white', !active);
-            btn.classList.toggle('dark:bg-gray-700', !active);
-            btn.classList.toggle('border-gray-300', !active);
-            btn.classList.toggle('dark:border-gray-600', !active);
-            btn.classList.toggle('text-gray-500', !active);
-            btn.classList.toggle('dark:text-gray-400', !active);
-            return active;
-        }
-
         // Toggle helper for a lab service tier's C41/B&W/E6 process buttons.
         function toggleTierProcessBtn(btn) {
             const active = btn.dataset.active !== 'true';
@@ -606,16 +587,14 @@
             return active;
         }
 
-        // Process filter used by the Cheapest tab (C41 / B&W / E6 toggle buttons).
+        // Process filter for the Cheapest tab. Single-select segmented control
+        // (All / C41 / B&W / E6), persisted across sessions. Named "process"
+        // (the development chemistry) to stay distinct from film *format*
+        // (35mm / 120 / 110), which is a separate filter planned for later.
+        let cheapestProcess = localStorage.getItem('cheapestProcess') || 'ALL';
         function filmPassesProcessFilter(f) {
-            const process = f.process || 'C41';
-            const showC41 = document.getElementById('cheapestFilterC41').dataset.active === 'true';
-            const showBw = document.getElementById('cheapestFilterBw').dataset.active === 'true';
-            const showE6 = document.getElementById('cheapestFilterE6').dataset.active === 'true';
-            if (process === 'C41') return showC41;
-            if (process === 'BW') return showBw;
-            if (process === 'E6') return showE6;
-            return true;
+            if (cheapestProcess === 'ALL') return true;
+            return (f.process || 'C41') === cheapestProcess;
         }
 
         // A lab service tier can support more than one process (e.g. a tier
@@ -851,7 +830,7 @@
 
         // ---------- Cheapest Total upgrade threshold ----------
         const upgradeThresholdInput = document.getElementById('upgradeThresholdInput');
-        upgradeThresholdInput.value = localStorage.getItem('upgradeThresholdPercent') ?? '10';
+        upgradeThresholdInput.value = localStorage.getItem('upgradeThresholdPercent') ?? '4';
         upgradeThresholdInput.addEventListener('input', () => {
             const val = Math.min(100, Math.max(0, parseFloat(upgradeThresholdInput.value) || 0));
             localStorage.setItem('upgradeThresholdPercent', val);
@@ -948,44 +927,38 @@
         Object.keys(cheapestSubTabs).forEach(key => cheapestSubTabs[key].btn.addEventListener('click', () => switchCheapestSubTab(key)));
         document.getElementById('cheapestFilmSelect').addEventListener('change', () => updateCostPerFilmTab());
 
-        ['cheapestFilterC41', 'cheapestFilterBw', 'cheapestFilterE6'].forEach(id => {
-            document.getElementById(id).addEventListener('click', (e) => {
-                toggleFilterBtn(e.currentTarget);
+        // ---------- Cheapest tab Process segmented control ----------
+        // Single-select (All / C41 / B&W / E6), persisted. Highlights the active
+        // segment so it's always obvious what's selected, and re-runs the active
+        // sub-view on change.
+        function renderProcessSegmented() {
+            document.querySelectorAll('#processSegmented .process-seg').forEach(btn => {
+                const active = btn.dataset.process === cheapestProcess;
+                btn.classList.toggle('bg-white', active);
+                btn.classList.toggle('dark:bg-gray-800', active);
+                btn.classList.toggle('text-indigo-700', active);
+                btn.classList.toggle('dark:text-indigo-400', active);
+                btn.classList.toggle('shadow-sm', active);
+                btn.classList.toggle('text-gray-500', !active);
+                btn.classList.toggle('dark:text-gray-400', !active);
+                btn.setAttribute('aria-selected', active ? 'true' : 'false');
+            });
+        }
+        document.querySelectorAll('#processSegmented .process-seg').forEach(btn => {
+            btn.addEventListener('click', () => {
+                cheapestProcess = btn.dataset.process;
+                localStorage.setItem('cheapestProcess', cheapestProcess);
+                renderProcessSegmented();
                 refreshActiveCheapestSubTab();
             });
         });
+        renderProcessSegmented();
 
-        // ---------- Cheapest tab service filters (Next Day / Hi-Res) ----------
-        // Constrain every Cheapest sub-view (Per ISO / Per Photo / Per Lab) to
-        // lab tiers matching the pressed services. Unpressed = no service
-        // constraint. Both pressed = require both at once.
-        const cheapestServiceState = { nextDay: false, hiRes: false };
-        function tierPassesServiceFilter(tier) {
-            if (cheapestServiceState.nextDay && tier.turnaroundTime !== 'next_day') return false;
-            if (cheapestServiceState.hiRes && !tier.highResScan) return false;
-            return true;
-        }
-        function setServicePillActive(btn, active, activeClasses) {
-            btn.dataset.active = active ? 'true' : 'false';
-            const base = ['border-gray-300', 'dark:border-gray-600', 'text-gray-600', 'dark:text-gray-300'];
-            if (active) {
-                base.forEach(c => btn.classList.remove(c));
-                activeClasses.forEach(c => btn.classList.add(c));
-            } else {
-                activeClasses.forEach(c => btn.classList.remove(c));
-                base.forEach(c => btn.classList.add(c));
-            }
-        }
-        document.getElementById('cheapestServiceNextDay').addEventListener('click', (e) => {
-            cheapestServiceState.nextDay = !cheapestServiceState.nextDay;
-            setServicePillActive(e.currentTarget, cheapestServiceState.nextDay, ['bg-amber-100', 'dark:bg-amber-900/40', 'border-amber-400', 'text-amber-800', 'dark:text-amber-300']);
-            refreshActiveCheapestSubTab();
-        });
-        document.getElementById('cheapestServiceHiRes').addEventListener('click', (e) => {
-            cheapestServiceState.hiRes = !cheapestServiceState.hiRes;
-            setServicePillActive(e.currentTarget, cheapestServiceState.hiRes, ['bg-indigo-100', 'dark:bg-indigo-900/40', 'border-indigo-400', 'text-indigo-800', 'dark:text-indigo-300']);
-            refreshActiveCheapestSubTab();
-        });
+        // Service preference (Next Day / Hi-Res) is no longer a manual filter —
+        // the Recommended Pick Threshold surfaces the best-value hi-res/next-day
+        // option automatically. Kept as a pass-through so the existing tier
+        // filters keep their shape.
+        function tierPassesServiceFilter() { return true; }
 
 
         Object.keys(tabs).forEach(key => tabs[key].btn.addEventListener('click', () => switchTab(key)));
@@ -1019,7 +992,7 @@
             if (localStorage.getItem('upgradeThresholdPercent') === null && configSettings.upgradeThresholdPercent !== undefined) {
                 localStorage.setItem('upgradeThresholdPercent', configSettings.upgradeThresholdPercent);
             }
-            upgradeThresholdInput.value = localStorage.getItem('upgradeThresholdPercent') ?? '10';
+            upgradeThresholdInput.value = localStorage.getItem('upgradeThresholdPercent') ?? '4';
             updateLabComparison();
         }
 
@@ -1568,8 +1541,8 @@
             // recommended pick (highlighted gold) — a few cents more for both
             // perks usually beats "technically cheapest" with worse service.
             // "Cheapest Total" always shows the actual cheapest, unchanged.
-            // Adjustable in Settings, defaults to 10%.
-            const UPGRADE_THRESHOLD = (parseFloat(localStorage.getItem('upgradeThresholdPercent')) || 10) / 100;
+            // Adjustable in Settings, defaults to 4%.
+            const UPGRADE_THRESHOLD = (parseFloat(localStorage.getItem('upgradeThresholdPercent')) || 4) / 100;
             let hiResFastestNote = '';
             let hiResFastestRecommended = false;
             if (rawCheapestTotal && cheapestHiResFastest && cheapestHiResFastest.id !== rawCheapestTotal.id) {
@@ -1839,8 +1812,9 @@
                 if (!bestBundle || !bestBundle.exposures) return;
 
                 // Cheapest compatible lab tier for this specific film at this
-                // specific ISO.
-                let best = null;
+                // specific ISO — plus the cheapest hi-res + next-day tier, so the
+                // Recommended Pick Threshold can suggest a service upgrade.
+                let best = null, bestHrNd = null;
                 labNames.forEach(labName => {
                     normalizeLabServices(allLabs[labName])
                         .filter(tier => !(tier.noPushPull && stopsAbs > 0) && tierMatchesFilmProcess(tier, f) && tierPassesServiceFilter(tier))
@@ -1850,23 +1824,36 @@
                                 : 0;
                             const devCostPerPhoto = (tier.devCost + pushPullFee) / bestBundle.exposures;
                             const totalCostPerPhoto = bestFilmCostPerPhoto + devCostPerPhoto;
-                            if (!best || totalCostPerPhoto < best.totalCostPerPhoto) {
-                                best = {
-                                    filmName: f.name,
-                                    labName,
-                                    stops: stopsSigned,
-                                    overLimit,
-                                    maxPushPull,
-                                    filmCostPerPhoto: bestFilmCostPerPhoto,
-                                    devCostPerPhoto,
-                                    totalCostPerPhoto,
-                                    highResScan: tier.highResScan,
-                                    turnaroundTime: tier.turnaroundTime
-                                };
+                            const candidate = {
+                                filmName: f.name,
+                                labName,
+                                stops: stopsSigned,
+                                overLimit,
+                                maxPushPull,
+                                filmCostPerPhoto: bestFilmCostPerPhoto,
+                                devCostPerPhoto,
+                                totalCostPerPhoto,
+                                highResScan: tier.highResScan,
+                                turnaroundTime: tier.turnaroundTime
+                            };
+                            if (!best || totalCostPerPhoto < best.totalCostPerPhoto) best = candidate;
+                            if (tier.highResScan && tier.turnaroundTime === 'next_day' &&
+                                (!bestHrNd || totalCostPerPhoto < bestHrNd.totalCostPerPhoto)) {
+                                bestHrNd = candidate;
                             }
                         });
                 });
                 if (!best) return;
+                // If a hi-res + next-day option exists and it's not already the
+                // cheapest, flag it as a recommended upgrade when it's within the
+                // threshold of the cheapest — same rule as "Labs For This Roll".
+                if (bestHrNd && bestHrNd !== best && best.totalCostPerPhoto > 0) {
+                    const premium = (bestHrNd.totalCostPerPhoto - best.totalCostPerPhoto) / best.totalCostPerPhoto;
+                    const threshold = (parseFloat(localStorage.getItem('upgradeThresholdPercent')) || 4) / 100;
+                    if (premium >= 0 && premium < threshold) {
+                        best.upgrade = { pick: bestHrNd, premium };
+                    }
+                }
                 const bucket = stopsSigned === 0 ? native : (stopsSigned > 0 ? push : pull);
                 bucket.push(best);
             });
@@ -1887,12 +1874,23 @@
             const isCheapest = rank === 0;
             const rowBg = entry.overLimit ? 'bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700' : (isCheapest ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-white dark:bg-gray-800/50');
             const textColor = entry.overLimit ? 'text-red-700 dark:text-red-400' : (isCheapest ? 'text-amber-800 dark:text-amber-300 font-semibold' : 'text-gray-700 dark:text-gray-300');
-            return `<div class="flex justify-between items-start px-3 py-2 rounded-lg text-sm ${rowBg}">
+            // Recommended service upgrade (hi-res + next day within threshold).
+            const up = entry.upgrade;
+            const upgradeLine = up
+                ? `<div class="mt-1 flex justify-between items-center px-3 py-1.5 rounded-lg text-xs bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800/40">
+                        <span class="text-indigo-700 dark:text-indigo-300">🔍⚡ <span class="font-semibold">Recommended:</span> hi-res + next day <span class="opacity-70">@ ${escapeHtml(up.pick.labName)}</span> · +${(up.premium * 100).toFixed(0)}%</span>
+                        <span class="font-mono text-indigo-700 dark:text-indigo-300 font-semibold">${CUR()}${up.pick.totalCostPerPhoto.toFixed(2)}/photo</span>
+                    </div>`
+                : '';
+            return `<div>
+                <div class="flex justify-between items-start px-3 py-2 rounded-lg text-sm ${rowBg}">
                 <span class="${entry.overLimit ? 'font-semibold text-red-700 dark:text-red-400' : (isCheapest ? 'font-semibold text-amber-800 dark:text-amber-300' : 'text-gray-700 dark:text-gray-300')}">${isCheapest && !entry.overLimit ? '⭐ ' : ''}${escapeHtml(entry.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(entry.labName)}</span>${stopsLabel}${hiResBadge}${turnaroundBadge}</span>
                 <span class="font-mono text-right leading-tight ${textColor}">
                     <div class="font-semibold">${CUR()}${entry.totalCostPerPhoto.toFixed(2)}/photo</div>
                     <div class="text-xs opacity-80">${CUR()}${entry.filmCostPerPhoto.toFixed(2)} film + ${CUR()}${entry.devCostPerPhoto.toFixed(2)} dev</div>
                 </span>
+                </div>
+                ${upgradeLine}
             </div>`;
         }
 
@@ -2526,7 +2524,7 @@
         function buildConfig() {
             return {
                 settings: {
-                    upgradeThresholdPercent: parseFloat(localStorage.getItem('upgradeThresholdPercent')) || 10
+                    upgradeThresholdPercent: parseFloat(localStorage.getItem('upgradeThresholdPercent')) || 4
                 },
                 films: buildFilmsArray(),
                 labs: buildLabsArray()
