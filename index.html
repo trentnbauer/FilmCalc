@@ -260,6 +260,7 @@
                 <div class="flex gap-1 bg-gray-100 dark:bg-gray-700/50 rounded-lg p-1">
                     <button id="cheapestSubIsoBtn" type="button" class="flex-1 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide bg-white dark:bg-gray-800 text-indigo-700 dark:text-indigo-400 shadow-sm transition-colors">Per ISO</button>
                     <button id="cheapestSubPhotoBtn" type="button" class="flex-1 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 transition-colors">Per Photo</button>
+                    <button id="cheapestSubFilmBtn" type="button" class="flex-1 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 transition-colors">Per Film</button>
                     <button id="cheapestSubLabBtn" type="button" class="flex-1 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 transition-colors">Per Lab</button>
                 </div>
 
@@ -277,6 +278,17 @@
                 <div id="cheapestSubPhotoContent" class="space-y-6 hidden">
                     <p class="text-xs text-gray-500 dark:text-gray-400">Every saved film stock ranked by its cheapest box-speed (native) pairing with a lab — film + dev cost, cheapest first. Each film also shows its cheapest 1-stop push/pull alternative underneath.</p>
                     <div id="costPerPhotoResults" class="space-y-2"></div>
+                </div>
+
+                <div id="cheapestSubFilmContent" class="space-y-6 hidden">
+                    <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800/30 p-4 text-left">
+                        <label for="cheapestFilmSelect" class="block text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">Film stock</label>
+                        <select id="cheapestFilmSelect" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm"><option value="">-- Pick a film --</option></select>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Every saved lab ranked cheapest-first for this film at box speed — film + dev cost. Honours the film-type and service filters above.</p>
+                    </div>
+                    <div id="cheapestFilmResults">
+                        <p class="text-sm text-gray-400 text-center">Pick a film to compare labs</p>
+                    </div>
                 </div>
 
                 <div id="cheapestSubLabContent" class="space-y-6 hidden">
@@ -900,10 +912,11 @@
 
         Object.keys(librarySubTabs).forEach(key => librarySubTabs[key].btn.addEventListener('click', () => switchLibrarySubTab(key)));
 
-        // ---------- Cheapest tab's Per ISO / Per Photo / Per Lab sub-nav ----------
+        // ---------- Cheapest tab's Per ISO / Per Photo / Per Film / Per Lab sub-nav ----------
         const cheapestSubTabs = {
             iso: { btn: document.getElementById('cheapestSubIsoBtn'), content: document.getElementById('cheapestSubIsoContent'), update: () => updateIsoPriceCalculator() },
             photo: { btn: document.getElementById('cheapestSubPhotoBtn'), content: document.getElementById('cheapestSubPhotoContent'), update: () => updateCostPerPhotoTab() },
+            film: { btn: document.getElementById('cheapestSubFilmBtn'), content: document.getElementById('cheapestSubFilmContent'), update: () => updateCostPerFilmTab() },
             lab: { btn: document.getElementById('cheapestSubLabBtn'), content: document.getElementById('cheapestSubLabContent'), update: () => updateCostPerLabTab() }
         };
         let activeCheapestSubTab = 'iso';
@@ -933,6 +946,7 @@
         }
 
         Object.keys(cheapestSubTabs).forEach(key => cheapestSubTabs[key].btn.addEventListener('click', () => switchCheapestSubTab(key)));
+        document.getElementById('cheapestFilmSelect').addEventListener('change', () => updateCostPerFilmTab());
 
         ['cheapestFilterC41', 'cheapestFilterBw', 'cheapestFilterE6'].forEach(id => {
             document.getElementById(id).addEventListener('click', (e) => {
@@ -2090,6 +2104,66 @@
             container.innerHTML = rows.map((e, i) => {
                 const oneStop = byLabOneStop.get(e.labName);
                 return renderNativeMatchRow(e, i) + renderPushPullSubLine(oneStop, oneStop ? oneStop.filmName : '');
+            }).join('');
+        }
+
+        // Per Film view: user picks one film stock, then every lab is ranked
+        // cheapest-first for that film at box speed (film + dev). Mirrors the Per
+        // Lab tab but keyed on the chosen film. Honours the film-type + service
+        // filters via computeNativeFilmLabMatrix. Each lab row shows its cheapest
+        // 1-stop push/pull alternative underneath.
+        function populateCheapestFilmDropdown() {
+            const select = document.getElementById('cheapestFilmSelect');
+            if (!select) return;
+            const prev = select.value;
+            const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
+            const films = Object.values(allFilms)
+                .filter(f => !f.hidden && filmPassesProcessFilter(f) && (parseInt(f.boxSpeed) || 0) > 0)
+                .sort((a, b) => a.name.localeCompare(b.name) || (parseInt(a.boxSpeed) || 0) - (parseInt(b.boxSpeed) || 0));
+            select.innerHTML = '<option value="">-- Pick a film --</option>' + films.map(f => {
+                const key = filmKey(f.name, f.boxSpeed);
+                return `<option value="${escapeHtml(key)}">${escapeHtml(f.name)} (${f.boxSpeed} ISO)</option>`;
+            }).join('');
+            // Keep the current selection if it still passes the filters.
+            if (prev && [...select.options].some(o => o.value === prev)) select.value = prev;
+        }
+
+        function updateCostPerFilmTab() {
+            populateCheapestFilmDropdown();
+            const container = document.getElementById('cheapestFilmResults');
+            const select = document.getElementById('cheapestFilmSelect');
+            const selectedKey = select.value;
+
+            if (!selectedKey) {
+                container.innerHTML = '<p class="text-sm text-gray-400 text-center">Pick a film to compare labs</p>';
+                return;
+            }
+
+            const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
+            const film = allFilms[selectedKey];
+            if (!film) { container.innerHTML = '<p class="text-sm text-gray-400 text-center">Pick a film to compare labs</p>'; return; }
+
+            const nativeRows = computeNativeFilmLabMatrix()
+                .filter(e => filmKey(e.filmName, e.boxSpeed) === selectedKey)
+                .sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto);
+
+            if (nativeRows.length === 0) {
+                container.innerHTML = `<p class="text-sm text-gray-400 text-center">No lab matches ${escapeHtml(film.name)} with the current filters</p>`;
+                return;
+            }
+
+            // Cheapest 1-stop push/pull per lab, for the sub-line under each row.
+            const oneStopByLab = new Map();
+            computeOneStopFilmLabMatrix()
+                .filter(e => e.filmName === film.name)
+                .forEach(e => {
+                    const existing = oneStopByLab.get(e.labName);
+                    if (!existing || e.totalCostPerPhoto < existing.totalCostPerPhoto) oneStopByLab.set(e.labName, e);
+                });
+
+            container.innerHTML = nativeRows.map((e, i) => {
+                const oneStop = oneStopByLab.get(e.labName);
+                return renderNativeMatchRow(e, i) + renderPushPullSubLine(oneStop, e.labName);
             }).join('');
         }
 
