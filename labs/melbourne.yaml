@@ -1,3 +1,5 @@
+label: Melbourne Labs
+labs:
 - name: Hillvale Photo Melbourne
   hidden: false
   address: 43-45 Edward Street, Brunswick VIC 3056, Australia
@@ -5,70 +7,70 @@
   email: develop@hillvale.com.au
   website: https://hillvale.com.au
   services:
-    - devCost: 19
-      pushPullCost: 3
-      pushPullType: per_stop
-      turnaroundTime: same_week
-      highResScan: false
-      noPushPull: false
-      processes:
-        - C41
-    - devCost: 30
-      pushPullCost: 3
-      pushPullType: per_stop
-      turnaroundTime: same_week
-      highResScan: true
-      noPushPull: false
-      processes:
-        - C41
-    - devCost: 28.5
-      pushPullCost: 3
-      pushPullType: per_stop
-      turnaroundTime: next_day
-      highResScan: false
-      noPushPull: false
-      processes:
-        - C41
-    - devCost: 45
-      pushPullCost: 3
-      pushPullType: per_stop
-      turnaroundTime: next_day
-      highResScan: true
-      noPushPull: false
-      processes:
-        - C41
-    - devCost: 22
-      pushPullCost: 3
-      pushPullType: per_stop
-      turnaroundTime: same_week
-      highResScan: false
-      noPushPull: false
-      processes:
-        - BW
-    - devCost: 30
-      pushPullCost: 3
-      pushPullType: per_stop
-      turnaroundTime: same_week
-      highResScan: true
-      noPushPull: false
-      processes:
-        - BW
-    - devCost: 25
-      pushPullCost: 3
-      pushPullType: per_stop
-      turnaroundTime: longer
-      highResScan: false
-      noPushPull: false
-      processes:
-        - E6
-    - devCost: 35
-      pushPullCost: 3
-      pushPullType: per_stop
-      turnaroundTime: longer
-      highResScan: true
-      noPushPull: false
-      processes:
-        - E6
+  - devCost: 19
+    pushPullCost: 3
+    pushPullType: per_stop
+    turnaroundTime: same_week
+    highResScan: false
+    noPushPull: false
+    processes:
+    - C41
+  - devCost: 30
+    pushPullCost: 3
+    pushPullType: per_stop
+    turnaroundTime: same_week
+    highResScan: true
+    noPushPull: false
+    processes:
+    - C41
+  - devCost: 28.5
+    pushPullCost: 3
+    pushPullType: per_stop
+    turnaroundTime: next_day
+    highResScan: false
+    noPushPull: false
+    processes:
+    - C41
+  - devCost: 45
+    pushPullCost: 3
+    pushPullType: per_stop
+    turnaroundTime: next_day
+    highResScan: true
+    noPushPull: false
+    processes:
+    - C41
+  - devCost: 22
+    pushPullCost: 3
+    pushPullType: per_stop
+    turnaroundTime: same_week
+    highResScan: false
+    noPushPull: false
+    processes:
+    - BW
+  - devCost: 30
+    pushPullCost: 3
+    pushPullType: per_stop
+    turnaroundTime: same_week
+    highResScan: true
+    noPushPull: false
+    processes:
+    - BW
+  - devCost: 25
+    pushPullCost: 3
+    pushPullType: per_stop
+    turnaroundTime: longer
+    highResScan: false
+    noPushPull: false
+    processes:
+    - E6
+  - devCost: 35
+    pushPullCost: 3
+    pushPullType: per_stop
+    turnaroundTime: longer
+    highResScan: true
+    noPushPull: false
+    processes:
+    - E6
 - name: Walkens Melbourne
   hidden: false
   address: 338 Brunswick Street, Fitzroy VIC 3065, Australia
@@ -76,86 +78,86 @@
   email: contact@walkens.com.au
   website: https://walkens.com.au
   services:
-    - devCost: 16
-      pushPullCost: 0
-      pushPullType: flat
-      turnaroundTime: same_week
-      highResScan: false
-      noPushPull: true
-      processes:
-        - C41
-    - devCost: 23
-      pushPullCost: 0
-      pushPullType: flat
-      turnaroundTime: same_week
-      highResScan: true
-      noPushPull: true
-      processes:
-        - C41
-    - devCost: 26
-      pushPullCost: 0
-      pushPullType: flat
-      turnaroundTime: next_day
-      highResScan: false
-      noPushPull: true
-      processes:
-        - C41
-    - devCost: 33
-      pushPullCost: 0
-      pushPullType: flat
-      turnaroundTime: next_day
-      highResScan: true
-      noPushPull: true
-      processes:
-        - C41
-    - devCost: 23
-      pushPullCost: 3
-      pushPullType: flat
-      turnaroundTime: same_week
-      highResScan: false
-      noPushPull: false
-      processes:
-        - BW
-    - devCost: 30
-      pushPullCost: 3
-      pushPullType: flat
-      turnaroundTime: same_week
-      highResScan: true
-      noPushPull: false
-      processes:
-        - BW
-    - devCost: 33
-      pushPullCost: 3
-      pushPullType: flat
-      turnaroundTime: next_day
-      highResScan: false
-      noPushPull: false
-      processes:
-        - BW
-    - devCost: 40
-      pushPullCost: 3
-      pushPullType: flat
-      turnaroundTime: next_day
-      highResScan: true
-      noPushPull: false
-      processes:
-        - BW
-    - devCost: 23
-      pushPullCost: 10
-      pushPullType: flat
-      turnaroundTime: same_week
-      highResScan: false
-      noPushPull: false
-      processes:
-        - E6
-    - devCost: 30
-      pushPullCost: 10
-      pushPullType: flat
-      turnaroundTime: same_week
-      highResScan: true
-      noPushPull: false
-      processes:
-        - E6
+  - devCost: 16
+    pushPullCost: 0
+    pushPullType: flat
+    turnaroundTime: same_week
+    highResScan: false
+    noPushPull: true
+    processes:
+    - C41
+  - devCost: 23
+    pushPullCost: 0
+    pushPullType: flat
+    turnaroundTime: same_week
+    highResScan: true
+    noPushPull: true
+    processes:
+    - C41
+  - devCost: 26
+    pushPullCost: 0
+    pushPullType: flat
+    turnaroundTime: next_day
+    highResScan: false
+    noPushPull: true
+    processes:
+    - C41
+  - devCost: 33
+    pushPullCost: 0
+    pushPullType: flat
+    turnaroundTime: next_day
+    highResScan: true
+    noPushPull: true
+    processes:
+    - C41
+  - devCost: 23
+    pushPullCost: 3
+    pushPullType: flat
+    turnaroundTime: same_week
+    highResScan: false
+    noPushPull: false
+    processes:
+    - BW
+  - devCost: 30
+    pushPullCost: 3
+    pushPullType: flat
+    turnaroundTime: same_week
+    highResScan: true
+    noPushPull: false
+    processes:
+    - BW
+  - devCost: 33
+    pushPullCost: 3
+    pushPullType: flat
+    turnaroundTime: next_day
+    highResScan: false
+    noPushPull: false
+    processes:
+    - BW
+  - devCost: 40
+    pushPullCost: 3
+    pushPullType: flat
+    turnaroundTime: next_day
+    highResScan: true
+    noPushPull: false
+    processes:
+    - BW
+  - devCost: 23
+    pushPullCost: 10
+    pushPullType: flat
+    turnaroundTime: same_week
+    highResScan: false
+    noPushPull: false
+    processes:
+    - E6
+  - devCost: 30
+    pushPullCost: 10
+    pushPullType: flat
+    turnaroundTime: same_week
+    highResScan: true
+    noPushPull: false
+    processes:
+    - E6
 - name: Irohas Melbourne
   hidden: false
   address: Ground Floor, 15 McKillop Street, Melbourne VIC 3000, Australia
@@ -163,27 +165,27 @@
   email: info@irohasphoto.com.au
   website: https://irohasphoto.com.au
   services:
-    - devCost: 17
-      pushPullCost: 5
-      pushPullType: per_stop
-      turnaroundTime: next_day
-      highResScan: true
-      noPushPull: false
-      processes:
-        - C41
-    - devCost: 19
-      pushPullCost: 5
-      pushPullType: per_stop
-      turnaroundTime: same_week
-      highResScan: true
-      noPushPull: false
-      processes:
-        - BW
-    - devCost: 21
-      pushPullCost: 5
-      pushPullType: per_stop
-      turnaroundTime: same_week
-      highResScan: true
-      noPushPull: false
-      processes:
-        - E6
+  - devCost: 17
+    pushPullCost: 5
+    pushPullType: per_stop
+    turnaroundTime: next_day
+    highResScan: true
+    noPushPull: false
+    processes:
+    - C41
+  - devCost: 19
+    pushPullCost: 5
+    pushPullType: per_stop
+    turnaroundTime: same_week
+    highResScan: true
+    noPushPull: false
+    processes:
+    - BW
+  - devCost: 21
+    pushPullCost: 5
+    pushPullType: per_stop
+    turnaroundTime: same_week
+    highResScan: true
+    noPushPull: false
+    processes:
+    - E6
