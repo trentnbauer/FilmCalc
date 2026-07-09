@@ -125,11 +125,11 @@
             <div role="tablist" aria-label="Main sections" class="flex gap-1 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20 bg-white dark:bg-gray-800 -mx-6 md:-mx-8 px-6 md:px-8">
                 <button id="tabFilmBtn" type="button" role="tab" aria-selected="true" class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 transition-colors">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m-6 4h6m-6 4h3M5 3h14a1 1 0 011 1v16a1 1 0 01-1 1H5a1 1 0 01-1-1V4a1 1 0 011-1z"/></svg>
-                    <span>Compare</span>
+                    <span>Film Lookup</span>
                 </button>
                 <button id="tabCheapestBtn" type="button" role="tab" aria-selected="false" class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-2.2 0-4 1.1-4 2.5S9.8 13 12 13s4 1.1 4 2.5-1.8 2.5-4 2.5m0-10V6m0 12v-2m0-10a9 9 0 100 18 9 9 0 000-18z" transform="scale(0.92) translate(1,1)"/></svg>
-                    <span>Cheapest</span>
+                    <span>Dev Cost</span>
                 </button>
                 <button id="tabLibraryBtn" type="button" role="tab" aria-selected="false" class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
@@ -142,7 +142,7 @@
             </div>
 
             <div id="filmTabContent" class="space-y-4">
-                <p class="text-xs text-gray-500 dark:text-gray-400">Cost out one specific roll by hand — enter the film and target speed, and see which lab is cheapest for it below. To browse and rank saved films by ISO, use the <span class="font-semibold">Cheapest</span> tab.</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Cost out one specific roll by hand — enter the film and target speed, and see which lab is cheapest for it below. To browse and rank saved films by ISO, use the <span class="font-semibold">Dev Cost</span> tab.</p>
 
                 <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                     <div class="p-4 pb-0">
@@ -369,7 +369,7 @@
                     <div>
                         <label for="libraryMaxPushPull" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Max Push/Pull (stops)</label>
                         <input type="number" id="libraryMaxPushPull" min="0" step="0.5" value="1" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Applies to the whole film stock, not individual bundles. The Compare tab warns if this film is loaded and pushed/pulled further than this.</p>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Applies to the whole film stock, not individual bundles. The Film Lookup tab warns if this film is loaded and pushed/pulled further than this.</p>
                     </div>
 
                     <div>
@@ -579,7 +579,7 @@
             return `${name}${boxSpeed || 0}`;
         }
 
-        // Toggle helper for the Cheapest tab's C41/B&W/E6 filter buttons.
+        // Toggle helper for the Dev Cost tab's C41/B&W/E6 filter buttons.
         // Toggle helper for a lab service tier's C41/B&W/E6 process buttons.
         function toggleTierProcessBtn(btn) {
             const active = btn.dataset.active !== 'true';
@@ -596,7 +596,7 @@
             return active;
         }
 
-        // Process filter for the Cheapest tab. Single-select segmented control
+        // Process filter for the Dev Cost tab. Single-select segmented control
         // (All / C41 / B&W / E6), persisted across sessions. Named "process"
         // (the development chemistry) to stay distinct from film *format*
         // (35mm / 120 / 110), which is a separate filter planned for later.
@@ -900,7 +900,7 @@
 
         Object.keys(librarySubTabs).forEach(key => librarySubTabs[key].btn.addEventListener('click', () => switchLibrarySubTab(key)));
 
-        // ---------- Cheapest tab's Per ISO / Per Photo / Per Film / Per Lab sub-nav ----------
+        // ---------- Dev Cost tab's Per ISO / Per Photo / Per Film / Per Lab sub-nav ----------
         const cheapestSubTabs = {
             iso: { btn: document.getElementById('cheapestSubIsoBtn'), content: document.getElementById('cheapestSubIsoContent'), update: () => updateIsoPriceCalculator() },
             photo: { btn: document.getElementById('cheapestSubPhotoBtn'), content: document.getElementById('cheapestSubPhotoContent'), update: () => updateCostPerPhotoTab() },
@@ -936,7 +936,7 @@
         Object.keys(cheapestSubTabs).forEach(key => cheapestSubTabs[key].btn.addEventListener('click', () => switchCheapestSubTab(key)));
         document.getElementById('cheapestFilmSelect').addEventListener('change', () => updateCostPerFilmTab());
 
-        // ---------- Cheapest tab Process segmented control ----------
+        // ---------- Dev Cost tab Process segmented control ----------
         // Single-select (All / C41 / B&W / E6), persisted. Highlights the active
         // segment so it's always obvious what's selected, and re-runs the active
         // sub-view on change.
@@ -1665,10 +1665,10 @@
             return totalPhotos > 0 ? (parseFloat(cost) || 0) / totalPhotos : null;
         }
 
-        // On the manual Compare tab: after the user enters a film by hand, check
+        // On the manual Film Lookup tab: after the user enters a film by hand, check
         // whether any saved film at the same box speed is cheaper per-photo on a
         // full film + dev (+ push/pull) basis, and if so surface it with a buy
-        // link. Discovery/ranking lives in the Cheapest tab; this is just a
+        // link. Discovery/ranking lives in the Dev Cost tab; this is just a
         // "you could save money" nudge for the specific roll being costed.
         function updateCheaperAlternative() {
             const container = document.getElementById('cheaperAlternative');
@@ -1753,9 +1753,9 @@
                 ? { bg: 'bg-orange-100 dark:bg-orange-900/30', label: 'text-orange-700 dark:text-orange-400', big: 'text-orange-800 dark:text-orange-300', sub: 'text-orange-700/80 dark:text-orange-400/80' }
                 : { bg: 'bg-green-100 dark:bg-green-900/30', label: 'text-green-700 dark:text-green-400', big: 'text-green-800 dark:text-green-300', sub: 'text-green-700/80 dark:text-green-400/80' };
             const costBlock = `<div class="mt-1 rounded-lg ${c.bg} px-4 py-3 text-center">
-                <p class="text-xs font-semibold ${c.label} uppercase tracking-wide">Cost per photo</p>
-                <p class="font-mono text-3xl font-bold ${c.big} mt-0.5">${CUR()}${currentTotal.toFixed(2)}</p>
-                <p class="text-xs ${c.sub} mt-0.5">${CUR()}${currentFilmCostPerPhoto.toFixed(2)} film + ${CUR()}${currentDevCpp.toFixed(2)} dev${stopsAbs > 0 ? ` · at ${devSpeed} ISO` : ''}</p>
+                <p class="text-xs font-semibold ${c.label} uppercase tracking-wide">Film cost per photo</p>
+                <p class="font-mono text-3xl font-bold ${c.big} mt-0.5">${CUR()}${currentFilmCostPerPhoto.toFixed(2)}</p>
+                <p class="text-xs ${c.sub} mt-0.5">+ ${CUR()}${currentDevCpp.toFixed(2)} dev = ${CUR()}${currentTotal.toFixed(2)}/photo total${stopsAbs > 0 ? ` · at ${devSpeed} ISO` : ''}</p>
             </div>`;
 
             // Smaller secondary block: a cheaper library alternative, if one is
@@ -1934,6 +1934,8 @@
                         <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Film (per photo)</span><span class="font-mono">${CUR()}${entry.filmCostPerPhoto.toFixed(2)}</span></div>
                         <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Development (per photo)</span><span class="font-mono">${CUR()}${(entry.devCostBase / entry.exposures).toFixed(2)}</span></div>
                         ${entry.pushPullFee > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Push/pull fee (per photo)</span><span class="font-mono">${CUR()}${(entry.pushPullFee / entry.exposures).toFixed(2)}</span></div>` : ''}
+                        <div class="flex justify-between text-gray-500 dark:text-gray-400 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>Film cost (per roll)</span><span class="font-mono">${CUR()}${entry.filmCostPerRoll.toFixed(2)}</span></div>
+                        <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Development (per roll)</span><span class="font-mono">${CUR()}${entry.devCostPerRoll.toFixed(2)}</span></div>
                         <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>Scan</span><span>${entry.highResScan ? 'Hi-res' : 'Standard'}</span></div>
                         <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>Turnaround</span><span>${turnaroundLabels[entry.turnaroundTime] || entry.turnaroundTime || '—'}</span></div>
                         <div class="flex justify-between font-semibold text-gray-700 dark:text-gray-300 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>Total per roll (${entry.exposures} exp)</span><span class="font-mono">${CUR()}${entry.totalCostPerRoll.toFixed(2)}</span></div>
@@ -2371,7 +2373,7 @@
         // default, overridden by the loaded film's own limit (Film Setup)
         // whenever one's been loaded via Quick Calculate.
         let loadedFilmMaxPushPull = 1;
-        // The film currently costed out in the Compare tab — set whenever a film
+        // The film currently costed out in the Film Lookup tab — set whenever a film
         // is loaded (via the saved-films dropdown or the Target Speed auto-load)
         // and cleared on manual/blank entry. Used by the Cheapest quick answer so
         // it can name the stock and offer its buy link, not just the lab + price.
