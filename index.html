@@ -444,7 +444,7 @@
                     <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-4">
                         <div class="space-y-2">
                             <h4 class="font-semibold text-gray-700 dark:text-gray-300 text-sm">Export Data</h4>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">Download your saved films/labs/settings as YAML, in the same format the app reads — so it can be dropped straight into <code>config.yaml</code>, or into the project's <code>films/</code> or <code>labs/</code> folders to share as a preset.</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Download your saved films/labs/settings as YAML. "Export Everything" writes a <code>config.yaml</code>. "Films/Labs Only" asks for a preset name that's saved inside the file — so it shows up by that name when re-imported (drag &amp; drop supported) or dropped into the project's <code>films/</code> or <code>labs/</code> folders.</p>
                             <button id="exportBtn" type="button" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-medium">Export Everything (config.yaml)</button>
                             <div class="grid grid-cols-2 gap-2">
                                 <button id="exportFilmsBtn" type="button" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-medium text-sm">Export Films Only</button>
@@ -493,8 +493,10 @@
 
                 <div class="border-t border-gray-200 dark:border-gray-600 pt-4 space-y-2">
                     <h3 class="font-semibold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest">Or Upload a File</h3>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">Select your own <code>config.yaml</code>, or a <code>films.yaml</code>/<code>labs.yaml</code> export. Multiple files at once are fine.</p>
-                    <button id="importUploadBtn" type="button" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-medium">Choose File(s)…</button>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Drag &amp; drop, or select, your own <code>config.yaml</code> or a named <code>films</code>/<code>labs</code> export. Multiple files at once are fine — the name inside each file is used automatically.</p>
+                    <div id="importDropzone" class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center transition-colors cursor-pointer hover:border-blue-400 dark:hover:border-blue-500">
+                        <p class="text-sm text-gray-500 dark:text-gray-400 pointer-events-none">📥 Drop YAML files here<br><span class="text-xs">or click to choose</span></p>
+                    </div>
                     <input type="file" id="importFile" class="hidden" accept=".yaml,.yml" multiple>
                 </div>
             </div>
@@ -2545,12 +2547,32 @@
             downloadYaml('config.yaml', buildConfig());
         });
 
+        // A named single-type export wraps the array in a self-describing map:
+        //   label: My Films
+        //   films: [ ... ]
+        // The embedded label is what the Import screen shows, so a plain
+        // drag-and-drop of the file needs no separate manifest. Cancelling the
+        // prompt aborts; leaving it blank exports the bare array (unlabelled).
+        function exportNamed(kind, buildArray, defaultName) {
+            const name = window.prompt(`Name this ${kind} preset (shown in the Import list):`, defaultName);
+            if (name === null) return; // cancelled
+            const arr = buildArray();
+            const label = name.trim();
+            const safe = label ? label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') : kind;
+            const filename = `${safe || kind}.yaml`;
+            if (label) {
+                downloadYaml(filename, { label, [kind]: arr });
+            } else {
+                downloadYaml(filename, arr); // unlabelled bare array, still importable
+            }
+        }
+
         document.getElementById('exportFilmsBtn').addEventListener('click', () => {
-            downloadYaml('films.yaml', buildFilmsArray());
+            exportNamed('films', buildFilmsArray, 'My Films');
         });
 
         document.getElementById('exportLabsBtn').addEventListener('click', () => {
-            downloadYaml('labs.yaml', buildLabsArray());
+            exportNamed('labs', buildLabsArray, 'My Labs');
         });
 
         // ---------- Write live config to server (self-hosted / Docker only) ----------
@@ -2631,16 +2653,33 @@
             }
         }
 
+        // Pull a human label out of a parsed preset file. New self-describing
+        // files carry a top-level `label:`; older bare-array files don't, so we
+        // fall back to the manifest-provided label, then the filename.
+        function labelFromParsed(parsed) {
+            if (parsed && !Array.isArray(parsed) && typeof parsed.label === 'string' && parsed.label.trim()) {
+                return parsed.label.trim();
+            }
+            return null;
+        }
+
         let presetEntries = [];
         let presetListLoaded = false;
         async function loadPresetList() {
             if (presetListLoaded) return;
             presetListLoaded = true;
             const [films, labs] = await Promise.all([fetchManifest('films'), fetchManifest('labs')]);
-            presetEntries = [
+            const rawEntries = [
                 ...films.map(f => ({ folder: 'films', file: f.file, label: f.label || f.file, type: 'Film' })),
                 ...labs.map(l => ({ folder: 'labs', file: l.file, label: l.label || l.file, type: 'Lab' }))
             ];
+            // Prefer the label embedded inside each file over the manifest's, so
+            // renaming a preset only means editing its own YAML.
+            presetEntries = await Promise.all(rawEntries.map(async (e) => {
+                const fetched = await fetchYamlPreset(e.folder, e.file);
+                const embedded = fetched.ok ? labelFromParsed(fetched.parsed) : null;
+                return { ...e, label: embedded || e.label };
+            }));
             if (presetEntries.length === 0) {
                 importPresetList.innerHTML = '<p class="text-xs text-gray-400 text-center py-2">No presets found — upload a file instead.</p>';
                 return;
@@ -2779,7 +2818,8 @@
             closeImportModal();
         }
 
-        document.getElementById('importUploadBtn').addEventListener('click', () => document.getElementById('importFile').click());
+        const importDropzone = document.getElementById('importDropzone');
+        importDropzone.addEventListener('click', () => document.getElementById('importFile').click());
         document.getElementById('importFile').addEventListener('change', (e) => {
             const files = Array.from(e.target.files || []);
             if (!files.length) return;
@@ -2787,6 +2827,21 @@
                 finishImport(results);
                 e.target.value = '';
             });
+        });
+        // Drag-and-drop: highlight on dragover, import on drop. Only YAML files
+        // are read; anything else is ignored.
+        ['dragenter', 'dragover'].forEach(evt => importDropzone.addEventListener(evt, (e) => {
+            e.preventDefault();
+            importDropzone.classList.add('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
+        }));
+        ['dragleave', 'drop'].forEach(evt => importDropzone.addEventListener(evt, (e) => {
+            e.preventDefault();
+            importDropzone.classList.remove('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
+        }));
+        importDropzone.addEventListener('drop', (e) => {
+            const files = Array.from(e.dataTransfer?.files || []).filter(f => /\.ya?ml$/i.test(f.name));
+            if (!files.length) { alert('Please drop .yaml or .yml files.'); return; }
+            Promise.all(files.map(readYamlFile)).then(finishImport);
         });
 
         importSelectedPresetsBtn.addEventListener('click', async () => {
