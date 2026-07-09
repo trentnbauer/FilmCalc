@@ -1,0 +1,86 @@
+name: Deploy static content to Pages
+
+on:
+  # Runs on pushes targeting the default branch
+  push:
+    branches: ["main"]
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # Single deploy job since we're just deploying
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Generate preset manifests
+        # films/index.json and labs/index.json are the browser's stand-in for a
+        # directory listing (static hosting can't enumerate a folder). Rather
+        # than hand-maintain them, rebuild both here by globbing every *.yaml in
+        # the folder. Each entry's label is read from the file's own top-level
+        # `label:` line, falling back to a title-cased filename. Generated into
+        # the working tree so the next step stages them; not committed back.
+        run: |
+          python3 - <<'PY'
+          import glob, json, os, re
+
+          def label_from_file(path):
+              # Cheap top-level "label:" scan — avoids a YAML dep and is safe
+              # because label is always a plain scalar on its own line.
+              with open(path, encoding='utf-8') as fh:
+                  for line in fh:
+                      m = re.match(r'label:\s*(.+?)\s*$', line)
+                      if m:
+                          return m.group(1).strip().strip('"\'')
+                      # Stop at the first list/array item — no top-level label present.
+                      if line.lstrip().startswith('- '):
+                          break
+              # Fallback: prettomsify the filename, e.g. "melbourne-labs" -> "Melbourne Labs"
+              stem = os.path.splitext(os.path.basename(path))[0]
+              return re.sub(r'[-_]+', ' ', stem).title()
+
+          for folder in ('films', 'labs'):
+              files = sorted(
+                  os.path.basename(p) for p in glob.glob(f'{folder}/*.yaml') + glob.glob(f'{folder}/*.yml')
+              )
+              entries = [{'file': f, 'label': label_from_file(os.path.join(folder, f))} for f in files]
+              with open(f'{folder}/index.json', 'w', encoding='utf-8') as out:
+                  json.dump(entries, out, indent=2, ensure_ascii=False)
+                  out.write('\n')
+              print(f'{folder}/index.json -> {len(entries)} preset(s): ' + ', '.join(f["file"] for f in entries))
+          PY
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Stage site files
+        # The actual static app, plus films/ and labs/ — the Settings →
+        # Import modal fetches films/index.json and labs/index.json (and
+        # whatever preset files they list) at runtime, so those folders
+        # need to be live on the deployed site, not just the Docker image.
+        # Docker/self-hosting files (Dockerfile, compose, README) still
+        # don't belong here.
+        run: |
+          mkdir -p _site
+          cp index.html favicon.ico icon.ico icon.svg apple-touch-icon.png manifest.json sw.js _site/
+          cp -r films labs _site/
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '_site'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
