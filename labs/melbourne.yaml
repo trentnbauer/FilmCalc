@@ -1,5 +1,9 @@
 - name: Hillvale Photo Melbourne
   hidden: false
+  address: 43-45 Edward Street, Brunswick VIC 3056, Australia
+  phone: (03) 9023 3689
+  email: develop@hillvale.com.au
+  website: https://hillvale.com.au
   services:
     - devCost: 19
       pushPullCost: 3
@@ -67,6 +71,10 @@
         - E6
 - name: Walkens Melbourne
   hidden: false
+  address: 338 Brunswick Street, Fitzroy VIC 3065, Australia
+  phone: (03) 9077 8163
+  email: contact@walkens.com.au
+  website: https://walkens.com.au
   services:
     - devCost: 16
       pushPullCost: 0
@@ -150,6 +158,10 @@
         - E6
 - name: Irohas Melbourne
   hidden: false
+  address: Ground Floor, 15 McKillop Street, Melbourne VIC 3000, Australia
+  phone: 0468 512 566
+  email: info@irohasphoto.com.au
+  website: https://irohasphoto.com.au
   services:
     - devCost: 17
       pushPullCost: 5
@@ -175,4 +187,3 @@
       noPushPull: false
       processes:
         - E6
-
