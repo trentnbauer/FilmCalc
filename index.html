@@ -141,7 +141,7 @@
                 </button>
             </div>
 
-            <div id="filmTabContent" class="space-y-6">
+            <div id="filmTabContent" class="space-y-4">
                 <p class="text-xs text-gray-500 dark:text-gray-400">Cost out one specific roll by hand — enter the film and target speed, and see which lab is cheapest for it below. To browse and rank saved films by ISO, use the <span class="font-semibold">Cheapest</span> tab.</p>
 
                 <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg">
@@ -152,7 +152,8 @@
                         <div class="grid grid-cols-2 gap-2">
                             <div>
                                 <label for="boxSpeed" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Box Speed (ISO)</label>
-                                <input type="number" inputmode="numeric" id="boxSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                                <input type="number" inputmode="numeric" id="boxSpeed" placeholder="400" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                                <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">The film's rated speed (on the box)</p>
                             </div>
                             <div>
                                 <label for="processSelect" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Process</label>
@@ -165,35 +166,41 @@
                         </div>
                         <div>
                             <label for="filmCost" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Total Cost incl. Postage ($)</label>
-                            <input type="number" inputmode="decimal" id="filmCost" step="0.01" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                            <input type="number" inputmode="decimal" id="filmCost" step="0.01" placeholder="e.g. 24.95" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                         </div>
                         <div class="grid grid-cols-2 gap-2">
                             <div>
                                 <label for="rolls" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Rolls</label>
-                                <input type="number" inputmode="numeric" id="rolls" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                                <input type="number" inputmode="numeric" id="rolls" placeholder="1" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                             </div>
                             <div>
                                 <label for="exposures" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Exposures per Roll</label>
-                                <input type="number" inputmode="numeric" id="exposures" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                                <input type="number" inputmode="numeric" id="exposures" placeholder="36" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                             </div>
                         </div>
-
                         <div id="loadedFilmSummary" class="text-xs text-gray-500 dark:text-gray-400"></div>
-                        <div id="cheaperAlternative"></div>
-
-                        <div class="grid grid-cols-2 gap-2">
-                            <button id="clearQuickCalcBtn" type="button" class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 rounded font-medium">Clear</button>
-                            <button id="saveToLibraryBtn" type="button" class="w-full bg-blue-600 text-white py-2 rounded font-medium hover:bg-blue-700">💾 Save to Library</button>
-                        </div>
                     </div>
                 </div>
 
                 <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800/30 p-4 text-left">
-                    <label for="devSpeed" class="block text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">Target Speed (ISO)</label>
-                    <input type="number" inputmode="numeric" id="devSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">The ISO you're shooting this film at. Leave equal to box speed for no push/pull.</p>
+                    <div class="flex items-center justify-between mb-1">
+                        <label for="devSpeed" class="text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide">Shooting at (Target ISO)</label>
+                        <button type="button" id="matchBoxSpeedBtn" class="text-[11px] text-indigo-500 dark:text-indigo-400 hover:underline">= box speed</button>
+                    </div>
+                    <input type="number" inputmode="numeric" id="devSpeed" placeholder="same as box speed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                    <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">Only change this if you're pushing or pulling. Box 400 → shooting 800 = +1 stop push.</p>
                     <div id="pushPullWarning" class="mt-1"></div>
                     <div id="expiredStackWarning" class="mt-1"></div>
+                </div>
+
+                <!-- Result pulled up directly under the inputs -->
+                <div id="cheaperAlternative"></div>
+
+                <!-- Secondary actions, demoted to a quiet row -->
+                <div class="flex items-center gap-3 text-sm px-1">
+                    <button id="saveToLibraryBtn" type="button" class="text-blue-600 dark:text-blue-400 font-medium hover:underline">💾 Save to Library</button>
+                    <span class="text-gray-300 dark:text-gray-600">·</span>
+                    <button id="clearQuickCalcBtn" type="button" class="text-gray-500 dark:text-gray-400 hover:underline">Clear</button>
                 </div>
 
                 <details id="moreOptionsDetails" class="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/30">
@@ -1782,6 +1789,24 @@
         // it beats the film's own Max Push/Pull limit; entries that exceed
         // that limit are flagged rather than hidden, since a film is still a
         // valid (if inadvisable) option.
+        // Sort mode for the Cheapest Per ISO view. Persisted so a re-open keeps
+        // the last choice. 'price' | 'turnaround' | 'scan'.
+        let cheapestSort = localStorage.getItem('cheapestSort') || 'price';
+        const turnaroundRank = { next_day: 0, same_week: 1, longer: 2 };
+        function sortIsoEntries(entries) {
+            const by = cheapestSort;
+            return entries.slice().sort((a, b) => {
+                if (by === 'turnaround') {
+                    const ta = turnaroundRank[a.turnaroundTime] ?? 9, tb = turnaroundRank[b.turnaroundTime] ?? 9;
+                    if (ta !== tb) return ta - tb;
+                } else if (by === 'scan') {
+                    // Hi-res first, then by price.
+                    if (a.highResScan !== b.highResScan) return a.highResScan ? -1 : 1;
+                }
+                return a.totalCostPerPhoto - b.totalCostPerPhoto;
+            });
+        }
+
         function computeIsoPriceOptions(targetIso) {
             const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
             const allLabs = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') };
@@ -1836,7 +1861,16 @@
                                 devCostPerPhoto,
                                 totalCostPerPhoto,
                                 highResScan: tier.highResScan,
-                                turnaroundTime: tier.turnaroundTime
+                                turnaroundTime: tier.turnaroundTime,
+                                // Extra fields for the expandable breakdown row.
+                                devCostBase: tier.devCost,
+                                pushPullFee,
+                                exposures: bestBundle.exposures,
+                                filmCostPerRoll: bestFilmCostPerPhoto * bestBundle.exposures,
+                                devCostPerRoll: tier.devCost + pushPullFee,
+                                totalCostPerRoll: totalCostPerPhoto * bestBundle.exposures,
+                                buyLink: bestBundle.buyLink,
+                                storeName: bestBundle.storeName
                             };
                             if (!best || totalCostPerPhoto < best.totalCostPerPhoto) best = candidate;
                             if (tier.highResScan && tier.turnaroundTime === 'next_day' &&
@@ -1866,6 +1900,15 @@
             return { native, push, pull };
         }
 
+        // Tracks which ISO rows are expanded (by a stable key), so re-renders
+        // (sort changes, ISO tweaks) preserve open/closed state.
+        const expandedIsoRows = new Set();
+        let expandAllIso = false;
+
+        function isoRowKey(entry) {
+            return `${entry.filmName}|${entry.labName}|${entry.stops}`;
+        }
+
         function renderIsoRow(entry, rank) {
             const hiResBadge = entry.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">HI-RES</span>` : '';
             const turnaroundBadge = entry.turnaroundTime ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 align-middle">${turnaroundLabels[entry.turnaroundTime] || entry.turnaroundTime}</span>` : '';
@@ -1876,23 +1919,39 @@
             const isCheapest = rank === 0;
             const rowBg = entry.overLimit ? 'bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700' : (isCheapest ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-white dark:bg-gray-800/50');
             const textColor = entry.overLimit ? 'text-red-700 dark:text-red-400' : (isCheapest ? 'text-amber-800 dark:text-amber-300 font-semibold' : 'text-gray-700 dark:text-gray-300');
-            // Recommended service upgrade (hi-res + next day within threshold).
-            const up = entry.upgrade;
-            const upgradeLine = up
-                ? `<div class="mt-1 flex justify-between items-center px-3 py-1.5 rounded-lg text-xs bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800/40">
-                        <span class="text-indigo-700 dark:text-indigo-300">🔍⚡ <span class="font-semibold">Recommended:</span> hi-res + next day <span class="opacity-70">@ ${escapeHtml(up.pick.labName)}</span> · +${(up.premium * 100).toFixed(0)}%</span>
-                        <span class="font-mono text-indigo-700 dark:text-indigo-300 font-semibold">${CUR()}${up.pick.totalCostPerPhoto.toFixed(2)}/photo</span>
+
+            const key = isoRowKey(entry);
+            const isOpen = expandAllIso || expandedIsoRows.has(key);
+            const chevron = `<span class="text-gray-400 dark:text-gray-500 transition-transform inline-block ${isOpen ? 'rotate-90' : ''}">▸</span>`;
+
+            // Expandable breakdown: full per-photo + per-roll cost line items.
+            const buyUrl = sanitizeUrl(entry.buyLink);
+            const buyLink = buyUrl
+                ? `<a href="${escapeHtml(buyUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-[11px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:underline">🛒 ${entry.storeName ? 'Buy from ' + escapeHtml(entry.storeName) : 'Buy film'} ↗</a>`
+                : '';
+            const breakdown = isOpen
+                ? `<div class="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700 text-xs space-y-1">
+                        <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Film (per photo)</span><span class="font-mono">${CUR()}${entry.filmCostPerPhoto.toFixed(2)}</span></div>
+                        <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Development (per photo)</span><span class="font-mono">${CUR()}${(entry.devCostBase / entry.exposures).toFixed(2)}</span></div>
+                        ${entry.pushPullFee > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Push/pull fee (per photo)</span><span class="font-mono">${CUR()}${(entry.pushPullFee / entry.exposures).toFixed(2)}</span></div>` : ''}
+                        <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>Scan</span><span>${entry.highResScan ? 'Hi-res' : 'Standard'}</span></div>
+                        <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>Turnaround</span><span>${turnaroundLabels[entry.turnaroundTime] || entry.turnaroundTime || '—'}</span></div>
+                        <div class="flex justify-between font-semibold text-gray-700 dark:text-gray-300 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>Total per roll (${entry.exposures} exp)</span><span class="font-mono">${CUR()}${entry.totalCostPerRoll.toFixed(2)}</span></div>
+                        ${buyLink ? `<div class="pt-1.5">${buyLink}</div>` : ''}
                     </div>`
                 : '';
+
             return `<div>
-                <div class="flex justify-between items-start px-3 py-2 rounded-lg text-sm ${rowBg}">
-                <span class="${entry.overLimit ? 'font-semibold text-red-700 dark:text-red-400' : (isCheapest ? 'font-semibold text-amber-800 dark:text-amber-300' : 'text-gray-700 dark:text-gray-300')}">${isCheapest && !entry.overLimit ? '⭐ ' : ''}${escapeHtml(entry.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(entry.labName)}</span>${stopsLabel}${hiResBadge}${turnaroundBadge}</span>
-                <span class="font-mono text-right leading-tight ${textColor}">
-                    <div class="font-semibold">${CUR()}${entry.totalCostPerPhoto.toFixed(2)}/photo</div>
-                    <div class="text-xs opacity-80">${CUR()}${entry.filmCostPerPhoto.toFixed(2)} film + ${CUR()}${entry.devCostPerPhoto.toFixed(2)} dev</div>
-                </span>
+                <div class="iso-row cursor-pointer px-3 py-2 rounded-lg text-sm ${rowBg}" data-iso-key="${escapeHtml(key)}">
+                    <div class="flex justify-between items-start gap-2">
+                        <span class="${entry.overLimit ? 'font-semibold text-red-700 dark:text-red-400' : (isCheapest ? 'font-semibold text-amber-800 dark:text-amber-300' : 'text-gray-700 dark:text-gray-300')}">${isCheapest && !entry.overLimit ? '⭐ ' : ''}${escapeHtml(entry.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(entry.labName)}</span>${stopsLabel}${hiResBadge}${turnaroundBadge}</span>
+                        <span class="font-mono text-right leading-tight ${textColor} whitespace-nowrap flex items-center gap-1.5">
+                            <span class="font-semibold">${CUR()}${entry.totalCostPerPhoto.toFixed(2)}/photo</span>
+                            ${chevron}
+                        </span>
+                    </div>
+                    ${breakdown}
                 </div>
-                ${upgradeLine}
             </div>`;
         }
 
@@ -1914,18 +1973,38 @@
             }
 
             const { native, push, pull } = computeIsoPriceOptions(targetIso);
+            const sortedNative = sortIsoEntries(native);
+            const sortedPush = sortIsoEntries(push);
+            const sortedPull = sortIsoEntries(pull);
+
+            // Rank for the ⭐ marker is always by price (cheapest), independent
+            // of the chosen sort — so "cheapest" stays meaningful even when
+            // sorting by turnaround or scan.
+            const priceRank = (entries, entry) => entries.slice().sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto).indexOf(entry);
+            const renderBucket = (sorted, all) => sorted.map(e => renderIsoRow(e, priceRank(all, e))).join('');
 
             const nativeHtml = native.length
-                ? native.map((e, i) => renderIsoRow(e, i)).join('')
+                ? renderBucket(sortedNative, native)
                 : '<p class="text-xs text-gray-400 text-center py-2">No film natively rated at this ISO</p>';
             const pushHtml = push.length
-                ? push.map((e, i) => renderIsoRow(e, i)).join('')
+                ? renderBucket(sortedPush, push)
                 : '<p class="text-xs text-gray-400 text-center py-2">No film can be pushed to this ISO</p>';
             const pullHtml = pull.length
-                ? pull.map((e, i) => renderIsoRow(e, i)).join('')
+                ? renderBucket(sortedPull, pull)
                 : '<p class="text-xs text-gray-400 text-center py-2">No film can be pulled to this ISO</p>';
 
-            container.innerHTML = `<div class="space-y-4">
+            const sortPill = (mode, label) => `<button type="button" data-sort="${mode}" class="cheapest-sort-pill px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${cheapestSort === mode ? 'bg-indigo-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}">${label}</button>`;
+            const controls = `<div class="flex items-center justify-between gap-2 flex-wrap mb-3">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="text-xs text-gray-400 dark:text-gray-500 font-semibold uppercase tracking-wide">Sort</span>
+                    ${sortPill('price', 'Price')}
+                    ${sortPill('turnaround', 'Turnaround')}
+                    ${sortPill('scan', 'Scan')}
+                </div>
+                <button type="button" id="isoExpandAllBtn" class="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline">${expandAllIso ? 'Collapse all' : 'Expand all'}</button>
+            </div>`;
+
+            container.innerHTML = controls + `<div class="space-y-4">
                 <div>
                     <h3 class="text-xs font-semibold text-green-700 dark:text-green-400 uppercase tracking-wide mb-2">Native (${targetIso} ISO)</h3>
                     <div class="space-y-1.5">${nativeHtml}</div>
@@ -1939,6 +2018,36 @@
                     <div class="space-y-1.5">${pullHtml}</div>
                 </div>
             </div>`;
+
+            // Wire sort pills.
+            container.querySelectorAll('.cheapest-sort-pill').forEach(btn => btn.addEventListener('click', () => {
+                cheapestSort = btn.dataset.sort;
+                localStorage.setItem('cheapestSort', cheapestSort);
+                updateIsoPriceCalculator();
+            }));
+            // Expand-all toggle.
+            const expandAllBtn = document.getElementById('isoExpandAllBtn');
+            if (expandAllBtn) expandAllBtn.addEventListener('click', () => {
+                expandAllIso = !expandAllIso;
+                if (!expandAllIso) expandedIsoRows.clear();
+                updateIsoPriceCalculator();
+            });
+            // Per-row expand/collapse.
+            container.querySelectorAll('.iso-row').forEach(row => row.addEventListener('click', () => {
+                const key = row.dataset.isoKey;
+                if (expandAllIso) {
+                    // Leaving expand-all: seed the set with all currently-open rows,
+                    // then toggle this one closed.
+                    container.querySelectorAll('.iso-row').forEach(r => expandedIsoRows.add(r.dataset.isoKey));
+                    expandAllIso = false;
+                    expandedIsoRows.delete(key);
+                } else if (expandedIsoRows.has(key)) {
+                    expandedIsoRows.delete(key);
+                } else {
+                    expandedIsoRows.add(key);
+                }
+                updateIsoPriceCalculator();
+            }));
         }
 
 
@@ -2275,6 +2384,16 @@
         const boxSpeedInput = document.getElementById('boxSpeed');
         const devSpeedInput = document.getElementById('devSpeed');
         devSpeedInput.addEventListener('input', () => { devSpeedOverridden = true; });
+
+        // "= box speed" shortcut: sets target ISO to the entered box speed
+        // (no push/pull) and recomputes.
+        document.getElementById('matchBoxSpeedBtn').addEventListener('click', () => {
+            const box = document.getElementById('boxSpeed').value;
+            devSpeedInput.value = box;
+            devSpeedOverridden = true;
+            updateLabComparison();
+            updateCheaperAlternative();
+        });
         boxSpeedInput.addEventListener('input', () => {
             if (!devSpeedOverridden) devSpeedInput.value = boxSpeedInput.value;
         });
