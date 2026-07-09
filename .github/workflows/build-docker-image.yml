@@ -33,6 +33,37 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Generate preset manifests
+        # Keep films/index.json and labs/index.json in sync with whatever *.yaml
+        # files exist, so the Docker image's Import list matches the folder —
+        # same generator as the Pages deploy workflow. Runs before the build so
+        # the COPY films/labs step picks up fresh manifests.
+        run: |
+          python3 - <<'PY'
+          import glob, json, os, re
+
+          def label_from_file(path):
+              with open(path, encoding='utf-8') as fh:
+                  for line in fh:
+                      m = re.match(r'label:\s*(.+?)\s*$', line)
+                      if m:
+                          return m.group(1).strip().strip('"\'')
+                      if line.lstrip().startswith('- '):
+                          break
+              stem = os.path.splitext(os.path.basename(path))[0]
+              return re.sub(r'[-_]+', ' ', stem).title()
+
+          for folder in ('films', 'labs'):
+              files = sorted(
+                  os.path.basename(p) for p in glob.glob(f'{folder}/*.yaml') + glob.glob(f'{folder}/*.yml')
+              )
+              entries = [{'file': f, 'label': label_from_file(os.path.join(folder, f))} for f in files]
+              with open(f'{folder}/index.json', 'w', encoding='utf-8') as out:
+                  json.dump(entries, out, indent=2, ensure_ascii=False)
+                  out.write('\n')
+              print(f'{folder}/index.json -> {len(entries)} preset(s): ' + ', '.join(f["file"] for f in entries))
+          PY
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
