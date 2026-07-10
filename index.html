@@ -609,8 +609,10 @@
         // native ratings). Using name alone as the storage key meant saving
         // "Kodak Foo" at 400 after loading "Kodak Foo" at 200 silently
         // overwrote the 200 entry instead of creating a second one.
-        function filmKey(name, boxSpeed) {
-            return `${name}${boxSpeed || 0}`;
+        // Films are keyed by name + box speed + format, so e.g. "Kodak Gold 200"
+        // in 35mm and 120 are distinct entries that don't overwrite each other.
+        function filmKey(name, boxSpeed, format) {
+            return `${name}|${boxSpeed || 0}|${format || '35mm'}`;
         }
 
         // Toggle helper for the Dev Cost tab's C41/B&W/E6 filter buttons.
@@ -1067,6 +1069,8 @@
             if (typeof refreshActiveCheapestSubTab === 'function') refreshActiveCheapestSubTab();
             if (typeof updateLabComparison === 'function') updateLabComparison();
             if (typeof updateCheaperAlternative === 'function') updateCheaperAlternative();
+            // Film management list is filtered by Film Type too.
+            if (typeof updateLibraryFilmDropdown === 'function') updateLibraryFilmDropdown();
         }
         const globalProcessSel = document.getElementById('globalProcess');
         const globalFormatSel = document.getElementById('globalFormat');
@@ -1102,7 +1106,7 @@
                 const res = await fetch('config.yaml');
                 if (res.ok) {
                     const parsed = jsyaml.load(await res.text()) || {};
-                    (parsed.films || []).forEach(f => { defaultFilms[filmKey(f.name, f.boxSpeed)] = f; });
+                    (parsed.films || []).forEach(f => { defaultFilms[filmKey(f.name, f.boxSpeed, f.format)] = f; });
                     (parsed.labs || []).forEach(l => { defaultLabs[l.name] = l; });
                     configSettings = parsed.settings || {};
                 }
@@ -2201,6 +2205,7 @@
                         results.push({
                             filmName: f.name,
                             boxSpeed,
+                            format: f.format,
                             labName,
                             filmCostPerPhoto: bestFilmCostPerPhoto,
                             devCostPerPhoto,
@@ -2346,7 +2351,7 @@
                 .filter(f => !f.hidden && filmPassesProcessFilter(f) && (parseInt(f.boxSpeed) || 0) > 0)
                 .sort((a, b) => a.name.localeCompare(b.name) || (parseInt(a.boxSpeed) || 0) - (parseInt(b.boxSpeed) || 0));
             select.innerHTML = '<option value="">-- Pick a film --</option>' + films.map(f => {
-                const key = filmKey(f.name, f.boxSpeed);
+                const key = filmKey(f.name, f.boxSpeed, f.format);
                 return `<option value="${escapeHtml(key)}">${escapeHtml(f.name)} (${f.boxSpeed} ISO)</option>`;
             }).join('');
             // Keep the current selection if it still passes the filters.
@@ -2369,7 +2374,7 @@
             if (!film) { container.innerHTML = '<p class="text-sm text-gray-400 text-center">Pick a film to compare labs</p>'; return; }
 
             const nativeRows = computeNativeFilmLabMatrix()
-                .filter(e => filmKey(e.filmName, e.boxSpeed) === selectedKey)
+                .filter(e => filmKey(e.filmName, e.boxSpeed, e.format) === selectedKey)
                 .sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto);
 
             if (nativeRows.length === 0) {
@@ -2532,9 +2537,16 @@
         }
 
         // Film Library's dropdown lists film stocks only (one entry per name),
-        // for editing the whole film and its bundles at once.
+        // for editing the whole film and its bundles at once. Filtered to the
+        // selected Film Type so managing a format shows only that format's
+        // stocks; the label includes the format so same-name/speed stocks in
+        // different formats are distinguishable.
         function updateLibraryFilmDropdown() {
-            updateDropdown('libraryFilmsDropdown', defaultFilms, 'filmProfiles', f => `${f.name} (${f.boxSpeed || '?'} ISO)`);
+            updateDropdown(
+                'libraryFilmsDropdown', defaultFilms, 'filmProfiles',
+                f => `${f.name} (${f.boxSpeed || '?'} ISO · ${f.format || '35mm'})`,
+                f => (f.format || '35mm') === cheapestFormat
+            );
         }
 
         function updateFilmDropdowns() {
@@ -2650,15 +2662,15 @@
                 buyLink: block.querySelector('.bundle-buyLink').value.trim()
             }));
 
-            // Name + Box Speed together are this film's identity — that's
-            // the only thing that decides which entry gets written. Saving
-            // NEVER deletes a different entry, even if one was loaded before
-            // editing: e.g. loading "Kodak Porta" (800 ISO) and changing Box
-            // Speed to 400 before hitting Save creates a second, separate
-            // "Kodak Porta" (400 ISO) entry — the 800 one is untouched. To
-            // edit an existing entry in place instead, keep its Name and Box
-            // Speed the same while changing anything else.
-            const key = filmKey(name, boxSpeed);
+            // Name + Box Speed + Format together are this film's identity —
+            // that's the only thing that decides which entry gets written.
+            // Saving NEVER deletes a different entry, even if one was loaded
+            // before editing: e.g. loading "Kodak Gold" (35mm) and changing
+            // Format to 120 before hitting Save creates a second, separate
+            // "Kodak Gold 120" entry — the 35mm one is untouched. To edit an
+            // existing entry in place, keep its Name, Box Speed and Format the
+            // same while changing anything else.
+            const key = filmKey(name, boxSpeed, format);
             let saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
             saved[key] = { name, boxSpeed, maxPushPull, process, format, hidden: document.getElementById('filmHiddenCheckbox').checked, bundles };
             localStorage.setItem('filmProfiles', JSON.stringify(saved));
@@ -2940,11 +2952,11 @@
             const hasNestedBundles = entries.some(f => Array.isArray(f.bundles));
             const result = {};
             if (hasNestedBundles) {
-                entries.forEach(f => { if (f.name) result[filmKey(f.name, f.boxSpeed)] = f; });
+                entries.forEach(f => { if (f.name) result[filmKey(f.name, f.boxSpeed, f.format)] = f; });
             } else {
                 entries.forEach(f => {
                     if (!f.name) return;
-                    const key = filmKey(f.name, f.boxSpeed);
+                    const key = filmKey(f.name, f.boxSpeed, f.format);
                     const bundle = { rolls: f.rolls, exposures: f.exposures, filmCost: f.filmCost, storeName: f.storeName, buyLink: f.buyLink };
                     if (result[key]) {
                         result[key].bundles.push(bundle);
