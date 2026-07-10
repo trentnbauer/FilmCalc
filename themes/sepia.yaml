@@ -1,0 +1,9 @@
+label: Sepia
+light:
+  pageBg: "#f4ecd8"
+  cardBg: "#fbf6ea"
+  accent: "#8a5a2b"
+dark:
+  pageBg: "#1c1710"
+  cardBg: "#2a2318"
+  accent: "#d9a566"
