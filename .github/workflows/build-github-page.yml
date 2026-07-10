@@ -54,7 +54,7 @@ jobs:
               stem = os.path.splitext(os.path.basename(path))[0]
               return re.sub(r'[-_]+', ' ', stem).title()
 
-          for folder in ('films', 'labs'):
+          for folder in ('films', 'labs', 'themes'):
               files = sorted(
                   os.path.basename(p) for p in glob.glob(f'{folder}/*.yaml') + glob.glob(f'{folder}/*.yml')
               )
@@ -76,7 +76,7 @@ jobs:
         run: |
           mkdir -p _site
           cp index.html favicon.ico icon.ico icon.svg apple-touch-icon.png manifest.json sw.js _site/
-          cp -r films labs _site/
+          cp -r films labs themes _site/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
