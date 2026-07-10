@@ -21,6 +21,7 @@ films:
     filmCost: 24.95
     storeName: JB HiFi
     buyLink: ''
+  format: 35mm
 - name: Kodak ColorPlus
   boxSpeed: 200
   maxPushPull: 1
@@ -32,6 +33,7 @@ films:
     filmCost: 150
     storeName: eBay
     buyLink: https://www.ebay.com.au/itm/122005535954
+  format: 35mm
 - name: Kodak Ultramax
   boxSpeed: 400
   maxPushPull: 1
@@ -58,6 +60,7 @@ films:
     filmCost: 27.95
     storeName: JB HiFi
     buyLink: ''
+  format: 35mm
 - name: Kodak Porta
   boxSpeed: 800
   maxPushPull: 1
@@ -69,6 +72,7 @@ films:
     filmCost: 40
     storeName: Walkens
     buyLink: https://walkens.com.au/products/kodak-portra-800-35mm?variant=44814089420989&country=AU&currency=AUD&utm_medium=product_sync&utm_source=google&utm_content=sag_organic&utm_campaign=sag_organic&gad_source=1&gad_campaignid=17181065002&gbraid=0AAAAADBByy702yk-BGUXuaKWjQkZuYXfL&gclid=CjwKCAjwx7LSBhB3EiwAjcodxJoVRduVX3CsCFBgc_FO8MYXKcOuhKOGEbq8iqr6BSzsYI9pAFSZ7hoCCuQQAvD_BwE
+  format: 35mm
 - name: 1 Shot
   boxSpeed: 400
   maxPushPull: 1
@@ -80,6 +84,7 @@ films:
     filmCost: 25.95
     storeName: JB HiFi
     buyLink: ''
+  format: 35mm
 - name: Ilford HP5+
   boxSpeed: 400
   maxPushPull: 1
@@ -91,6 +96,7 @@ films:
     filmCost: 18
     storeName: JB HiFi
     buyLink: ''
+  format: 35mm
 - name: Ilford InfoColor Vintage Tone
   boxSpeed: 400
   maxPushPull: 1
@@ -102,6 +108,7 @@ films:
     filmCost: 29.95
     storeName: JB HiFi
     buyLink: ''
+  format: 35mm
 - name: FujiFilm Color
   boxSpeed: 400
   maxPushPull: 1
@@ -113,6 +120,7 @@ films:
     filmCost: 24
     storeName: JB HiFi
     buyLink: ''
+  format: 35mm
 - name: FujiFilm Color
   boxSpeed: 200
   maxPushPull: 1
@@ -129,3 +137,4 @@ films:
     filmCost: 41.1
     storeName: Woolworths
     buyLink: ''
+  format: 35mm
