@@ -19,6 +19,7 @@ COPY default.conf /etc/nginx/conf.d/default.conf
 # be served alongside the app, not just live in the git repo.
 COPY films /usr/share/nginx/html/films
 COPY labs /usr/share/nginx/html/labs
+COPY themes /usr/share/nginx/html/themes
 
 # docker-compose.yml mounts a named volume at exactly this path so
 # config.yaml survives container recreation. That mount only works
