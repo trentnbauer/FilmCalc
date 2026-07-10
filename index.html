@@ -131,6 +131,14 @@
 
         <form id="calculatorForm" class="space-y-6">
 
+            <!-- Global film format — one control, applies everywhere (Film Lookup
+                 cheaper-alternative + Dev Cost ranking). Sits above the tabs so
+                 it's always visible. -->
+            <div class="flex items-center gap-2">
+                <label for="globalFormat" class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide shrink-0">Film Type</label>
+                <select id="globalFormat" data-options="formats" class="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm"></select>
+            </div>
+
             <div role="tablist" aria-label="Main sections" class="flex gap-1 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20 bg-white dark:bg-gray-800 -mx-6 md:-mx-8 px-6 md:px-8">
                 <button id="tabFilmBtn" type="button" role="tab" aria-selected="true" class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 transition-colors">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m-6 4h6m-6 4h3M5 3h14a1 1 0 011 1v16a1 1 0 01-1 1H5a1 1 0 01-1-1V4a1 1 0 011-1z"/></svg>
@@ -154,29 +162,12 @@
                 </button>
             </div>
 
-            <!-- Global filters — apply to both Film Lookup and Dev Cost. Hidden
-                 on Library/Settings tabs (toggled in switchTab). -->
-            <div id="globalFilters" class="grid grid-cols-2 gap-2 hidden">
+            <!-- Dev Cost process filter (format is the global control above the
+                 tabs). Hidden on other tabs (toggled in switchTab). -->
+            <div id="globalFilters" class="hidden">
                 <div>
                     <label for="globalProcess" class="block text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Process</label>
-                    <select id="globalProcess" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm">
-                        <option value="ALL">All processes</option>
-                        <option value="C41">C41 (Color)</option>
-                        <option value="BW">B&amp;W</option>
-                        <option value="E6">E6</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="globalFormat" class="block text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Format</label>
-                    <select id="globalFormat" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm">
-                        <option value="ALL">All formats</option>
-                        <option value="35mm">35mm</option>
-                        <option value="120">120</option>
-                        <option value="110">110</option>
-                        <option value="127">127</option>
-                        <option value="220">220</option>
-                        <option value="sheet">Sheet</option>
-                    </select>
+                    <select id="globalProcess" data-options="processes" data-include-all="All processes" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm"></select>
                 </div>
             </div>
 
@@ -196,23 +187,8 @@
                             </div>
                             <div>
                                 <label for="processSelect" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Process</label>
-                                <select id="processSelect" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                                    <option value="C41">C41 (Color)</option>
-                                    <option value="BW">B&amp;W</option>
-                                    <option value="E6">E6</option>
-                                </select>
+                                <select id="processSelect" data-options="processes" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600"></select>
                             </div>
-                        </div>
-                        <div>
-                            <label for="lookupFormat" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Format</label>
-                            <select id="lookupFormat" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                                <option value="35mm">35mm</option>
-                                <option value="120">120</option>
-                                <option value="110">110</option>
-                                <option value="127">127</option>
-                                <option value="220">220</option>
-                                <option value="sheet">Sheet</option>
-                            </select>
                         </div>
                         <div>
                             <label for="filmCost" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Total Cost incl. Postage ($)</label>
@@ -420,24 +396,13 @@
 
                     <div>
                         <label for="libraryProcessSelect" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Process</label>
-                        <select id="libraryProcessSelect" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                            <option value="C41">C41 (Color)</option>
-                            <option value="BW">B&amp;W</option>
-                            <option value="E6">E6</option>
-                        </select>
+                        <select id="libraryProcessSelect" data-options="processes" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600"></select>
                         <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Only lab service tiers set to the same process are considered for this film.</p>
                     </div>
 
                     <div>
                         <label for="libraryFormatSelect" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Format</label>
-                        <select id="libraryFormatSelect" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
-                            <option value="35mm">35mm</option>
-                            <option value="120">120</option>
-                            <option value="110">110</option>
-                            <option value="127">127</option>
-                            <option value="220">220</option>
-                            <option value="sheet">Sheet</option>
-                        </select>
+                        <select id="libraryFormatSelect" data-options="formats" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600"></select>
                         <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Physical film size. Used by the global Format filter.</p>
                     </div>
 
@@ -665,14 +630,59 @@
             return active;
         }
 
+        // Film formats and dev processes live in options.yaml so new ones can
+        // be added without touching HTML/JS. These defaults are a fallback if
+        // the file can't be fetched (offline first load), and are overwritten by
+        // loadOptions() before the UI populates.
+        let FORMAT_OPTIONS = [
+            { value: '35mm', label: '35mm' }, { value: '120', label: '120' },
+            { value: '110', label: '110' }, { value: '127', label: '127' },
+            { value: '220', label: '220' }, { value: 'sheet', label: 'Sheet' }
+        ];
+        let PROCESS_OPTIONS = [
+            { value: 'C41', label: 'C41 (Color)' }, { value: 'BW', label: 'B&W' },
+            { value: 'E6', label: 'E6' }, { value: 'ECN2', label: 'ECN-2' }
+        ];
+
+        async function loadOptions() {
+            try {
+                const res = await fetch('options.yaml');
+                if (res.ok) {
+                    const parsed = jsyaml.load(await res.text());
+                    if (Array.isArray(parsed?.formats) && parsed.formats.length) {
+                        FORMAT_OPTIONS = parsed.formats.map(o => ({ value: String(o.value), label: String(o.label ?? o.value) }));
+                    }
+                    if (Array.isArray(parsed?.processes) && parsed.processes.length) {
+                        PROCESS_OPTIONS = parsed.processes.map(o => ({ value: String(o.value), label: String(o.label ?? o.value) }));
+                    }
+                }
+            } catch { /* keep fallback defaults */ }
+        }
+
+        // Populate every <select data-options="formats|processes"> from the
+        // loaded lists. data-include-all="Label" prepends an ALL option (used by
+        // the Dev Cost process *filter*, not the per-entry selects).
+        function populateOptionSelects() {
+            document.querySelectorAll('select[data-options]').forEach(sel => {
+                const list = sel.dataset.options === 'formats' ? FORMAT_OPTIONS : PROCESS_OPTIONS;
+                const prev = sel.value;
+                let html = '';
+                if (sel.dataset.includeAll) html += `<option value="ALL">${sel.dataset.includeAll}</option>`;
+                html += list.map(o => `<option value="${o.value}">${o.label.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</option>`).join('');
+                sel.innerHTML = html;
+                if (prev && [...sel.options].some(o => o.value === prev)) sel.value = prev;
+            });
+        }
+
         // Global film filters (Process + Format), shared by Film Lookup and Dev
-        // Cost tabs, persisted across sessions. Process = development chemistry
-        // (C41/B&W/E6); Format = physical film size (35mm/120/110/…).
+        // Cost tabs, persisted across sessions. Process = development chemistry;
+        // Format = physical film size. Format has no "All" — a camera is always
+        // one format — so it defaults to the first format.
         let cheapestProcess = localStorage.getItem('globalProcess') || 'ALL';
-        let cheapestFormat = localStorage.getItem('globalFormat') || 'ALL';
+        let cheapestFormat = localStorage.getItem('globalFormat') || '35mm';
         function filmPassesProcessFilter(f) {
             if (cheapestProcess !== 'ALL' && (f.process || 'C41') !== cheapestProcess) return false;
-            if (cheapestFormat !== 'ALL' && (f.format || '35mm') !== cheapestFormat) return false;
+            if ((f.format || '35mm') !== cheapestFormat) return false;
             return true;
         }
 
@@ -1196,10 +1206,8 @@
                     </div>
                     <div>
                         <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Process</label>
-                        <div class="flex items-center gap-2">
-                            <button type="button" class="tier-process-c41 process-toggle-btn px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${processes.includes('C41') ? 'bg-green-600 border-green-600 text-white' : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400'}" data-active="${processes.includes('C41') ? 'true' : 'false'}">C41</button>
-                            <button type="button" class="tier-process-bw process-toggle-btn px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${processes.includes('BW') ? 'bg-green-600 border-green-600 text-white' : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400'}" data-active="${processes.includes('BW') ? 'true' : 'false'}">B&amp;W</button>
-                            <button type="button" class="tier-process-e6 process-toggle-btn px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${processes.includes('E6') ? 'bg-green-600 border-green-600 text-white' : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400'}" data-active="${processes.includes('E6') ? 'true' : 'false'}">E6</button>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            ${PROCESS_OPTIONS.map(pr => `<button type="button" class="tier-process-btn process-toggle-btn px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${processes.includes(pr.value) ? 'bg-green-600 border-green-600 text-white' : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400'}" data-process="${pr.value}" data-active="${processes.includes(pr.value) ? 'true' : 'false'}">${escapeHtml(pr.label)}</button>`).join('')}
                         </div>
                         <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Tick every process this tier handles — a film only matches a tier that includes its own process.</p>
                     </div>
@@ -1249,7 +1257,7 @@
             newBlock.querySelector('.tier-noPushPull').addEventListener('change', (e) => {
                 newBlock.querySelector('.tier-pushpull-fields').classList.toggle('hidden', e.target.checked);
             });
-            newBlock.querySelectorAll('.tier-process-c41, .tier-process-bw, .tier-process-e6').forEach(btn => {
+            newBlock.querySelectorAll('.tier-process-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     toggleTierProcessBtn(btn);
                     updateLabComparison();
@@ -1825,9 +1833,8 @@
                 if (f.hidden) return;
                 if ((parseInt(f.boxSpeed) || 0) !== boxSpeed) return;
                 if ((f.process || 'C41') !== process) return;
-                // Match the format chosen in the Film block (defaults 35mm).
-                const lookupFormat = document.getElementById('lookupFormat').value || '35mm';
-                if ((f.format || '35mm') !== lookupFormat) return;
+                // Match the global Film Type filter (above the tabs).
+                if ((f.format || '35mm') !== cheapestFormat) return;
                 const maxPushPull = parseFloat(f.maxPushPull) || 1;
                 if (stopsAbs > maxPushPull) return;
 
@@ -2621,7 +2628,7 @@
             document.getElementById('libraryBoxSpeed').value = boxSpeed || '';
             document.getElementById('libraryMaxPushPull').value = '1';
             document.getElementById('libraryProcessSelect').value = document.getElementById('processSelect').value;
-            document.getElementById('libraryFormatSelect').value = document.getElementById('lookupFormat').value || '35mm';
+            document.getElementById('libraryFormatSelect').value = cheapestFormat || '35mm';
             resetBundles([{ rolls, exposures, filmCost, storeName: '', buyLink: '' }]);
             document.getElementById('libraryFilmName').focus();
         });
@@ -2666,9 +2673,9 @@
             if (tierBlocks.length === 0) return alert('Add at least one service tier');
             const services = Array.from(tierBlocks).map(block => {
                 const processes = [];
-                if (block.querySelector('.tier-process-c41').dataset.active === 'true') processes.push('C41');
-                if (block.querySelector('.tier-process-bw').dataset.active === 'true') processes.push('BW');
-                if (block.querySelector('.tier-process-e6').dataset.active === 'true') processes.push('E6');
+                block.querySelectorAll('.tier-process-btn').forEach(btn => {
+                    if (btn.dataset.active === 'true') processes.push(btn.dataset.process);
+                });
                 return {
                     devCost: block.querySelector('.tier-devCost').value,
                     pushPullCost: block.querySelector('.tier-pushPullCost').value,
@@ -3109,7 +3116,20 @@
             document.getElementById('firstLaunchDismissBtn').addEventListener('click', dismiss);
         })();
 
-        loadDefaults();
+        (async () => {
+            await loadOptions();
+            populateOptionSelects();
+            // Reflect persisted/default filter values now that options exist.
+            const gp = document.getElementById('globalProcess'); if (gp) gp.value = cheapestProcess;
+            const gf = document.getElementById('globalFormat');
+            if (gf) {
+                // Format has no ALL; if the stored value is stale, fall back to first.
+                gf.value = [...gf.options].some(o => o.value === cheapestFormat) ? cheapestFormat : (FORMAT_OPTIONS[0]?.value || '35mm');
+                cheapestFormat = gf.value;
+                localStorage.setItem('globalFormat', cheapestFormat);
+            }
+            loadDefaults();
+        })();
     </script>
 </body>
 </html>
