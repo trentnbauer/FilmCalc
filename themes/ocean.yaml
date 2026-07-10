@@ -1,0 +1,9 @@
+label: Ocean
+light:
+  pageBg: "#eff6ff"
+  cardBg: "#ffffff"
+  accent: "#0369a1"
+dark:
+  pageBg: "#0b1220"
+  cardBg: "#111c2e"
+  accent: "#38bdf8"
