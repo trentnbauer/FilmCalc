@@ -156,7 +156,7 @@
 
             <!-- Global filters — apply to both Film Lookup and Dev Cost. Hidden
                  on Library/Settings tabs (toggled in switchTab). -->
-            <div id="globalFilters" class="grid grid-cols-2 gap-2">
+            <div id="globalFilters" class="grid grid-cols-2 gap-2 hidden">
                 <div>
                     <label for="globalProcess" class="block text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Process</label>
                     <select id="globalProcess" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm">
@@ -202,6 +202,17 @@
                                     <option value="E6">E6</option>
                                 </select>
                             </div>
+                        </div>
+                        <div>
+                            <label for="lookupFormat" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Format</label>
+                            <select id="lookupFormat" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                                <option value="35mm">35mm</option>
+                                <option value="120">120</option>
+                                <option value="110">110</option>
+                                <option value="127">127</option>
+                                <option value="220">220</option>
+                                <option value="sheet">Sheet</option>
+                            </select>
                         </div>
                         <div>
                             <label for="filmCost" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Total Cost incl. Postage ($)</label>
@@ -266,6 +277,11 @@
             <!-- Expired film reference calculator (own tab) -->
             <div id="expiredTabContent" class="space-y-4 hidden">
                 <p class="text-xs text-gray-500 dark:text-gray-400">Estimate how much slower to rate expired film. Older film loses sensitivity over time — roughly one stop per decade, faster if stored warm.</p>
+                <div class="text-xs text-gray-400 dark:text-gray-500 -mt-2 space-y-0.5">
+                    <p><span class="font-semibold">Cold stored</span> — in a fridge or freezer.</p>
+                    <p><span class="font-semibold">Climate controlled</span> — a shop or inside a house.</p>
+                    <p><span class="font-semibold">Uncontrolled</span> — a roof cavity, garage, shed, or outdoors.</p>
+                </div>
                 <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-100 dark:border-yellow-800/30 p-4 space-y-3">
                     <div>
                         <label for="expiredBoxSpeed" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Film Box Speed (ISO)</label>
@@ -275,9 +291,9 @@
                         <div>
                             <label for="filmStorageCondition" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Storage</label>
                             <select id="filmStorageCondition" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
-                                <option value="cold">Cold (fridge/freezer)</option>
-                                <option value="storefront">Store Front / Room Temp</option>
-                                <option value="unknown">Unknown</option>
+                                <option value="cold">Cold stored (fridge/freezer)</option>
+                                <option value="controlled">Climate controlled building</option>
+                                <option value="uncontrolled">Uncontrolled building</option>
                             </select>
                         </div>
                         <div>
@@ -814,7 +830,7 @@
         // more slowly than film left at room temperature or of unknown history.
         // These years-per-stop figures are commonly-cited approximations, not a
         // guarantee — bracketing exposures is still the safe move.
-        const EXPIRED_YEARS_PER_STOP = { cold: 15, storefront: 7, unknown: 5 };
+        const EXPIRED_YEARS_PER_STOP = { cold: 15, controlled: 10, uncontrolled: 5 };
 
         const filmStorageCondition = document.getElementById('filmStorageCondition');
         const filmExpiryDate = document.getElementById('filmExpiryDate');
@@ -835,10 +851,10 @@
             const yearsExpired = nowDecimal - expDecimal;
             if (yearsExpired <= 0) return null;
 
-            const yearsPerStop = EXPIRED_YEARS_PER_STOP[filmStorageCondition.value] || EXPIRED_YEARS_PER_STOP.unknown;
+            const yearsPerStop = EXPIRED_YEARS_PER_STOP[filmStorageCondition.value] || EXPIRED_YEARS_PER_STOP.uncontrolled;
             const stopsLoss = Math.round((yearsExpired / yearsPerStop) * 2) / 2;
             const recommendedEI = Math.max(1, Math.round(boxSpeed / Math.pow(2, stopsLoss)));
-            const storageLabel = { cold: 'cold-stored', storefront: 'store-front stored', unknown: 'unknown storage' }[filmStorageCondition.value];
+            const storageLabel = { cold: 'cold-stored', controlled: 'climate-controlled storage', uncontrolled: 'uncontrolled storage' }[filmStorageCondition.value];
             return { boxSpeed, yearsExpired, stopsLoss, recommendedEI, storageLabel };
         }
 
@@ -974,7 +990,9 @@
             });
             document.getElementById('labsForThisRollSection').classList.toggle('hidden', tab !== 'film');
             // Global Process/Format filters only apply to Film Lookup + Dev Cost.
-            document.getElementById('globalFilters').classList.toggle('hidden', tab !== 'film' && tab !== 'cheapest');
+            // Global Process/Format filters live on the Dev Cost tab only. Film
+            // Lookup has its own per-entry Process + Format in the Film block.
+            document.getElementById('globalFilters').classList.toggle('hidden', tab !== 'cheapest');
             if (tab === 'cheapest') refreshActiveCheapestSubTab();
         }
 
@@ -1415,18 +1433,12 @@
                 ? `<p class="text-sm text-blue-800 dark:text-blue-300 mt-1">Development note: ${devSpeed > boxSpeed ? 'Push' : 'Pull'} ${stops} stop${stops === 1 ? '' : 's'}</p>`
                 : '';
 
-            const expiredInfo = computeExpiredInfo();
-            const expiredNote = expiredInfo
-                ? `<p class="text-xs text-blue-700/80 dark:text-blue-400/80 mt-1">Expired film estimate: ~EI ${expiredInfo.recommendedEI} recommended for age (${expiredInfo.stopsLoss} stop${expiredInfo.stopsLoss === 1 ? '' : 's'} slower, ${expiredInfo.storageLabel})</p>`
-                : '';
-
             el.innerHTML = `<div class="flex items-start gap-2 bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700 rounded-lg px-3 py-2 text-left">
                 <span class="text-blue-500 dark:text-blue-400">📷</span>
                 <div>
                     <p class="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">Camera Setting</p>
                     <p class="text-sm text-blue-800 dark:text-blue-300">Set Camera or light meter to <span class="font-semibold">${devSpeed} ISO</span></p>
                     ${devNoteHtml}
-                    ${expiredNote}
                 </div>
             </div>`;
         }
@@ -1813,7 +1825,9 @@
                 if (f.hidden) return;
                 if ((parseInt(f.boxSpeed) || 0) !== boxSpeed) return;
                 if ((f.process || 'C41') !== process) return;
-                if (cheapestFormat !== 'ALL' && (f.format || '35mm') !== cheapestFormat) return;
+                // Match the format chosen in the Film block (defaults 35mm).
+                const lookupFormat = document.getElementById('lookupFormat').value || '35mm';
+                if ((f.format || '35mm') !== lookupFormat) return;
                 const maxPushPull = parseFloat(f.maxPushPull) || 1;
                 if (stopsAbs > maxPushPull) return;
 
@@ -2607,6 +2621,7 @@
             document.getElementById('libraryBoxSpeed').value = boxSpeed || '';
             document.getElementById('libraryMaxPushPull').value = '1';
             document.getElementById('libraryProcessSelect').value = document.getElementById('processSelect').value;
+            document.getElementById('libraryFormatSelect').value = document.getElementById('lookupFormat').value || '35mm';
             resetBundles([{ rolls, exposures, filmCost, storeName: '', buyLink: '' }]);
             document.getElementById('libraryFilmName').focus();
         });
