@@ -1,0 +1,28 @@
+# Film formats and development processes used to populate the app's dropdowns
+# and the lab service-tier process buttons. Add a new format or process here and
+# it appears everywhere automatically — no HTML changes needed.
+#
+# formats: value is stored on each film (film.format); label is shown in menus.
+# processes: value is stored on films and lab tiers; label is shown in menus.
+formats:
+  - value: 35mm
+    label: 35mm
+  - value: "120"
+    label: "120"
+  - value: "110"
+    label: "110"
+  - value: "127"
+    label: "127"
+  - value: "220"
+    label: "220"
+  - value: sheet
+    label: Sheet
+processes:
+  - value: C41
+    label: C41 (Color)
+  - value: BW
+    label: B&W
+  - value: E6
+    label: E6
+  - value: ECN2
+    label: ECN-2
