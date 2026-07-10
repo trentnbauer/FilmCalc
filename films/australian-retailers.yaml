@@ -138,3 +138,291 @@ films:
     storeName: Woolworths
     buyLink: ''
   format: 35mm
+- name: Kodak Portra 400
+  boxSpeed: 400
+  maxPushPull: 2
+  process: C41
+  hidden: false
+  bundles:
+  - rolls: 1
+    exposures: 12
+    filmCost: 36.0
+    storeName: Walkens
+    buyLink: https://walkens.com.au/products/kodak-portra-400-120-film
+  format: '120'
+- name: Kodak Portra 160
+  boxSpeed: 160
+  maxPushPull: 2
+  process: C41
+  hidden: false
+  bundles:
+  - rolls: 1
+    exposures: 12
+    filmCost: 38.0
+    storeName: Walkens
+    buyLink: https://walkens.com.au/products/kodak-portra-160-120-film
+  format: '120'
+- name: Kodak Portra 800
+  boxSpeed: 800
+  maxPushPull: 2
+  process: C41
+  hidden: false
+  bundles:
+  - rolls: 1
+    exposures: 12
+    filmCost: 43.0
+    storeName: Walkens
+    buyLink: https://walkens.com.au/products/kodak-portra-800-120-film
+  format: '120'
+- name: Kodak Ektar 100
+  boxSpeed: 100
+  maxPushPull: 2
+  process: C41
+  hidden: false
+  bundles:
+  - rolls: 1
+    exposures: 12
+    filmCost: 29.0
+    storeName: Walkens
+    buyLink: https://walkens.com.au/products/kodak-ektar-100-120-film
+  format: '120'
+- name: Kodak Gold 200
+  boxSpeed: 200
+  maxPushPull: 2
+  process: C41
+  hidden: false
+  bundles:
+  - rolls: 1
+    exposures: 12
+    filmCost: 18.5
+    storeName: Walkens
+    buyLink: https://walkens.com.au/products/eastman-kodak-gold-200-120-film
+  format: '120'
+- name: Kodak Tri-X 400
+  boxSpeed: 400
+  maxPushPull: 2
+  process: BW
+  hidden: false
+  bundles:
+  - rolls: 1
+    exposures: 12
+    filmCost: 18.5
+    storeName: Walkens
+    buyLink: https://walkens.com.au/products/kodak-tri-x-400-120-film
+  format: '120'
+- name: Kodak T-Max 400
+  boxSpeed: 400
+  maxPushPull: 2
+  process: BW
+  hidden: false
+  bundles:
+  - rolls: 1
+    exposures: 12
+    filmCost: 20.5
+    storeName: Walkens
+    buyLink: https://walkens.com.au/products/kodak-t-max-400-120-film
+  format: '120'
+- name: Kodak T-Max 100
+  boxSpeed: 100
+  maxPushPull: 2
+  process: BW
+  hidden: false
+  bundles:
+  - rolls: 1
+    exposures: 12
+    filmCost: 23.0
+    storeName: Walkens
+    buyLink: https://walkens.com.au/products/kodak-t-max-100-120-film
+  format: '120'
+- name: Kodak Ektachrome E100
+  boxSpeed: 100
+  maxPushPull: 1
+  process: E6
+  hidden: false
+  bundles:
+  - rolls: 1
+    exposures: 12
+    filmCost: 50.0
+    storeName: Walkens
+    buyLink: https://walkens.com.au/products/kodak-ektachrome-e100-120-film
+  format: '120'
+- name: Ilford HP5+ 400
+  boxSpeed: 400
+  maxPushPull: 2
+  process: BW
+  hidden: false
+  bundles:
+  - rolls: 1
+    exposures: 12
+    filmCost: 16.0
+    storeName: Walkens
+    buyLink: https://walkens.com.au/products/ilford-hp5-400-120-film
+  format: '120'
+- name: Ilford FP4+ 125
+  boxSpeed: 125
+  maxPushPull: 2
+  process: BW
+  hidden: false
+  bundles:
+  - rolls: 1
+    exposures: 12
+    filmCost: 16.0
+    storeName: Walkens
+    buyLink: https://walkens.com.au/products/ilford-fp4-125-120-film
+  format: '120'
+- name: Ilford Delta 100
+  boxSpeed: 100
+  maxPushPull: 2
+  process: BW
+  hidden: false
+  bundles:
+  - rolls: 1
+    exposures: 12
+    filmCost: 17.5
+    storeName: Walkens
+    buyLink: https://walkens.com.au/products/ilford-delta-100-120-film
+  format: '120'
+- name: Ilford Delta 400
+  boxSpeed: 400
+  maxPushPull: 2
+  process: BW
+  hidden: false
+  bundles:
+  - rolls: 1
+    exposures: 12
+    filmCost: 17.5
+    storeName: Walkens
+    buyLink: https://walkens.com.au/products/ilford-delta-400-120-film
+  format: '120'
+- name: Ilford Delta 3200
+  boxSpeed: 3200
+  maxPushPull: 2
+  process: BW
+  hidden: false
+  bundles:
+  - rolls: 1
+    exposures: 12
+    filmCost: 17.0
+    storeName: Walkens
+    buyLink: https://walkens.com.au/products/ilford-delta-3200-120-film
+  format: '120'
+- name: Ilford XP2 Super 400
+  boxSpeed: 400
+  maxPushPull: 2
+  process: C41
+  hidden: false
+  bundles:
+  - rolls: 1
+    exposures: 12
+    filmCost: 15.0
+    storeName: Walkens
+    buyLink: https://walkens.com.au/products/ilford-xp2-super-400-120-film
+  format: '120'
+- name: Kentmere Pan 100
+  boxSpeed: 100
+  maxPushPull: 2
+  process: BW
+  hidden: false
+  bundles:
+  - rolls: 1
+    exposures: 12
+    filmCost: 12.0
+    storeName: Walkens
+    buyLink: https://walkens.com.au/products/kentmere-pan-100-120-film
+  format: '120'
+- name: Kentmere Pan 200
+  boxSpeed: 200
+  maxPushPull: 2
+  process: BW
+  hidden: false
+  bundles:
+  - rolls: 1
+    exposures: 12
+    filmCost: 12.0
+    storeName: Walkens
+    buyLink: https://walkens.com.au/products/kentmere-pan-200-120-film
+  format: '120'
+- name: Kentmere Pan 400
+  boxSpeed: 400
+  maxPushPull: 2
+  process: BW
+  hidden: false
+  bundles:
+  - rolls: 1
+    exposures: 12
+    filmCost: 12.0
+    storeName: Walkens
+    buyLink: https://walkens.com.au/products/kentmere-pan-400-120-film
+  format: '120'
+- name: Fujifilm Neopan Acros 100 II
+  boxSpeed: 100
+  maxPushPull: 2
+  process: BW
+  hidden: false
+  bundles:
+  - rolls: 1
+    exposures: 12
+    filmCost: 25.0
+    storeName: Walkens
+    buyLink: https://walkens.com.au/products/fujifilm-neopan-acros-100-ii-120-film
+  format: '120'
+- name: Lomography Color Negative 400
+  boxSpeed: 400
+  maxPushPull: 2
+  process: C41
+  hidden: false
+  bundles:
+  - rolls: 1
+    exposures: 12
+    filmCost: 26.0
+    storeName: Walkens
+    buyLink: https://walkens.com.au/products/lomography-color-negative-400-120
+  format: '120'
+- name: Lomography Color Negative 800
+  boxSpeed: 800
+  maxPushPull: 2
+  process: C41
+  hidden: false
+  bundles:
+  - rolls: 1
+    exposures: 12
+    filmCost: 29.0
+    storeName: Walkens
+    buyLink: https://walkens.com.au/products/lomography-color-negative-800-120
+  format: '120'
+- name: Fomapan Classic 100
+  boxSpeed: 100
+  maxPushPull: 2
+  process: BW
+  hidden: false
+  bundles:
+  - rolls: 1
+    exposures: 12
+    filmCost: 14.0
+    storeName: Walkens
+    buyLink: https://walkens.com.au/products/foma-fomapan-classic-100-120-film
+  format: '120'
+- name: Fomapan Creative 200
+  boxSpeed: 200
+  maxPushPull: 2
+  process: BW
+  hidden: false
+  bundles:
+  - rolls: 1
+    exposures: 12
+    filmCost: 15.0
+    storeName: Walkens
+    buyLink: https://walkens.com.au/products/foma-fomapan-creative-200-120-film
+  format: '120'
+- name: Fomapan Action 400
+  boxSpeed: 400
+  maxPushPull: 2
+  process: BW
+  hidden: false
+  bundles:
+  - rolls: 1
+    exposures: 12
+    filmCost: 14.0
+    storeName: Walkens
+    buyLink: https://walkens.com.au/products/foma-fomapan-action-400-120-film
+  format: '120'
