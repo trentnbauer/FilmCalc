@@ -21,6 +21,15 @@
         }
     </script>
     <style>
+        /* Custom-theme variables. Default to empty so the base Tailwind colours
+           show through; a loaded theme sets --theme-page-bg / --theme-card-bg /
+           --theme-accent (light or dark values, chosen by the .dark class).
+           Applied only where a theme is active via .themed-* helper classes. */
+        .themed-page[data-theme-active="1"] { background-color: var(--theme-page-bg) !important; }
+        .themed-card[data-theme-active="1"] { background-color: var(--theme-card-bg) !important; }
+        [data-theme-active="1"] .theme-accent-text { color: var(--theme-accent) !important; }
+        [data-theme-active="1"] .theme-accent-bg { background-color: var(--theme-accent) !important; }
+
         /* Native form controls (selects, month picker, number spinners) follow the app theme
            instead of always rendering light. */
         html { color-scheme: light; }
@@ -67,7 +76,7 @@
         html.dark .filmcalc-logo { --hole: #1f2937; } /* gray-800, the card colour */
     </style>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans min-h-screen flex items-start justify-center p-4 pt-4 md:pt-8 transition-colors duration-200">
+<body class="themed-page bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans min-h-screen flex items-start justify-center p-4 pt-4 md:pt-8 transition-colors duration-200">
 
     <div class="w-full max-w-2xl space-y-3">
 
@@ -78,7 +87,7 @@
         </button>
     </div>
 
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 md:p-8 w-full relative transition-colors duration-200">
+    <div class="themed-card bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 md:p-8 w-full relative transition-colors duration-200">
 
         <header class="flex items-start justify-between gap-4 mb-6">
             <div class="flex items-center gap-3">
@@ -131,6 +140,10 @@
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-2.2 0-4 1.1-4 2.5S9.8 13 12 13s4 1.1 4 2.5-1.8 2.5-4 2.5m0-10V6m0 12v-2m0-10a9 9 0 100 18 9 9 0 000-18z" transform="scale(0.92) translate(1,1)"/></svg>
                     <span>Dev Cost</span>
                 </button>
+                <button id="tabExpiredBtn" type="button" role="tab" aria-selected="false" class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>Expired</span>
+                </button>
                 <button id="tabLibraryBtn" type="button" role="tab" aria-selected="false" class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
                     <span>Library</span>
@@ -139,6 +152,32 @@
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                     <span>Settings</span>
                 </button>
+            </div>
+
+            <!-- Global filters — apply to both Film Lookup and Dev Cost. Hidden
+                 on Library/Settings tabs (toggled in switchTab). -->
+            <div id="globalFilters" class="grid grid-cols-2 gap-2">
+                <div>
+                    <label for="globalProcess" class="block text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Process</label>
+                    <select id="globalProcess" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm">
+                        <option value="ALL">All processes</option>
+                        <option value="C41">C41 (Color)</option>
+                        <option value="BW">B&amp;W</option>
+                        <option value="E6">E6</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="globalFormat" class="block text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Format</label>
+                    <select id="globalFormat" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm">
+                        <option value="ALL">All formats</option>
+                        <option value="35mm">35mm</option>
+                        <option value="120">120</option>
+                        <option value="110">110</option>
+                        <option value="127">127</option>
+                        <option value="220">220</option>
+                        <option value="sheet">Sheet</option>
+                    </select>
+                </div>
             </div>
 
             <div id="filmTabContent" class="space-y-4">
@@ -190,7 +229,6 @@
                     <input type="number" inputmode="numeric" id="devSpeed" placeholder="same as box speed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                     <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">Only change this if you're pushing or pulling. Box 400 → shooting 800 = +1 stop push.</p>
                     <div id="pushPullWarning" class="mt-1"></div>
-                    <div id="expiredStackWarning" class="mt-1"></div>
                 </div>
 
                 <!-- Result pulled up directly under the inputs -->
@@ -204,32 +242,8 @@
                 </div>
 
                 <details id="moreOptionsDetails" class="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/30">
-                    <summary class="cursor-pointer select-none px-4 py-2.5 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">⚙️ More options — expired film &amp; extra fees</summary>
+                    <summary class="cursor-pointer select-none px-4 py-2.5 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">⚙️ More options — extra fees</summary>
                     <div class="px-4 pb-4 space-y-4">
-
-                <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-100 dark:border-yellow-800/30 p-4">
-                    <label class="flex items-center gap-2 text-sm font-semibold text-yellow-800 dark:text-yellow-400 uppercase tracking-wide mb-2">
-                        <input type="checkbox" id="filmExpiredCheckbox" class="rounded border-gray-300 dark:border-gray-600 text-yellow-600 focus:ring-yellow-500">
-                        Expired Film
-                    </label>
-                    <div id="expiredFieldsContainer" class="hidden space-y-2">
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label for="filmStorageCondition" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Storage</label>
-                                <select id="filmStorageCondition" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
-                                    <option value="cold">Cold (fridge/freezer)</option>
-                                    <option value="storefront">Store Front / Room Temp</option>
-                                    <option value="unknown">Unknown</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="filmExpiryDate" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Expiry (Month/Year)</label>
-                                <input type="month" id="filmExpiryDate" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
-                            </div>
-                        </div>
-                        <div id="expiredRecommendation" class="text-xs"></div>
-                    </div>
-                </div>
 
                 <div>
                     <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Extra Fees</span>
@@ -249,17 +263,33 @@
                 </details>
             </div>
 
-            <div id="cheapestTabContent" class="space-y-6 hidden">
-                <div>
-                    <span class="block text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1.5">Process</span>
-                    <div id="processSegmented" class="grid grid-cols-4 gap-1 bg-gray-100 dark:bg-gray-700/50 rounded-lg p-1" role="tablist" aria-label="Process filter">
-                        <button type="button" data-process="ALL" class="process-seg py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide transition-colors">All</button>
-                        <button type="button" data-process="C41" class="process-seg py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide transition-colors">C41</button>
-                        <button type="button" data-process="BW" class="process-seg py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide transition-colors">B&amp;W</button>
-                        <button type="button" data-process="E6" class="process-seg py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide transition-colors">E6</button>
+            <!-- Expired film reference calculator (own tab) -->
+            <div id="expiredTabContent" class="space-y-4 hidden">
+                <p class="text-xs text-gray-500 dark:text-gray-400">Estimate how much slower to rate expired film. Older film loses sensitivity over time — roughly one stop per decade, faster if stored warm.</p>
+                <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-100 dark:border-yellow-800/30 p-4 space-y-3">
+                    <div>
+                        <label for="expiredBoxSpeed" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Film Box Speed (ISO)</label>
+                        <input type="number" inputmode="numeric" id="expiredBoxSpeed" placeholder="400" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                     </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label for="filmStorageCondition" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Storage</label>
+                            <select id="filmStorageCondition" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
+                                <option value="cold">Cold (fridge/freezer)</option>
+                                <option value="storefront">Store Front / Room Temp</option>
+                                <option value="unknown">Unknown</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="filmExpiryDate" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Expiry (Month/Year)</label>
+                            <input type="month" id="filmExpiryDate" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
+                        </div>
+                    </div>
+                    <div id="expiredRecommendation" class="text-xs"></div>
                 </div>
+            </div>
 
+            <div id="cheapestTabContent" class="space-y-6 hidden">
                 <div class="flex gap-1 bg-gray-100 dark:bg-gray-700/50 rounded-lg p-1">
                     <button id="cheapestSubIsoBtn" type="button" class="flex-1 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide bg-white dark:bg-gray-800 text-indigo-700 dark:text-indigo-400 shadow-sm transition-colors">Per ISO</button>
                     <button id="cheapestSubPhotoBtn" type="button" class="flex-1 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 transition-colors">Per Photo</button>
@@ -382,6 +412,19 @@
                         <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Only lab service tiers set to the same process are considered for this film.</p>
                     </div>
 
+                    <div>
+                        <label for="libraryFormatSelect" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Format</label>
+                        <select id="libraryFormatSelect" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                            <option value="35mm">35mm</option>
+                            <option value="120">120</option>
+                            <option value="110">110</option>
+                            <option value="127">127</option>
+                            <option value="220">220</option>
+                            <option value="sheet">Sheet</option>
+                        </select>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Physical film size. Used by the global Format filter.</p>
+                    </div>
+
                     <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                         <input type="checkbox" id="filmHiddenCheckbox" class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500">
                         Hide this film from the Calculator
@@ -408,6 +451,16 @@
             </div>
 
             <div id="settingsTabContent" class="space-y-5 hidden">
+                <div>
+                    <h3 class="font-semibold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest mb-2">Appearance</h3>
+                    <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3 mb-3">
+                        <h4 class="font-semibold text-gray-700 dark:text-gray-300 text-sm">Theme</h4>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Custom colour themes from the project's <code>themes/</code> folder. Each theme defines both light and dark variants, so the light/dark toggle keeps working.</p>
+                        <select id="themeSelect" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
+                            <option value="">Default</option>
+                        </select>
+                    </div>
+                </div>
                 <div>
                     <h3 class="font-semibold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest mb-2">Calculator Settings</h3>
                     <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3 mb-3">
@@ -596,14 +649,15 @@
             return active;
         }
 
-        // Process filter for the Dev Cost tab. Single-select segmented control
-        // (All / C41 / B&W / E6), persisted across sessions. Named "process"
-        // (the development chemistry) to stay distinct from film *format*
-        // (35mm / 120 / 110), which is a separate filter planned for later.
-        let cheapestProcess = localStorage.getItem('cheapestProcess') || 'ALL';
+        // Global film filters (Process + Format), shared by Film Lookup and Dev
+        // Cost tabs, persisted across sessions. Process = development chemistry
+        // (C41/B&W/E6); Format = physical film size (35mm/120/110/…).
+        let cheapestProcess = localStorage.getItem('globalProcess') || 'ALL';
+        let cheapestFormat = localStorage.getItem('globalFormat') || 'ALL';
         function filmPassesProcessFilter(f) {
-            if (cheapestProcess === 'ALL') return true;
-            return (f.process || 'C41') === cheapestProcess;
+            if (cheapestProcess !== 'ALL' && (f.process || 'C41') !== cheapestProcess) return false;
+            if (cheapestFormat !== 'ALL' && (f.format || '35mm') !== cheapestFormat) return false;
+            return true;
         }
 
         // A lab service tier can support more than one process (e.g. a tier
@@ -630,9 +684,78 @@
             document.documentElement.classList.toggle('dark');
             localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
             updateThemeIcons();
+            applyActiveTheme(); // re-apply so theme picks the right light/dark colours
         });
 
         updateThemeIcons();
+
+        // ---------- Custom themes (YAML files in themes/) ----------
+        // A theme file: { label, light: {pageBg,cardBg,accent}, dark: {...} }.
+        // We set CSS variables from whichever block matches the current mode, so
+        // the light/dark toggle keeps working inside any theme. Default = no
+        // theme (base Tailwind colours).
+        let loadedThemes = {}; // file -> parsed theme
+        let activeThemeFile = localStorage.getItem('activeTheme') || '';
+
+        function applyThemeVars(theme) {
+            const root = document.documentElement;
+            if (!theme) {
+                document.body.removeAttribute('data-theme-active');
+                document.querySelector('.themed-card')?.removeAttribute('data-theme-active');
+                root.style.removeProperty('--theme-page-bg');
+                root.style.removeProperty('--theme-card-bg');
+                root.style.removeProperty('--theme-accent');
+                return;
+            }
+            const isDark = root.classList.contains('dark');
+            const v = (isDark ? theme.dark : theme.light) || theme.light || theme.dark || {};
+            if (v.pageBg) root.style.setProperty('--theme-page-bg', v.pageBg);
+            if (v.cardBg) root.style.setProperty('--theme-card-bg', v.cardBg);
+            if (v.accent) root.style.setProperty('--theme-accent', v.accent);
+            document.body.setAttribute('data-theme-active', '1');
+            document.querySelector('.themed-card')?.setAttribute('data-theme-active', '1');
+        }
+
+        function applyActiveTheme() {
+            applyThemeVars(activeThemeFile ? loadedThemes[activeThemeFile] : null);
+        }
+
+        async function loadThemeList() {
+            const select = document.getElementById('themeSelect');
+            let manifest = [];
+            try {
+                const res = await fetch('themes/index.json');
+                if (res.ok) manifest = await res.json();
+            } catch { /* no themes folder / offline — default only */ }
+            for (const entry of (Array.isArray(manifest) ? manifest : [])) {
+                try {
+                    const r = await fetch(`themes/${entry.file}`);
+                    if (!r.ok) continue;
+                    const parsed = jsyaml.load(await r.text());
+                    if (!parsed || (!parsed.light && !parsed.dark)) continue;
+                    loadedThemes[entry.file] = parsed;
+                    const opt = document.createElement('option');
+                    opt.value = entry.file;
+                    opt.textContent = parsed.label || entry.label || entry.file;
+                    select.appendChild(opt);
+                } catch { /* skip bad theme file */ }
+            }
+            // Restore saved selection if it loaded.
+            if (activeThemeFile && loadedThemes[activeThemeFile]) {
+                select.value = activeThemeFile;
+            } else {
+                activeThemeFile = '';
+            }
+            applyActiveTheme();
+        }
+
+        document.getElementById('themeSelect').addEventListener('change', (e) => {
+            activeThemeFile = e.target.value;
+            localStorage.setItem('activeTheme', activeThemeFile);
+            applyActiveTheme();
+        });
+
+        loadThemeList();
 
         // ---------- Dev banner (dismissible) ----------
         // Hidden by default in the markup so dismissed users never see a flash;
@@ -693,17 +816,15 @@
         // guarantee — bracketing exposures is still the safe move.
         const EXPIRED_YEARS_PER_STOP = { cold: 15, storefront: 7, unknown: 5 };
 
-        const filmExpiredCheckbox = document.getElementById('filmExpiredCheckbox');
-        const expiredFieldsContainer = document.getElementById('expiredFieldsContainer');
         const filmStorageCondition = document.getElementById('filmStorageCondition');
         const filmExpiryDate = document.getElementById('filmExpiryDate');
+        const expiredBoxSpeedInput = document.getElementById('expiredBoxSpeed');
 
-        // Shared by the Expired Film box, the camera-setting info box, and the
-        // push/pull stacking warning, so all three stay consistent with one
-        // calculation instead of three copies of the same math.
+        // Standalone expired-film reference: given a box speed, expiry date and
+        // storage, estimate how many stops of sensitivity the film has lost and
+        // the shooting speed (EI) to rate it at.
         function computeExpiredInfo() {
-            if (!filmExpiredCheckbox.checked) return null;
-            const boxSpeed = parseInt(document.getElementById('boxSpeed').value) || 0;
+            const boxSpeed = parseInt(expiredBoxSpeedInput.value) || 0;
             const expiryVal = filmExpiryDate.value;
             if (!boxSpeed || !expiryVal) return null;
 
@@ -721,40 +842,15 @@
             return { boxSpeed, yearsExpired, stopsLoss, recommendedEI, storageLabel };
         }
 
-        // If the age-based adjustment is already significant (1+ stops) and the
-        // person is additionally pushing/pulling away from that recommended EI,
-        // warn — stacking the two risks under/overexposing film that's already
-        // been compensated for. Lives under Dev Speed since that's what it's
-        // reacting to, not inside the Expired Film box itself.
-        function renderExpiredStackWarning() {
-            const el = document.getElementById('expiredStackWarning');
-            if (!el) return;
-            const info = computeExpiredInfo();
-            if (!info || info.stopsLoss < 1) { el.innerHTML = ''; return; }
-
-            const devSpeedVal = parseFloat(document.getElementById('devSpeed').value) || 0;
-            if (devSpeedVal <= 0 || devSpeedVal === info.recommendedEI) { el.innerHTML = ''; return; }
-
-            const extraStops = Math.round(Math.abs(Math.log2(devSpeedVal / info.recommendedEI)) * 10) / 10;
-            if (extraStops <= 0) { el.innerHTML = ''; return; }
-
-            el.innerHTML = `<div class="flex items-start gap-2 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg px-3 py-2">
-                <span class="text-red-500 dark:text-red-400">⚠️</span>
-                <p class="text-sm text-red-800 dark:text-red-300 font-medium">This film already needs ~${info.stopsLoss} stop${info.stopsLoss === 1 ? '' : 's'} of age compensation — shooting at ${devSpeedVal} ISO adds another ${extraStops} stop${extraStops === 1 ? '' : 's'} of push/pull on top of that.</p>
-            </div>`;
-        }
-
         function updateExpiredRecommendation() {
             const el = document.getElementById('expiredRecommendation');
-            renderExpiredStackWarning();
+            if (!el) return;
 
-            if (!filmExpiredCheckbox.checked) { el.innerHTML = ''; return; }
-
-            const boxSpeed = parseInt(document.getElementById('boxSpeed').value) || 0;
+            const boxSpeed = parseInt(expiredBoxSpeedInput.value) || 0;
             const expiryVal = filmExpiryDate.value;
 
             if (!boxSpeed || !expiryVal) {
-                el.innerHTML = '<p class="text-gray-400 dark:text-gray-500">Enter Box Speed and an expiry date for a recommendation</p>';
+                el.innerHTML = '<p class="text-gray-400 dark:text-gray-500">Enter box speed and an expiry date for a recommendation</p>';
                 return;
             }
 
@@ -770,14 +866,9 @@
                 <p class="text-gray-400 dark:text-gray-500 mt-1">This is a camera/meter setting, not a lab instruction — develop normally at box speed unless you're also intentionally pushing/pulling for other reasons.</p>`;
         }
 
-        filmExpiredCheckbox.addEventListener('change', () => {
-            expiredFieldsContainer.classList.toggle('hidden', !filmExpiredCheckbox.checked);
-            updateExpiredRecommendation();
-        });
         filmStorageCondition.addEventListener('change', updateExpiredRecommendation);
         filmExpiryDate.addEventListener('change', updateExpiredRecommendation);
-        document.getElementById('boxSpeed').addEventListener('input', updateExpiredRecommendation);
-        document.getElementById('devSpeed').addEventListener('input', updateExpiredRecommendation);
+        expiredBoxSpeedInput.addEventListener('input', updateExpiredRecommendation);
 
         // ---------- Lab directions link ----------
         // Builds a maps search URL from whatever's typed in the address field —
@@ -860,6 +951,7 @@
         const tabs = {
             film: { btn: document.getElementById('tabFilmBtn'), content: document.getElementById('filmTabContent') },
             cheapest: { btn: document.getElementById('tabCheapestBtn'), content: document.getElementById('cheapestTabContent') },
+            expired: { btn: document.getElementById('tabExpiredBtn'), content: document.getElementById('expiredTabContent') },
             library: { btn: document.getElementById('tabLibraryBtn'), content: document.getElementById('libraryTabContent') },
             settings: { btn: document.getElementById('tabSettingsBtn'), content: document.getElementById('settingsTabContent') }
         };
@@ -881,6 +973,8 @@
                 setTabActive(tabs[key].btn, active);
             });
             document.getElementById('labsForThisRollSection').classList.toggle('hidden', tab !== 'film');
+            // Global Process/Format filters only apply to Film Lookup + Dev Cost.
+            document.getElementById('globalFilters').classList.toggle('hidden', tab !== 'film' && tab !== 'cheapest');
             if (tab === 'cheapest') refreshActiveCheapestSubTab();
         }
 
@@ -936,32 +1030,30 @@
         Object.keys(cheapestSubTabs).forEach(key => cheapestSubTabs[key].btn.addEventListener('click', () => switchCheapestSubTab(key)));
         document.getElementById('cheapestFilmSelect').addEventListener('change', () => updateCostPerFilmTab());
 
-        // ---------- Dev Cost tab Process segmented control ----------
-        // Single-select (All / C41 / B&W / E6), persisted. Highlights the active
-        // segment so it's always obvious what's selected, and re-runs the active
-        // sub-view on change.
-        function renderProcessSegmented() {
-            document.querySelectorAll('#processSegmented .process-seg').forEach(btn => {
-                const active = btn.dataset.process === cheapestProcess;
-                btn.classList.toggle('bg-white', active);
-                btn.classList.toggle('dark:bg-gray-800', active);
-                btn.classList.toggle('text-indigo-700', active);
-                btn.classList.toggle('dark:text-indigo-400', active);
-                btn.classList.toggle('shadow-sm', active);
-                btn.classList.toggle('text-gray-500', !active);
-                btn.classList.toggle('dark:text-gray-400', !active);
-                btn.setAttribute('aria-selected', active ? 'true' : 'false');
-            });
+        // ---------- Global Process + Format dropdowns ----------
+        // Shared by Film Lookup and Dev Cost. Persisted, and re-run whichever
+        // tab is active on change.
+        function applyGlobalFilterChange() {
+            // Dev Cost tab (if it's the active view) and Film Lookup both read
+            // filmPassesProcessFilter, so refresh both cheaply.
+            if (typeof refreshActiveCheapestSubTab === 'function') refreshActiveCheapestSubTab();
+            if (typeof updateLabComparison === 'function') updateLabComparison();
+            if (typeof updateCheaperAlternative === 'function') updateCheaperAlternative();
         }
-        document.querySelectorAll('#processSegmented .process-seg').forEach(btn => {
-            btn.addEventListener('click', () => {
-                cheapestProcess = btn.dataset.process;
-                localStorage.setItem('cheapestProcess', cheapestProcess);
-                renderProcessSegmented();
-                refreshActiveCheapestSubTab();
-            });
+        const globalProcessSel = document.getElementById('globalProcess');
+        const globalFormatSel = document.getElementById('globalFormat');
+        globalProcessSel.value = cheapestProcess;
+        globalFormatSel.value = cheapestFormat;
+        globalProcessSel.addEventListener('change', () => {
+            cheapestProcess = globalProcessSel.value;
+            localStorage.setItem('globalProcess', cheapestProcess);
+            applyGlobalFilterChange();
         });
-        renderProcessSegmented();
+        globalFormatSel.addEventListener('change', () => {
+            cheapestFormat = globalFormatSel.value;
+            localStorage.setItem('globalFormat', cheapestFormat);
+            applyGlobalFilterChange();
+        });
 
         // Service preference (Next Day / Hi-Res) is no longer a manual filter —
         // the Recommended Pick Threshold surfaces the best-value hi-res/next-day
@@ -1721,6 +1813,7 @@
                 if (f.hidden) return;
                 if ((parseInt(f.boxSpeed) || 0) !== boxSpeed) return;
                 if ((f.process || 'C41') !== process) return;
+                if (cheapestFormat !== 'ALL' && (f.format || '35mm') !== cheapestFormat) return;
                 const maxPushPull = parseFloat(f.maxPushPull) || 1;
                 if (stopsAbs > maxPushPull) return;
 
@@ -2440,6 +2533,7 @@
                 document.getElementById('libraryBoxSpeed').value = '';
                 document.getElementById('libraryMaxPushPull').value = '1';
                 document.getElementById('libraryProcessSelect').value = 'C41';
+                document.getElementById('libraryFormatSelect').value = '35mm';
                 document.getElementById('filmHiddenCheckbox').checked = false;
                 resetBundles([{}]);
                 return;
@@ -2448,6 +2542,7 @@
             document.getElementById('libraryBoxSpeed').value = film.boxSpeed || '';
             document.getElementById('libraryMaxPushPull').value = film.maxPushPull ?? 1;
             document.getElementById('libraryProcessSelect').value = film.process || 'C41';
+            document.getElementById('libraryFormatSelect').value = film.format || '35mm';
             document.getElementById('filmHiddenCheckbox').checked = !!film.hidden;
             resetBundles(normalizeFilmBundles(film));
         });
@@ -2504,14 +2599,6 @@
             const rolls = document.getElementById('rolls').value;
             const exposures = document.getElementById('exposures').value;
 
-            // Expired-film details (storage, expiry date) describe a specific
-            // roll's condition, not the film stock as a permanent product — they
-            // never carry over into the library, so only the underlying box
-            // speed and bundle numbers get saved.
-            if (document.getElementById('filmExpiredCheckbox').checked) {
-                alert('Heads up: expired film details (storage, expiry date) aren\'t saved to the Film Library — only Box Speed, Rolls, Exposures, and Cost will carry over.');
-            }
-
             switchTab('library');
             switchLibrarySubTab('films');
 
@@ -2530,6 +2617,7 @@
             const boxSpeed = document.getElementById('libraryBoxSpeed').value;
             const maxPushPull = parseFloat(document.getElementById('libraryMaxPushPull').value) || 1;
             const process = document.getElementById('libraryProcessSelect').value || 'C41';
+            const format = document.getElementById('libraryFormatSelect').value || '35mm';
             const bundleBlocks = document.querySelectorAll('#filmBundlesContainer .bundle-block');
             if (bundleBlocks.length === 0) return alert('Add at least one bundle');
             const bundles = Array.from(bundleBlocks).map(block => ({
@@ -2550,7 +2638,7 @@
             // Speed the same while changing anything else.
             const key = filmKey(name, boxSpeed);
             let saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
-            saved[key] = { name, boxSpeed, maxPushPull, process, hidden: document.getElementById('filmHiddenCheckbox').checked, bundles };
+            saved[key] = { name, boxSpeed, maxPushPull, process, format, hidden: document.getElementById('filmHiddenCheckbox').checked, bundles };
             localStorage.setItem('filmProfiles', JSON.stringify(saved));
             updateFilmDropdowns();
             document.getElementById('libraryFilmsDropdown').value = key;
@@ -2629,6 +2717,7 @@
                 boxSpeed: Number(f.boxSpeed) || 0,
                 maxPushPull: Number(f.maxPushPull ?? 1),
                 process: f.process || 'C41',
+                format: f.format || '35mm',
                 hidden: !!f.hidden,
                 bundles: normalizeFilmBundles(f)
             }));
@@ -2838,7 +2927,7 @@
                     if (result[key]) {
                         result[key].bundles.push(bundle);
                     } else {
-                        result[key] = { name: f.name, boxSpeed: f.boxSpeed, maxPushPull: f.maxPushPull ?? 1, process: f.process || 'C41', bundles: [bundle] };
+                        result[key] = { name: f.name, boxSpeed: f.boxSpeed, maxPushPull: f.maxPushPull ?? 1, process: f.process || 'C41', format: f.format || '35mm', bundles: [bundle] };
                     }
                 });
             }
