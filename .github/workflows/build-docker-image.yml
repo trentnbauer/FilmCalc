@@ -15,6 +15,7 @@ on:
       - "sw.js"
       - "films/**"
       - "labs/**"
+      - "themes/**"
       - ".github/workflows/build-docker-image.yml"
   workflow_dispatch: {}
 
@@ -53,7 +54,7 @@ jobs:
               stem = os.path.splitext(os.path.basename(path))[0]
               return re.sub(r'[-_]+', ' ', stem).title()
 
-          for folder in ('films', 'labs'):
+          for folder in ('films', 'labs', 'themes'):
               files = sorted(
                   os.path.basename(p) for p in glob.glob(f'{folder}/*.yaml') + glob.glob(f'{folder}/*.yml')
               )
