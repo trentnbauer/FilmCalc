@@ -283,13 +283,13 @@
 
             <div id="cheapestTabContent" class="space-y-6 hidden">
                 <div class="flex gap-1 bg-gray-100 dark:bg-gray-700/50 rounded-lg p-1">
-                    <button id="cheapestSubIsoBtn" type="button" class="flex-1 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide bg-white dark:bg-gray-800 text-indigo-700 dark:text-indigo-400 shadow-sm transition-colors">Per ISO</button>
+                    <button id="cheapestSubFilmBtn" type="button" class="flex-1 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide bg-white dark:bg-gray-800 text-indigo-700 dark:text-indigo-400 shadow-sm transition-colors">Per Film</button>
                     <button id="cheapestSubPhotoBtn" type="button" class="flex-1 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 transition-colors">Per Photo</button>
-                    <button id="cheapestSubFilmBtn" type="button" class="flex-1 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 transition-colors">Per Film</button>
                     <button id="cheapestSubLabBtn" type="button" class="flex-1 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 transition-colors">Per Lab</button>
+                    <button id="cheapestSubIsoBtn" type="button" class="flex-1 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 transition-colors">Per ISO</button>
                 </div>
 
-                <div id="cheapestSubIsoContent" class="space-y-6">
+                <div id="cheapestSubIsoContent" class="space-y-6 hidden">
                     <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800/30 p-4 text-left">
                         <label for="isoCalcTargetSpeed" class="block text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">Shooting ISO</label>
                         <input type="number" inputmode="numeric" id="isoCalcTargetSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
@@ -305,7 +305,7 @@
                     <div id="costPerPhotoResults" class="space-y-2"></div>
                 </div>
 
-                <div id="cheapestSubFilmContent" class="space-y-6 hidden">
+                <div id="cheapestSubFilmContent" class="space-y-6">
                     <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800/30 p-4 text-left">
                         <label for="cheapestFilmSelect" class="block text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">Film stock</label>
                         <select id="cheapestFilmSelect" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm"><option value="">-- Pick a film --</option></select>
@@ -1031,7 +1031,7 @@
             film: { btn: document.getElementById('cheapestSubFilmBtn'), content: document.getElementById('cheapestSubFilmContent'), update: () => updateCostPerFilmTab() },
             lab: { btn: document.getElementById('cheapestSubLabBtn'), content: document.getElementById('cheapestSubLabContent'), update: () => updateCostPerLabTab() }
         };
-        let activeCheapestSubTab = 'iso';
+        let activeCheapestSubTab = 'film';
 
         function setSubTabActive(btn, active) {
             btn.classList.toggle('bg-white', active);
@@ -2020,6 +2020,18 @@
 
         // Tracks which ISO rows are expanded (by a stable key), so re-renders
         // (sort changes, ISO tweaks) preserve open/closed state.
+        // Favourite labs — persisted set of lab names. Favourited labs are
+        // always shown in Dev Cost views (even if they'd otherwise be beaten on
+        // price), but rows still sort by price. Toggled via the star on each row.
+        let favouriteLabs = new Set(JSON.parse(localStorage.getItem('favouriteLabs') || '[]'));
+        function isFavLab(name) { return favouriteLabs.has(name); }
+        function toggleFavLab(name) {
+            if (favouriteLabs.has(name)) favouriteLabs.delete(name); else favouriteLabs.add(name);
+            localStorage.setItem('favouriteLabs', JSON.stringify([...favouriteLabs]));
+        }
+
+        // Shared expand state for all Dev Cost views (Per Film / Photo / Lab /
+        // ISO). Keyed by a per-row string so open/closed survives re-renders.
         const expandedIsoRows = new Set();
         let expandAllIso = false;
 
@@ -2211,7 +2223,16 @@
                             devCostPerPhoto,
                             totalCostPerPhoto: bestFilmCostPerPhoto + devCostPerPhoto,
                             highResScan: tier.highResScan,
-                            turnaroundTime: tier.turnaroundTime
+                            turnaroundTime: tier.turnaroundTime,
+                            // Breakdown fields for the expandable row (native = no push/pull).
+                            devCostBase: tier.devCost,
+                            pushPullFee: 0,
+                            exposures: bestBundle.exposures,
+                            filmCostPerRoll: bestFilmCostPerPhoto * bestBundle.exposures,
+                            devCostPerRoll: tier.devCost,
+                            totalCostPerRoll: (bestFilmCostPerPhoto + devCostPerPhoto) * bestBundle.exposures,
+                            buyLink: bestBundle.buyLink,
+                            storeName: bestBundle.storeName
                         });
                     });
                 });
@@ -2264,6 +2285,94 @@
             return results;
         }
 
+        // Shared expandable row for the matrix-based Dev Cost views (Per Film /
+        // Per Photo / Per Lab). Matches the Per ISO row: collapsed by default,
+        // chevron, full breakdown when open, plus a favourite-lab star.
+        // keyPrefix disambiguates rows across views so expand state doesn't leak.
+        function matrixRowKey(keyPrefix, entry) {
+            return `${keyPrefix}|${entry.filmName}|${entry.boxSpeed}|${entry.format || '35mm'}|${entry.labName}`;
+        }
+
+        function renderMatrixRow(entry, rank, keyPrefix) {
+            const hiResBadge = entry.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">HI-RES</span>` : '';
+            const turnaroundBadge = entry.turnaroundTime ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 align-middle">${turnaroundLabels[entry.turnaroundTime] || entry.turnaroundTime}</span>` : '';
+            const isCheapest = rank === 0;
+            const rowBg = isCheapest ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-white dark:bg-gray-800/50';
+            const textColor = isCheapest ? 'text-amber-800 dark:text-amber-300 font-semibold' : 'text-gray-600 dark:text-gray-400';
+            const key = matrixRowKey(keyPrefix, entry);
+            const isOpen = expandAllIso || expandedIsoRows.has(key);
+            const chevron = `<span class="text-gray-400 dark:text-gray-500 transition-transform inline-block ${isOpen ? 'rotate-90' : ''}">▸</span>`;
+            const fav = isFavLab(entry.labName);
+            const star = `<button type="button" class="fav-star text-sm leading-none ${fav ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600'}" data-fav-lab="${escapeHtml(entry.labName)}" title="${fav ? 'Unfavourite lab' : 'Favourite lab'}" onclick="event.stopPropagation()">${fav ? '★' : '☆'}</button>`;
+
+            const buyUrl = sanitizeUrl(entry.buyLink);
+            const buyLink = buyUrl
+                ? `<a href="${escapeHtml(buyUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-[11px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:underline">🛒 ${entry.storeName ? 'Buy from ' + escapeHtml(entry.storeName) : 'Buy film'} ↗</a>`
+                : '';
+            const breakdown = isOpen
+                ? `<div class="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700 text-xs space-y-1">
+                        <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Film (per photo)</span><span class="font-mono">${CUR()}${entry.filmCostPerPhoto.toFixed(2)}</span></div>
+                        <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Development (per photo)</span><span class="font-mono">${CUR()}${(entry.devCostBase / entry.exposures).toFixed(2)}</span></div>
+                        ${entry.pushPullFee > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Push/pull fee (per photo)</span><span class="font-mono">${CUR()}${(entry.pushPullFee / entry.exposures).toFixed(2)}</span></div>` : ''}
+                        <div class="flex justify-between text-gray-500 dark:text-gray-400 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>Film cost (per roll)</span><span class="font-mono">${CUR()}${entry.filmCostPerRoll.toFixed(2)}</span></div>
+                        <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Development (per roll)</span><span class="font-mono">${CUR()}${entry.devCostPerRoll.toFixed(2)}</span></div>
+                        <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>Scan</span><span>${entry.highResScan ? 'Hi-res' : 'Standard'}</span></div>
+                        <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>Turnaround</span><span>${turnaroundLabels[entry.turnaroundTime] || entry.turnaroundTime || '—'}</span></div>
+                        <div class="flex justify-between font-semibold text-gray-700 dark:text-gray-300 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>Total per roll (${entry.exposures} exp)</span><span class="font-mono">${CUR()}${entry.totalCostPerRoll.toFixed(2)}</span></div>
+                        ${buyLink ? `<div class="pt-1.5">${buyLink}</div>` : ''}
+                    </div>`
+                : '';
+
+            return `<div>
+                <div class="matrix-row cursor-pointer px-3 py-2 rounded-lg text-sm ${rowBg}" data-row-key="${escapeHtml(key)}">
+                    <div class="flex justify-between items-start gap-2">
+                        <span class="${textColor}">${star} ${isCheapest ? '⭐ ' : ''}${escapeHtml(entry.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(entry.labName)}</span> <span class="text-xs opacity-70">(${entry.boxSpeed} ISO)</span>${hiResBadge}${turnaroundBadge}</span>
+                        <span class="font-mono text-right leading-tight ${textColor} whitespace-nowrap flex items-center gap-1.5">
+                            <span class="font-semibold">${CUR()}${entry.totalCostPerPhoto.toFixed(2)}/photo</span>
+                            ${chevron}
+                        </span>
+                    </div>
+                    ${breakdown}
+                </div>
+            </div>`;
+        }
+
+        // Wire favourite stars + row expand/collapse for a matrix-based view's
+        // container. Called after each render.
+        function wireMatrixRows(container, rerender) {
+            container.querySelectorAll('.fav-star').forEach(star => star.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleFavLab(star.dataset.favLab);
+                rerender();
+            }));
+            container.querySelectorAll('.matrix-row').forEach(row => row.addEventListener('click', () => {
+                const key = row.dataset.rowKey;
+                if (expandAllIso) {
+                    container.querySelectorAll('.matrix-row').forEach(r => expandedIsoRows.add(r.dataset.rowKey));
+                    expandAllIso = false;
+                    expandedIsoRows.delete(key);
+                } else if (expandedIsoRows.has(key)) {
+                    expandedIsoRows.delete(key);
+                } else {
+                    expandedIsoRows.add(key);
+                }
+                rerender();
+            }));
+        }
+
+        // An "Expand all / Collapse all" control row for the matrix views.
+        function expandAllControl() {
+            return `<div class="flex justify-end mb-2"><button type="button" class="matrix-expand-all text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline">${expandAllIso ? 'Collapse all' : 'Expand all'}</button></div>`;
+        }
+        function wireExpandAll(container, rerender) {
+            const btn = container.querySelector('.matrix-expand-all');
+            if (btn) btn.addEventListener('click', () => {
+                expandAllIso = !expandAllIso;
+                if (!expandAllIso) expandedIsoRows.clear();
+                rerender();
+            });
+        }
+
         function renderNativeMatchRow(entry, rank) {
             const hiResBadge = entry.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">HI-RES</span>` : '';
             const turnaroundBadge = entry.turnaroundTime ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 align-middle">${turnaroundLabels[entry.turnaroundTime] || entry.turnaroundTime}</span>` : '';
@@ -2299,17 +2408,19 @@
             }
             const byFilmNative = new Map();
             nativeMatrix.forEach(e => {
-                const key = `${e.filmName}__${e.boxSpeed}`;
+                const key = `${e.filmName}__${e.boxSpeed}__${e.format}`;
                 const existing = byFilmNative.get(key);
                 if (!existing || e.totalCostPerPhoto < existing.totalCostPerPhoto) byFilmNative.set(key, e);
             });
             const rows = [...byFilmNative.values()].sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto);
-            container.innerHTML = rows.map((e, i) => renderNativeMatchRow(e, i)).join('');
+            container.innerHTML = expandAllControl() + rows.map((e, i) => renderMatrixRow(e, i, 'photo')).join('');
+            wireExpandAll(container, updateCostPerPhotoTab);
+            wireMatrixRows(container, updateCostPerPhotoTab);
         }
 
         // Cheapest film pairing for every lab, ranked lab-first (which lab
-        // gives the best value overall). Each row's cheapest 1-stop push/pull
-        // alternative at that same lab shows underneath it.
+        // gives the best value overall). Every lab appears; favourites are
+        // starred. Rows expand to a full cost breakdown.
         function updateCostPerLabTab() {
             const container = document.getElementById('costPerLabResults');
             const nativeMatrix = computeNativeFilmLabMatrix();
@@ -2317,24 +2428,15 @@
                 container.innerHTML = '<p class="text-sm text-gray-400 text-center">Save at least one film and one lab profile to compare</p>';
                 return;
             }
-            const oneStopMatrix = computeOneStopFilmLabMatrix();
-
             const byLabNative = new Map();
             nativeMatrix.forEach(e => {
                 const existing = byLabNative.get(e.labName);
                 if (!existing || e.totalCostPerPhoto < existing.totalCostPerPhoto) byLabNative.set(e.labName, e);
             });
-            const byLabOneStop = new Map();
-            oneStopMatrix.forEach(e => {
-                const existing = byLabOneStop.get(e.labName);
-                if (!existing || e.totalCostPerPhoto < existing.totalCostPerPhoto) byLabOneStop.set(e.labName, e);
-            });
-
             const rows = [...byLabNative.values()].sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto);
-            container.innerHTML = rows.map((e, i) => {
-                const oneStop = byLabOneStop.get(e.labName);
-                return renderNativeMatchRow(e, i) + renderPushPullSubLine(oneStop, oneStop ? oneStop.filmName : '');
-            }).join('');
+            container.innerHTML = expandAllControl() + rows.map((e, i) => renderMatrixRow(e, i, 'lab')).join('');
+            wireExpandAll(container, updateCostPerLabTab);
+            wireMatrixRows(container, updateCostPerLabTab);
         }
 
         // Per Film view: user picks one film stock, then every lab is ranked
@@ -2382,19 +2484,9 @@
                 return;
             }
 
-            // Cheapest 1-stop push/pull per lab, for the sub-line under each row.
-            const oneStopByLab = new Map();
-            computeOneStopFilmLabMatrix()
-                .filter(e => e.filmName === film.name)
-                .forEach(e => {
-                    const existing = oneStopByLab.get(e.labName);
-                    if (!existing || e.totalCostPerPhoto < existing.totalCostPerPhoto) oneStopByLab.set(e.labName, e);
-                });
-
-            container.innerHTML = nativeRows.map((e, i) => {
-                const oneStop = oneStopByLab.get(e.labName);
-                return renderNativeMatchRow(e, i) + renderPushPullSubLine(oneStop, e.labName);
-            }).join('');
+            container.innerHTML = expandAllControl() + nativeRows.map((e, i) => renderMatrixRow(e, i, 'film')).join('');
+            wireExpandAll(container, updateCostPerFilmTab);
+            wireMatrixRows(container, updateCostPerFilmTab);
         }
 
 
