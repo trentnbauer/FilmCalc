@@ -2320,6 +2320,18 @@
             localStorage.setItem('favouriteLabs', JSON.stringify([...favouriteLabs]));
         }
 
+        // For lab-ranked Dev Cost views (Per Lab / Per Film — one row per lab),
+        // pins any favourited lab(s) to the top of the displayed list ahead of
+        // price order, so "my lab" doesn't get buried below cheaper options.
+        // Rows stay price-sorted within each group (favourites, then the rest);
+        // the true price rank still comes from priceSortedRows, so the amber
+        // "cheapest" star stays accurate even when a favourite is shown first.
+        function reorderFavouriteLabsFirst(priceSortedRows) {
+            const favs = priceSortedRows.filter(e => isFavLab(e.labName));
+            const rest = priceSortedRows.filter(e => !isFavLab(e.labName));
+            return [...favs, ...rest];
+        }
+
         // Shared expand state for all Dev Cost views (Per Film / Photo / Lab /
         // ISO). Keyed by a per-row string so open/closed survives re-renders.
         const expandedIsoRows = new Set();
@@ -2590,17 +2602,20 @@
             return `${keyPrefix}|${entry.filmName}|${entry.boxSpeed}|${entry.format || '35mm'}|${entry.labName}`;
         }
 
-        function renderMatrixRow(entry, rank, keyPrefix) {
+        function renderMatrixRow(entry, rank, keyPrefix, pinnedByFav) {
             const hiResBadge = entry.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">HI-RES</span>` : '';
             const turnaroundBadge = entry.turnaroundTime ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 align-middle">${escapeHtml(turnaroundLabels[entry.turnaroundTime] || entry.turnaroundTime)}</span>` : '';
             const isCheapest = rank === 0;
-            const rowBg = isCheapest ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-white dark:bg-gray-800/50';
+            const rowBg = isCheapest ? 'bg-amber-100 dark:bg-amber-900/30' : (pinnedByFav ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'bg-white dark:bg-gray-800/50');
             const textColor = isCheapest ? 'text-amber-800 dark:text-amber-300 font-semibold' : 'text-gray-600 dark:text-gray-400';
             const key = matrixRowKey(keyPrefix, entry);
             const isOpen = expandAllIso || expandedIsoRows.has(key);
             const chevron = `<span class="text-gray-400 dark:text-gray-500 transition-transform inline-block ${isOpen ? 'rotate-90' : ''}">▸</span>`;
             const fav = isFavLab(entry.labName);
             const star = `<button type="button" class="fav-star text-sm leading-none ${fav ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600'}" data-fav-lab="${escapeHtml(entry.labName)}" title="${fav ? 'Unfavourite lab' : 'Favourite lab'}" onclick="event.stopPropagation()">${fav ? '★' : '☆'}</button>`;
+            const pinnedFavNote = pinnedByFav
+                ? `<div class="text-[11px] text-indigo-600 dark:text-indigo-400 mt-0.5">📌 Shown first — this is your favourite lab</div>`
+                : '';
 
             const buyUrl = sanitizeUrl(entry.buyLink);
             const buyLink = buyUrl
@@ -2636,6 +2651,7 @@
                             ${chevron}
                         </span>
                     </div>
+                    ${pinnedFavNote}
                     ${breakdown}
                 </div>
             </div>`;
@@ -2737,8 +2753,12 @@
                 const existing = byLabNative.get(e.labName);
                 if (!existing || e.totalCostPerPhoto < existing.totalCostPerPhoto) byLabNative.set(e.labName, e);
             });
-            const rows = [...byLabNative.values()].sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto);
-            container.innerHTML = expandAllControl() + rows.map((e, i) => renderMatrixRow(e, i, 'lab')).join('');
+            const priceSortedRows = [...byLabNative.values()].sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto);
+            const rows = reorderFavouriteLabsFirst(priceSortedRows);
+            container.innerHTML = expandAllControl() + rows.map(e => {
+                const rank = priceSortedRows.indexOf(e);
+                return renderMatrixRow(e, rank, 'lab', isFavLab(e.labName) && rank !== 0);
+            }).join('');
             wireExpandAll(container, updateCostPerLabTab);
             wireMatrixRows(container, updateCostPerLabTab);
         }
@@ -2779,16 +2799,20 @@
             const film = allFilms[selectedKey];
             if (!film) { container.innerHTML = '<p class="text-sm text-gray-400 text-center">Pick a film to compare labs</p>'; return; }
 
-            const nativeRows = computeNativeFilmLabMatrix()
+            const priceSortedRows = computeNativeFilmLabMatrix()
                 .filter(e => filmKey(e.filmName, e.boxSpeed, e.format) === selectedKey)
                 .sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto);
 
-            if (nativeRows.length === 0) {
+            if (priceSortedRows.length === 0) {
                 container.innerHTML = `<p class="text-sm text-gray-400 text-center">No lab matches ${escapeHtml(film.name)} with the current filters</p>`;
                 return;
             }
 
-            container.innerHTML = expandAllControl() + nativeRows.map((e, i) => renderMatrixRow(e, i, 'film')).join('');
+            const rows = reorderFavouriteLabsFirst(priceSortedRows);
+            container.innerHTML = expandAllControl() + rows.map(e => {
+                const rank = priceSortedRows.indexOf(e);
+                return renderMatrixRow(e, rank, 'film', isFavLab(e.labName) && rank !== 0);
+            }).join('');
             wireExpandAll(container, updateCostPerFilmTab);
             wireMatrixRows(container, updateCostPerFilmTab);
         }
