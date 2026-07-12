@@ -18,7 +18,17 @@ on:
       - "labs/**"
       - "themes/**"
       - ".github/workflows/build-docker-image.yml"
+  # Daily rebuild even with no app changes, so the image keeps picking up
+  # base-image (nginx:alpine) security patches. Midnight UTC.
+  schedule:
+    - cron: '0 0 * * *'
   workflow_dispatch: {}
+
+concurrency:
+  # A push-triggered and a scheduled build racing each other would both try
+  # to move the docker-build-marker tag and push to the same image tags.
+  group: build-docker-image
+  cancel-in-progress: false
 
 env:
   REGISTRY: ghcr.io
@@ -28,12 +38,16 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          # Full history + tags, needed to diff against the previous build's
+          # marker tag for the changelog below.
+          fetch-depth: 0
 
       - name: Generate preset manifests
         # Keep films/index.json and labs/index.json in sync with whatever *.yaml
@@ -66,6 +80,46 @@ jobs:
               print(f'{folder}/index.json -> {len(entries)} preset(s): ' + ', '.join(f["file"] for f in entries))
           PY
 
+      - name: List changes since the last build
+        id: changelog
+        # docker-build-marker is moved to HEAD at the end of every successful
+        # build (see the last step), so this always covers exactly what's new
+        # since the image now on ghcr.io was built — whether that's from a
+        # push or a previous scheduled rebuild. First-ever run has no marker,
+        # so it falls back to the last 10 commits.
+        run: |
+          if git rev-parse -q --verify refs/tags/docker-build-marker >/dev/null; then
+            RANGE="docker-build-marker..HEAD"
+          else
+            RANGE="$(git rev-list --max-parents=0 HEAD)..HEAD"
+          fi
+
+          MULTI=$(git log "$RANGE" --pretty=format:'- %s (%h)' | head -n 30)
+          if [ -z "$MULTI" ]; then
+            MULTI="No commits since the last image build (rebuilt for base image freshness)."
+          fi
+
+          # Single-line, semicolon-joined form for the OCI description label —
+          # a label value can't safely contain literal newlines.
+          ONELINE=$(git log "$RANGE" --pretty=format:'%s (%h)' | head -n 30 | paste -sd '; ' -)
+          if [ -z "$ONELINE" ]; then
+            ONELINE="No commits since the last image build (rebuilt for base image freshness)."
+          fi
+          # Keep the label from growing unbounded.
+          ONELINE=$(echo "$ONELINE" | cut -c1-1000)
+
+          {
+            echo "oneline<<EOF"
+            echo "$ONELINE"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+          {
+            echo "## 🎞️ Changes in this image build"
+            echo ""
+            echo "$MULTI"
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -84,6 +138,8 @@ jobs:
           tags: |
             type=raw,value=latest
             type=sha,format=short
+          labels: |
+            org.opencontainers.image.description=${{ steps.changelog.outputs.oneline }}
 
       - name: Build and push image
         uses: docker/build-push-action@v6
@@ -94,3 +150,8 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64
+
+      - name: Move last-build marker to this commit
+        run: |
+          git tag -f docker-build-marker
+          git push origin docker-build-marker --force
