@@ -1,0 +1,10 @@
+# Force people through the templates — a blank issue is nearly always
+# a screenshot-less "the numbers are wrong", which costs a round-trip.
+blank_issues_enabled: false
+contact_links:
+  - name: 🎞️ Add your own films and labs
+    url: https://github.com/trentnbauer/FilmCalc#readme
+    about: >
+      You don't need an issue to use your own data — the Library tab lets you add and edit
+      film stocks and labs directly, and Settings → Import/Export moves them between devices.
+      Preset requests are only for stocks/labs that should ship with the project.
