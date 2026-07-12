@@ -2432,7 +2432,10 @@
                     <div class="flex justify-between items-start gap-2">
                         <span class="${semanticRowText} ${entry.overLimit ? 'font-semibold text-red-700 dark:text-red-400' : (isCheapest ? 'font-semibold text-amber-800 dark:text-amber-300' : 'text-gray-700 dark:text-gray-300')}">${star} ${isCheapest && !entry.overLimit ? '⭐ ' : ''}${escapeHtml(entry.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(entry.labName)}</span>${stopsLabel}${hiResBadge}${turnaroundBadge}</span>
                         <span class="font-mono text-right leading-tight ${semanticRowText} ${textColor} whitespace-nowrap flex items-center gap-1.5">
-                            <span class="font-semibold">${CUR()}${entry.totalCostPerPhoto.toFixed(2)}/photo</span>
+                            <span>
+                                <span class="font-semibold block">${CUR()}${entry.totalCostPerPhoto.toFixed(2)}/photo</span>
+                                <span class="text-[11px] opacity-70 font-normal block">${CUR()}${entry.devCostPerRoll.toFixed(2)}/roll dev</span>
+                            </span>
                             ${chevron}
                         </span>
                     </div>
@@ -2769,7 +2772,10 @@
                     <div class="flex justify-between items-start gap-2">
                         <span class="${semanticRowText} ${textColor}">${star}${filmStar}${pinBtn} ${isCheapest ? '⭐ ' : ''}${escapeHtml(entry.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(entry.labName)}</span> <span class="text-xs opacity-70">(${entry.boxSpeed} ISO)</span>${hiResBadge}${turnaroundBadge}</span>
                         <span class="font-mono text-right leading-tight ${semanticRowText} ${textColor} whitespace-nowrap flex items-center gap-1.5">
-                            <span class="font-semibold">${CUR()}${entry.totalCostPerPhoto.toFixed(2)}/photo</span>
+                            <span>
+                                <span class="font-semibold block">${CUR()}${entry.totalCostPerPhoto.toFixed(2)}/photo</span>
+                                <span class="text-[11px] opacity-70 font-normal block">${CUR()}${entry.devCostPerRoll.toFixed(2)}/roll dev</span>
+                            </span>
                             ${chevron}
                         </span>
                     </div>
@@ -2966,7 +2972,10 @@
                         <div class="flex justify-between items-start gap-2">
                             <span class="text-indigo-800 dark:text-indigo-300"><button type="button" class="unpin-dev-cost-btn text-red-400 hover:text-red-600 text-xs font-bold mr-1" data-unpin-id="${p.pinId}" title="Unpin" onclick="event.stopPropagation()">✕</button>${escapeHtml(p.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(p.labName)}</span> <span class="text-xs opacity-70">(${p.boxSpeed} ISO)</span>${hiResBadge}${turnaroundBadge}</span>
                             <span class="font-mono text-right leading-tight text-indigo-800 dark:text-indigo-300 whitespace-nowrap flex items-center gap-1.5">
-                                <span class="font-semibold">${CUR()}${p.totalCostPerPhoto.toFixed(2)}/photo</span>
+                                <span>
+                                    <span class="font-semibold block">${CUR()}${p.totalCostPerPhoto.toFixed(2)}/photo</span>
+                                    <span class="text-[11px] opacity-70 font-normal block">${CUR()}${p.devCostPerRoll.toFixed(2)}/roll dev</span>
+                                </span>
                                 ${chevron}
                             </span>
                         </div>
