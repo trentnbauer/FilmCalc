@@ -375,12 +375,18 @@
             <div id="cheapestFilmsTabContent" class="space-y-6">
                 <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800/30">
                     <label class="block text-sm font-semibold text-blue-800 dark:text-blue-400 mb-2 uppercase tracking-wide">Film Management</label>
+                    <!-- The global Format row (#globalFormatRow) is moved here by
+                         switchTab() while the Library tab is active, instead of
+                         sitting in the page header — it's what "Load a saved
+                         film" and every save below are scoped to. -->
+                    <div id="filmManagementFormatSlot" class="mb-2"></div>
                     <select id="libraryFilmsDropdown" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 mb-2 text-sm"><option value="">-- Load a saved film --</option></select>
                     <button id="deleteFilmBtn" type="button" class="w-full border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 py-1.5 rounded text-sm font-semibold transition-colors">Delete Selected Film</button>
                 </div>
 
                 <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg space-y-3">
                     <h2 class="font-semibold text-blue-800 dark:text-blue-400 text-sm uppercase tracking-wide">Film Setup</h2>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 -mt-2">Saves under whichever Format is selected above.</p>
                     <div>
                         <label for="libraryFilmName" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Film Name</label>
                         <input type="text" id="libraryFilmName" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" placeholder="e.g. Kodak Gold 200">
@@ -399,12 +405,6 @@
                         <label for="libraryProcessSelect" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Process</label>
                         <select id="libraryProcessSelect" data-options="processes" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600"></select>
                         <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Only lab service tiers set to the same process are considered for this film.</p>
-                    </div>
-
-                    <div>
-                        <label for="libraryFormatSelect" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Format</label>
-                        <select id="libraryFormatSelect" data-options="formats" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600"></select>
-                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Physical film size. Used by the global Format filter.</p>
                     </div>
 
                     <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
@@ -1171,9 +1171,20 @@
             });
             document.getElementById('labsForThisRollSection').classList.toggle('hidden', tab !== 'film');
             // The global Format control drives Film Lookup, Dev Cost ranking,
-            // and Library's film list/dropdown — hide it on Expired/Settings
-            // where it has no effect.
-            document.getElementById('globalFormatRow').classList.toggle('hidden', tab === 'expired' || tab === 'settings');
+            // and Library's film list/dropdown. On the Library tab it moves
+            // into the Film Management card instead of sitting in the page
+            // header — visibility there then just follows the Films/Labs
+            // sub-tab's own hidden toggle, no extra logic needed. Everywhere
+            // else it moves back above the tabs, hidden only on Expired/
+            // Settings where it has no effect.
+            const formatRow = document.getElementById('globalFormatRow');
+            if (tab === 'library') {
+                document.getElementById('filmManagementFormatSlot').appendChild(formatRow);
+                formatRow.classList.remove('hidden');
+            } else {
+                document.querySelector('[role="tablist"]').insertAdjacentElement('beforebegin', formatRow);
+                formatRow.classList.toggle('hidden', tab === 'expired' || tab === 'settings');
+            }
             // Global Process filter only applies to Dev Cost. Film Lookup has
             // its own per-entry Process in the Film block.
             document.getElementById('globalFilters').classList.toggle('hidden', tab !== 'cheapest');
@@ -3124,7 +3135,6 @@
                 document.getElementById('libraryBoxSpeed').value = '';
                 document.getElementById('libraryMaxPushPull').value = '1';
                 document.getElementById('libraryProcessSelect').value = 'C41';
-                document.getElementById('libraryFormatSelect').value = '35mm';
                 document.getElementById('filmHiddenCheckbox').checked = false;
                 resetBundles([{}]);
                 return;
@@ -3133,7 +3143,6 @@
             document.getElementById('libraryBoxSpeed').value = film.boxSpeed || '';
             document.getElementById('libraryMaxPushPull').value = film.maxPushPull ?? 1;
             document.getElementById('libraryProcessSelect').value = film.process || 'C41';
-            document.getElementById('libraryFormatSelect').value = film.format || '35mm';
             document.getElementById('filmHiddenCheckbox').checked = !!film.hidden;
             resetBundles(normalizeFilmBundles(film));
         });
@@ -3201,7 +3210,6 @@
             document.getElementById('libraryBoxSpeed').value = boxSpeed || '';
             document.getElementById('libraryMaxPushPull').value = '1';
             document.getElementById('libraryProcessSelect').value = document.getElementById('processSelect').value;
-            document.getElementById('libraryFormatSelect').value = cheapestFormat || '35mm';
             resetBundles([{ rolls, exposures, filmCost, storeName: '', buyLink: '' }]);
             document.getElementById('libraryFilmName').focus();
         });
@@ -3228,7 +3236,7 @@
             const boxSpeed = document.getElementById('libraryBoxSpeed').value;
             const maxPushPull = parseFloat(document.getElementById('libraryMaxPushPull').value) || 1;
             const process = document.getElementById('libraryProcessSelect').value || 'C41';
-            const format = document.getElementById('libraryFormatSelect').value || '35mm';
+            const format = cheapestFormat || '35mm';
             const bundleBlocks = document.querySelectorAll('#filmBundlesContainer .bundle-block');
             if (bundleBlocks.length === 0) return setSaveStatus('saveFilmStatus', 'Add at least one bundle first.', true);
             const bundles = Array.from(bundleBlocks).map(block => ({
