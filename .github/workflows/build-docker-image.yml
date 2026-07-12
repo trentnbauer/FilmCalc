@@ -1,32 +1,17 @@
 name: Build and Publish Docker Image
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "index.html"
-      - "Dockerfile"
-      - "default.conf"
-      - "favicon.ico"
-      - "icon.ico"
-      - "icon.svg"
-      - "apple-touch-icon.png"
-      - "options.yaml"
-      - "films/**"
-      - "labs/**"
-      - "themes/**"
-      - ".github/workflows/build-docker-image.yml"
-  # Daily check — does NOT rebuild/republish on its own. It only builds if
-  # check-for-changes finds commits since the last successful build, so this
-  # is purely a safety net for a push-triggered build that failed or was
-  # missed, not a "keep the image fresh" rebuild. Midnight UTC.
+  # Daily build — only actually builds/pushes if check-for-changes finds
+  # commits since the last successful build (see the check-for-changes job
+  # below), so this caps Docker image builds at once per 24h no matter how
+  # many changes land on main in between. Midnight UTC.
   schedule:
     - cron: '0 0 * * *'
   workflow_dispatch: {}
 
 concurrency:
-  # A push-triggered and a scheduled run racing each other would both try to
-  # move the docker-build-marker tag and push to the same image tags.
+  # A manual dispatch and a scheduled run racing each other would both try
+  # to move the docker-build-marker tag and push to the same image tags.
   group: build-docker-image
   cancel-in-progress: false
 
