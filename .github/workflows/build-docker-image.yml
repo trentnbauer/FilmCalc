@@ -101,6 +101,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Stamp build version into index.html
+        run: sed -i "s/%%FILMCALC_VERSION%%/$(git rev-parse --short HEAD)/" index.html
+
       - name: Generate preset manifests
         # Keep films/index.json and labs/index.json in sync with whatever *.yaml
         # files exist, so the Docker image's Import list matches the folder —
