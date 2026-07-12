@@ -1793,16 +1793,19 @@
             if (boxSpeedForWarning > 0 && devSpeedForWarning > 0 && boxSpeedForWarning !== devSpeedForWarning) {
                 warningStops = Math.round(Math.abs(Math.log2(devSpeedForWarning / boxSpeedForWarning)) * 10) / 10;
             }
-            renderPushPullWarning(warningStops);
-            renderCameraSetting(boxSpeedForWarning, devSpeedForWarning, warningStops);
 
             const hasRequiredFields = [devSpeedRaw, filmCostRaw, rollsRaw, exposuresRaw].every(v => v !== '' && v !== null && parseFloat(v) > 0);
             if (!hasRequiredFields) {
+                renderPushPullWarning(0);
+                renderCameraSetting(boxSpeedForWarning, 0, warningStops);
                 bestPicksContainer.innerHTML = '';
                 container.innerHTML = '<p class="text-sm text-gray-400 text-center">Fill in Target Speed, Film Cost, Rolls & Exposures to compare labs</p>';
                 renderPinnedResult(null);
                 return;
             }
+
+            renderPushPullWarning(warningStops);
+            renderCameraSetting(boxSpeedForWarning, devSpeedForWarning, warningStops);
 
             const boxSpeed = boxSpeedForWarning;
             const devSpeed = devSpeedForWarning;
