@@ -1,0 +1,31 @@
+# Hex or a standard CSS color name both work — see themes/ocean.yaml for
+# details and the full list of customizable slots.
+label: Monochrome
+light:
+  pageBg: "#f2f2f2"
+  cardBg: "#ffffff"
+  accent: "#404040"
+  cheapestBg: "#e5e5e5"
+  cheapestText: "#262626"
+  recommendedBg: "#d4d4d4"
+  recommendedText: "#171717"
+  favourite: "#525252"
+  defaultLab: "#404040"
+  warningBg: "#e5e5e5"
+  warningText: "#404040"
+  dangerBg: "#d4d4d4"
+  dangerText: "#000000"
+dark:
+  pageBg: "#141414"
+  cardBg: "#1f1f1f"
+  accent: "#d4d4d4"
+  cheapestBg: "#2b2b2b"
+  cheapestText: "#e5e5e5"
+  recommendedBg: "#383838"
+  recommendedText: "#f5f5f5"
+  favourite: "#a3a3a3"
+  defaultLab: "#d4d4d4"
+  warningBg: "#2b2b2b"
+  warningText: "#d4d4d4"
+  dangerBg: "#383838"
+  dangerText: "#ffffff"

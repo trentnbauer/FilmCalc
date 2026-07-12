@@ -1,0 +1,31 @@
+# Hex or a standard CSS color name both work — see themes/ocean.yaml for
+# details and the full list of customizable slots.
+label: Forest
+light:
+  pageBg: "#f1f5ec"
+  cardBg: "#ffffff"
+  accent: "#2f6b3a"
+  cheapestBg: "#e0f2e2"
+  cheapestText: "#1e7d3a"
+  recommendedBg: "#fef3c7"
+  recommendedText: "#a16207"
+  favourite: "#65a30d"
+  defaultLab: "#2f6b3a"
+  warningBg: "#ffedd5"
+  warningText: "#9a3412"
+  dangerBg: "#fee2e2"
+  dangerText: "#b91c1c"
+dark:
+  pageBg: "#0e1710"
+  cardBg: "#16241a"
+  accent: "#4ade80"
+  cheapestBg: "#123420"
+  cheapestText: "#6ee7a0"
+  recommendedBg: "#422006"
+  recommendedText: "#fde047"
+  favourite: "#a3e635"
+  defaultLab: "#4ade80"
+  warningBg: "#431407"
+  warningText: "#fdba74"
+  dangerBg: "#450a0a"
+  dangerText: "#f87171"

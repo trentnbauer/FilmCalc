@@ -1,4 +1,8 @@
 [
+  { "file": "colorblind-safe.yaml", "label": "Colorblind Safe" },
+  { "file": "forest.yaml", "label": "Forest" },
+  { "file": "midnight.yaml", "label": "Midnight" },
+  { "file": "monochrome.yaml", "label": "Monochrome" },
   { "file": "ocean.yaml", "label": "Ocean" },
   { "file": "sepia.yaml", "label": "Sepia" }
 ]
