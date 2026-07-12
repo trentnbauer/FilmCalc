@@ -469,6 +469,18 @@
                             <span class="text-sm text-gray-600 dark:text-gray-300">% price premium allowed</span>
                         </div>
                     </div>
+                    <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3 mt-3">
+                        <h4 class="font-semibold text-gray-700 dark:text-gray-300 text-sm">Default Lab &amp; Service</h4>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Your usual lab and service tier (e.g. Irohas · Next Day · Hi-Res). When set, the Film Lookup headline shows <span class="font-semibold">your</span> cost with this lab, and notes the cheapest option underneath. Leave as "None" to always show the cheapest.</p>
+                        <select id="defaultLabSelect" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
+                            <option value="">None (show cheapest)</option>
+                        </select>
+                        <select id="defaultTierSelect" class="hidden w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm"></select>
+                        <div class="border-t border-gray-200 dark:border-gray-600 pt-3">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Re-run the setup screen to pick your home lab and ♥ favourite / ✕ ignore film stocks.</p>
+                            <button id="redoFavouritesBtn" type="button" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-medium text-sm">♥ Set Up Favourites…</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div>
@@ -541,6 +553,34 @@
                     </div>
                     <input type="file" id="importFile" class="hidden" accept=".yaml,.yml" multiple>
                 </div>
+            </div>
+        </div>
+
+
+        <div id="setupModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 max-w-lg w-full relative max-h-[85vh] overflow-y-auto">
+                <button id="setupModalCloseBtn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-xl leading-none" aria-label="Close">✕</button>
+                <h2 class="text-lg font-bold mb-1 text-gray-900 dark:text-white">Set Up Your Favourites</h2>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-5">Tell FilmCalc which lab you usually use and which film stocks you care about. You can change any of this later.</p>
+
+                <div class="space-y-2 mb-5">
+                    <h3 class="font-semibold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest">Your Home Lab</h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Your usual lab and service tier. The Film Lookup will show <span class="font-semibold">your</span> cost with this lab, and note the cheapest option underneath.</p>
+                    <select id="setupLabSelect" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
+                        <option value="">None (always show cheapest)</option>
+                    </select>
+                    <select id="setupTierSelect" class="hidden w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm"></select>
+                </div>
+
+                <div class="border-t border-gray-200 dark:border-gray-600 pt-4 space-y-2">
+                    <h3 class="font-semibold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest">Your Film Stocks</h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">♥ the stocks you shoot, ✕ the ones you'll never use (they're hidden from all lists). Leave a film untouched to keep it available without favouriting it.</p>
+                    <div id="setupFilmList" class="space-y-1 max-h-64 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg p-2">
+                        <p class="text-xs text-gray-400 text-center py-2">No films saved yet — import some first.</p>
+                    </div>
+                </div>
+
+                <button id="setupDoneBtn" type="button" class="mt-5 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-medium">Done</button>
             </div>
         </div>
 
@@ -965,6 +1005,63 @@
             localStorage.setItem('upgradeThresholdPercent', val);
             updateLabComparison();
         });
+
+        // ---------- Default lab & service tier ----------
+        // Persisted as { lab, tierIndex }. Drives the Film Lookup headline to
+        // show the user's usual lab instead of the theoretical cheapest.
+        function getDefaultLabPref() {
+            try { return JSON.parse(localStorage.getItem('defaultLabPref') || 'null'); } catch { return null; }
+        }
+        function tierDescription(tier) {
+            const parts = [];
+            parts.push(turnaroundLabels[tier.turnaroundTime] || tier.turnaroundTime || '—');
+            parts.push(tier.highResScan ? '🔍 Hi-Res' : 'Standard scan');
+            if (Array.isArray(tier.processes) && tier.processes.length) parts.push(tier.processes.join('/'));
+            parts.push(`${CUR()}${(parseFloat(tier.devCost) || 0).toFixed(2)}/roll`);
+            return parts.join(' · ');
+        }
+        function populateDefaultTierSelect(labName, selectedIndex) {
+            const tierSel = document.getElementById('defaultTierSelect');
+            if (!labName) { tierSel.classList.add('hidden'); tierSel.innerHTML = ''; return; }
+            const allLabs = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') };
+            const lab = allLabs[labName];
+            if (!lab) { tierSel.classList.add('hidden'); tierSel.innerHTML = ''; return; }
+            const tiers = normalizeLabServices(lab);
+            tierSel.innerHTML = tiers.map((t, i) => `<option value="${i}">${escapeHtml(tierDescription(t))}</option>`).join('');
+            if (selectedIndex != null && tiers[selectedIndex]) tierSel.value = String(selectedIndex);
+            tierSel.classList.remove('hidden');
+        }
+        function populateDefaultLabSelect() {
+            const labSel = document.getElementById('defaultLabSelect');
+            if (!labSel) return;
+            const pref = getDefaultLabPref();
+            const allLabs = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') };
+            const names = Object.keys(allLabs).filter(n => !allLabs[n].hidden);
+            labSel.innerHTML = '<option value="">None (show cheapest)</option>' + names.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+            if (pref && pref.lab && names.includes(pref.lab)) {
+                labSel.value = pref.lab;
+                populateDefaultTierSelect(pref.lab, pref.tierIndex);
+            } else {
+                document.getElementById('defaultTierSelect').classList.add('hidden');
+            }
+        }
+        function saveDefaultLabPref() {
+            const lab = document.getElementById('defaultLabSelect').value;
+            const tierSel = document.getElementById('defaultTierSelect');
+            if (!lab) {
+                localStorage.removeItem('defaultLabPref');
+            } else {
+                localStorage.setItem('defaultLabPref', JSON.stringify({ lab, tierIndex: parseInt(tierSel.value) || 0 }));
+            }
+            updateLabComparison();
+            updateCheaperAlternative();
+        }
+        document.getElementById('defaultLabSelect').addEventListener('change', (e) => {
+            const lab = e.target.value;
+            if (lab) populateDefaultTierSelect(lab, 0); else document.getElementById('defaultTierSelect').classList.add('hidden');
+            saveDefaultLabPref();
+        });
+        document.getElementById('defaultTierSelect').addEventListener('change', saveDefaultLabPref);
 
         // ---------- Delete all data ----------
         document.getElementById('deleteAllDataBtn').addEventListener('click', () => {
@@ -1876,6 +1973,25 @@
                 return best;
             }
 
+            // The user's default lab + tier (Settings), if set and it can develop
+            // this film's process at the required push/pull. Returns per-photo dev
+            // cost, or null to fall back to cheapest.
+            function preferredDevPerPhoto(exposures) {
+                const pref = getDefaultLabPref();
+                if (!pref || !pref.lab) return null;
+                const lab = allLabs[pref.lab];
+                if (!lab || lab.hidden) return null;
+                const tiers = normalizeLabServices(lab);
+                const tier = tiers[pref.tierIndex];
+                if (!tier) return null;
+                if (!tierMatchesFilmProcess(tier, { process })) return null;
+                if (tier.noPushPull && stopsAbs > 0) return null;
+                const pushPullFee = stopsAbs > 0
+                    ? ((tier.pushPullType === 'per_stop') ? tier.pushPullCost * stopsAbs : tier.pushPullCost)
+                    : 0;
+                return (tier.devCost + pushPullFee) / exposures;
+            }
+
             // Find the cheapest saved film (same box speed, same process, within
             // its own push/pull limit) on a full film + dev basis.
             let bestAlt = null;
@@ -1900,10 +2016,17 @@
                 });
             });
 
-            // Current entry's own total, using the same cheapest dev.
+            // Current entry's own total. Uses the default lab from Settings when
+            // one is set and it can handle this process/push; otherwise cheapest.
             const exposures = parseInt(document.getElementById('exposures').value) || 36;
-            const currentDevCpp = cheapestDevPerPhoto(exposures);
+            const cheapestDev = cheapestDevPerPhoto(exposures);
+            const preferredDev = preferredDevPerPhoto(exposures);
+            // Headline uses the preferred lab if set & applicable, else cheapest.
+            const usingPreferred = preferredDev !== null;
+            const currentDevCpp = usingPreferred ? preferredDev : cheapestDev;
             const currentTotal = currentDevCpp !== null ? currentFilmCostPerPhoto + currentDevCpp : null;
+            const pref = getDefaultLabPref();
+            const cheapestTotal = cheapestDev !== null ? currentFilmCostPerPhoto + cheapestDev : null;
 
             if (currentTotal === null) { container.innerHTML = ''; return; }
 
@@ -1916,10 +2039,16 @@
             const c = cheaperExists
                 ? { bg: 'bg-orange-100 dark:bg-orange-900/30', label: 'text-orange-700 dark:text-orange-400', big: 'text-orange-800 dark:text-orange-300', sub: 'text-orange-700/80 dark:text-orange-400/80' }
                 : { bg: 'bg-green-100 dark:bg-green-900/30', label: 'text-green-700 dark:text-green-400', big: 'text-green-800 dark:text-green-300', sub: 'text-green-700/80 dark:text-green-400/80' };
+            const headingLabel = usingPreferred ? `Total cost per photo <span class="normal-case opacity-80">· ${escapeHtml(pref.lab)}</span>` : 'Total cost per photo';
+            // When using a preferred lab that isn't the cheapest, note the cheapest total underneath.
+            const cheapestNote = (usingPreferred && cheapestTotal !== null && cheapestTotal < currentTotal - 0.001)
+                ? `<p class="text-xs ${c.sub} mt-1 pt-1 border-t border-current/10">Cheapest lab: ${CUR()}${cheapestTotal.toFixed(2)}/photo total</p>`
+                : '';
             const costBlock = `<div class="mt-1 rounded-lg ${c.bg} px-4 py-3 text-center">
-                <p class="text-xs font-semibold ${c.label} uppercase tracking-wide">Film cost per photo</p>
-                <p class="font-mono text-3xl font-bold ${c.big} mt-0.5">${CUR()}${currentFilmCostPerPhoto.toFixed(2)}</p>
-                <p class="text-xs ${c.sub} mt-0.5">+ ${CUR()}${currentDevCpp.toFixed(2)} dev = ${CUR()}${currentTotal.toFixed(2)}/photo total${stopsAbs > 0 ? ` · at ${devSpeed} ISO` : ''}</p>
+                <p class="text-xs font-semibold ${c.label} uppercase tracking-wide">${headingLabel}</p>
+                <p class="font-mono text-3xl font-bold ${c.big} mt-0.5">${CUR()}${currentTotal.toFixed(2)}</p>
+                <p class="text-xs ${c.sub} mt-0.5">${CUR()}${currentFilmCostPerPhoto.toFixed(2)} film + ${CUR()}${currentDevCpp.toFixed(2)} dev${stopsAbs > 0 ? ` · at ${devSpeed} ISO` : ''}</p>
+                ${cheapestNote}
             </div>`;
 
             // Smaller secondary block: a cheaper library alternative, if one is
@@ -2078,6 +2207,16 @@
         // price), but rows still sort by price. Toggled via the star on each row.
         let favouriteLabs = new Set(JSON.parse(localStorage.getItem('favouriteLabs') || '[]'));
         function isFavLab(name) { return favouriteLabs.has(name); }
+
+        // Favourite film stocks — keyed by filmKey(name, boxSpeed, format). Kept
+        // in its own localStorage key (never on the film object), so favourites
+        // are personal and are NOT included in exports.
+        let favouriteFilms = new Set(JSON.parse(localStorage.getItem('favouriteFilms') || '[]'));
+        function isFavFilm(key) { return favouriteFilms.has(key); }
+        function toggleFavFilm(key) {
+            if (favouriteFilms.has(key)) favouriteFilms.delete(key); else favouriteFilms.add(key);
+            localStorage.setItem('favouriteFilms', JSON.stringify([...favouriteFilms]));
+        }
 
         // Google Maps directions link for a lab, from its saved address (falling
         // back to searching by lab name). Returns '' if neither is available.
@@ -2724,7 +2863,7 @@
             updateCheaperAlternative();
         }
 
-        function updateLabDropdown() { updateDropdown('savedLabsDropdown', defaultLabs, 'labProfiles'); updateLabComparison(); }
+        function updateLabDropdown() { updateDropdown('savedLabsDropdown', defaultLabs, 'labProfiles'); populateDefaultLabSelect(); updateLabComparison(); }
 
         document.getElementById('libraryFilmsDropdown').addEventListener('change', (e) => {
             const key = e.target.value;
@@ -3048,6 +3187,108 @@
         }
         function closeImportModal() { importModal.classList.add('hidden'); }
 
+        // ---------- Favourites setup modal ----------
+        // Step 2 of first-run onboarding (after import), and re-runnable from
+        // Settings. Sets the default lab + tier, and lets the user ♥ favourite
+        // or ✕ ignore (hide) each film stock.
+        const setupModal = document.getElementById('setupModal');
+        function openSetupModal() {
+            populateSetupLabSelect();
+            renderSetupFilmList();
+            setupModal.classList.remove('hidden');
+        }
+        function closeSetupModal() { setupModal.classList.add('hidden'); }
+        document.getElementById('setupModalCloseBtn').addEventListener('click', closeSetupModal);
+        document.getElementById('setupDoneBtn').addEventListener('click', closeSetupModal);
+        setupModal.addEventListener('click', (e) => { if (e.target === setupModal) closeSetupModal(); });
+
+        function populateSetupTierSelect(labName, selectedIndex) {
+            const tierSel = document.getElementById('setupTierSelect');
+            if (!labName) { tierSel.classList.add('hidden'); tierSel.innerHTML = ''; return; }
+            const allLabs = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') };
+            const lab = allLabs[labName];
+            if (!lab) { tierSel.classList.add('hidden'); tierSel.innerHTML = ''; return; }
+            const tiers = normalizeLabServices(lab);
+            tierSel.innerHTML = tiers.map((t, i) => `<option value="${i}">${escapeHtml(tierDescription(t))}</option>`).join('');
+            if (selectedIndex != null && tiers[selectedIndex]) tierSel.value = String(selectedIndex);
+            tierSel.classList.remove('hidden');
+        }
+        function populateSetupLabSelect() {
+            const labSel = document.getElementById('setupLabSelect');
+            const pref = getDefaultLabPref();
+            const allLabs = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') };
+            const names = Object.keys(allLabs).filter(n => !allLabs[n].hidden);
+            labSel.innerHTML = '<option value="">None (always show cheapest)</option>' + names.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+            if (pref && pref.lab && names.includes(pref.lab)) {
+                labSel.value = pref.lab;
+                populateSetupTierSelect(pref.lab, pref.tierIndex);
+            } else {
+                document.getElementById('setupTierSelect').classList.add('hidden');
+            }
+        }
+        function saveSetupLabPref() {
+            const lab = document.getElementById('setupLabSelect').value;
+            const tierSel = document.getElementById('setupTierSelect');
+            if (!lab) {
+                localStorage.removeItem('defaultLabPref');
+            } else {
+                localStorage.setItem('defaultLabPref', JSON.stringify({ lab, tierIndex: parseInt(tierSel.value) || 0 }));
+            }
+            populateDefaultLabSelect(); // keep the Settings copy in sync
+            updateLabComparison();
+            updateCheaperAlternative();
+        }
+        document.getElementById('setupLabSelect').addEventListener('change', (e) => {
+            const lab = e.target.value;
+            if (lab) populateSetupTierSelect(lab, 0); else document.getElementById('setupTierSelect').classList.add('hidden');
+            saveSetupLabPref();
+        });
+        document.getElementById('setupTierSelect').addEventListener('change', saveSetupLabPref);
+        document.getElementById('redoFavouritesBtn').addEventListener('click', openSetupModal);
+
+        // Film list with ♥ (favourite) and ✕ (ignore/hide) toggles.
+        function renderSetupFilmList() {
+            const listEl = document.getElementById('setupFilmList');
+            const saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
+            const all = { ...defaultFilms, ...saved };
+            const keys = Object.keys(all);
+            if (keys.length === 0) {
+                listEl.innerHTML = '<p class="text-xs text-gray-400 text-center py-2">No films saved yet — import some first.</p>';
+                return;
+            }
+            listEl.innerHTML = keys.map(key => {
+                const f = all[key];
+                const fav = isFavFilm(key);
+                const ignored = !!f.hidden;
+                return `<div class="flex items-center justify-between gap-2 px-2 py-1.5 rounded ${ignored ? 'opacity-50' : ''}">
+                    <span class="text-sm text-gray-700 dark:text-gray-300 truncate">${escapeHtml(f.name)} <span class="text-xs opacity-70">(${f.boxSpeed || '?'} ISO · ${escapeHtml(f.format || '35mm')})</span></span>
+                    <span class="flex items-center gap-1 shrink-0">
+                        <button type="button" class="setup-fav-btn text-base leading-none px-1 ${fav ? 'text-red-500' : 'text-gray-300 dark:text-gray-600'}" data-key="${escapeHtml(key)}" title="${fav ? 'Unfavourite' : 'Favourite'}">${fav ? '♥' : '♡'}</button>
+                        <button type="button" class="setup-ignore-btn text-base leading-none px-1 ${ignored ? 'text-red-600 font-bold' : 'text-gray-300 dark:text-gray-600'}" data-key="${escapeHtml(key)}" title="${ignored ? 'Un-ignore' : 'Ignore this film'}">✕</button>
+                    </span>
+                </div>`;
+            }).join('');
+
+            listEl.querySelectorAll('.setup-fav-btn').forEach(btn => btn.addEventListener('click', () => {
+                toggleFavFilm(btn.dataset.key);
+                renderSetupFilmList();
+            }));
+            listEl.querySelectorAll('.setup-ignore-btn').forEach(btn => btn.addEventListener('click', () => {
+                const key = btn.dataset.key;
+                const savedNow = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
+                // Ignoring a preset film needs it materialised into saved profiles
+                // first, since defaults themselves aren't editable.
+                const base = savedNow[key] || { ...(defaultFilms[key] || {}) };
+                if (!base.name) return;
+                base.hidden = !base.hidden;
+                savedNow[key] = base;
+                localStorage.setItem('filmProfiles', JSON.stringify(savedNow));
+                renderSetupFilmList();
+                updateFilmDropdowns();
+                refreshActiveCheapestSubTab();
+            }));
+        }
+
         document.getElementById('importBtn').addEventListener('click', openImportModal);
         importModalCloseBtn.addEventListener('click', closeImportModal);
         importModal.addEventListener('click', (e) => { if (e.target === importModal) closeImportModal(); });
@@ -3225,10 +3466,13 @@
             updateLabComparison();
             if (errors > 0 && filmsImported === 0 && labsImported === 0 && !settingsImported) {
                 alert('Could not read the selected file(s) — are they valid YAML?');
+                closeImportModal();
             } else {
                 alert(`Imported ${filmsImported} film profile(s), ${labsImported} lab profile(s)${settingsImported ? ', and settings' : ''}.`);
+                closeImportModal();
+                // Step 2: let them pick a home lab and favourite/ignore stocks.
+                openSetupModal();
             }
-            closeImportModal();
         }
 
         const importDropzone = document.getElementById('importDropzone');
