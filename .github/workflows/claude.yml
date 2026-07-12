@@ -20,16 +20,23 @@ concurrency:
 
 jobs:
   claude:
+    # author_association == 'OWNER' restricts every trigger to the repo owner
+    # only — anyone else's @claude mention on an issue/PR is ignored. This is
+    # a personal repo, so OWNER always resolves to exactly one account; if
+    # collaborators are ever added they'll show up as COLLABORATOR/MEMBER,
+    # not OWNER, and still won't trigger this.
     if: |
-      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
-      (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
+      (
+        (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude') && github.event.comment.author_association == 'OWNER') ||
+        (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude') && github.event.comment.author_association == 'OWNER') ||
+        (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude') && github.event.review.author_association == 'OWNER') ||
+        (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')) && github.event.issue.author_association == 'OWNER')
+      )
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      pull-requests: read
-      issues: read
+      contents: write # Lets Claude push a branch and open a PR when asked to
+      pull-requests: write
+      issues: write
       id-token: write
       actions: read # Required for Claude to read CI results on PRs
     steps:
