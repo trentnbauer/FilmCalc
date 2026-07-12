@@ -1,0 +1,125 @@
+name: Validate film & lab data
+
+# Runs on every PR that touches the data files, so a contributor who gets the
+# YAML indentation wrong finds out immediately (with a readable message) instead
+# of silently breaking the site on merge.
+on:
+  pull_request:
+    paths:
+      - "films/**"
+      - "labs/**"
+      - "options.yaml"
+  push:
+    branches: [main]
+    paths:
+      - "films/**"
+      - "labs/**"
+      - "options.yaml"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the YAML is valid and complete
+        run: |
+          python3 - <<'PY'
+          import glob, sys, yaml
+
+          VALID_PROCESSES = {"C41", "BW", "E6", "ECN2"}
+          VALID_FORMATS = {"35mm", "120", "110", "127", "220", "sheet"}
+          VALID_TURNAROUND = {"next_day", "same_week", "longer"}
+          VALID_PUSHPULL_TYPE = {"per_stop", "flat"}
+
+          errors = []
+
+          def err(f, msg):
+              errors.append(f"{f}: {msg}")
+
+          # ---- films ----
+          for path in sorted(glob.glob("films/*.yaml") + glob.glob("films/*.yml")):
+              try:
+                  doc = yaml.safe_load(open(path))
+              except yaml.YAMLError as e:
+                  err(path, f"not valid YAML — check your indentation (spaces, never tabs).\n    {e}")
+                  continue
+              if not isinstance(doc, dict) or "films" not in doc:
+                  err(path, "expected a top-level 'films:' list")
+                  continue
+              for i, film in enumerate(doc["films"] or []):
+                  where = f"film #{i+1} ({film.get('name', 'unnamed')})"
+                  for key in ("name", "boxSpeed", "process", "bundles"):
+                      if key not in film:
+                          err(path, f"{where}: missing required field '{key}'")
+                  if film.get("process") and film["process"] not in VALID_PROCESSES:
+                      err(path, f"{where}: process '{film['process']}' must be one of {sorted(VALID_PROCESSES)}")
+                  fmt = film.get("format", "35mm")
+                  if fmt not in VALID_FORMATS:
+                      err(path, f"{where}: format '{fmt}' must be one of {sorted(VALID_FORMATS)}")
+                  if not isinstance(film.get("boxSpeed"), int):
+                      err(path, f"{where}: boxSpeed must be a plain number (no quotes)")
+                  for j, b in enumerate(film.get("bundles") or []):
+                      bw = f"{where}, bundle #{j+1}"
+                      for key in ("rolls", "exposures", "filmCost"):
+                          if key not in b:
+                              err(path, f"{bw}: missing required field '{key}'")
+                      if isinstance(b.get("filmCost"), str):
+                          err(path, f"{bw}: filmCost must be a number, not text (write 24.95, not '$24.95')")
+                      if b.get("rolls") == 0 or b.get("exposures") == 0:
+                          err(path, f"{bw}: rolls and exposures must be greater than 0")
+
+          # ---- labs ----
+          for path in sorted(glob.glob("labs/*.yaml") + glob.glob("labs/*.yml")):
+              try:
+                  doc = yaml.safe_load(open(path))
+              except yaml.YAMLError as e:
+                  err(path, f"not valid YAML — check your indentation (spaces, never tabs).\n    {e}")
+                  continue
+              if not isinstance(doc, dict) or "labs" not in doc:
+                  err(path, "expected a top-level 'labs:' list")
+                  continue
+              for i, lab in enumerate(doc["labs"] or []):
+                  where = f"lab #{i+1} ({lab.get('name', 'unnamed')})"
+                  if "name" not in lab:
+                      err(path, f"{where}: missing required field 'name'")
+                  if not lab.get("services"):
+                      err(path, f"{where}: needs at least one entry under 'services:'")
+                  for j, s in enumerate(lab.get("services") or []):
+                      sw = f"{where}, service #{j+1}"
+                      if "devCost" not in s:
+                          err(path, f"{sw}: missing required field 'devCost'")
+                      if isinstance(s.get("devCost"), str):
+                          err(path, f"{sw}: devCost must be a number, not text (write 17, not '$17')")
+                      t = s.get("turnaroundTime")
+                      if t and t not in VALID_TURNAROUND:
+                          err(path, f"{sw}: turnaroundTime '{t}' must be one of {sorted(VALID_TURNAROUND)}")
+                      pt = s.get("pushPullType")
+                      if pt and pt not in VALID_PUSHPULL_TYPE:
+                          err(path, f"{sw}: pushPullType '{pt}' must be 'per_stop' or 'flat'")
+                      for p in (s.get("processes") or []):
+                          if p not in VALID_PROCESSES:
+                              err(path, f"{sw}: process '{p}' must be one of {sorted(VALID_PROCESSES)}")
+
+          # ---- options ----
+          try:
+              yaml.safe_load(open("options.yaml"))
+          except FileNotFoundError:
+              pass
+          except yaml.YAMLError as e:
+              err("options.yaml", f"not valid YAML:\n    {e}")
+
+          if errors:
+              print("\n❌ Found some problems with the data files:\n")
+              for e in errors:
+                  print(f"  • {e}")
+              print(
+                  "\nSee CONTRIBUTING.md for the correct format. The most common cause is\n"
+                  "indentation — YAML uses spaces, never tabs, and your entry must line up\n"
+                  "with the ones around it. Copying an existing entry and editing it is the\n"
+                  "safest approach.\n"
+              )
+              sys.exit(1)
+
+          print("✅ All film and lab data looks good.")
+          PY
