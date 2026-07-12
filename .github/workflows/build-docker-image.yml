@@ -18,15 +18,17 @@ on:
       - "labs/**"
       - "themes/**"
       - ".github/workflows/build-docker-image.yml"
-  # Daily rebuild even with no app changes, so the image keeps picking up
-  # base-image (nginx:alpine) security patches. Midnight UTC.
+  # Daily check — does NOT rebuild/republish on its own. It only builds if
+  # check-for-changes finds commits since the last successful build, so this
+  # is purely a safety net for a push-triggered build that failed or was
+  # missed, not a "keep the image fresh" rebuild. Midnight UTC.
   schedule:
     - cron: '0 0 * * *'
   workflow_dispatch: {}
 
 concurrency:
-  # A push-triggered and a scheduled build racing each other would both try
-  # to move the docker-build-marker tag and push to the same image tags.
+  # A push-triggered and a scheduled run racing each other would both try to
+  # move the docker-build-marker tag and push to the same image tags.
   group: build-docker-image
   cancel-in-progress: false
 
@@ -35,7 +37,78 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  check-for-changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      has_changes: ${{ steps.changelog.outputs.has_changes }}
+      oneline: ${{ steps.changelog.outputs.oneline }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Full history + tags, needed to diff against the previous build's
+          # marker tag.
+          fetch-depth: 0
+
+      - name: List changes since the last build
+        id: changelog
+        # docker-build-marker is moved to HEAD at the end of every build that
+        # actually runs (see build-and-push), so this always covers exactly
+        # what's new since the image now on ghcr.io was built. No marker yet
+        # (first-ever run) always counts as "has changes", to establish one.
+        # A manual run always counts as "has changes" too, so workflow_dispatch
+        # can force a rebuild for testing regardless of whether anything changed.
+        run: |
+          if git rev-parse -q --verify refs/tags/docker-build-marker >/dev/null; then
+            RANGE="docker-build-marker..HEAD"
+            HAS_MARKER=true
+          else
+            RANGE="$(git rev-list --max-parents=0 HEAD)..HEAD"
+            HAS_MARKER=false
+          fi
+
+          COUNT=$(git rev-list --count "$RANGE" 2>/dev/null || echo 0)
+
+          if [ "$HAS_MARKER" = true ] && [ "$COUNT" -eq 0 ] && [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
+            HAS_CHANGES=false
+          else
+            HAS_CHANGES=true
+          fi
+
+          MULTI=$(git log "$RANGE" --pretty=format:'- %s (%h)' | head -n 30)
+          if [ -z "$MULTI" ]; then
+            MULTI="No commits since the last image build."
+          fi
+
+          # Single-line, semicolon-joined form for the OCI description label —
+          # a label value can't safely contain literal newlines.
+          ONELINE=$(git log "$RANGE" --pretty=format:'%s (%h)' | head -n 30 | paste -sd '; ' -)
+          if [ -z "$ONELINE" ]; then
+            ONELINE="No commits since the last image build."
+          fi
+          # Keep the label from growing unbounded.
+          ONELINE=$(echo "$ONELINE" | cut -c1-1000)
+
+          echo "has_changes=$HAS_CHANGES" >> "$GITHUB_OUTPUT"
+          {
+            echo "oneline<<EOF"
+            echo "$ONELINE"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+          {
+            echo "## 🎞️ Changes since the last image build"
+            echo ""
+            echo "$MULTI"
+            echo ""
+            echo "**Will build/push a new image:** $HAS_CHANGES"
+          } >> "$GITHUB_STEP_SUMMARY"
+
   build-and-push:
+    needs: check-for-changes
+    if: needs.check-for-changes.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -44,10 +117,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          # Full history + tags, needed to diff against the previous build's
-          # marker tag for the changelog below.
-          fetch-depth: 0
 
       - name: Generate preset manifests
         # Keep films/index.json and labs/index.json in sync with whatever *.yaml
@@ -80,46 +149,6 @@ jobs:
               print(f'{folder}/index.json -> {len(entries)} preset(s): ' + ', '.join(f["file"] for f in entries))
           PY
 
-      - name: List changes since the last build
-        id: changelog
-        # docker-build-marker is moved to HEAD at the end of every successful
-        # build (see the last step), so this always covers exactly what's new
-        # since the image now on ghcr.io was built — whether that's from a
-        # push or a previous scheduled rebuild. First-ever run has no marker,
-        # so it falls back to the last 10 commits.
-        run: |
-          if git rev-parse -q --verify refs/tags/docker-build-marker >/dev/null; then
-            RANGE="docker-build-marker..HEAD"
-          else
-            RANGE="$(git rev-list --max-parents=0 HEAD)..HEAD"
-          fi
-
-          MULTI=$(git log "$RANGE" --pretty=format:'- %s (%h)' | head -n 30)
-          if [ -z "$MULTI" ]; then
-            MULTI="No commits since the last image build (rebuilt for base image freshness)."
-          fi
-
-          # Single-line, semicolon-joined form for the OCI description label —
-          # a label value can't safely contain literal newlines.
-          ONELINE=$(git log "$RANGE" --pretty=format:'%s (%h)' | head -n 30 | paste -sd '; ' -)
-          if [ -z "$ONELINE" ]; then
-            ONELINE="No commits since the last image build (rebuilt for base image freshness)."
-          fi
-          # Keep the label from growing unbounded.
-          ONELINE=$(echo "$ONELINE" | cut -c1-1000)
-
-          {
-            echo "oneline<<EOF"
-            echo "$ONELINE"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
-
-          {
-            echo "## 🎞️ Changes in this image build"
-            echo ""
-            echo "$MULTI"
-          } >> "$GITHUB_STEP_SUMMARY"
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -139,7 +168,7 @@ jobs:
             type=raw,value=latest
             type=sha,format=short
           labels: |
-            org.opencontainers.image.description=${{ steps.changelog.outputs.oneline }}
+            org.opencontainers.image.description=${{ needs.check-for-changes.outputs.oneline }}
 
       - name: Build and push image
         uses: docker/build-push-action@v6
