@@ -1,0 +1,106 @@
+name: "🐛 Bug report"
+description: Something is broken, missing, or behaving unexpectedly
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For a *wrong number*, please use the **Wrong calculation** template instead — it asks for
+        the specific inputs needed to reproduce it.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part of the app?
+      options:
+        - Film Lookup tab
+        - Dev Cost tab
+        - Expired tab
+        - Library (film/lab management)
+        - Settings
+        - Import / Export
+        - Favourites (♥ films, ★ labs) or home lab setup
+        - Themes / dark mode
+        - Install / PWA / offline
+        - Something else
+    validations:
+      required: true
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      placeholder: Describe the problem in a sentence or two.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1. 
+        2. 
+        3. 
+    validations:
+      required: true
+
+  - type: input
+    id: expected
+    attributes:
+      label: What did you expect to happen instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot
+      description: |
+        **Please attach a screenshot** — it's by far the fastest way to understand a visual or
+        layout problem. Drag an image into this box to upload it. A short screen recording is
+        even better for anything involving tapping/scrolling.
+      placeholder: Paste or drag your screenshot here.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: device
+    attributes:
+      label: Device
+      options:
+        - Phone — iOS (Safari)
+        - Phone — iOS (other browser)
+        - Phone — Android (Chrome)
+        - Phone — Android (other browser)
+        - Desktop — Chrome / Edge
+        - Desktop — Firefox
+        - Desktop — Safari
+        - Installed as an app (PWA / home screen)
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: hosting
+    attributes:
+      label: How are you running FilmCalc?
+      options:
+        - GitHub Pages (the public site)
+        - Self-hosted Docker
+        - Opened the HTML file directly
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: console
+    attributes:
+      label: Browser console errors (optional)
+      description: |
+        If you can, open the browser console (F12 → Console on desktop) and paste any red errors.
+        This is optional but very helpful for anything that "just doesn't do anything".
+      render: text
+    validations:
+      required: false
