@@ -2169,7 +2169,7 @@
                 </div>`;
             } else if (bestAlt) {
                 altBlock = `<div class="mt-2 px-1">
-                    <p class="text-xs text-gray-500 dark:text-gray-400">🏆 Cheapest saved ${boxSpeed} ISO ${process} option at this speed.</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">🏆 Cheapest saved ${boxSpeed} ISO ${escapeHtml(process)} option at this speed.</p>
                 </div>`;
             }
 
@@ -3773,7 +3773,7 @@ A lab charging different prices for C41 vs B&W vs E6, or for next-day vs same-we
                 const fav = isFavFilm(key);
                 const ignored = !!f.hidden;
                 return `<div class="flex items-center justify-between gap-2 px-2 py-1.5 rounded ${ignored ? 'opacity-50' : ''}">
-                    <span class="text-sm text-gray-700 dark:text-gray-300 truncate">${escapeHtml(f.name)} <span class="text-xs opacity-70">(${f.boxSpeed || '?'} ISO · ${escapeHtml(f.format || '35mm')})</span></span>
+                    <span class="text-sm text-gray-700 dark:text-gray-300 truncate">${escapeHtml(f.name)} <span class="text-xs opacity-70">(${escapeHtml(f.boxSpeed || '?')} ISO · ${escapeHtml(f.format || '35mm')})</span></span>
                     <span class="flex items-center gap-1 shrink-0">
                         <button type="button" class="setup-fav-btn text-base leading-none px-1 ${fav ? 'text-red-500' : 'text-gray-300 dark:text-gray-600'}" data-key="${escapeHtml(key)}" title="${fav ? 'Unfavourite' : 'Favourite'}">${fav ? '♥' : '♡'}</button>
                         <button type="button" class="setup-ignore-btn text-base leading-none px-1 ${ignored ? 'text-red-600 font-bold' : 'text-gray-300 dark:text-gray-600'}" data-key="${escapeHtml(key)}" title="${ignored ? 'Un-ignore' : 'Ignore this film'}">✕</button>
