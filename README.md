@@ -147,6 +147,30 @@ Each lab is one entry with a `services` list underneath it — one item per serv
 
 All three top-level keys (`settings`, `films`, `labs`) are optional — include only what you want to seed. `settings.upgradeThresholdPercent` acts as a factory default for the "Cheapest Total" upgrade threshold (see Settings in the app) and only applies if the person hasn't already changed it themselves.
 
+## Contributing a film stock or lab
+
+Want a film stock or lab added to the presets that ship with the app? **You don't need to know git,
+and you don't need to install anything** — it's done entirely in the browser, and FilmCalc can even
+write the file for you.
+
+👉 **[Read the step-by-step guide (CONTRIBUTING.md)](CONTRIBUTING.md)**
+
+The short version:
+
+1. Build the film or lab in the **Library** tab, then **Settings → Export Films Only**.
+2. Copy your entry out of the downloaded file.
+3. On GitHub, open [`films/australian-retailers.yaml`](films/australian-retailers.yaml) (or
+   [`labs/melbourne.yaml`](labs/melbourne.yaml)) and click the **pencil ✏️**.
+4. Paste it in, add the shop link in the description, and click **Propose changes**.
+
+An automatic check runs on your pull request and will tell you in plain English if anything's off.
+
+Prefer not to? **[Open an issue](https://github.com/trentnbauer/FilmCalc/issues/new/choose)** with the
+details and a link, and it can be added for you — that's a perfectly good option too.
+
+Note that presets aim to cover **mainstream, reliably available** stocks and labs. Rare or limited-run
+films are generally left out, but you can always add them privately in your own **Library** tab.
+
 ## Built With
 
 - [Tailwind CSS](https://tailwindcss.com/) — styling and responsive layout
