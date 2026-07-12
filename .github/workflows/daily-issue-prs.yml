@@ -38,7 +38,7 @@ jobs:
           gh label create "claude-attempted" \
             --repo ${{ github.repository }} \
             --color "5319e7" \
-            --description "Claude has opened a PR for this issue, or judged it too ambiguous to attempt unsupervised. Remove this label to have it retried tomorrow." \
+            --description "Claude already handled this issue (PR opened, or skipped as too ambiguous). Remove to retry." \
             --force
 
       - name: Run Claude Code
