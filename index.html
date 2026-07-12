@@ -29,6 +29,18 @@
         [data-theme-active="1"] .theme-accent-text { color: var(--theme-accent) !important; }
         [data-theme-active="1"] .theme-accent-bg { background-color: var(--theme-accent) !important; }
 
+        /* Tab bar + dropdowns previously stayed a hardcoded blue/gray under
+           every theme. Route the tab bar's background, the active tab, and
+           every <select>'s border through the same --theme-card-bg /
+           --theme-accent variables as the rest of the app. Scoped off
+           body[data-theme-active="1"] (rather than requiring the .themed-card
+           attribute match used elsewhere) since applyThemeVars() only ever
+           tags the first .themed-card element, which is the outer card, not
+           the tab bar nested inside it. */
+        [data-theme-active="1"] [role="tablist"] { background-color: var(--theme-card-bg) !important; }
+        [data-theme-active="1"] [role="tab"][aria-selected="true"] { color: var(--theme-accent) !important; border-color: var(--theme-accent) !important; }
+        [data-theme-active="1"] select { border-color: var(--theme-accent) !important; }
+
         /* Semantic result colors — cheapest/recommended/favourite/default-lab/
            warning/danger. Same "only while a theme is active" pattern as the
            accent rules above, but applyThemeVars() always sets each of these
@@ -105,7 +117,7 @@
 
         <header class="flex items-start justify-between gap-4 mb-6">
             <div class="flex items-center gap-3">
-                <svg class="filmcalc-logo w-9 h-9 text-blue-600 dark:text-blue-400 shrink-0" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <svg class="filmcalc-logo theme-accent-text w-9 h-9 text-blue-600 dark:text-blue-400 shrink-0" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M14 22 V14 H22"/>
                     <path d="M42 14 H50 V22"/>
                     <path d="M50 42 V50 H42"/>
@@ -1284,6 +1296,7 @@
             btn.classList.toggle('dark:bg-gray-800', active);
             btn.classList.toggle('text-indigo-700', active);
             btn.classList.toggle('dark:text-indigo-400', active);
+            btn.classList.toggle('theme-accent-text', active);
             btn.classList.toggle('shadow-sm', active);
             btn.classList.toggle('text-gray-500', !active);
             btn.classList.toggle('dark:text-gray-400', !active);
