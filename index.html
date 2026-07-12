@@ -60,6 +60,16 @@
         [data-theme-active="1"] .theme-danger-bg { background-color: var(--theme-danger-bg) !important; }
         [data-theme-active="1"] .theme-danger-text { color: var(--theme-danger-text) !important; }
 
+        /* Generic grouping/section cards — e.g. the "Film" and "Shooting at"
+           input blocks, the Expired-film info box, Library's Film/Lab
+           Management panels. These aren't cheapest/recommended/warning/danger
+           results, just visual grouping, but they were previously hardcoded
+           Tailwind blue/indigo/green/yellow and so stayed those colors under
+           every theme (issue #42) instead of following it like everything
+           else. */
+        [data-theme-active="1"] .theme-section-bg { background-color: var(--theme-section-bg) !important; }
+        [data-theme-active="1"] .theme-section-text { color: var(--theme-section-text) !important; }
+
         /* Native form controls (selects, month picker, number spinners) follow the app theme
            instead of always rendering light. */
         html { color-scheme: light; }
@@ -201,9 +211,9 @@
             <div id="filmTabContent" role="tabpanel" aria-labelledby="tabFilmBtn" class="space-y-4">
                 <p class="text-xs text-gray-500 dark:text-gray-400">Cost out one specific roll by hand — enter the film and target speed, and see which lab is cheapest for it below. To browse and rank saved films by ISO, use the <span class="font-semibold">Dev Cost</span> tab.</p>
 
-                <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <div class="theme-section-bg bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                     <div class="p-4 pb-0">
-                        <span class="font-semibold text-blue-800 dark:text-blue-400 text-sm uppercase tracking-wide">Film</span>
+                        <span class="theme-section-text font-semibold text-blue-800 dark:text-blue-400 text-sm uppercase tracking-wide">Film</span>
                     </div>
                     <div id="quickCalcContent" class="px-4 pb-4 space-y-3">
                         <div class="grid grid-cols-2 gap-2">
@@ -242,9 +252,9 @@
                     </div>
                 </div>
 
-                <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800/30 p-4 text-left">
+                <div class="theme-section-bg bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800/30 p-4 text-left">
                     <div class="flex items-center justify-between mb-1">
-                        <label for="devSpeed" class="text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide">Shooting at (Target ISO)</label>
+                        <label for="devSpeed" class="theme-section-text text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide">Shooting at (Target ISO)</label>
                         <button type="button" id="matchBoxSpeedBtn" class="text-[11px] text-indigo-500 dark:text-indigo-400 hover:underline">= box speed</button>
                     </div>
                     <input type="number" inputmode="numeric" id="devSpeed" min="0" placeholder="same as box speed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
@@ -295,7 +305,7 @@
                     <p><span class="font-semibold">Climate controlled</span> — a shop or inside a house.</p>
                     <p><span class="font-semibold">Uncontrolled</span> — a roof cavity, garage, shed, or outdoors.</p>
                 </div>
-                <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-100 dark:border-yellow-800/30 p-4 space-y-3">
+                <div class="theme-section-bg bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-100 dark:border-yellow-800/30 p-4 space-y-3">
                     <div>
                         <label for="expiredBoxSpeed" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Film Box Speed (ISO)</label>
                         <input type="number" inputmode="numeric" id="expiredBoxSpeed" min="0" placeholder="400" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
@@ -327,8 +337,8 @@
                 </div>
 
                 <div id="cheapestSubIsoContent" class="space-y-6 hidden">
-                    <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800/30 p-4 text-left">
-                        <label for="isoCalcTargetSpeed" class="block text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">Shooting ISO</label>
+                    <div class="theme-section-bg bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800/30 p-4 text-left">
+                        <label for="isoCalcTargetSpeed" class="theme-section-text block text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">Shooting ISO</label>
                         <input type="number" inputmode="numeric" id="isoCalcTargetSpeed" min="0" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Enter the ISO you're shooting at. Lists every saved film shot at box speed (native), pushed up from a slower film, and pulled down from a faster one — ranked cheapest first, with anything beyond a film's own Max Push/Pull limit flagged in red.</p>
                     </div>
@@ -343,8 +353,8 @@
                 </div>
 
                 <div id="cheapestSubFilmContent" class="space-y-6">
-                    <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800/30 p-4 text-left">
-                        <label for="cheapestFilmSelect" class="block text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">Film stock</label>
+                    <div class="theme-section-bg bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800/30 p-4 text-left">
+                        <label for="cheapestFilmSelect" class="theme-section-text block text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">Film stock</label>
                         <select id="cheapestFilmSelect" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm"><option value="">-- Pick a film --</option></select>
                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Every saved lab ranked cheapest-first for this film at box speed — film + dev cost. Honours the film-type and service filters above.</p>
                     </div>
@@ -379,14 +389,14 @@
                 </div>
 
             <div id="labTabContent" class="space-y-6 hidden">
-                <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-100 dark:border-green-800/30">
-                    <label class="block text-sm font-semibold text-green-800 dark:text-green-400 mb-2 uppercase tracking-wide">Lab Management</label>
+                <div class="theme-section-bg bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-100 dark:border-green-800/30">
+                    <label class="theme-section-text block text-sm font-semibold text-green-800 dark:text-green-400 mb-2 uppercase tracking-wide">Lab Management</label>
                     <select id="savedLabsDropdown" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 mb-2 text-sm"><option value="">-- Load a saved lab --</option></select>
                     <button id="deleteLabBtn" type="button" class="w-full border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 py-1.5 rounded text-sm font-semibold transition-colors">Delete Selected Lab</button>
                 </div>
 
-                <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg space-y-3">
-                    <h2 class="font-semibold text-green-800 dark:text-green-400 text-sm uppercase tracking-wide">Lab Setup</h2>
+                <div class="theme-section-bg bg-green-50 dark:bg-green-900/20 p-4 rounded-lg space-y-3">
+                    <h2 class="theme-section-text font-semibold text-green-800 dark:text-green-400 text-sm uppercase tracking-wide">Lab Setup</h2>
                     <div>
                         <label for="labName" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Lab Name</label>
                         <input type="text" id="labName" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" placeholder="e.g. Irohas Melbourne">
@@ -423,8 +433,8 @@
             </div>
 
             <div id="cheapestFilmsTabContent" class="space-y-6">
-                <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800/30">
-                    <label class="block text-sm font-semibold text-blue-800 dark:text-blue-400 mb-2 uppercase tracking-wide">Film Management</label>
+                <div class="theme-section-bg bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800/30">
+                    <label class="theme-section-text block text-sm font-semibold text-blue-800 dark:text-blue-400 mb-2 uppercase tracking-wide">Film Management</label>
                     <!-- The global Format row (#globalFormatRow) is moved here by
                          switchTab() while the Library tab is active, instead of
                          sitting in the page header — it's what "Load a saved
@@ -434,8 +444,8 @@
                     <button id="deleteFilmBtn" type="button" class="w-full border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 py-1.5 rounded text-sm font-semibold transition-colors">Delete Selected Film</button>
                 </div>
 
-                <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg space-y-3">
-                    <h2 class="font-semibold text-blue-800 dark:text-blue-400 text-sm uppercase tracking-wide">Film Setup</h2>
+                <div class="theme-section-bg bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg space-y-3">
+                    <h2 class="theme-section-text font-semibold text-blue-800 dark:text-blue-400 text-sm uppercase tracking-wide">Film Setup</h2>
                     <p class="text-xs text-gray-400 dark:text-gray-500 -mt-2">Saves under whichever Format is selected above.</p>
                     <div>
                         <label for="libraryFilmName" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Film Name</label>
@@ -701,6 +711,14 @@
                 <p class="text-xs text-gray-500 dark:text-gray-400 mb-5">Tell FilmCalc which lab you usually use and which film stocks you care about. You can change any of this later.</p>
 
                 <div class="space-y-2 mb-5">
+                    <h3 class="font-semibold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest">Theme</h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Pick a colour theme now, or leave it Default and change it later in Settings.</p>
+                    <select id="setupThemeSelect" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
+                        <option value="">Default</option>
+                    </select>
+                </div>
+
+                <div class="space-y-2 mb-5">
                     <h3 class="font-semibold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest">Your Home Lab</h3>
                     <p class="text-xs text-gray-500 dark:text-gray-400">Your usual lab and service tier. The Film Lookup will show <span class="font-semibold">your</span> cost with this lab, and note the cheapest option underneath.</p>
                     <select id="setupLabSelect" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
@@ -924,7 +942,8 @@
                 favourite: '#f59e0b',
                 defaultLab: '#4f46e5',
                 warningBg: '#ffedd5', warningText: '#9a3412',
-                dangerBg: '#fef2f2', dangerText: '#b91c1c'
+                dangerBg: '#fef2f2', dangerText: '#b91c1c',
+                sectionBg: '#f1f5f9', sectionText: '#334155'
             },
             dark: {
                 cheapestBg: '#052e16', cheapestText: '#4ade80',
@@ -932,7 +951,8 @@
                 favourite: '#fbbf24',
                 defaultLab: '#818cf8',
                 warningBg: '#431407', warningText: '#fdba74',
-                dangerBg: '#450a0a', dangerText: '#f87171'
+                dangerBg: '#450a0a', dangerText: '#f87171',
+                sectionBg: '#1e293b80', sectionText: '#cbd5e1'
             }
         };
         const SEMANTIC_THEME_KEYS = Object.keys(SEMANTIC_THEME_DEFAULTS.light);
@@ -968,8 +988,13 @@
             applyThemeVars(activeThemeFile ? loadedThemes[activeThemeFile] : null);
         }
 
+        // Settings and the first-run setup modal each have their own <select>
+        // over the same theme list, kept in sync so picking one updates the
+        // other (issue #43 — setup previously had no theme picker at all).
+        const themeSelects = () => [document.getElementById('themeSelect'), document.getElementById('setupThemeSelect')];
+
         async function loadThemeList() {
-            const select = document.getElementById('themeSelect');
+            const selects = themeSelects();
             let manifest = [];
             try {
                 const res = await fetch('themes/index.json');
@@ -982,26 +1007,29 @@
                     const parsed = jsyaml.load(await r.text());
                     if (!parsed || (!parsed.light && !parsed.dark)) continue;
                     loadedThemes[entry.file] = parsed;
-                    const opt = document.createElement('option');
-                    opt.value = entry.file;
-                    opt.textContent = parsed.label || entry.label || entry.file;
-                    select.appendChild(opt);
+                    for (const select of selects) {
+                        const opt = document.createElement('option');
+                        opt.value = entry.file;
+                        opt.textContent = parsed.label || entry.label || entry.file;
+                        select.appendChild(opt);
+                    }
                 } catch { /* skip bad theme file */ }
             }
             // Restore saved selection if it loaded.
             if (activeThemeFile && loadedThemes[activeThemeFile]) {
-                select.value = activeThemeFile;
+                selects.forEach(select => select.value = activeThemeFile);
             } else {
                 activeThemeFile = '';
             }
             applyActiveTheme();
         }
 
-        document.getElementById('themeSelect').addEventListener('change', (e) => {
+        themeSelects().forEach(select => select.addEventListener('change', (e) => {
             activeThemeFile = e.target.value;
             localStorage.setItem('activeTheme', activeThemeFile);
+            themeSelects().forEach(other => { if (other !== e.target) other.value = activeThemeFile; });
             applyActiveTheme();
-        });
+        }));
 
         loadThemeList();
 
