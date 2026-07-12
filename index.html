@@ -69,10 +69,6 @@
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
         }
-
-        /* FilmCalc logo: sprocket holes punch through to the card background. */
-        .filmcalc-logo { --hole: #ffffff; }
-        html.dark .filmcalc-logo { --hole: #1f2937; } /* gray-800, the card colour */
     </style>
 </head>
 <body class="themed-page bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans min-h-screen flex items-start justify-center p-4 pt-4 md:pt-8 transition-colors duration-200">
@@ -90,18 +86,12 @@
 
         <header class="flex items-start justify-between gap-4 mb-6">
             <div class="flex items-center gap-3">
-                <svg class="filmcalc-logo w-9 h-9 text-blue-600 dark:text-blue-400 shrink-0" viewBox="0 0 64 64" aria-hidden="true">
-                    <path d="M18 12 C14 12 12 15 12 19 V45 C12 49 15 52 19 52 H38 C48 52 54 46 54 36 C54 26 48 20 38 20 H22 C20 20 19 19 19 17 C19 15 20 14 22 14 H48" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-                    <g fill="var(--hole, #fff)">
-                        <rect x="13" y="16" width="3" height="3" rx=".5"/>
-                        <rect x="13" y="23" width="3" height="3" rx=".5"/>
-                        <rect x="13" y="30" width="3" height="3" rx=".5"/>
-                        <rect x="13" y="37" width="3" height="3" rx=".5"/>
-                        <rect x="13" y="44" width="3" height="3" rx=".5"/>
-                        <rect x="48" y="23" width="3" height="3" rx=".5"/>
-                        <rect x="48" y="30" width="3" height="3" rx=".5"/>
-                        <rect x="48" y="37" width="3" height="3" rx=".5"/>
-                    </g>
+                <svg class="filmcalc-logo w-9 h-9 text-blue-600 dark:text-blue-400 shrink-0" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M14 22 V14 H22"/>
+                    <path d="M42 14 H50 V22"/>
+                    <path d="M50 42 V50 H42"/>
+                    <path d="M22 50 H14 V42"/>
+                    <path d="M28 32 H36 M32 28 V36"/>
                 </svg>
                 <div>
                     <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white leading-tight">FilmCalc</h1>
