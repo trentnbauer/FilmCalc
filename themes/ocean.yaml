@@ -1,3 +1,8 @@
+# Every color below can be a hex code ("#0369a1") or a standard CSS color
+# name ("steelblue", "darkslategray", "black", "white", "grey", ...) — the
+# app passes whatever you write straight into a CSS custom property, and
+# any valid CSS <color> value works. Hex is used here for exact control,
+# but named colors are just as valid if you'd rather not look up hex codes.
 label: Ocean
 light:
   pageBg: "#eff6ff"
