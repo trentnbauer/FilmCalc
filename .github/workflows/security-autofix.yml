@@ -1,0 +1,67 @@
+name: Daily Security Auto-Fix
+
+# Runs at 6:30am AEST (UTC+10, fixed year-round) every day. GitHub Actions
+# cron has no timezone support, so this is pinned to 20:30 UTC — in
+# Sydney/Melbourne that's 6:30am AEST but 7:30am AEDT during daylight
+# saving (Oct-Apr).
+on:
+  schedule:
+    - cron: '30 20 * * *'
+  workflow_dispatch:
+
+jobs:
+  security-autofix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      security-events: read
+      issues: read
+      id-token: write
+      actions: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude Code
+        id: claude
+        uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ github.token }}
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          additional_permissions: |
+            actions: read
+          claude_args: '--allowed-tools "Bash(gh:*),Bash(git:*),Read,Edit,Write,Grep,Glob"'
+          prompt: |
+            You are running as a scheduled, unattended job with no human present. Be conservative:
+            only touch what's clearly required to fix a real, verified vulnerability. Do not refactor,
+            reformat, or "improve" unrelated code.
+
+            1. List this repo's open code scanning alerts with security_severity_level "high" or
+               "critical":
+               gh api repos/${{ github.repository }}/code-scanning/alerts --paginate \
+                 -q '.[] | select(.state=="open" and (.rule.security_severity_level=="high" or .rule.security_severity_level=="critical"))'
+
+               If there are none, stop here — do not create a branch, commit, or PR.
+
+            2. For each alert, don't just patch the flagged line. Pull the SARIF for the most recent
+               analysis (gh api -H "Accept: application/sarif+json" repos/${{ github.repository }}/code-scanning/analyses/<id>)
+               and trace the codeFlows to find the actual tainted source feeding the sink — the
+               flagged line is often downstream of the real problem. Fix the root cause.
+
+            3. Apply the minimal correct fix for each finding. If a finding looks like a false
+               positive (e.g. already-sanitized data the tool can't trace through a custom helper),
+               leave it and note why in the PR description rather than guessing at a change.
+
+            4. If you made any fixes: create a new branch named `security-autofix-YYYY-MM-DD` (today's
+               date), commit with a message describing what was fixed and why, push it, and open a PR
+               against main with `gh pr create`. The PR description must list each alert fixed (rule
+               id + file/line), the root cause, and how it was verified. Do not push to main directly,
+               and do not merge the PR yourself — it needs human review.
+
+            5. If nothing needed fixing, or every open high/critical alert is a documented false
+               positive, do not open a PR.
