@@ -1,0 +1,89 @@
+name: "➕ Add a film stock or lab"
+description: Request a new film stock or lab be added to the presets
+title: "[Add] "
+labels: ["data", "enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Presets aim to cover **mainstream, readily available** stocks and labs. Rare, limited-run,
+        novelty, or frequently-out-of-stock films are generally left out on purpose — you can always
+        add them yourself in the Library tab without them shipping as a preset.
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What should be added?
+      options:
+        - A film stock
+        - A lab
+    validations:
+      required: true
+
+  - type: input
+    id: name
+    attributes:
+      label: Name
+      placeholder: "e.g. Kodak Portra 400 (120), or Hillvale Photo Melbourne"
+    validations:
+      required: true
+
+  - type: textarea
+    id: film-details
+    attributes:
+      label: Film details (skip if requesting a lab)
+      value: |
+        - Format (35mm / 120 / 110 / …): 
+        - Box speed (ISO): 
+        - Process (C41 / BW / E6 / ECN-2): 
+        - Exposures per roll: 
+        - Push/pull limit in stops (maxPushPull): 
+        - Regular price (not sale price): 
+        - Where to buy (link): 
+    validations:
+      required: false
+
+  - type: textarea
+    id: lab-details
+    attributes:
+      label: Lab details (skip if requesting a film)
+      description: One block per service tier — copy the block if the lab offers several.
+      value: |
+        - Address: 
+        - Website: 
+        - Service tier: 
+          - Development cost per roll: 
+          - Push/pull fee (and whether it's per-stop or flat): 
+          - Turnaround (next day / same week / longer): 
+          - Hi-res scan? (yes/no): 
+          - Processes handled (C41 / BW / E6 / ECN-2): 
+    validations:
+      required: false
+
+  - type: input
+    id: source
+    attributes:
+      label: Source link
+      description: The retailer or lab page with current pricing.
+      placeholder: "https://…"
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot (optional but helpful)
+      description: |
+        A screenshot of the pricing page preserves what you saw, since prices and stock change.
+        Drag an image into this box to upload it.
+      placeholder: Paste or drag your screenshot here.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirmations
+      options:
+        - label: This is a mainstream stock/lab that's reliably available (not a rare or limited run)
+        - label: The price given is the **regular** price, not a sale price
