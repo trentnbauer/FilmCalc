@@ -733,8 +733,14 @@
         // javascript:, data:, and other schemes that could execute on click,
         // e.g. from a maliciously crafted imported config.yaml.
         function sanitizeUrl(url) {
+            const raw = String(url ?? '').trim();
+            if (!raw) return '';
             try {
-                const u = new URL(String(url ?? ''), window.location.href);
+                // Resolved against window.location.href so a relative path still
+                // works, but that same base-resolving behaviour means an empty
+                // string would otherwise silently resolve to the current page
+                // itself (a valid, non-empty URL) — hence the blank check above.
+                const u = new URL(raw, window.location.href);
                 return (u.protocol === 'http:' || u.protocol === 'https:') ? u.href : '';
             } catch {
                 return '';
@@ -2787,10 +2793,13 @@
             });
             const priceSortedRows = [...byFilmNative.values()].sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto);
             const rows = reorderFavouriteFilmsFirst(priceSortedRows);
+            const oneStopMatrix = computeOneStopFilmLabMatrix();
             container.innerHTML = expandAllControl() + rows.map(e => {
                 const rank = priceSortedRows.indexOf(e);
                 const isFav = isFavFilm(filmKey(e.filmName, e.boxSpeed, e.format));
-                return renderMatrixRow(e, rank, 'photo', isFav && rank !== 0 ? 'favFilm' : null);
+                const rowHtml = renderMatrixRow(e, rank, 'photo', isFav && rank !== 0 ? 'favFilm' : null);
+                const bestOneStop = oneStopMatrix.filter(o => o.filmName === e.filmName).sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto)[0];
+                return rowHtml + renderPushPullSubLine(bestOneStop, bestOneStop ? bestOneStop.labName : '');
             }).join('');
             wireExpandAll(container, updateCostPerPhotoTab);
             wireMatrixRows(container, updateCostPerPhotoTab);
@@ -2813,9 +2822,12 @@
             });
             const priceSortedRows = [...byLabNative.values()].sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto);
             const rows = reorderFavouriteLabsFirst(priceSortedRows);
+            const oneStopMatrix = computeOneStopFilmLabMatrix();
             container.innerHTML = expandAllControl() + rows.map(e => {
                 const rank = priceSortedRows.indexOf(e);
-                return renderMatrixRow(e, rank, 'lab', isFavLab(e.labName) && rank !== 0);
+                const rowHtml = renderMatrixRow(e, rank, 'lab', isFavLab(e.labName) && rank !== 0);
+                const bestOneStop = oneStopMatrix.filter(o => o.labName === e.labName).sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto)[0];
+                return rowHtml + renderPushPullSubLine(bestOneStop, bestOneStop ? bestOneStop.filmName : '');
             }).join('');
             wireExpandAll(container, updateCostPerLabTab);
             wireMatrixRows(container, updateCostPerLabTab);
