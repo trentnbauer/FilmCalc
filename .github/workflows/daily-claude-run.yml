@@ -133,21 +133,34 @@ jobs:
             touch a feature request (`enhancement`) or anything else that isn't a bug or vulnerability
             report. Leave those for a human (or a different workflow) to triage.
 
-            For each issue in Tier 4 or 5: read it fully and decide whether it's implementable with
-            reasonable confidence in what "done" looks like — the same judgment call you'd make if a
-            human asked you to "just implement this issue" with no other context. If it's too vague,
-            too large for one PR, or hinges on a decision only the repo owner can make (a design/infra
-            tradeoff, a security-sensitive default, etc.), don't implement it — comment on the issue
-            explaining what's unclear or what decision is needed instead.
+            For each issue in Tier 4 or 5: read it fully, then try to replicate the reported behavior
+            before deciding anything else — follow the reporter's repro steps against the current code
+            (read the relevant code path end-to-end, and actually exercise it where that's feasible in
+            this environment: run the calculation/script, parse the YAML, load the page logic, etc.,
+            rather than only reasoning about it from the description). Keep track of what you did and
+            what you observed — you'll need it either way, in the PR's test plan or in the comment
+            below.
+
+            Now decide whether it's implementable with reasonable confidence in what "done" looks
+            like — the same judgment call you'd make if a human asked you to "just implement this
+            issue" with no other context. If you couldn't replicate the reported behavior, or it's too
+            vague, too large for one PR, or hinges on a decision only the repo owner can make (a
+            design/infra tradeoff, a security-sensitive default, etc.), don't implement it — comment on
+            the issue explaining what you tried in order to replicate it and what happened, plus
+            whatever else is unclear or the decision that's needed. Directly @-mention the repo owner
+            in that comment (`@${{ github.repository_owner }}`, e.g. "`@${{ github.repository_owner }}`
+            could you confirm/clarify ...") so they're notified that a response from them is what's
+            blocking progress.
 
             If you can implement it: create a branch named `claude/issue-<number>-<short-slug>`,
             implement the change, verify it actually works (read the surrounding code so the change
             matches existing conventions; sanity-check syntax — e.g. for `index.html`, confirm the
             HTML/JS is well-formed), commit, and push. Open a PR: title describing the change, a body
-            explaining what and why, including `Fixes #<number>`, and a test-plan checklist of what you
-            verified. Do not merge issue-derived PRs yourself, even in Tier 4 — the Tier 1 auto-merge
-            exception applies only to code-scanning alerts, not issues, since a reported vulnerability
-            needs a human to confirm the report and the fix actually match.
+            explaining what and why, including `Fixes #<number>`, and a test-plan checklist that
+            includes how you replicated the original issue and confirmed your fix resolves it, plus
+            whatever else you verified. Do not merge issue-derived PRs yourself, even in Tier 4 — the
+            Tier 1 auto-merge exception applies only to code-scanning alerts, not issues, since a
+            reported vulnerability needs a human to confirm the report and the fix actually match.
 
             Either way — PR opened, or skipped with a comment — label the issue:
             `gh issue edit <number> --repo ${{ github.repository }} --add-label "claude-attempted"`
