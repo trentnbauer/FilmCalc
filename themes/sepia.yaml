@@ -1,3 +1,5 @@
+# Hex or a standard CSS color name both work — see themes/ocean.yaml for
+# details and the full list of customizable slots.
 label: Sepia
 light:
   pageBg: "#f4ecd8"
