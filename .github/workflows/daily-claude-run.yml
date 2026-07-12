@@ -8,7 +8,9 @@ name: Daily Claude Run
 # Replaces the separate "Daily Security Auto-Fix" and "Daily Issue PRs"
 # workflows with one combined priority queue, so security work and issue
 # work interleave by priority instead of running as two unrelated jobs
-# (see the prompt below for the exact tier order).
+# (see the prompt below for the exact tier order). Scope is deliberately
+# narrow: vulnerabilities and bug reports only -- feature requests and
+# anything else get left alone for a human to triage.
 on:
   schedule:
     - cron: '0 15 * * *'
@@ -59,13 +61,14 @@ jobs:
           claude_args: '--allowed-tools "Bash(gh:*),Bash(git:*),Read,Edit,Write,Grep,Glob"'
           prompt: |
             You are running as a scheduled, unattended job with no human present. Be conservative:
-            implement real, working fixes/features, and do not refactor or "improve" unrelated code.
-            Every change goes through its own PR for the repo owner to review — with exactly one
-            narrow exception (Tier 1 below) where you may merge automatically, and only when you are
-            genuinely confident. Never push to main directly, and never approve a PR (GitHub blocks
-            self-approval anyway).
+            implement real, working fixes, and do not refactor or "improve" unrelated code. This run
+            only handles vulnerabilities and bug reports — never feature requests, and never any other
+            open issue that isn't clearly a bug. Every change goes through its own PR for the repo
+            owner to review — with exactly one narrow exception (Tier 1 below) where you may merge
+            automatically, and only when you are genuinely confident. Never push to main directly, and
+            never approve a PR (GitHub blocks self-approval anyway).
 
-            Work through these eight tiers, strictly in order. Fully finish every item in a tier
+            Work through these six tiers, strictly in order. Fully finish every item in a tier
             (PR opened/merged, or skipped with a comment/note, plus tracking applied) before starting
             the next item, and don't begin a lower tier while any higher tier still has unprocessed
             items:
@@ -73,16 +76,16 @@ jobs:
             **Tier 1 — Critical security vulnerabilities (may auto-merge)**
             **Tier 2 — High severity vulnerabilities**
             **Tier 3 — Medium severity vulnerabilities**
-            **Tier 7 — Low severity vulnerabilities** (yes, out of numeric order — see the full list below)
+            **Tier 6 — Low severity vulnerabilities** (yes, out of numeric order — see the full list below)
 
-            For tiers 1/2/3/7, list this repo's open code scanning alerts:
+            For tiers 1/2/3/6, list this repo's open code scanning alerts:
             ```
             gh api repos/${{ github.repository }}/code-scanning/alerts --paginate \
               -q '.[] | select(.state=="open")'
             ```
             Bucket each by `.rule.security_severity_level` (critical/high/medium/low); an alert with
             no `security_severity_level` (i.e. `.rule.severity` of `error`/`warning`/`note` instead)
-            counts as Tier 7 (low) if `error`, and is skipped entirely if `warning` or `note` — those
+            counts as Tier 6 (low) if `error`, and is skipped entirely if `warning` or `note` — those
             are lint-style findings, not worth a standalone security PR.
 
             For each alert, in its tier: don't just patch the flagged line — pull the SARIF for the
@@ -114,30 +117,23 @@ jobs:
 
             **Tier 4 — Open issues reporting a security vulnerability**
             **Tier 5 — Bug reports**
-            **Tier 6 — Feature requests** (confirm in-scope first — see below)
-            **Tier 8 — Everything else** (any remaining open issue not covered above)
 
-            For tiers 4/5/6/8, list open issues authored by ${{ github.repository_owner }}:
+            For tiers 4/5, list open issues authored by ${{ github.repository_owner }}:
             ```
             gh issue list --repo ${{ github.repository }} --author ${{ github.repository_owner }} \
               --state open --json number,title,body,labels,createdAt --jq 'sort_by(.createdAt)'
             ```
             Skip any issue already labelled `claude-attempted` — it's been handled or judged too
-            ambiguous already; a human removing that label is the signal to retry it. Sort the
-            remainder into:
+            ambiguous already; a human removing that label is the signal to retry it. From what's
+            left, only act on:
               - Tier 4: the issue's title/body clearly describes a security vulnerability (regardless
                 of label) — a real exploit, data leak, injection, etc., not just "this looks unsafe".
               - Tier 5: labelled `bug` (and not already Tier 4).
-              - Tier 6: labelled `enhancement` (and not already Tier 4/5). Before implementing, fetch
-                this repo's wiki Home page (`gh api repos/${{ github.repository }}/wiki` won't work —
-                instead `git clone` or `curl` `https://raw.githubusercontent.com/wiki/${{ github.repository }}/Home.md`)
-                and read its "What is and isn't this tool?" section. If the request conflicts with
-                that stated scope (e.g. anything resembling gear/inventory tracking rather than cost
-                calculation), do NOT implement it — comment explaining the scope conflict instead, then
-                label and move on.
-              - Tier 8: anything left over.
+            Ignore every other open issue completely this run — do not comment on, label, or otherwise
+            touch a feature request (`enhancement`) or anything else that isn't a bug or vulnerability
+            report. Leave those for a human (or a different workflow) to triage.
 
-            For each issue, in its tier: read it fully and decide whether it's implementable with
+            For each issue in Tier 4 or 5: read it fully and decide whether it's implementable with
             reasonable confidence in what "done" looks like — the same judgment call you'd make if a
             human asked you to "just implement this issue" with no other context. If it's too vague,
             too large for one PR, or hinges on a decision only the repo owner can make (a design/infra
