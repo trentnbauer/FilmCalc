@@ -42,6 +42,12 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # daily-claude-run.yml opens PRs as claude[bot] -- without this,
+          # the action refuses to run on its own PRs ("Workflow initiated by
+          # non-human actor"). Allow-listing just this one bot rather than
+          # '*', since this is a public repo and '*' would let any bot
+          # (including an external contributor's) trigger the action.
+          allowed_bots: "claude[bot]"
           plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
           plugins: 'code-review@claude-code-plugins'
           prompt: '/code-review:code-review ${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
