@@ -10,6 +10,14 @@ on:
   pull_request_review:
     types: [submitted]
 
+concurrency:
+  # Queue (don't cancel) — a second @claude mention on the same PR/issue is
+  # usually a distinct follow-up request, not a stale duplicate, so an
+  # in-flight run shouldn't be killed. This just stops them running in
+  # parallel and racing each other on the same branch/comments.
+  group: claude-mention-${{ github.event.issue.number || github.event.pull_request.number }}
+  cancel-in-progress: false
+
 jobs:
   claude:
     if: |

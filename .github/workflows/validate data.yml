@@ -133,6 +133,11 @@ jobs:
     needs: validate
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    concurrency:
+      # A new push should replace the in-flight check of the commit it
+      # superseded, not queue up alongside it.
+      group: claude-sanity-check-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
     permissions:
       contents: read
       pull-requests: write
