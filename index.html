@@ -2275,7 +2275,9 @@
             });
         }
 
-        function computeIsoPriceOptions(targetIso) {
+        function computeIsoPriceOptions(targetIso, filters) {
+            filters = filters || {};
+            const matchesFilters = tier => (!filters.turnaround || tier.turnaroundTime === filters.turnaround) && (!filters.hiRes || tier.highResScan);
             const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
             const allLabs = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') };
             const labNames = Object.keys(allLabs).filter(n => !allLabs[n].hidden);
@@ -2340,7 +2342,7 @@
                                 buyLink: bestBundle.buyLink,
                                 storeName: bestBundle.storeName
                             };
-                            if (!best || totalCostPerPhoto < best.totalCostPerPhoto) best = candidate;
+                            if (matchesFilters(tier) && (!best || totalCostPerPhoto < best.totalCostPerPhoto)) best = candidate;
                             if (tier.highResScan && tier.turnaroundTime === 'next_day' &&
                                 (!bestHrNd || totalCostPerPhoto < bestHrNd.totalCostPerPhoto)) {
                                 bestHrNd = candidate;
@@ -2529,14 +2531,18 @@
             }
 
             const { native: allNative, push: allPush, pull: allPull } = computeIsoPriceOptions(targetIso);
-            // Next Day / Same Week / Hi-Res filters narrow each bucket before
-            // sorting and ranking, so the ⭐ "cheapest" marker and bucket
-            // "no matches" messages reflect only what's actually shown —
-            // same idea as Film Lookup's Next Day / Hi-Res filter pills.
-            const matchesIsoFilters = e => (!isoFilterTurnaround || e.turnaroundTime === isoFilterTurnaround) && (!isoFilterHiRes || e.highResScan);
-            const native = allNative.filter(matchesIsoFilters);
-            const push = allPush.filter(matchesIsoFilters);
-            const pull = allPull.filter(matchesIsoFilters);
+            // Next Day / Same Week / Hi-Res filters need to pick the cheapest
+            // MATCHING tier per film (recomputed here), not just filter the
+            // unfiltered cheapest-overall pick above — a film's cheapest lab
+            // tier is rarely the hi-res one, so filtering after the fact would
+            // wrongly drop films that do have a matching tier at another lab.
+            // allNative/allPush/allPull (unfiltered) are kept only to tell
+            // "no matches for this filter" apart from "no film at this ISO at
+            // all" in the messaging below.
+            const hasActiveIsoFilter = isoFilterTurnaround || isoFilterHiRes;
+            const { native, push, pull } = hasActiveIsoFilter
+                ? computeIsoPriceOptions(targetIso, { turnaround: isoFilterTurnaround, hiRes: isoFilterHiRes })
+                : { native: allNative, push: allPush, pull: allPull };
             const sortedNative = sortIsoEntries(native);
             const sortedPush = sortIsoEntries(push);
             const sortedPull = sortIsoEntries(pull);
