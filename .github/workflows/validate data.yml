@@ -151,7 +151,7 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: '--allowed-tools "Bash(gh pr comment:*),Bash(gh pr diff:*),WebFetch,Read,Grep,Glob"'
           prompt: |
-            This PR changed film and/or lab data files. Read "data spec.md" in the repo root — it is
+            This PR changed film and/or lab data files. Read "DATA_SPEC.md" in the repo root — it is
             the authoritative rules a film/lab entry must follow. Then review ONLY the added/changed
             lines in this PR (gh pr diff ${{ github.event.pull_request.number }}) against those rules,
             specifically the things the schema validator that already ran in this workflow can't check:
