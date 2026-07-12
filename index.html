@@ -29,6 +29,25 @@
         [data-theme-active="1"] .theme-accent-text { color: var(--theme-accent) !important; }
         [data-theme-active="1"] .theme-accent-bg { background-color: var(--theme-accent) !important; }
 
+        /* Semantic result colors — cheapest/recommended/favourite/default-lab/
+           warning/danger. Same "only while a theme is active" pattern as the
+           accent rules above, but applyThemeVars() always sets each of these
+           variables (to the theme's custom color, or this app's normal
+           default for the current light/dark mode) — so a theme only needs
+           to define the slots it actually wants to change, and never renders
+           a broken/invalid color for one it leaves out. See themes/ocean.yaml
+           for an example that customises all of them. */
+        [data-theme-active="1"] .theme-cheapest-bg { background-color: var(--theme-cheapest-bg) !important; }
+        [data-theme-active="1"] .theme-cheapest-text { color: var(--theme-cheapest-text) !important; }
+        [data-theme-active="1"] .theme-recommended-bg { background-color: var(--theme-recommended-bg) !important; }
+        [data-theme-active="1"] .theme-recommended-text { color: var(--theme-recommended-text) !important; }
+        [data-theme-active="1"] .theme-favourite-text { color: var(--theme-favourite) !important; }
+        [data-theme-active="1"] .theme-default-lab-text { color: var(--theme-default-lab) !important; }
+        [data-theme-active="1"] .theme-warning-bg { background-color: var(--theme-warning-bg) !important; }
+        [data-theme-active="1"] .theme-warning-text { color: var(--theme-warning-text) !important; }
+        [data-theme-active="1"] .theme-danger-bg { background-color: var(--theme-danger-bg) !important; }
+        [data-theme-active="1"] .theme-danger-text { color: var(--theme-danger-text) !important; }
+
         /* Native form controls (selects, month picker, number spinners) follow the app theme
            instead of always rendering light. */
         html { color-scheme: light; }
@@ -855,12 +874,42 @@
         updateThemeIcons();
 
         // ---------- Custom themes (YAML files in themes/) ----------
-        // A theme file: { label, light: {pageBg,cardBg,accent}, dark: {...} }.
+        // A theme file: { label, light: {pageBg,cardBg,accent,...}, dark: {...} }.
         // We set CSS variables from whichever block matches the current mode, so
         // the light/dark toggle keeps working inside any theme. Default = no
         // theme (base Tailwind colours).
         let loadedThemes = {}; // file -> parsed theme
         let activeThemeFile = localStorage.getItem('activeTheme') || '';
+
+        // Optional per-result colors a theme can override — cheapest/
+        // recommended picks, favourited rows, your default lab, warnings,
+        // and over-limit/danger flags. Every one of these is always set to
+        // *something* whenever a theme is active (the theme's own color if
+        // it defines that slot, otherwise this app's normal default for the
+        // current light/dark mode) so a theme only needs to specify the
+        // slots it actually wants to change.
+        const SEMANTIC_THEME_DEFAULTS = {
+            light: {
+                cheapestBg: '#dcfce7', cheapestText: '#15803d',
+                recommendedBg: '#fef3c7', recommendedText: '#b45309',
+                favourite: '#f59e0b',
+                defaultLab: '#4f46e5',
+                warningBg: '#ffedd5', warningText: '#9a3412',
+                dangerBg: '#fef2f2', dangerText: '#b91c1c'
+            },
+            dark: {
+                cheapestBg: '#052e16', cheapestText: '#4ade80',
+                recommendedBg: '#451a03', recommendedText: '#fcd34d',
+                favourite: '#fbbf24',
+                defaultLab: '#818cf8',
+                warningBg: '#431407', warningText: '#fdba74',
+                dangerBg: '#450a0a', dangerText: '#f87171'
+            }
+        };
+        const SEMANTIC_THEME_KEYS = Object.keys(SEMANTIC_THEME_DEFAULTS.light);
+        function semanticCssVar(key) {
+            return `--theme-${key.replace(/[A-Z]/g, m => '-' + m.toLowerCase())}`;
+        }
 
         function applyThemeVars(theme) {
             const root = document.documentElement;
@@ -870,6 +919,7 @@
                 root.style.removeProperty('--theme-page-bg');
                 root.style.removeProperty('--theme-card-bg');
                 root.style.removeProperty('--theme-accent');
+                SEMANTIC_THEME_KEYS.forEach(key => root.style.removeProperty(semanticCssVar(key)));
                 return;
             }
             const isDark = root.classList.contains('dark');
@@ -877,6 +927,10 @@
             if (v.pageBg) root.style.setProperty('--theme-page-bg', v.pageBg);
             if (v.cardBg) root.style.setProperty('--theme-card-bg', v.cardBg);
             if (v.accent) root.style.setProperty('--theme-accent', v.accent);
+            const semanticDefaults = isDark ? SEMANTIC_THEME_DEFAULTS.dark : SEMANTIC_THEME_DEFAULTS.light;
+            SEMANTIC_THEME_KEYS.forEach(key => {
+                root.style.setProperty(semanticCssVar(key), v[key] || semanticDefaults[key]);
+            });
             document.body.setAttribute('data-theme-active', '1');
             document.querySelector('.themed-card')?.setAttribute('data-theme-active', '1');
         }
@@ -1675,9 +1729,9 @@
                 el.innerHTML = '';
                 return;
             }
-            el.innerHTML = `<div class="flex items-start gap-2 bg-orange-100 dark:bg-orange-900/30 border border-orange-300 dark:border-orange-700 rounded-lg px-3 py-2">
-                <span class="text-orange-500 dark:text-orange-400">⚠️</span>
-                <p class="text-sm text-orange-800 dark:text-orange-300 font-medium">This pushes/pulls ${stops} stop${stops === 1 ? '' : 's'} — check the film can handle it (most stocks are rated for about 1).</p>
+            el.innerHTML = `<div class="flex items-start gap-2 theme-warning-bg bg-orange-100 dark:bg-orange-900/30 border border-orange-300 dark:border-orange-700 rounded-lg px-3 py-2">
+                <span class="theme-warning-text text-orange-500 dark:text-orange-400">⚠️</span>
+                <p class="text-sm theme-warning-text text-orange-800 dark:text-orange-300 font-medium">This pushes/pulls ${stops} stop${stops === 1 ? '' : 's'} — check the film can handle it (most stocks are rated for about 1).</p>
             </div>`;
         }
 
@@ -1882,14 +1936,16 @@
                     </div>`;
                 }
                 const isCurrent = pick.name === currentLabName;
-                const noteHtml = note ? `<div class="text-xs ${recommended ? 'text-amber-800/80 dark:text-amber-300/80' : 'text-green-700/80 dark:text-green-400/80'} mt-1 italic">${note}</div>` : '';
-                return `<div class="px-3 py-3 rounded-lg text-sm ${recommended ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-green-100 dark:bg-green-900/30'} ${isCurrent ? 'ring-2 ring-blue-400' : ''}">
+                const semanticBg = recommended ? 'theme-recommended-bg' : 'theme-cheapest-bg';
+                const semanticText = recommended ? 'theme-recommended-text' : 'theme-cheapest-text';
+                const noteHtml = note ? `<div class="text-xs ${semanticText} ${recommended ? 'text-amber-800/80 dark:text-amber-300/80' : 'text-green-700/80 dark:text-green-400/80'} mt-1 italic">${note}</div>` : '';
+                return `<div class="px-3 py-3 rounded-lg text-sm ${semanticBg} ${recommended ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-green-100 dark:bg-green-900/30'} ${isCurrent ? 'ring-2 ring-blue-400' : ''}">
                     <div class="flex justify-between items-start">
-                        <div class="text-xs font-semibold ${recommended ? 'text-amber-700 dark:text-amber-400' : 'text-green-700 dark:text-green-400'} uppercase tracking-wide mb-1">${label}</div>
+                        <div class="text-xs font-semibold ${semanticText} ${recommended ? 'text-amber-700 dark:text-amber-400' : 'text-green-700 dark:text-green-400'} uppercase tracking-wide mb-1">${label}</div>
                         ${renderPinBtn(pick.id)}
                     </div>
-                    <div class="font-semibold ${recommended ? 'text-amber-800 dark:text-amber-300' : 'text-green-800 dark:text-green-400'}">${escapeHtml(pick.name)}${renderBadges(pick)}</div>
-                    <div class="font-mono ${recommended ? 'text-amber-800 dark:text-amber-300' : 'text-green-800 dark:text-green-400'} mt-1">
+                    <div class="font-semibold ${semanticText} ${recommended ? 'text-amber-800 dark:text-amber-300' : 'text-green-800 dark:text-green-400'}">${escapeHtml(pick.name)}${renderBadges(pick)}</div>
+                    <div class="font-mono ${semanticText} ${recommended ? 'text-amber-800 dark:text-amber-300' : 'text-green-800 dark:text-green-400'} mt-1">
                         <span class="font-semibold">${CUR()}${pick.costPerPhoto.toFixed(2)}/photo</span>
                         <span class="text-xs opacity-80"> · ${CUR()}${pick.devCostPerRoll.toFixed(2)}/dev · ${CUR()}${pick.costPerRoll.toFixed(2)}/total</span>
                     </div>
@@ -2079,17 +2135,17 @@
             // Orange when a cheaper library film exists, green when this is the
             // cheapest (or tied) option at this speed.
             const c = cheaperExists
-                ? { bg: 'bg-orange-100 dark:bg-orange-900/30', label: 'text-orange-700 dark:text-orange-400', big: 'text-orange-800 dark:text-orange-300', sub: 'text-orange-700/80 dark:text-orange-400/80' }
-                : { bg: 'bg-green-100 dark:bg-green-900/30', label: 'text-green-700 dark:text-green-400', big: 'text-green-800 dark:text-green-300', sub: 'text-green-700/80 dark:text-green-400/80' };
+                ? { bg: 'bg-orange-100 dark:bg-orange-900/30', label: 'text-orange-700 dark:text-orange-400', big: 'text-orange-800 dark:text-orange-300', sub: 'text-orange-700/80 dark:text-orange-400/80', semanticBg: 'theme-warning-bg', semanticText: 'theme-warning-text' }
+                : { bg: 'bg-green-100 dark:bg-green-900/30', label: 'text-green-700 dark:text-green-400', big: 'text-green-800 dark:text-green-300', sub: 'text-green-700/80 dark:text-green-400/80', semanticBg: 'theme-cheapest-bg', semanticText: 'theme-cheapest-text' };
             const headingLabel = usingPreferred ? `Total cost per photo <span class="normal-case opacity-80">· ${escapeHtml(pref.lab)}</span>` : 'Total cost per photo';
             // When using a preferred lab that isn't the cheapest, note the cheapest total underneath.
             const cheapestNote = (usingPreferred && cheapestTotal !== null && cheapestTotal < currentTotal - 0.001)
-                ? `<p class="text-xs ${c.sub} mt-1 pt-1 border-t border-current/10">Cheapest lab: ${CUR()}${cheapestTotal.toFixed(2)}/photo total</p>`
+                ? `<p class="text-xs ${c.semanticText} ${c.sub} mt-1 pt-1 border-t border-current/10">Cheapest lab: ${CUR()}${cheapestTotal.toFixed(2)}/photo total</p>`
                 : '';
-            const costBlock = `<div class="mt-1 rounded-lg ${c.bg} px-4 py-3 text-center">
-                <p class="text-xs font-semibold ${c.label} uppercase tracking-wide">${headingLabel}</p>
-                <p class="font-mono text-3xl font-bold ${c.big} mt-0.5">${CUR()}${currentTotal.toFixed(2)}</p>
-                <p class="text-xs ${c.sub} mt-0.5">${CUR()}${currentFilmCostPerPhoto.toFixed(2)} film + ${CUR()}${currentDevCpp.toFixed(2)} dev${stopsAbs > 0 ? ` · at ${devSpeed} ISO` : ''}</p>
+            const costBlock = `<div class="mt-1 rounded-lg ${c.semanticBg} ${c.bg} px-4 py-3 text-center">
+                <p class="text-xs font-semibold ${c.semanticText} ${c.label} uppercase tracking-wide">${headingLabel}</p>
+                <p class="font-mono text-3xl font-bold ${c.semanticText} ${c.big} mt-0.5">${CUR()}${currentTotal.toFixed(2)}</p>
+                <p class="text-xs ${c.semanticText} ${c.sub} mt-0.5">${CUR()}${currentFilmCostPerPhoto.toFixed(2)} film + ${CUR()}${currentDevCpp.toFixed(2)} dev${stopsAbs > 0 ? ` · at ${devSpeed} ISO` : ''}</p>
                 ${cheapestNote}
             </div>`;
 
@@ -2322,15 +2378,17 @@
             const turnaroundBadge = entry.turnaroundTime ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 align-middle">${escapeHtml(turnaroundLabels[entry.turnaroundTime] || entry.turnaroundTime)}</span>` : '';
             const direction = entry.stops > 0 ? 'Push' : 'Pull';
             const stopsLabel = entry.stops !== 0
-                ? ` <span class="text-xs ${entry.overLimit ? 'text-red-600 dark:text-red-400 font-semibold' : 'opacity-70'}">(${direction} ${Math.abs(entry.stops)} stop${Math.abs(entry.stops) === 1 ? '' : 's'}${entry.overLimit ? ` — over its ${entry.maxPushPull}-stop limit` : ''})</span>`
+                ? ` <span class="text-xs ${entry.overLimit ? 'theme-danger-text text-red-600 dark:text-red-400 font-semibold' : 'opacity-70'}">(${direction} ${Math.abs(entry.stops)} stop${Math.abs(entry.stops) === 1 ? '' : 's'}${entry.overLimit ? ` — over its ${entry.maxPushPull}-stop limit` : ''})</span>`
                 : '';
             const isCheapest = rank === 0;
+            const semanticRowBg = entry.overLimit ? 'theme-danger-bg' : (isCheapest ? 'theme-recommended-bg' : '');
+            const semanticRowText = entry.overLimit ? 'theme-danger-text' : (isCheapest ? 'theme-recommended-text' : '');
             const rowBg = entry.overLimit ? 'bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700' : (isCheapest ? 'bg-amber-100 dark:bg-amber-900/30' : (pinnedByFav ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'bg-white dark:bg-gray-800/50'));
             const textColor = entry.overLimit ? 'text-red-700 dark:text-red-400' : (isCheapest ? 'text-amber-800 dark:text-amber-300 font-semibold' : 'text-gray-700 dark:text-gray-300');
             const fav = isFavLab(entry.labName);
-            const star = `<button type="button" class="fav-star text-sm leading-none" data-fav-lab="${escapeHtml(entry.labName)}" title="${fav ? 'Unfavourite lab' : 'Favourite lab'}" onclick="event.stopPropagation()"><span class="${fav ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600'}">${fav ? '★' : '☆'}</span></button>`;
+            const star = `<button type="button" class="fav-star text-sm leading-none" data-fav-lab="${escapeHtml(entry.labName)}" title="${fav ? 'Unfavourite lab' : 'Favourite lab'}" onclick="event.stopPropagation()"><span class="${fav ? 'theme-favourite-text text-amber-400' : 'text-gray-300 dark:text-gray-600'}">${fav ? '★' : '☆'}</span></button>`;
             const pinnedFavNote = pinnedByFav
-                ? `<div class="text-[11px] text-indigo-600 dark:text-indigo-400 mt-0.5">📌 Shown first — this is your favourite lab</div>`
+                ? `<div class="text-[11px] theme-favourite-text text-indigo-600 dark:text-indigo-400 mt-0.5">📌 Shown first — this is your favourite lab</div>`
                 : '';
 
             const key = isoRowKey(entry);
@@ -2364,10 +2422,10 @@
                 : '';
 
             return `<div>
-                <div class="iso-row cursor-pointer px-3 py-2 rounded-lg text-sm ${rowBg}" data-iso-key="${escapeHtml(key)}" title="Tap for cost breakdown">
+                <div class="iso-row cursor-pointer px-3 py-2 rounded-lg text-sm ${semanticRowBg} ${rowBg}" data-iso-key="${escapeHtml(key)}" title="Tap for cost breakdown">
                     <div class="flex justify-between items-start gap-2">
-                        <span class="${entry.overLimit ? 'font-semibold text-red-700 dark:text-red-400' : (isCheapest ? 'font-semibold text-amber-800 dark:text-amber-300' : 'text-gray-700 dark:text-gray-300')}">${star} ${isCheapest && !entry.overLimit ? '⭐ ' : ''}${escapeHtml(entry.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(entry.labName)}</span>${stopsLabel}${hiResBadge}${turnaroundBadge}</span>
-                        <span class="font-mono text-right leading-tight ${textColor} whitespace-nowrap flex items-center gap-1.5">
+                        <span class="${semanticRowText} ${entry.overLimit ? 'font-semibold text-red-700 dark:text-red-400' : (isCheapest ? 'font-semibold text-amber-800 dark:text-amber-300' : 'text-gray-700 dark:text-gray-300')}">${star} ${isCheapest && !entry.overLimit ? '⭐ ' : ''}${escapeHtml(entry.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(entry.labName)}</span>${stopsLabel}${hiResBadge}${turnaroundBadge}</span>
+                        <span class="font-mono text-right leading-tight ${semanticRowText} ${textColor} whitespace-nowrap flex items-center gap-1.5">
                             <span class="font-semibold">${CUR()}${entry.totalCostPerPhoto.toFixed(2)}/photo</span>
                             ${chevron}
                         </span>
@@ -2642,6 +2700,8 @@
             const hiResBadge = entry.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">HI-RES</span>` : '';
             const turnaroundBadge = entry.turnaroundTime ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 align-middle">${escapeHtml(turnaroundLabels[entry.turnaroundTime] || entry.turnaroundTime)}</span>` : '';
             const isCheapest = rank === 0;
+            const semanticRowBg = isCheapest ? 'theme-recommended-bg' : '';
+            const semanticRowText = isCheapest ? 'theme-recommended-text' : '';
             const rowBg = isCheapest ? 'bg-amber-100 dark:bg-amber-900/30' : (pinReason ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'bg-white dark:bg-gray-800/50');
             const textColor = isCheapest ? 'text-amber-800 dark:text-amber-300 font-semibold' : 'text-gray-600 dark:text-gray-400';
             const key = matrixRowKey(keyPrefix, entry);
@@ -2652,7 +2712,7 @@
             const fav = isFavLab(entry.labName);
             const star = keyPrefix === 'film'
                 ? ''
-                : `<button type="button" class="fav-star text-sm leading-none ${fav ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600'}" data-fav-lab="${escapeHtml(entry.labName)}" title="${fav ? 'Unfavourite lab' : 'Favourite lab'}" onclick="event.stopPropagation()">${fav ? '★' : '☆'}</button>`;
+                : `<button type="button" class="fav-star text-sm leading-none ${fav ? 'theme-favourite-text text-amber-400' : 'text-gray-300 dark:text-gray-600'}" data-fav-lab="${escapeHtml(entry.labName)}" title="${fav ? 'Unfavourite lab' : 'Favourite lab'}" onclick="event.stopPropagation()">${fav ? '★' : '☆'}</button>`;
             const pinned = keyPrefix === 'film' ? isDevCostPinned(entry) : false;
             const pinBtn = keyPrefix === 'film'
                 ? `<button type="button" class="dev-cost-pin-btn text-sm leading-none ${pinned ? 'text-indigo-500' : 'text-gray-300 dark:text-gray-600'}" data-pin-row-key="${escapeHtml(matrixRowKey(keyPrefix, entry))}" title="${pinned ? 'Unpin' : 'Pin for comparison'}" onclick="event.stopPropagation()">📌</button>`
@@ -2663,14 +2723,14 @@
             const filmFavKeyForRow = filmKey(entry.filmName, entry.boxSpeed, entry.format);
             const favFilm = isFavFilm(filmFavKeyForRow);
             const filmStar = keyPrefix === 'photo'
-                ? `<button type="button" class="fav-film-star text-sm leading-none ${favFilm ? 'text-red-400' : 'text-gray-300 dark:text-gray-600'}" data-fav-film="${escapeHtml(filmFavKeyForRow)}" title="${favFilm ? 'Unfavourite film' : 'Favourite film'}" onclick="event.stopPropagation()">${favFilm ? '♥' : '♡'}</button>`
+                ? `<button type="button" class="fav-film-star text-sm leading-none ${favFilm ? 'theme-favourite-text text-red-400' : 'text-gray-300 dark:text-gray-600'}" data-fav-film="${escapeHtml(filmFavKeyForRow)}" title="${favFilm ? 'Unfavourite film' : 'Favourite film'}" onclick="event.stopPropagation()">${favFilm ? '♥' : '♡'}</button>`
                 : '';
             const pinnedFavNote = pinReason === 'default'
-                ? `<div class="text-[11px] text-indigo-600 dark:text-indigo-400 mt-0.5">🏠 Shown first — this is your default lab</div>`
+                ? `<div class="text-[11px] theme-default-lab-text text-indigo-600 dark:text-indigo-400 mt-0.5">🏠 Shown first — this is your default lab</div>`
                 : pinReason === 'favFilm'
-                    ? `<div class="text-[11px] text-indigo-600 dark:text-indigo-400 mt-0.5">📌 Shown first — this is a favourite film</div>`
+                    ? `<div class="text-[11px] theme-favourite-text text-indigo-600 dark:text-indigo-400 mt-0.5">📌 Shown first — this is a favourite film</div>`
                     : pinReason
-                        ? `<div class="text-[11px] text-indigo-600 dark:text-indigo-400 mt-0.5">★ Shown first — this is your favourite lab</div>`
+                        ? `<div class="text-[11px] theme-favourite-text text-indigo-600 dark:text-indigo-400 mt-0.5">★ Shown first — this is your favourite lab</div>`
                         : '';
 
             const buyUrl = sanitizeUrl(entry.buyLink);
@@ -2699,10 +2759,10 @@
                 : '';
 
             return `<div>
-                <div class="matrix-row cursor-pointer px-3 py-2 rounded-lg text-sm ${rowBg}" data-row-key="${escapeHtml(key)}" title="Tap for cost breakdown">
+                <div class="matrix-row cursor-pointer px-3 py-2 rounded-lg text-sm ${semanticRowBg} ${rowBg}" data-row-key="${escapeHtml(key)}" title="Tap for cost breakdown">
                     <div class="flex justify-between items-start gap-2">
-                        <span class="${textColor}">${star}${filmStar}${pinBtn} ${isCheapest ? '⭐ ' : ''}${escapeHtml(entry.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(entry.labName)}</span> <span class="text-xs opacity-70">(${entry.boxSpeed} ISO)</span>${hiResBadge}${turnaroundBadge}</span>
-                        <span class="font-mono text-right leading-tight ${textColor} whitespace-nowrap flex items-center gap-1.5">
+                        <span class="${semanticRowText} ${textColor}">${star}${filmStar}${pinBtn} ${isCheapest ? '⭐ ' : ''}${escapeHtml(entry.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(entry.labName)}</span> <span class="text-xs opacity-70">(${entry.boxSpeed} ISO)</span>${hiResBadge}${turnaroundBadge}</span>
+                        <span class="font-mono text-right leading-tight ${semanticRowText} ${textColor} whitespace-nowrap flex items-center gap-1.5">
                             <span class="font-semibold">${CUR()}${entry.totalCostPerPhoto.toFixed(2)}/photo</span>
                             ${chevron}
                         </span>
@@ -3033,14 +3093,16 @@
             bestContainer.innerHTML = isoSpeeds.map(iso => {
                 const cheapest = byIso[iso][0];
                 const isOverallCheapest = cheapest.id === overallCheapest.id;
+                const semanticBg = isOverallCheapest ? 'theme-recommended-bg' : 'theme-cheapest-bg';
+                const semanticText = isOverallCheapest ? 'theme-recommended-text' : 'theme-cheapest-text';
                 const bg = isOverallCheapest ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-green-100 dark:bg-green-900/30';
                 const labelColor = isOverallCheapest ? 'text-amber-700 dark:text-amber-400' : 'text-green-700 dark:text-green-400';
                 const textColor = isOverallCheapest ? 'text-amber-800 dark:text-amber-300' : 'text-green-800 dark:text-green-400';
                 const label = isOverallCheapest ? `⭐ Cheapest Overall (${iso} ISO)` : `🏆 Cheapest ${iso} ISO`;
-                return `<div class="px-3 py-3 rounded-lg text-sm ${bg}">
-                    <div class="text-xs font-semibold ${labelColor} uppercase tracking-wide mb-1">${label}</div>
-                    <div class="font-semibold ${textColor}">${escapeHtml(cheapest.name)}${renderBuyLink(cheapest)}</div>
-                    <div class="font-mono ${textColor} mt-1">
+                return `<div class="px-3 py-3 rounded-lg text-sm ${semanticBg} ${bg}">
+                    <div class="text-xs font-semibold ${semanticText} ${labelColor} uppercase tracking-wide mb-1">${label}</div>
+                    <div class="font-semibold ${semanticText} ${textColor}">${escapeHtml(cheapest.name)}${renderBuyLink(cheapest)}</div>
+                    <div class="font-mono ${semanticText} ${textColor} mt-1">
                         <span class="font-semibold">${CUR()}${cheapest.costPerPhoto.toFixed(2)}/photo</span>
                         <span class="text-xs opacity-80"> · ${CUR()}${cheapest.packTotalCost.toFixed(2)} pack total · ${cheapest.rolls} Roll${cheapest.rolls == 1 ? '' : 's'} × ${cheapest.exposures}exp</span>
                     </div>
