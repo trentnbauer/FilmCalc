@@ -108,7 +108,7 @@
                     <p class="text-xs text-gray-500 dark:text-gray-400">Compare film + development costs across labs</p>
                 </div>
             </div>
-            <button id="themeToggle" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Toggle Dark Mode">
+            <button id="themeToggle" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Toggle Dark Mode" title="Toggle dark mode">
                 <svg id="themeToggleLightIcon" class="hidden w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4.22 3.22a1 1 0 011.415 0l.708.708a1 1 0 01-1.414 1.414l-.708-.708a1 1 0 010-1.414zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM14.22 15.78a1 1 0 010 1.415l-.708.708a1 1 0 01-1.414-1.414l-.708-.708a1 1 0 011.415 0zM10 16a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-4.22-3.22a1 1 0 01-1.415 0l-.708-.708a1 1 0 011.414-1.414l.708.708a1 1 0 010 1.415zM2 10a1 1 0 011-1h1a1 1 0 110 2H3a1 1 0 01-1-1zm3.22-4.22a1 1 0 010-1.415l.708-.708a1 1 0 011.414 1.414l-.708.708a1 1 0 01-1.415 0zM10 5a5 5 0 100 10 5 5 0 000-10z" clip-rule="evenodd"></path></svg>
                 <svg id="themeToggleDarkIcon" class="hidden w-5 h-5 text-gray-700" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
             </button>
@@ -137,8 +137,8 @@
                  Labelled "Format" to match the same field's name in Library
                  (physical film size — 35mm/120/etc — not stock/process). -->
             <div id="globalFormatRow" class="flex items-center gap-2">
-                <label for="globalFormat" class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide shrink-0">Format</label>
-                <select id="globalFormat" data-options="formats" class="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm"></select>
+                <label for="globalFormat" class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide shrink-0" title="Physical film size — 35mm, 120, etc. Applies across Film Lookup, Dev Cost, and the Library's film list.">Format</label>
+                <select id="globalFormat" data-options="formats" title="Physical film size — 35mm, 120, etc. Applies across Film Lookup, Dev Cost, and the Library's film list." class="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm"></select>
             </div>
 
             <div role="tablist" aria-label="Main sections" class="flex gap-1 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20 bg-white dark:bg-gray-800 -mx-6 md:-mx-8 px-6 md:px-8">
@@ -168,8 +168,8 @@
                  tabs). Hidden on other tabs (toggled in switchTab). -->
             <div id="globalFilters" class="hidden">
                 <div>
-                    <label for="globalProcess" class="block text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Process</label>
-                    <select id="globalProcess" data-options="processes" data-include-all="All processes" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm"></select>
+                    <label for="globalProcess" class="block text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1" title="Development chemistry — C41, B&amp;W, E6, ECN-2. Narrows every Dev Cost view to films/labs of this process only.">Process</label>
+                    <select id="globalProcess" data-options="processes" data-include-all="All processes" title="Development chemistry — C41, B&amp;W, E6, ECN-2. Narrows every Dev Cost view to films/labs of this process only." class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm"></select>
                 </div>
             </div>
 
@@ -292,10 +292,10 @@
 
             <div id="cheapestTabContent" role="tabpanel" aria-labelledby="tabCheapestBtn" class="space-y-6 hidden">
                 <div class="flex gap-1 bg-gray-100 dark:bg-gray-700/50 rounded-lg p-1">
-                    <button id="cheapestSubFilmBtn" type="button" class="flex-1 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide bg-white dark:bg-gray-800 text-indigo-700 dark:text-indigo-400 shadow-sm transition-colors">Per Film</button>
-                    <button id="cheapestSubPhotoBtn" type="button" class="flex-1 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 transition-colors">Per Photo</button>
-                    <button id="cheapestSubLabBtn" type="button" class="flex-1 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 transition-colors">Per Lab</button>
-                    <button id="cheapestSubIsoBtn" type="button" class="flex-1 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 transition-colors">Per ISO</button>
+                    <button id="cheapestSubFilmBtn" type="button" title="Pick one film stock, see every lab ranked for it" class="flex-1 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide bg-white dark:bg-gray-800 text-indigo-700 dark:text-indigo-400 shadow-sm transition-colors">Per Film</button>
+                    <button id="cheapestSubPhotoBtn" type="button" title="Every saved film's cheapest lab, ranked film-first" class="flex-1 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 transition-colors">Per Photo</button>
+                    <button id="cheapestSubLabBtn" type="button" title="Every saved lab's cheapest film, ranked lab-first" class="flex-1 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 transition-colors">Per Lab</button>
+                    <button id="cheapestSubIsoBtn" type="button" title="Every option — native, pushed, or pulled — for a shooting ISO you enter" class="flex-1 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 transition-colors">Per ISO</button>
                 </div>
 
                 <div id="cheapestSubIsoContent" class="space-y-6 hidden">
@@ -524,6 +524,15 @@
                     </div>
                 </div>
 
+                <div>
+                    <h3 class="font-semibold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest mb-2">Help</h3>
+                    <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3">
+                        <h4 class="font-semibold text-gray-700 dark:text-gray-300 text-sm">Report an Issue</h4>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Found a bug, a wrong calculation, or have a feature idea? File it on GitHub — it opens in a new tab and takes a couple of minutes.</p>
+                        <a href="https://github.com/trentnbauer/FilmCalc/issues/new/choose" target="_blank" rel="noopener noreferrer" class="block w-full text-center bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-medium">🐛 Report an Issue ↗</a>
+                    </div>
+                </div>
+
                 <div class="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200 dark:border-red-800/40 space-y-3">
                     <h4 class="font-semibold text-red-700 dark:text-red-400 text-sm uppercase tracking-wide">Delete All Data</h4>
                     <p class="text-xs text-red-600/80 dark:text-red-400/70">Permanently deletes every saved film, lab, and setting from this browser. Built-in defaults from <code>config.yaml</code> aren't affected. Consider exporting a backup first — this can't be undone.</p>
@@ -689,8 +698,8 @@
                 </div>
 
                 <div class="flex gap-2 mb-4 justify-center">
-                    <button id="filterNextDayBtn" type="button" class="px-3 py-1.5 rounded-full text-xs font-semibold border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-amber-400 transition-colors">⚡ Next Day</button>
-                    <button id="filterHiResBtn" type="button" class="px-3 py-1.5 rounded-full text-xs font-semibold border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-indigo-400 transition-colors">HI-RES</button>
+                    <button id="filterNextDayBtn" type="button" title="Show only labs offering next-day turnaround" class="px-3 py-1.5 rounded-full text-xs font-semibold border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-amber-400 transition-colors">⚡ Next Day</button>
+                    <button id="filterHiResBtn" type="button" title="Show only labs offering hi-res scans" class="px-3 py-1.5 rounded-full text-xs font-semibold border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-indigo-400 transition-colors">HI-RES</button>
                 </div>
 
                 <div id="labComparison" class="space-y-1.5 text-left"></div>
@@ -1911,7 +1920,7 @@
                         </div>`
                     : '';
                 return `<div>
-                    <div class="lookup-lab-row cursor-pointer px-3 py-2 rounded-lg text-sm bg-white dark:bg-gray-800/50 ${isCurrent ? 'ring-2 ring-blue-400' : ''} ${r.highResScan ? 'border border-indigo-300 dark:border-indigo-700' : ''}" data-lookup-key="${key}">
+                    <div class="lookup-lab-row cursor-pointer px-3 py-2 rounded-lg text-sm bg-white dark:bg-gray-800/50 ${isCurrent ? 'ring-2 ring-blue-400' : ''} ${r.highResScan ? 'border border-indigo-300 dark:border-indigo-700' : ''}" data-lookup-key="${key}" title="Tap for cost breakdown">
                         <div class="flex justify-between items-start gap-2">
                             <span class="text-gray-700 dark:text-gray-300">${escapeHtml(r.name)}${renderBadges(r)}${renderPinBtn(r.id)}</span>
                             <span class="font-mono text-right leading-tight text-gray-600 dark:text-gray-400 whitespace-nowrap flex items-center gap-1.5">
@@ -2345,7 +2354,7 @@
                 : '';
 
             return `<div>
-                <div class="iso-row cursor-pointer px-3 py-2 rounded-lg text-sm ${rowBg}" data-iso-key="${escapeHtml(key)}">
+                <div class="iso-row cursor-pointer px-3 py-2 rounded-lg text-sm ${rowBg}" data-iso-key="${escapeHtml(key)}" title="Tap for cost breakdown">
                     <div class="flex justify-between items-start gap-2">
                         <span class="${entry.overLimit ? 'font-semibold text-red-700 dark:text-red-400' : (isCheapest ? 'font-semibold text-amber-800 dark:text-amber-300' : 'text-gray-700 dark:text-gray-300')}">${star} ${isCheapest && !entry.overLimit ? '⭐ ' : ''}${escapeHtml(entry.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(entry.labName)}</span>${stopsLabel}${hiResBadge}${turnaroundBadge}</span>
                         <span class="font-mono text-right leading-tight ${textColor} whitespace-nowrap flex items-center gap-1.5">
@@ -2403,13 +2412,13 @@
                 ? renderBucket(sortedPull, pull)
                 : '<p class="text-xs text-gray-400 text-center py-2">No film can be pulled to this ISO</p>';
 
-            const sortPill = (mode, label) => `<button type="button" data-sort="${mode}" class="cheapest-sort-pill px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${cheapestSort === mode ? 'bg-indigo-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}">${label}</button>`;
+            const sortPill = (mode, label, title) => `<button type="button" data-sort="${mode}" title="${title}" class="cheapest-sort-pill px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${cheapestSort === mode ? 'bg-indigo-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}">${label}</button>`;
             const controls = `<div class="flex items-center justify-between gap-2 flex-wrap mb-3">
                 <div class="flex items-center gap-1.5 flex-wrap">
                     <span class="text-xs text-gray-400 dark:text-gray-500 font-semibold uppercase tracking-wide">Sort</span>
-                    ${sortPill('price', 'Price')}
-                    ${sortPill('turnaround', 'Turnaround')}
-                    ${sortPill('scan', 'Scan')}
+                    ${sortPill('price', 'Price', 'Cheapest first (the ⭐ marker always reflects this, regardless of sort)')}
+                    ${sortPill('turnaround', 'Turnaround', 'Next Day first, then Same Week, then Longer')}
+                    ${sortPill('scan', 'Scan', 'Hi-Res scans first, then by price')}
                 </div>
                 <button type="button" id="isoExpandAllBtn" class="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline">${expandAllIso ? 'Collapse all' : 'Expand all'}</button>
             </div>`;
@@ -2680,7 +2689,7 @@
                 : '';
 
             return `<div>
-                <div class="matrix-row cursor-pointer px-3 py-2 rounded-lg text-sm ${rowBg}" data-row-key="${escapeHtml(key)}">
+                <div class="matrix-row cursor-pointer px-3 py-2 rounded-lg text-sm ${rowBg}" data-row-key="${escapeHtml(key)}" title="Tap for cost breakdown">
                     <div class="flex justify-between items-start gap-2">
                         <span class="${textColor}">${star}${filmStar}${pinBtn} ${isCheapest ? '⭐ ' : ''}${escapeHtml(entry.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(entry.labName)}</span> <span class="text-xs opacity-70">(${entry.boxSpeed} ISO)</span>${hiResBadge}${turnaroundBadge}</span>
                         <span class="font-mono text-right leading-tight ${textColor} whitespace-nowrap flex items-center gap-1.5">
@@ -2871,7 +2880,7 @@
                         </div>`
                     : '';
                 return `<div>
-                    <div class="matrix-row cursor-pointer px-3 py-2 rounded-lg text-sm bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800" data-row-key="${escapeHtml(key)}">
+                    <div class="matrix-row cursor-pointer px-3 py-2 rounded-lg text-sm bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800" data-row-key="${escapeHtml(key)}" title="Tap for cost breakdown">
                         <div class="flex justify-between items-start gap-2">
                             <span class="text-indigo-800 dark:text-indigo-300"><button type="button" class="unpin-dev-cost-btn text-red-400 hover:text-red-600 text-xs font-bold mr-1" data-unpin-id="${p.pinId}" title="Unpin" onclick="event.stopPropagation()">✕</button>${escapeHtml(p.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(p.labName)}</span> <span class="text-xs opacity-70">(${p.boxSpeed} ISO)</span>${hiResBadge}${turnaroundBadge}</span>
                             <span class="font-mono text-right leading-tight text-indigo-800 dark:text-indigo-300 whitespace-nowrap flex items-center gap-1.5">
