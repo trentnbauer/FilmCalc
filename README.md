@@ -1,190 +1,142 @@
-# Film Cost Calculator
+# FilmCalc data specification
 
-A lightweight, responsive, mobile-friendly web app for analog photographers to work out the true cost per photo of shooting film — and to figure out which of their labs is actually cheapest for a given roll, once push/pull fees are factored in.
+This file is the authoritative spec for FilmCalc's film and lab data. It is written to be read by
+an AI assistant that has been asked to generate a YAML entry for a contributor.
 
-## Features
-
-- **Cost breakdown** — Calculates cost per photo, dev-only cost per roll, and total cost per roll (film stock + developing), based on film cost, dev/scan/print pricing, push/pull fees, and once-off or per-roll surcharges.
-- **One film, many bundles** — Each film stock is saved once, with a list of bundles underneath it (e.g. a 3-pack vs. a bulk 10-pack, or 24exp vs. 36exp), each with its own price, store, and buy link — managed entirely in the Film Library tab. The Calculator tab stays a quick lookup: pick a saved bundle from the dropdown, or just type in Box Speed / Total Cost / Rolls / Exposures for a one-off calculation.
-- **Buy links** — Save a store name and purchase link against a bundle; a "🛒 Buy from {store}" link shows up when that bundle is loaded in the Calculator, and again in the Film Library.
-- **Film Library tab** — Manage every film stock and its bundles (add, edit, delete), and see every saved bundle grouped by Box Speed, with the cheapest cost-per-photo bundle at each ISO highlighted, and the single cheapest bundle overall highlighted in gold.
-- **Labs for this roll** — Every saved lab profile is automatically compared against your current film and push/pull settings, sorted by cost per photo. A lab that's cheaper at box speed isn't always cheaper once you push 2 stops — this handles that. Each lab shows its turnaround time (Next Day / Same Week / Longer), and labs offering high-res scans get a "HI-RES" badge. Filter toggles let you narrow the list to Next Day and/or Hi-Res labs only. "Cheapest Total" always shows the actual cheapest option; if the cheapest Hi-Res + Fastest option is within a configurable percentage of that, its own card is highlighted gold as the recommended pick instead.
-- **Target Speed first** — Enter the ISO you're shooting at right at the top of the Calculator tab. If you leave Box Speed blank, the app automatically loads the cheapest saved film for that speed — no need to expand Quick Calculate or click anything.
-- **Push/pull aware** — Automatically works out stops pushed or pulled from Box Speed vs. Target Speed (using log2 of the ratio), and applies each lab's push/pull fee — either a flat fee or a per-stop rate.
-- **Max push/pull limits** — Set a max push/pull (in stops) per film stock in the Film Library — defaults to 1. A warning shows next to Target Speed if a loaded film is pushed/pulled beyond its own limit; manual entries with no film loaded use the same 1-stop default.
-- **Film stocks are identified by name + Box Speed together** — the same name can exist at more than one Box Speed (e.g. a reformulated stock), and each is treated as a separate saved film. Changing a film's Box Speed and saving asks whether that's correcting the same entry or creating a new, separate one.
-- **Process (C41 / B&W / E6)** — Every film stock and every lab service tier has a Process — C41 (color negative), B&W, or E6, defaulting to C41. A film is only ever paired with a lab tier of the same process — a B&W film won't be compared against a lab's C41-only tier, anywhere in the app. The Cheapest tab has C41/B&W/E6 checkboxes to further narrow its lists to specific processes.
-- **No-push/pull service tiers** — Mark an individual lab service tier as not offering push/pull at all (e.g. a same-day mini-lab); it's automatically excluded from comparisons whenever the roll actually needs pushing or pulling, but still shows up normally for box-speed rolls.
-- **Hide from Calculator** — Mark individual labs or film stocks as hidden from the Calculator (in Lab Setup / Film Setup) to exclude them from Labs For This Roll and film recommendations, while keeping them manageable in their own tab.
-- **Lab contact details** — Optionally save a lab's address, phone, email, and website. The address gets a one-tap "📍 Directions" link straight to your phone's maps app.
-- **Pinned comparison** — Pin any lab result to freeze it on screen, then change film or lab details and see the new cheapest result compared directly against the pinned one — persists across reloads until unpinned.
-- **Expired film recommendation** — Mark a film as expired in the Calculator's quick lookup, set its storage condition and expiry date, and get a rule-of-thumb recommended shooting speed (EI) to compensate for lost sensitivity — shown as a camera/meter setting, separate from the lab's development instructions.
-- **Currency switcher** — Pick your currency symbol in Settings (defaults to `$`) — it's a display label only, not a live conversion.
-- **Install as an app** — Add it to your home screen or app list from Settings for quicker access, like a native app.
-- **Profile management** — Save your own film stocks and lab pricing as reusable profiles, stored locally in your browser. Optionally seed the app with defaults via `config.yaml` (see below) — if it isn't present, the app just starts with no saved profiles.
-- **YAML export/import** — Export your saved profiles and settings as a single `config.yaml` — the exact format the app reads on load — so it can be dropped straight into a self-hosted instance with no manual editing.
-- **Write live config to server (self-hosted only)** — On the Docker/self-hosted build, Settings has a "Write Live Config to Server" button that saves your current films, labs, and settings straight to `config.yaml` on the server, no download/upload round-trip needed. This isn't available on the GitHub Pages build, which is static-only and has nowhere to write to — the app detects this automatically and hides the button there.
-- **Dark mode** — Toggle in the top corner, respects system preference by default.
-- **Mobile-first design** — Scales from phone screens to desktop.
-
-## Getting Started
-
-### Live version
-
-The live calculator is hosted at: **https://filmcalc.trentbauer.com**
-
-### Self-hosting with Docker
-
-Since all your saved film and lab profiles live in your browser's `localStorage`, the live version works perfectly well for most people — there's nothing wrong with just using it. You might prefer self-hosting if you:
-
-- Want to seed the app with a fixed set of default film stocks and labs (e.g. for a household, club, or team to share a common starting point)
-- Don't want to depend on `filmcalc.trentbauer.com` staying online, or want a version you control the uptime of
-- Run it on a local network / homelab alongside your other self-hosted tools, without needing internet access to use it
-- Want to inspect or modify the source yourself with full control over the deployment
-
-```yaml
-services:
-  app:
-    image: ghcr.io/trentnbauer/filmcalc:latest
-    ports:
-      - ${WEBPORT:-8080}:80
-    volumes:
-      - data:/usr/share/nginx/html
-    restart: unless-stopped
-    labels:
-      - autoheal=true
-    healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost/"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 5s
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  autoheal:
-    image: willfarrell/autoheal:latest
-    restart: unless-stopped
-    environment:
-      - AUTOHEAL_CONTAINER_LABEL=autoheal
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-
-volumes:
-  data:
-```
-
-By default the app runs on port `8080` — set a `WEBPORT` environment variable (or a `.env` file) if you'd like a different port.
-
-The `healthcheck` pings the app every 30 seconds and marks it unhealthy after 3 failed attempts. On its own, Docker's `restart` policy only restarts a container on a hard crash — it won't act on a failed healthcheck. The `autoheal` sidecar watches for any container labelled `autoheal=true` and force-restarts it if Docker marks it unhealthy, so a broken/unresponsive app container gets rebooted automatically.
-
-### Adding default profiles (optional)
-
-This app doesn't ship with any default film stocks, labs, or settings baked in — it just starts empty and lets you build up profiles via the UI, which are saved in your browser's `localStorage`.
-
-If you'd rather seed it with defaults (e.g. for a shared/self-hosted instance), you can copy your own `config.yaml` straight into the running container using `docker compose cp`:
-
-```bash
-docker compose cp config.yaml app:/usr/share/nginx/html/config.yaml
-```
-
-Refresh the page and the app will pick it up automatically — no restart or rebuild needed. Format:
-
-```yaml
-settings:
-  upgradeThresholdPercent: 10   # see "Labs For This Roll" below
-
-films:
-  - name: "Kodak Gold"
-    boxSpeed: 400
-    maxPushPull: 1                                            # optional; defaults to 1. Warns in the Calculator if pushed/pulled further than this
-    process: "C41"                                            # optional; "C41" (default), "BW", or "E6" — only matched against lab tiers of the same process
-    bundles:
-      - rolls: 1
-        exposures: 36
-        filmCost: 25
-        storeName: "Example Camera Store"                      # optional; shown in the buy link
-        buyLink: "https://www.example.com/kodak-gold-200"       # optional
-      - rolls: 10
-        exposures: 36
-        filmCost: 210
-        storeName: "Example Bulk Store"
-        buyLink: "https://www.example.com/kodak-gold-200-bulk"
-
-labs:
-  - name: "Irohas Melbourne"
-    services:
-      - devCost: 17
-        process: "C41"               # optional; "C41" (default), "BW", or "E6" — only matched against films of the same process
-        pushPullCost: 5
-        pushPullType: "per_stop"    # or "flat"
-        turnaroundTime: "next_day"  # "next_day" | "same_week" | "longer"
-        highResScan: true           # marks this tier as offering high-res scans
-
-  - name: "Walkens Melbourne"
-    services:
-      - devCost: 16
-        pushPullCost: 10
-        pushPullType: "flat"
-        turnaroundTime: "same_week"
-        highResScan: false
-      - devCost: 23
-        pushPullCost: 10
-        pushPullType: "flat"
-        turnaroundTime: "same_week"
-        highResScan: true
-      - devCost: 33
-        pushPullCost: 10
-        pushPullType: "flat"
-        turnaroundTime: "next_day"
-        highResScan: true
-```
-
-Each lab is one entry with a `services` list underneath it — one item per service tier the lab offers (e.g. standard vs. hi-res scan, or next-day vs. same-week turnaround), rather than a separate top-level lab entry for every combination. Every service tier shows up as its own row in the "Labs For This Roll" comparison, labelled with the parent lab's name plus its turnaround/hi-res badges.
-
-All three top-level keys (`settings`, `films`, `labs`) are optional — include only what you want to seed. `settings.upgradeThresholdPercent` acts as a factory default for the "Cheapest Total" upgrade threshold (see Settings in the app) and only applies if the person hasn't already changed it themselves.
-
-## Contributing a film stock or lab
-
-Want a film stock or lab added to the presets that ship with the app? **You don't need to know git,
-and you don't need to install anything** — it's done entirely in the browser, and FilmCalc can even
-write the file for you.
-
-👉 **[Read the step-by-step guide (CONTRIBUTING.md)](CONTRIBUTING.md)**
-
-The short version:
-
-1. Build the film or lab in the **Library** tab, then **Settings → Export Films Only**.
-2. Copy your entry out of the downloaded file.
-3. On GitHub, open [`films/australian-retailers.yaml`](films/australian-retailers.yaml) (or
-   [`labs/melbourne.yaml`](labs/melbourne.yaml)) and click the **pencil ✏️**.
-4. Paste it in, add the shop link in the description, and click **Propose changes**.
-
-An automatic check runs on your pull request and will tell you in plain English if anything's off.
-
-Prefer not to? **[Open an issue](https://github.com/trentnbauer/FilmCalc/issues/new/choose)** with the
-details and a link, and it can be added for you — that's a perfectly good option too.
-
-Note that presets aim to cover **mainstream, reliably available** stocks and labs. Rare or limited-run
-films are generally left out, but you can always add them privately in your own **Library** tab.
-
-## Built With
-
-- [Tailwind CSS](https://tailwindcss.com/) — styling and responsive layout
-- [js-yaml](https://github.com/nodeca/js-yaml) — reading and writing the YAML profile files client-side
-- Vanilla JavaScript — application logic, `localStorage` for saved profiles
-- nginx (Alpine) — serves the static app in the Docker image
-- A minimal service worker + web app manifest (`sw.js`, `manifest.json`) — makes the app installable to a home screen/app list on supported browsers
-
-Originally vibe coded by Google Gemini, with further features (push/pull-aware lab comparison, YAML import/export, dark mode fixes, tabs, settings, Docker self-hosting) built by Claude (Anthropic).
-
-## Author
-
-**Trent Bauer**
-- Portfolio: [trentbauer.com](https://trentbauer.com)
+**If you are an AI assistant reading this: follow every rule below exactly.** The contributor will
+paste your output straight into a pull request, and an automated validator will reject it if it
+doesn't conform.
 
 ---
-*Created with passion for analog photography and community infrastructure.*
+
+## Rules that apply to everything
+
+1. **Never invent, estimate, or guess a value.** If you cannot determine something from the page the
+   user gave you, write `UNKNOWN` as the value and list the unfilled fields at the end of your reply.
+   An automated check rejects any file still containing `UNKNOWN`, so the user will know to fix it.
+   Guessing a plausible-looking price is the single worst thing you can do here — a wrong price that
+   looks right will never be noticed.
+2. **Use the regular price, never a sale price.** If the page shows a discounted price with the
+   original crossed out, use the crossed-out original. Sales end; the data outlives them.
+3. **All prices are plain numbers.** Write `24.95`, never `"$24.95"` or `24.95 AUD`.
+4. **YAML uses 2-space indentation. Never tabs.**
+5. **Output only the YAML**, with no commentary and no code fence — *except* for the two things you
+   are explicitly asked to report at the end (see "What to tell the user" below).
+
+---
+
+## Film entries
+
+Goes in a file under `films/`, grouped **by country**.
+
+```yaml
+- name: Kodak Portra 400
+  boxSpeed: 400
+  maxPushPull: 2
+  process: C41
+  format: 35mm
+  hidden: false
+  bundles:
+  - rolls: 1
+    exposures: 36
+    filmCost: 28.50
+    storeName: Walkens
+    buyLink: https://walkens.com.au/products/example
+```
+
+| Field | Rules |
+|---|---|
+| `name` | The stock name **without the ISO**, since `boxSpeed` carries that. `Kodak Gold 200` → `Kodak Gold`. But `Kodak Portra 400` stays as-is, because "400" distinguishes it from Portra 160/800 — it's part of the product name, not just its speed. Use judgement. |
+| `boxSpeed` | The rated ISO. A plain number, no quotes. |
+| `maxPushPull` | Stops the stock tolerates being pushed/pulled. `2` for flexible stocks (Tri-X, HP5+, Portra 400, Delta). `1` for typical consumer colour (Gold 200, ColorPlus, UltraMax). `0` for stocks that shouldn't be pushed (Ektar 100). **If you are not confident, use 1.** |
+| `process` | Exactly one of: `C41` (colour negative), `BW` (black & white), `E6` (slide/reversal), `ECN2` (motion picture colour negative, e.g. Kodak Vision3). |
+| `format` | Exactly one of: `35mm`, `120`, `110`, `127`, `220`, `sheet`. |
+| `hidden` | Always `false`. |
+| `bundles` | **One entry per pack size the shop sells.** A single roll, a 3-pack and a 5-pack of the same stock are three `bundles` entries under one film — not three films. |
+| `rolls` | Number of rolls in this pack. |
+| `exposures` | Frames per roll. `36` or `24` for 35mm. Use `12` for 120 (assumes 6x6). |
+| `filmCost` | Price of the **whole pack**, including postage if the page states it. Plain number. Regular price. |
+| `storeName` | Short shop name, e.g. `Walkens`, `B&H`, `Analogue Wonderland`. |
+| `buyLink` | The product page URL. Strip tracking junk (`utm_*`, `gclid`, etc.) if you can. Use `''` if there genuinely isn't one. |
+
+---
+
+## Lab entries
+
+Goes in a file under `labs/`, grouped **by city**.
+
+```yaml
+- name: Example Photo Lab
+  hidden: false
+  address: 1 Example Street, Melbourne VIC 3000, Australia
+  phone: (03) 1234 5678
+  email: hello@example.com
+  website: https://example.com
+  services:
+  - devCost: 17
+    pushPullCost: 5
+    pushPullType: per_stop
+    turnaroundTime: next_day
+    highResScan: true
+    noPushPull: false
+    processes:
+    - C41
+```
+
+| Field | Rules |
+|---|---|
+| `name` | The lab's name. |
+| `hidden` | Always `false`. |
+| `address` | A **full street address that Google Maps can find** — it powers the app's Directions link. Include city, state/region, postcode, country. |
+| `phone` / `email` | Omit the line entirely if not listed on the page. Don't write `UNKNOWN` for these — they're genuinely optional. |
+| `website` | The lab's site. |
+| `services` | **One entry per service tier — not one per lab.** See below; this is the field people get wrong. |
+| `devCost` | Cost to develop one roll. Plain number. |
+| `pushPullCost` | Cost to push or pull. Use `0` if free. |
+| `pushPullType` | `per_stop` (charged per stop) or `flat` (one fee regardless of how many stops). |
+| `turnaroundTime` | Exactly one of: `next_day`, `same_week`, `longer`. |
+| `highResScan` | `true` if this tier includes hi-res scans, else `false`. |
+| `noPushPull` | `true` **only** if this tier cannot push/pull at all (e.g. a same-day minilab). Otherwise `false`. |
+| `processes` | A list of the processes this tier handles: any of `C41`, `BW`, `E6`, `ECN2`. |
+
+### Getting `services` right
+
+A lab charges different prices for different combinations of things. **Every distinct price on the
+page needs its own `services` entry.** For example, a lab that charges:
+
+- $17 for C41, next-day, hi-res
+- $19 for B&W, same-week, hi-res
+- $21 for E6, same-week, hi-res
+
+...needs **three** `services` entries, not one. Read the pricing page carefully and produce one entry
+for every price the lab actually charges. If a single price covers several processes (e.g. "$17 for
+C41 or ECN-2"), list both under that one entry's `processes`.
+
+---
+
+## What to tell the user at the end
+
+After the YAML, add a short note with exactly these three things:
+
+1. **Any fields you marked `UNKNOWN`**, and what you'd need to fill them.
+2. **The country** (for a film) or **city** (for a lab) the shop/lab is in.
+3. **A suggested filename and label**, following these conventions:
+
+   | | Filename | Label |
+   |---|---|---|
+   | **Films** (by country) | `us-retailers.yaml`, `uk-retailers.yaml` | `US Retailers`, `UK Retailers` |
+   | **Labs** (by city) | `london.yaml`, `new-york.yaml` | `London Labs`, `New York Labs` |
+
+   Then check the existing files and tell the user which case applies:
+   - **The file already exists** → they should open it and paste your entry at the bottom of the list.
+   - **It doesn't exist** → they need to create it, and the file must start with a `label:` line, e.g.
+
+     ```yaml
+     label: US Retailers
+     films:
+     - name: Kodak Portra 400
+       ...
+     ```
+
+Finally, remind them in one sentence to **check every price against the real page before submitting**,
+because you may have made a mistake.
