@@ -2379,7 +2379,7 @@
             return `${entry.filmName}|${entry.labName}|${entry.stops}`;
         }
 
-        function renderIsoRow(entry, rank, pinnedByFav) {
+        function renderIsoRow(entry, rank, pinReason) {
             const hiResBadge = entry.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">HI-RES</span>` : '';
             const turnaroundBadge = entry.turnaroundTime ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 align-middle">${escapeHtml(turnaroundLabels[entry.turnaroundTime] || entry.turnaroundTime)}</span>` : '';
             const direction = entry.stops > 0 ? 'Push' : 'Pull';
@@ -2389,13 +2389,15 @@
             const isCheapest = rank === 0;
             const semanticRowBg = entry.overLimit ? 'theme-danger-bg' : (isCheapest ? 'theme-recommended-bg' : '');
             const semanticRowText = entry.overLimit ? 'theme-danger-text' : (isCheapest ? 'theme-recommended-text' : '');
-            const rowBg = entry.overLimit ? 'bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700' : (isCheapest ? 'bg-amber-100 dark:bg-amber-900/30' : (pinnedByFav ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'bg-white dark:bg-gray-800/50'));
+            const rowBg = entry.overLimit ? 'bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700' : (isCheapest ? 'bg-amber-100 dark:bg-amber-900/30' : (pinReason ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'bg-white dark:bg-gray-800/50'));
             const textColor = entry.overLimit ? 'text-red-700 dark:text-red-400' : (isCheapest ? 'text-amber-800 dark:text-amber-300 font-semibold' : 'text-gray-700 dark:text-gray-300');
             const fav = isFavLab(entry.labName);
             const star = `<button type="button" class="fav-star text-sm leading-none" data-fav-lab="${escapeHtml(entry.labName)}" title="${fav ? 'Unfavourite lab' : 'Favourite lab'}" onclick="event.stopPropagation()"><span class="${fav ? 'theme-favourite-text text-amber-400' : 'text-gray-300 dark:text-gray-600'}">${fav ? '★' : '☆'}</span></button>`;
-            const pinnedFavNote = pinnedByFav
-                ? `<div class="text-[11px] theme-favourite-text text-indigo-600 dark:text-indigo-400 mt-0.5">📌 Shown first — this is your favourite lab</div>`
-                : '';
+            const pinnedFavNote = pinReason === 'default'
+                ? `<div class="text-[11px] theme-default-lab-text text-indigo-600 dark:text-indigo-400 mt-0.5">🏠 Shown first — this is your default lab</div>`
+                : pinReason
+                    ? `<div class="text-[11px] theme-favourite-text text-indigo-600 dark:text-indigo-400 mt-0.5">📌 Shown first — this is your favourite lab</div>`
+                    : '';
 
             const key = isoRowKey(entry);
             const isOpen = expandAllIso || expandedIsoRows.has(key);
@@ -2468,12 +2470,19 @@
             // of the chosen sort — so "cheapest" stays meaningful even when
             // sorting by turnaround or scan.
             const priceRank = (entries, entry) => entries.slice().sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto).indexOf(entry);
-            // Favourited labs are pinned to the top of each bucket, ahead of
-            // whatever sort is active, without disturbing the true price rank
-            // used for the ⭐ "cheapest" marker.
-            const renderBucket = (sorted, all) => reorderFavouriteLabsFirst(sorted).map(e => {
+            // The configured default (home) lab is pinned first, ahead of
+            // favourited labs, the same way Per Film pins it — so "my lab"
+            // always surfaces even when it's neither the cheapest nor
+            // starred as a favourite. Favourited labs are pinned next, ahead
+            // of whatever sort is active, without disturbing the true price
+            // rank used for the ⭐ "cheapest" marker.
+            const defaultLabName = getDefaultLabPref()?.lab || null;
+            const renderBucket = (sorted, all) => reorderDefaultLabFirst(reorderFavouriteLabsFirst(sorted), defaultLabName).map(e => {
                 const rank = priceRank(all, e);
-                return renderIsoRow(e, rank, isFavLab(e.labName) && rank !== 0);
+                const pinReason = (e.labName === defaultLabName && rank !== 0)
+                    ? 'default'
+                    : (isFavLab(e.labName) && rank !== 0);
+                return renderIsoRow(e, rank, pinReason);
             }).join('');
 
             const nativeHtml = native.length
