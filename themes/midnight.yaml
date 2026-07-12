@@ -1,0 +1,31 @@
+# Hex or a standard CSS color name both work — see themes/ocean.yaml for
+# details and the full list of customizable slots.
+label: Midnight
+light:
+  pageBg: "#f0eefc"
+  cardBg: "#ffffff"
+  accent: "#5b21b6"
+  cheapestBg: "#ede9fe"
+  cheapestText: "#5b21b6"
+  recommendedBg: "#fce7f3"
+  recommendedText: "#a21caf"
+  favourite: "#7c3aed"
+  defaultLab: "#5b21b6"
+  warningBg: "#ffedd5"
+  warningText: "#9a3412"
+  dangerBg: "#fee2e2"
+  dangerText: "#b91c1c"
+dark:
+  pageBg: "#0b0a1a"
+  cardBg: "#161329"
+  accent: "#a78bfa"
+  cheapestBg: "#241c47"
+  cheapestText: "#c4b5fd"
+  recommendedBg: "#3b1030"
+  recommendedText: "#f0abfc"
+  favourite: "#c084fc"
+  defaultLab: "#a78bfa"
+  warningBg: "#431407"
+  warningText: "#fdba74"
+  dangerBg: "#450a0a"
+  dangerText: "#f87171"
