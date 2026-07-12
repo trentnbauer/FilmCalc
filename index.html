@@ -2340,6 +2340,18 @@
             return [...favs, ...rest];
         }
 
+        // Per Film specifically also has a single configured "default" (home)
+        // lab from the Favourites setup — that one takes priority over the
+        // ordinary favourite-star pinning above, since it's the lab every other
+        // part of the app (Quick Answer, pinned comparisons) already treats as
+        // "your" lab for cost purposes.
+        function reorderDefaultThenFavouriteLabsFirst(priceSortedRows, defaultLabName) {
+            const def = defaultLabName ? priceSortedRows.filter(e => e.labName === defaultLabName) : [];
+            const favs = priceSortedRows.filter(e => e.labName !== defaultLabName && isFavLab(e.labName));
+            const rest = priceSortedRows.filter(e => e.labName !== defaultLabName && !isFavLab(e.labName));
+            return [...def, ...favs, ...rest];
+        }
+
         // Shared expand state for all Dev Cost views (Per Film / Photo / Lab /
         // ISO). Keyed by a per-row string so open/closed survives re-renders.
         const expandedIsoRows = new Set();
@@ -2628,20 +2640,22 @@
             return `${keyPrefix}|${entry.filmName}|${entry.boxSpeed}|${entry.format || '35mm'}|${entry.labName}`;
         }
 
-        function renderMatrixRow(entry, rank, keyPrefix, pinnedByFav) {
+        function renderMatrixRow(entry, rank, keyPrefix, pinReason) {
             const hiResBadge = entry.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">HI-RES</span>` : '';
             const turnaroundBadge = entry.turnaroundTime ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 align-middle">${escapeHtml(turnaroundLabels[entry.turnaroundTime] || entry.turnaroundTime)}</span>` : '';
             const isCheapest = rank === 0;
-            const rowBg = isCheapest ? 'bg-amber-100 dark:bg-amber-900/30' : (pinnedByFav ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'bg-white dark:bg-gray-800/50');
+            const rowBg = isCheapest ? 'bg-amber-100 dark:bg-amber-900/30' : (pinReason ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'bg-white dark:bg-gray-800/50');
             const textColor = isCheapest ? 'text-amber-800 dark:text-amber-300 font-semibold' : 'text-gray-600 dark:text-gray-400';
             const key = matrixRowKey(keyPrefix, entry);
             const isOpen = expandAllIso || expandedIsoRows.has(key);
             const chevron = `<span class="text-gray-400 dark:text-gray-500 transition-transform inline-block ${isOpen ? 'rotate-90' : ''}">▸</span>`;
             const fav = isFavLab(entry.labName);
             const star = `<button type="button" class="fav-star text-sm leading-none ${fav ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600'}" data-fav-lab="${escapeHtml(entry.labName)}" title="${fav ? 'Unfavourite lab' : 'Favourite lab'}" onclick="event.stopPropagation()">${fav ? '★' : '☆'}</button>`;
-            const pinnedFavNote = pinnedByFav
-                ? `<div class="text-[11px] text-indigo-600 dark:text-indigo-400 mt-0.5">📌 Shown first — this is your favourite lab</div>`
-                : '';
+            const pinnedFavNote = pinReason === 'default'
+                ? `<div class="text-[11px] text-indigo-600 dark:text-indigo-400 mt-0.5">🏠 Shown first — this is your default lab</div>`
+                : pinReason
+                    ? `<div class="text-[11px] text-indigo-600 dark:text-indigo-400 mt-0.5">📌 Shown first — this is your favourite lab</div>`
+                    : '';
 
             const buyUrl = sanitizeUrl(entry.buyLink);
             const buyLink = buyUrl
@@ -2838,10 +2852,14 @@
                 return;
             }
 
-            const rows = reorderFavouriteLabsFirst(priceSortedRows);
+            const defaultLabName = getDefaultLabPref()?.lab || null;
+            const rows = reorderDefaultThenFavouriteLabsFirst(priceSortedRows, defaultLabName);
             container.innerHTML = expandAllControl() + rows.map(e => {
                 const rank = priceSortedRows.indexOf(e);
-                return renderMatrixRow(e, rank, 'film', isFavLab(e.labName) && rank !== 0);
+                const pinReason = e.labName === defaultLabName
+                    ? (rank !== 0 ? 'default' : null)
+                    : (isFavLab(e.labName) && rank !== 0 ? true : null);
+                return renderMatrixRow(e, rank, 'film', pinReason);
             }).join('');
             wireExpandAll(container, updateCostPerFilmTab);
             wireMatrixRows(container, updateCostPerFilmTab);
