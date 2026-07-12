@@ -192,9 +192,15 @@
                                 <select id="processSelect" data-options="processes" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600"></select>
                             </div>
                         </div>
-                        <div>
-                            <label for="filmCost" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Total Cost incl. Postage ($)</label>
-                            <input type="number" inputmode="decimal" id="filmCost" step="0.01" min="0" placeholder="e.g. 24.95" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label for="filmCost" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Film Cost ($)</label>
+                                <input type="number" inputmode="decimal" id="filmCost" step="0.01" min="0" placeholder="e.g. 21.00" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                            </div>
+                            <div>
+                                <label for="postageCost" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Postage ($)</label>
+                                <input type="number" inputmode="decimal" id="postageCost" step="0.01" min="0" placeholder="e.g. 3.95" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                            </div>
                         </div>
                         <div class="grid grid-cols-2 gap-2">
                             <div>
@@ -1663,13 +1669,18 @@
             const el = document.getElementById('loadedFilmSummary');
             if (!el) return;
             const boxSpeed = document.getElementById('boxSpeed').value;
-            const filmCost = document.getElementById('filmCost').value;
+            const filmCostRaw = document.getElementById('filmCost').value;
+            const postageRaw = document.getElementById('postageCost').value;
             const rolls = document.getElementById('rolls').value;
             const exposures = document.getElementById('exposures').value;
-            if (!boxSpeed && !filmCost) { el.innerHTML = ''; return; }
+            if (!boxSpeed && !filmCostRaw && !postageRaw) { el.innerHTML = ''; return; }
+            const total = (parseFloat(filmCostRaw) || 0) + (parseFloat(postageRaw) || 0);
             const bits = [];
             if (boxSpeed) bits.push(`${escapeHtml(boxSpeed)} ISO`);
-            if (filmCost) bits.push(`${CUR()}${escapeHtml(filmCost)} total`);
+            if (filmCostRaw || postageRaw) {
+                const totalLabel = postageRaw ? `${CUR()}${total.toFixed(2)} total incl. postage` : `${CUR()}${total.toFixed(2)} total`;
+                bits.push(totalLabel);
+            }
             if (rolls && exposures) bits.push(`${escapeHtml(rolls)} × ${escapeHtml(exposures)}exp`);
             el.innerHTML = `<span class="font-mono">${bits.join(' · ')}</span>`;
         }
@@ -1696,14 +1707,15 @@
             const hasRequiredFields = [devSpeedRaw, filmCostRaw, rollsRaw, exposuresRaw].every(v => v !== '' && v !== null && parseFloat(v) > 0);
             if (!hasRequiredFields) {
                 bestPicksContainer.innerHTML = '';
-                container.innerHTML = '<p class="text-sm text-gray-400 text-center">Fill in Target Speed, Total Cost, Rolls & Exposures to compare labs</p>';
+                container.innerHTML = '<p class="text-sm text-gray-400 text-center">Fill in Target Speed, Film Cost, Rolls & Exposures to compare labs</p>';
                 renderPinnedResult(null);
                 return;
             }
 
             const boxSpeed = boxSpeedForWarning;
             const devSpeed = devSpeedForWarning;
-            const filmCost = parseFloat(filmCostRaw) || 0;
+            const postageRaw = document.getElementById('postageCost').value;
+            const filmCost = (parseFloat(filmCostRaw) || 0) + (parseFloat(postageRaw) || 0);
             const rolls = parseInt(rollsRaw) || 1;
             const exposures = parseInt(exposuresRaw) || 1;
             const totalPhotos = exposures * rolls;
@@ -1946,8 +1958,9 @@
             const devSpeed = parseInt(document.getElementById('devSpeed').value) || 0;
             const process = document.getElementById('processSelect').value || 'C41';
 
+            const filmCostTotal = (parseFloat(document.getElementById('filmCost').value) || 0) + (parseFloat(document.getElementById('postageCost').value) || 0);
             const currentFilmCostPerPhoto = computeCostPerPhoto(
-                document.getElementById('filmCost').value,
+                filmCostTotal,
                 document.getElementById('rolls').value,
                 document.getElementById('exposures').value
             );
@@ -3145,6 +3158,7 @@
         document.getElementById('clearQuickCalcBtn').addEventListener('click', () => {
             document.getElementById('boxSpeed').value = '';
             document.getElementById('filmCost').value = '';
+            document.getElementById('postageCost').value = '';
             document.getElementById('rolls').value = '';
             document.getElementById('exposures').value = '';
             document.getElementById('processSelect').value = 'C41';
@@ -3154,12 +3168,17 @@
 
         // ---------- Save profiles ----------
         // "Save to Film Library" carries over whatever's in Quick Calculate
-        // (Box Speed, Total Cost, Rolls, Exposures) as a single bundle, and hands
-        // control to the Film Library tab for the person to name the film stock
-        // and fill in anything else (store, buy link, additional bundles).
+        // (Box Speed, Film Cost + Postage combined, Rolls, Exposures) as a
+        // single bundle, and hands control to the Film Library tab for the
+        // person to name the film stock and fill in anything else (store, buy
+        // link, additional bundles). Bundles store one combined pack price
+        // (DATA_SPEC's filmCost, "incl. postage"), so the two fields are
+        // summed back into one number here.
         document.getElementById('saveToLibraryBtn').addEventListener('click', () => {
             const boxSpeed = document.getElementById('boxSpeed').value;
-            const filmCost = document.getElementById('filmCost').value;
+            const filmCostRaw = document.getElementById('filmCost').value;
+            const postageRaw = document.getElementById('postageCost').value;
+            const filmCost = (filmCostRaw || postageRaw) ? (parseFloat(filmCostRaw) || 0) + (parseFloat(postageRaw) || 0) : '';
             const rolls = document.getElementById('rolls').value;
             const exposures = document.getElementById('exposures').value;
 
