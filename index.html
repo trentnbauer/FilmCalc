@@ -361,6 +361,18 @@
 
             <div id="libraryTabContent" role="tabpanel" aria-labelledby="tabLibraryBtn" class="space-y-6 hidden">
                 <button id="addWithAiBtn" type="button" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-lg font-medium text-sm shadow-sm">✨ Add with AI — paste a shop or lab page</button>
+
+                <details id="bookmarkletDetails" class="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/30">
+                    <summary class="cursor-pointer select-none px-4 py-2.5 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">🔖 Jump here from a shop page (bookmarklet)</summary>
+                    <div class="px-4 pb-4 space-y-2">
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Drag this button to your bookmarks bar. While browsing a film or lab shop page, click it to jump straight back here with that page's link already filled in — no copy/paste needed.</p>
+                        <div class="text-center py-1">
+                            <a id="addWithAiBookmarklet" href="#" onclick="return false;" draggable="true" title="Drag me to your bookmarks bar" class="inline-block px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium shadow-sm cursor-grab">✨ Add to FilmCalc</a>
+                        </div>
+                        <p class="text-xs text-gray-400 dark:text-gray-500">Generated for <code id="bookmarkletOrigin"></code> — self-hosting elsewhere gets a bookmarklet pointing at your own instance automatically. Still <strong>check every price against the real page</strong> once it's imported.</p>
+                    </div>
+                </details>
+
                 <div class="flex gap-1 bg-gray-100 dark:bg-gray-700/50 rounded-lg p-1">
                     <button id="librarySubFilmsBtn" type="button" class="flex-1 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide bg-white dark:bg-gray-800 text-indigo-700 dark:text-indigo-400 shadow-sm transition-colors">Films</button>
                     <button id="librarySubLabsBtn" type="button" class="flex-1 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 transition-colors">Labs</button>
@@ -3322,6 +3334,17 @@
         function applyUrlParams() {
             const params = new URLSearchParams(window.location.search);
             const has = (k) => params.has(k) && params.get(k) !== '';
+
+            // ?addWithAiUrl=<page> — the bookmarklet deep link (see Library ->
+            // Add with AI -> "Get a bookmarklet"). Jumps straight to Library
+            // and opens Add with AI already in URL mode with the page
+            // pre-filled, instead of a Film Lookup calculation.
+            if (has('addWithAiUrl')) {
+                switchTab('library');
+                openAiModal({ url: params.get('addWithAiUrl'), kind: params.get('addWithAiKind') });
+                return;
+            }
+
             if (!URL_PARAM_FIELDS.some(k => has(k))) return;
 
             if (has('format') && FORMAT_OPTIONS.some(o => o.value === params.get('format'))) {
@@ -3861,12 +3884,24 @@ A lab charging different prices for C41 vs B&W vs E6, or for next-day vs same-we
             document.getElementById('aiUrlWrap').classList.toggle('hidden', mode !== 'url');
             aiUpdateUrlWarning();
         }
-        async function openAiModal() {
+        // prefill is optional: { url, kind } — used by the bookmarklet deep
+        // link (?addWithAiUrl=...) to open straight into URL mode with the
+        // shop/lab page already filled in, instead of the normal blank paste
+        // form.
+        async function openAiModal(prefill) {
             aiSelfHosted = await detectConfigWritable();
             document.getElementById('aiRememberWrap').classList.toggle('hidden', !aiSelfHosted);
             document.getElementById('aiKeyNotice').classList.toggle('hidden', aiSelfHosted);
             aiApplyProvider();
-            aiSetMode('paste');
+            if (prefill && prefill.url) {
+                aiSetMode('url');
+                document.getElementById('aiPageUrl').value = prefill.url;
+                if (prefill.kind === 'film' || prefill.kind === 'lab') {
+                    document.getElementById('aiKind').value = prefill.kind;
+                }
+            } else {
+                aiSetMode('paste');
+            }
             aiSetStatus('');
             document.getElementById('aiResultWrap').classList.add('hidden');
             aiPendingEntries = null;
@@ -4010,6 +4045,22 @@ A lab charging different prices for C41 vs B&W vs E6, or for next-day vs same-we
         });
 
         document.getElementById('addWithAiBtn').addEventListener('click', openAiModal);
+
+        // ---------- Add with AI bookmarklet ----------
+        // Generated from window.location.origin at render time, so a
+        // self-hosted instance produces a bookmarklet pointing at itself,
+        // not the public site — no hardcoded URL, nothing to configure.
+        // Dragging it to the bookmarks bar and clicking it from a shop/lab
+        // page opens FilmCalc in a new tab with that page's URL already
+        // filled into Add with AI's "Use a link" mode (see applyUrlParams'
+        // addWithAiUrl handling).
+        (function initBookmarklet() {
+            const origin = window.location.origin;
+            const code = `(function(){window.open(${JSON.stringify(origin)}+'/?addWithAiUrl='+encodeURIComponent(location.href),'_blank');})();`;
+            const link = document.getElementById('addWithAiBookmarklet');
+            link.href = 'javascript:' + encodeURIComponent(code);
+            document.getElementById('bookmarkletOrigin').textContent = origin;
+        })();
 
         // ---------- Write live config to server (self-hosted / Docker only) ----------
         // The GitHub Pages build serves purely static files with no write support,
