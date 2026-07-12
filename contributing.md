@@ -1,60 +1,122 @@
 # Adding a film stock or a lab
 
-Yes — new films and labs are added by opening a **pull request** on this repo. That sounds
-technical, but you don't need to install anything, use the command line, or know what git is.
-**Everything below happens in your web browser**, and GitHub does the complicated parts for you.
-
-You will need a free GitHub account. That's the only prerequisite.
-
-There are two routes. Pick whichever suits you:
-
-- **[Route A: Let the app write it for you](#route-a-let-the-app-write-it-for-you)** — easiest.
-  You build the film or lab inside FilmCalc, export it, and paste the result in. **Recommended.**
-- **[Route B: Type it in by hand](#route-b-type-it-in-by-hand)** — fine if you're adding one small
-  entry and don't want to fiddle with the app.
-
-Don't want to do either? **[Just open an issue](https://github.com/trentnbauer/FilmCalc/issues/new/choose)**
-with the details and a link, and it can be added for you. That's a completely acceptable option.
+**No git. No installing anything. Two clicks and a paste.**
 
 ---
 
-## Before you start: what gets accepted
+## 🎬 Start here
 
-Presets are meant to cover **mainstream, reliably available** stocks and labs. To keep the lists
-useful, these are generally **not** added:
+### 1️⃣ Click your button
 
-- Rare, limited-run, or novelty stocks (special-edition Lomochrome, small-batch films, etc.)
-- Films that are usually out of stock
-- Expired-stock-only listings
-- **Sale prices** — always use the regular price, since sales end
+<table>
+<tr>
+<td align="center" width="50%">
 
-If a film doesn't qualify, that's not a problem — you can still add it privately in FilmCalc's
-**Library** tab on your own device. It just won't ship with the project.
+### 🎞️ Adding a FILM?
+
+**[▶ Open Claude for a film](https://claude.ai/new?q=I%20want%20to%20add%20a%20FILM%20STOCK%20to%20FilmCalc%20%28an%20open-source%20film%20photography%20cost%20calculator%29.%0A%0AFirst%2C%20read%20the%20data%20specification%20here%20and%20follow%20every%20rule%20in%20it%20exactly%3A%0Ahttps%3A//raw.githubusercontent.com/trentnbauer/FilmCalc/main/DATA_SPEC.md%0A%0AThen%20generate%20the%20YAML%20entry%20for%20the%20film%20on%20the%20product%20page%20I%20give%20you%20below.%0A%0AProduct%20page%3A%20%5BPASTE%20THE%20LINK%20HERE%5D)**
+
+</td>
+<td align="center" width="50%">
+
+### 🏪 Adding a LAB?
+
+**[▶ Open Claude for a lab](https://claude.ai/new?q=I%20want%20to%20add%20a%20PHOTO%20LAB%20to%20FilmCalc%20%28an%20open-source%20film%20photography%20cost%20calculator%29.%0A%0AFirst%2C%20read%20the%20data%20specification%20here%20and%20follow%20every%20rule%20in%20it%20exactly%3A%0Ahttps%3A//raw.githubusercontent.com/trentnbauer/FilmCalc/main/DATA_SPEC.md%0A%0AThen%20generate%20the%20YAML%20entry%20for%20the%20lab%20on%20the%20pricing%20page%20I%20give%20you%20below.%0A%0ALab%20pricing%20page%3A%20%5BPASTE%20THE%20LINK%20HERE%5D)**
+
+</td>
+</tr>
+</table>
+
+The prompt is already written for you. Claude reads the project's data rules automatically — you
+don't need to know any of them.
+
+### 2️⃣ Paste your shop link and send
+
+Replace `[PASTE THE LINK HERE]` at the bottom of the prompt with the shop or lab page, and hit send.
+
+Claude gives you back:
+
+- ✅ the **YAML entry**, correctly formatted
+- ✅ the **filename** to use (e.g. `us-retailers.yaml`)
+- ✅ whether that file **already exists**, or you need to create it
+
+### 3️⃣ Check the prices ⚠️
+
+**AI invents prices that look completely convincing.** Open the shop page and compare every number.
+If you see `UNKNOWN`, fill it in yourself.
+
+> Not confident? **Stop here** and
+> **[open an issue](https://github.com/trentnbauer/FilmCalc/issues/new/choose)** with the link
+> instead — someone will add it for you. That's genuinely more useful than a pull request full of
+> invented prices.
+
+### 4️⃣ Upload it to GitHub
+
+Claude told you which file to use. Pick your case:
+
+| Claude said… | Do this |
+|---|---|
+| **"Create a new file"** *(most people)* | Go to **[films/](https://github.com/trentnbauer/FilmCalc/upload/main/films)** or **[labs/](https://github.com/trentnbauer/FilmCalc/upload/main/labs)** → **Create new file** → name it what Claude said → paste everything in |
+| **"That file already exists"** | Open the file → click the **pencil ✏️** → paste your entry at the **bottom of the list** |
+
+GitHub may say *"You need to fork this repository to propose changes"* — click the button. One click,
+totally normal.
+
+### 5️⃣ Send it
+
+At the bottom of the page:
+
+- **Title:** e.g. `Add Kodak Portra 400 (120)`
+- **Description:** **paste the shop link.** This is how the price gets checked.
+
+**Propose changes** → **Create pull request** → **Create pull request**.
+
+**Done.** An automatic check runs and tells you in plain English if anything's wrong.
 
 ---
 
-## Route A: Let the app write it for you
+## Other ways to do it
 
-This is the easy way. You never have to write YAML by hand — FilmCalc generates it.
+<details>
+<summary><b>🤖 Use a different AI (ChatGPT, Gemini, etc.)</b></summary>
 
-### 1. Build it in the app
+<br>
 
-- Open FilmCalc and go to the **Library** tab.
-- Add your film stock (or lab) exactly as you want it — name, box speed, price, buy link, and so on.
-- Double-check the numbers. What you type here is what ends up in the file.
+Same idea — paste this into any AI assistant, swapping in your link:
 
-### 2. Export it
+```text
+I want to add a film stock to FilmCalc (an open-source film photography cost calculator).
 
-- Go to **Settings → Export Data**.
-- Click **Export Films Only** (or **Export Labs Only**).
-- When it asks for a preset name, type something descriptive, e.g. `Australian Retailers`.
-- A `.yaml` file downloads to your computer.
+First, read the data specification here and follow every rule in it exactly:
+https://raw.githubusercontent.com/trentnbauer/FilmCalc/main/DATA_SPEC.md
 
-### 3. Open that file and copy your entry
+Then generate the YAML entry for the film on the product page I give you below.
 
-Open the downloaded file in any text editor (Notepad, TextEdit, VS Code — anything).
+Product page: [PASTE THE SHOP LINK HERE]
+```
 
-Inside you'll see a `films:` list. Find **your** film — it'll look something like this:
+For a lab, swap "film stock"/"film"/"product page" for "photo lab"/"lab"/"pricing page".
+
+> **If your AI can't browse the web**, open
+> **[DATA_SPEC.md](https://github.com/trentnbauer/FilmCalc/blob/main/DATA_SPEC.md)**
+> yourself, copy the whole thing, and paste it in along with your request.
+
+Then carry on from **[step 3](#3️⃣-check-the-prices-️)**.
+
+</details>
+
+<details>
+<summary><b>🎞️ Let the FilmCalc app write it (if you already use the app)</b></summary>
+
+<br>
+
+The app can generate the YAML for you — no AI needed.
+
+1. In FilmCalc, go to the **Library** tab and add your film stock (or lab) exactly as you want it.
+2. Go to **Settings → Export Data** → **Export Films Only** (or **Export Labs Only**).
+3. Give it a preset name. A `.yaml` file downloads.
+4. Open it in any text editor and copy **only your entry** — not the whole file, which contains every
+   film you have saved:
 
 ```yaml
 - name: Kodak Gold
@@ -71,162 +133,87 @@ Inside you'll see a `films:` list. Find **your** film — it'll look something l
     buyLink: https://example.com/kodak-gold-200
 ```
 
-Copy that block — from the `- name:` line down to the end of its `bundles`. **Only copy the entries
-you're actually adding**, not the whole file (it'll contain every film you have saved, most of which
-are already in the project).
+Then carry on from **[step 4](#4️⃣-upload-it-to-github)**.
 
-Now jump to **[Step 4: Put it into the project](#step-4-put-it-into-the-project)**.
+</details>
 
----
+<details>
+<summary><b>✍️ Write it by hand</b></summary>
 
-## Route B: Type it in by hand
+<br>
 
-If you'd rather just type it, here's the shape.
+The full field reference lives in **[DATA_SPEC.md](https://github.com/trentnbauer/FilmCalc/blob/main/DATA_SPEC.md)**
+— every field, every allowed value, with examples.
 
-### A film
+**Safest approach:** copy an existing entry from the file and edit it. YAML uses spaces (never tabs),
+and indentation is what gives it meaning.
 
-```yaml
-- name: Kodak Portra 400
-  boxSpeed: 400
-  maxPushPull: 2
-  process: C41
-  format: 35mm
-  hidden: false
-  bundles:
-  - rolls: 1
-    exposures: 36
-    filmCost: 28.50
-    storeName: Walkens
-    buyLink: https://walkens.com.au/products/example
-```
+Then carry on from **[step 4](#4️⃣-upload-it-to-github)**.
 
-| Field | What it means |
-|---|---|
-| `name` | The stock's name, without the ISO. e.g. `Kodak Portra 400` |
-| `boxSpeed` | The rated ISO on the box. A number, no quotes. |
-| `maxPushPull` | How many stops it can be pushed or pulled. Usually `1` or `2`; `0` for stocks that shouldn't be pushed (e.g. Ektar). |
-| `process` | One of `C41`, `BW`, `E6`, `ECN2`. |
-| `format` | One of `35mm`, `120`, `110`, `127`, `220`, `sheet`. |
-| `hidden` | Always `false` for a new entry. |
-| `bundles` | One entry per way you can buy it — a single roll, a 3-pack, a 5-pack. Add as many as you like. |
-| `rolls` | How many rolls in this bundle. |
-| `exposures` | Frames per roll. `36` or `24` for 35mm. For 120 use `12` (6x6). |
-| `filmCost` | Price for the **whole bundle**, including postage if there is any. Regular price, not sale. |
-| `storeName` | Where it's from, e.g. `Walkens`. |
-| `buyLink` | Link to the product page. Use `''` if there isn't one. |
+</details>
 
-### A lab
+<details>
+<summary><b>💬 Just open an issue and let someone else do it</b></summary>
 
-```yaml
-- name: Example Photo Lab
-  hidden: false
-  address: 1 Example Street, Melbourne VIC 3000, Australia
-  phone: (03) 1234 5678
-  email: hello@example.com
-  website: https://example.com
-  services:
-  - devCost: 17
-    pushPullCost: 5
-    pushPullType: per_stop
-    turnaroundTime: next_day
-    highResScan: true
-    noPushPull: false
-    processes:
-    - C41
-```
+<br>
 
-| Field | What it means |
-|---|---|
-| `name` | The lab's name. |
-| `address` | Full street address — this powers the **Directions** link, so make it something Google Maps can find. |
-| `services` | One entry per **service tier** the lab offers. A lab with next-day and same-week options gets two entries. |
-| `devCost` | What they charge to develop one roll, in dollars. |
-| `pushPullCost` | What they charge to push or pull. |
-| `pushPullType` | `per_stop` if they charge per stop, or `flat` for one fee regardless. |
-| `turnaroundTime` | One of `next_day`, `same_week`, `longer`. |
-| `highResScan` | `true` if this tier includes hi-res scans, otherwise `false`. |
-| `noPushPull` | `true` only if this tier can't push/pull at all. Usually `false`. |
-| `processes` | Which processes this tier handles — a list of `C41`, `BW`, `E6`, `ECN2`. |
+Completely fine — and genuinely useful.
 
-> **Careful with indentation.** YAML uses spaces (never tabs), and the indentation is what gives it
-> meaning. The safest approach is to copy an existing entry in the file and edit it, rather than
-> typing a new one from scratch. If you get it wrong, don't panic — a check runs automatically on
-> your pull request and will tell you.
+**[Open an issue](https://github.com/trentnbauer/FilmCalc/issues/new/choose)**, pick *"Add a film
+stock or lab"*, and paste the shop link with the details.
+
+</details>
 
 ---
 
-## Step 4: Put it into the project
+## Good to know
 
-This is the bit that sounds scary and isn't. **You will not need git, a terminal, or a fork.**
-GitHub handles all of that when you click the pencil icon.
+<details>
+<summary><b>What gets accepted?</b></summary>
 
-### 1. Open the right file
+<br>
 
-- **Films:** [`films/australian-retailers.yaml`](https://github.com/trentnbauer/FilmCalc/blob/main/films/australian-retailers.yaml)
-- **Labs:** [`labs/melbourne.yaml`](https://github.com/trentnbauer/FilmCalc/blob/main/labs/melbourne.yaml)
+Presets aim to cover **mainstream, reliably available** stocks and labs. Generally **not** added:
 
-If you're adding a stock or lab from a **different country or region**, it may be better to create a
-new file (e.g. `films/uk-retailers.yaml`). Use the **Add file → Create new file** button in the
-`films/` folder instead, and give it a `label:` at the top like the existing files have. If you're
-unsure, just add to the existing file and it can be moved later.
+- Rare, limited-run, or novelty stocks (special-edition Lomochrome, small-batch films)
+- Films that are usually out of stock
+- Expired-stock-only listings
+- **Sale prices** — always the regular price, since sales end
 
-### 2. Click the pencil ✏️
+If a film doesn't qualify, no problem — add it privately in FilmCalc's **Library** tab on your own
+device. It just won't ship with the project.
 
-Near the top right of the file, click the **pencil icon** ("Edit this file").
+</details>
 
-The first time you do this, GitHub will say something like *"You need to fork this repository to
-propose changes."* Click the button to continue — GitHub makes your own copy automatically. This is
-normal and takes one click.
+<details>
+<summary><b>Why are films grouped by country, but labs by city?</b></summary>
 
-### 3. Paste your entry in
+<br>
 
-Scroll to the bottom of the `films:` (or `labs:`) list and paste your block on the end, matching the
-indentation of the entries above it.
+**Films** are bought online and shipped, so pricing is broadly national — one `us-retailers.yaml`
+covers the whole US.
 
-Keep the list alphabetical if you can, but it isn't essential.
+**Labs** are physical places you post film to or walk into, so they only matter locally. A Melbourne
+shooter has no use for a London lab's pricing — hence `melbourne.yaml`, `london.yaml`, and so on.
 
-### 4. Describe your change
+Users choose which files to import in the app, so keeping them separate means nobody wades through
+prices in a currency they don't use.
 
-Scroll to the bottom of the page to the **Propose changes** box.
+</details>
 
-- **Title:** something short, e.g. `Add Kodak Portra 400 (120)` or `Add Example Photo Lab`
-- **Description:** paste the **link to the shop or lab page** you got the price from. This is the
-  single most helpful thing you can include — it's how the price gets verified.
+<details>
+<summary><b>What happens after I submit?</b></summary>
 
-Click the green **Propose changes** button.
+<br>
 
-### 5. Open the pull request
+- An automatic check confirms your YAML is valid. If something's off — usually indentation, or an
+  `UNKNOWN` you forgot to fill in — it shows a red ✗ and explains what's wrong in plain English.
+  Click the pencil again on your own branch to fix it; the pull request updates itself.
+- Your entry gets a sanity check: mainstream stock, regular price, working buy link.
+- Once merged, the site rebuilds automatically and your film or lab is live for everyone.
 
-GitHub takes you to a new page. Click the green **Create pull request** button, then **Create pull
-request** again on the screen after it.
+**If you get stuck, leave a comment on your pull request and say so.** Half-finished pull requests
+from people who tried are genuinely welcome — much easier to fix than to write from scratch. Nobody
+minds.
 
-**That's it. You've opened a pull request.** You didn't clone anything, install anything, or use a
-command line.
-
----
-
-## What happens next
-
-- An automatic check runs on your pull request to confirm the file is still valid YAML. If something's
-  off — usually indentation — it'll show a red ✗ and say so. You can fix it by clicking the pencil
-  again on your own branch; the pull request updates itself.
-- Your entry gets a quick sanity check: is it a mainstream stock, is the price the regular one, does
-  the buy link work.
-- Once it's merged, the site rebuilds automatically and your film or lab is available to everyone.
-
-If you get stuck at any point, **leave a comment on your pull request and say so.** Half-finished
-pull requests from people who tried are genuinely welcome — they're much easier to fix than to write
-from scratch. Nobody minds.
-
----
-
-## A quick summary
-
-1. Build the film/lab in FilmCalc's **Library** tab, then **Settings → Export Films Only**.
-2. Open the downloaded file and copy your entry.
-3. On GitHub, open `films/australian-retailers.yaml` and click the **pencil ✏️**.
-4. Paste your entry at the end of the list.
-5. Fill in the title, **paste the shop link in the description**, and click **Propose changes**.
-6. Click **Create pull request**.
-
-No git. No terminal. Six steps in a browser.
+</details>
