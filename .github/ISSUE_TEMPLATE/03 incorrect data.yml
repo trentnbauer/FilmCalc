@@ -1,0 +1,80 @@
+name: "📋 Incorrect film or lab data"
+description: A preset film stock or lab has a wrong price, push/pull limit, service tier, or detail
+title: "[Data] "
+labels: ["data"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is for the **preset data** shipped with the project (the `films/` and `labs/` YAML files)
+        — e.g. a film's price is out of date, a push/pull limit is wrong, or a lab's dev fee has changed.
+        The app itself may be working perfectly; the numbers it's fed are just stale.
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What's incorrect?
+      options:
+        - A film stock's price
+        - A film stock's push/pull limit (maxPushPull)
+        - A film stock's box speed, process, or format
+        - A lab's development cost
+        - A lab's push/pull fee
+        - A lab's service tier (turnaround / hi-res / processes offered)
+        - A lab's address or contact details
+        - Something else
+    validations:
+      required: true
+
+  - type: input
+    id: which
+    attributes:
+      label: Which film or lab?
+      placeholder: "e.g. Kodak Gold 200 (35mm), or Irohas Melbourne"
+    validations:
+      required: true
+
+  - type: input
+    id: current
+    attributes:
+      label: What the app currently says
+      placeholder: "e.g. $15.00 per roll"
+    validations:
+      required: true
+
+  - type: input
+    id: correct
+    attributes:
+      label: What it should say
+      placeholder: "e.g. $17.50 per roll"
+    validations:
+      required: true
+
+  - type: input
+    id: source
+    attributes:
+      label: Source
+      description: A link to the retailer or lab page showing the correct figure. Please use the **regular** price, not a sale price.
+      placeholder: "https://…"
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot
+      description: |
+        **Please attach a screenshot** of the source page showing the correct price/detail
+        (prices change and links go stale — a screenshot preserves what you saw).
+        Drag an image into this box to upload it.
+      placeholder: Paste or drag your screenshot here.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirmations
+      options:
+        - label: This is the **regular** price, not a temporary sale price
+        - label: This is a currently available stock (not discontinued or expired-stock-only)
