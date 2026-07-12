@@ -1041,9 +1041,12 @@
 
         // ---------- Currency symbol ----------
         // Purely a display label swap — no conversion math. Read by every cost
-        // display throughout the app via CUR().
+        // display throughout the app via CUR(). The custom-symbol input accepts
+        // any text (not just currency glyphs) and is interpolated straight into
+        // innerHTML at every call site, so escape it here once rather than at
+        // each of CUR()'s ~40 call sites.
         function CUR() {
-            return localStorage.getItem('currencySymbol') || '$';
+            return escapeHtml(localStorage.getItem('currencySymbol') || '$');
         }
 
         const KNOWN_CURRENCY_SYMBOLS = ['$', '€', '£', '¥', 'A$', 'NZ$', 'C$', 'R'];
@@ -1051,7 +1054,11 @@
         const currencyCustomInput = document.getElementById('currencyCustomInput');
 
         function initCurrencySelector() {
-            const stored = CUR();
+            // Raw (unescaped) value on purpose — this feeds a form field's
+            // .value, not innerHTML, so escaping here would corrupt round-tripping
+            // (e.g. a custom symbol containing "&" would grow an extra "amp;"
+            // on every save). CUR() itself still escapes for every HTML use.
+            const stored = localStorage.getItem('currencySymbol') || '$';
             if (KNOWN_CURRENCY_SYMBOLS.includes(stored)) {
                 currencySelect.value = stored;
                 currencyCustomInput.classList.add('hidden');
