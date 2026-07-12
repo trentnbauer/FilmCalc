@@ -28,6 +28,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Stamp build version into index.html
+        run: sed -i "s/%%FILMCALC_VERSION%%/$(git rev-parse --short HEAD)/" index.html
       - name: Generate preset manifests
         # films/index.json and labs/index.json are the browser's stand-in for a
         # directory listing (static hosting can't enumerate a folder). Rather
