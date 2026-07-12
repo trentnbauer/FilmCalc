@@ -139,17 +139,6 @@
 
         <form id="calculatorForm" class="space-y-6">
 
-            <!-- Global film format — one control, applies everywhere it's used
-                 (Film Lookup cheaper-alternative, Dev Cost ranking, Library's
-                 film list). Sits above the tabs so it's always visible on
-                 those; hidden on Expired/Settings where it has no effect.
-                 Labelled "Format" to match the same field's name in Library
-                 (physical film size — 35mm/120/etc — not stock/process). -->
-            <div id="globalFormatRow" class="flex items-center gap-2">
-                <label for="globalFormat" class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide shrink-0" title="Physical film size — 35mm, 120, etc. Applies across Film Lookup, Dev Cost, and the Library's film list.">Format</label>
-                <select id="globalFormat" data-options="formats" title="Physical film size — 35mm, 120, etc. Applies across Film Lookup, Dev Cost, and the Library's film list." class="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm"></select>
-            </div>
-
             <div role="tablist" aria-label="Main sections" class="flex gap-1 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20 bg-white dark:bg-gray-800 -mx-6 md:-mx-8 px-6 md:px-8">
                 <button id="tabFilmBtn" type="button" role="tab" aria-selected="true" aria-controls="filmTabContent" tabindex="0" class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 transition-colors">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m-6 4h6m-6 4h3M5 3h14a1 1 0 011 1v16a1 1 0 01-1 1H5a1 1 0 01-1-1V4a1 1 0 011-1z"/></svg>
@@ -173,8 +162,23 @@
                 </button>
             </div>
 
-            <!-- Dev Cost process filter (format is the global control above the
-                 tabs). Hidden on other tabs (toggled in switchTab). -->
+            <!-- Global film format — one control, applies everywhere it's used
+                 (Film Lookup cheaper-alternative, Dev Cost ranking, Library's
+                 film list). Sits right below the tab bar (not above it) so its
+                 hide/show never changes the tab bar's own position — it used
+                 to sit above the tabs and get hidden/shown per tab, which
+                 shifted the tab bar itself up and down when switching tabs.
+                 Hidden on Expired/Settings where it has no effect; moves into
+                 the Film Management card specifically on the Library tab (see
+                 switchTab) instead of resting here. Labelled "Format" to
+                 match the same field's name in Library (physical film size —
+                 35mm/120/etc — not stock/process). -->
+            <div id="globalFormatRow" class="flex items-center gap-2">
+                <label for="globalFormat" class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide shrink-0" title="Physical film size — 35mm, 120, etc. Applies across Film Lookup, Dev Cost, and the Library's film list.">Format</label>
+                <select id="globalFormat" data-options="formats" title="Physical film size — 35mm, 120, etc. Applies across Film Lookup, Dev Cost, and the Library's film list." class="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm"></select>
+            </div>
+
+            <!-- Dev Cost process filter. Hidden on other tabs (toggled in switchTab). -->
             <div id="globalFilters" class="hidden">
                 <div>
                     <label for="globalProcess" class="block text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1" title="Development chemistry — C41, B&amp;W, E6, ECN-2. Narrows every Dev Cost view to films/labs of this process only.">Process</label>
@@ -1229,17 +1233,19 @@
             document.getElementById('labsForThisRollSection').classList.toggle('hidden', tab !== 'film');
             // The global Format control drives Film Lookup, Dev Cost ranking,
             // and Library's film list/dropdown. On the Library tab it moves
-            // into the Film Management card instead of sitting in the page
-            // header — visibility there then just follows the Films/Labs
-            // sub-tab's own hidden toggle, no extra logic needed. Everywhere
-            // else it moves back above the tabs, hidden only on Expired/
-            // Settings where it has no effect.
+            // into the Film Management card instead of resting here —
+            // visibility there then just follows the Films/Labs sub-tab's
+            // own hidden toggle, no extra logic needed. Everywhere else it
+            // docks back right below the tab bar (never above it — that's
+            // what used to make the tab bar itself shift position when its
+            // hidden state changed), hidden only on Expired/Settings where
+            // it has no effect.
             const formatRow = document.getElementById('globalFormatRow');
             if (tab === 'library') {
                 document.getElementById('filmManagementFormatSlot').appendChild(formatRow);
                 formatRow.classList.remove('hidden');
             } else {
-                document.querySelector('[role="tablist"]').insertAdjacentElement('beforebegin', formatRow);
+                document.getElementById('globalFilters').insertAdjacentElement('beforebegin', formatRow);
                 formatRow.classList.toggle('hidden', tab === 'expired' || tab === 'settings');
             }
             // Global Process filter only applies to Dev Cost. Film Lookup has
