@@ -47,10 +47,14 @@ jobs:
             only touch what's clearly required to fix a real, verified vulnerability. Do not refactor,
             reformat, or "improve" unrelated code.
 
-            1. List this repo's open code scanning alerts with security_severity_level "high" or
-               "critical":
+            1. List this repo's open code scanning alerts, excluding "warning"/"note" severity,
+               sorted most severe first:
                gh api repos/${{ github.repository }}/code-scanning/alerts --paginate \
-                 -q '.[] | select(.state=="open" and (.rule.security_severity_level=="high" or .rule.security_severity_level=="critical"))'
+                 -q '.[] | select(.state=="open")' \
+                 | jq -s '[.[] | select((.rule.security_severity_level // .rule.severity // "note") as $sev
+                     | $sev != "warning" and $sev != "note")]
+                   | sort_by(["critical","high","medium","low","error"]
+                     | index(.rule.security_severity_level // .rule.severity // "error"))'
 
                If there are none, stop here — do not create a branch, commit, or PR.
 
@@ -61,13 +65,14 @@ jobs:
 
             3. Apply the minimal correct fix for each finding. If a finding looks like a false
                positive (e.g. already-sanitized data the tool can't trace through a custom helper),
-               leave it and note why in the PR description rather than guessing at a change.
+               leave it and note why (skip PR creation for that alert) rather than guessing at a change.
 
-            4. If you made any fixes: create a new branch named `security-autofix-YYYY-MM-DD` (today's
-               date), commit with a message describing what was fixed and why, push it, and open a PR
-               against main with `gh pr create`. The PR description must list each alert fixed (rule
-               id + file/line), the root cause, and how it was verified. Do not push to main directly,
-               and do not merge the PR yourself — it needs human review.
+            4. Process alerts one at a time, most severe to least severe. For each alert you fix,
+               create its own branch named `security-autofix-<rule-id>-<alert-number>-YYYY-MM-DD`
+               (today's date), commit with a message describing what was fixed and why, push it, and
+               open a separate PR against main with `gh pr create`. Each PR description must state the
+               alert fixed (rule id + file/line + severity), the root cause, and how it was verified.
+               Do not push to main directly, and do not merge any PR yourself — each needs human review.
 
-            5. If nothing needed fixing, or every open high/critical alert is a documented false
-               positive, do not open a PR.
+            5. If nothing needed fixing, or every open alert is a documented false positive, do not
+               open any PR.
