@@ -126,3 +126,54 @@ jobs:
 
           print("✅ All film and lab data looks good.")
           PY
+
+  claude-sanity-check:
+    # Only meaningful with a PR to comment on, and only worth an LLM call once
+    # the data is at least structurally valid.
+    needs: validate
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Claude data sanity check
+        uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ github.token }}
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: '--allowed-tools "Bash(gh pr comment:*),Bash(gh pr diff:*),WebFetch,Read,Grep,Glob"'
+          prompt: |
+            This PR changed film and/or lab data files. Read "data spec.md" in the repo root — it is
+            the authoritative rules a film/lab entry must follow. Then review ONLY the added/changed
+            lines in this PR (gh pr diff ${{ github.event.pull_request.number }}) against those rules,
+            specifically the things the schema validator that already ran in this workflow can't check:
+
+            - No `UNKNOWN` values left in.
+            - Price is the regular price, not a sale/discount price (watch for wording suggesting a sale).
+            - Films: a mainstream, reliably available stock — not rare/limited-run/novelty editions,
+              not usually out of stock, not an expired-stock-only listing.
+            - Films: `name` correctly excludes the ISO, except where the number is genuinely part of
+              the product name (e.g. Portra 400 vs Portra 160/800).
+            - Films are grouped in the right file for their country; labs in the right file for their
+              city. Flag anything that looks like it's in the wrong file.
+            - Labs: `services` has one entry per distinct price the lab actually charges, not one
+              lab-wide entry covering several prices.
+            - Labs: `address` reads like a real, geocodable street address.
+            - If a film `buyLink` or lab `website` is present, try fetching it with WebFetch. If it
+              loads, sanity-check that the price/name roughly match what's in the YAML. If it doesn't
+              load, or you're not confident, say so explicitly rather than guessing.
+
+            Post exactly one PR comment summarizing what you found:
+            gh pr comment ${{ github.event.pull_request.number }} --body "..."
+
+            If everything looks right, say so briefly. If something looks off, list it per entry with
+            the file and what's wrong. This is advisory only: do not edit any files, do not
+            approve/request changes, do not block or merge the PR.
