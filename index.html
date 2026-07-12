@@ -221,10 +221,13 @@
                 <div id="cheaperAlternative"></div>
 
                 <!-- Secondary actions, demoted to a quiet row -->
-                <div class="flex items-center gap-3 text-sm px-1">
+                <div class="flex items-center gap-3 text-sm px-1 flex-wrap">
                     <button id="saveToLibraryBtn" type="button" class="text-blue-600 dark:text-blue-400 font-medium hover:underline">💾 Save to Library</button>
                     <span class="text-gray-300 dark:text-gray-600">·</span>
+                    <button id="shareLinkBtn" type="button" title="Copy a link that reopens this exact calculation" class="text-blue-600 dark:text-blue-400 font-medium hover:underline">🔗 Share Link</button>
+                    <span class="text-gray-300 dark:text-gray-600">·</span>
                     <button id="clearQuickCalcBtn" type="button" class="text-gray-500 dark:text-gray-400 hover:underline">Clear</button>
+                    <span id="shareLinkStatus" class="text-xs text-green-600 dark:text-green-400"></span>
                 </div>
 
                 <details id="moreOptionsDetails" class="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/30">
@@ -3171,6 +3174,78 @@
             updateLabComparison();
         });
 
+        // ---------- Shareable calculated URL (Film Lookup deep link) ----------
+        // Query params pre-fill Film Lookup and trigger the calculation on
+        // load, so a specific roll can be bookmarked/shared/linked to
+        // directly instead of re-entered by hand. This stays entirely
+        // client-side (no server involved) — opening the link re-runs the
+        // same calculation the browser would do if you'd typed it in.
+        const URL_PARAM_FIELDS = ['format', 'process', 'boxSpeed', 'filmCost', 'postageCost', 'rolls', 'exposures', 'devSpeed', 'onceOffFee', 'perRollFee'];
+
+        function applyUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            const has = (k) => params.has(k) && params.get(k) !== '';
+            if (!URL_PARAM_FIELDS.some(k => has(k))) return;
+
+            if (has('format') && FORMAT_OPTIONS.some(o => o.value === params.get('format'))) {
+                cheapestFormat = params.get('format');
+                localStorage.setItem('globalFormat', cheapestFormat);
+                const gf = document.getElementById('globalFormat');
+                if (gf) gf.value = cheapestFormat;
+            }
+            if (has('process') && PROCESS_OPTIONS.some(o => o.value === params.get('process'))) {
+                document.getElementById('processSelect').value = params.get('process');
+            }
+            if (has('boxSpeed')) document.getElementById('boxSpeed').value = params.get('boxSpeed');
+            if (has('filmCost')) document.getElementById('filmCost').value = params.get('filmCost');
+            if (has('postageCost')) document.getElementById('postageCost').value = params.get('postageCost');
+            if (has('rolls')) document.getElementById('rolls').value = params.get('rolls');
+            if (has('exposures')) document.getElementById('exposures').value = params.get('exposures');
+            if (has('devSpeed')) {
+                document.getElementById('devSpeed').value = params.get('devSpeed');
+                devSpeedOverridden = true;
+            }
+            if (has('onceOffFee')) document.getElementById('onceOffFee').value = params.get('onceOffFee');
+            if (has('perRollFee')) document.getElementById('perRollFee').value = params.get('perRollFee');
+            if (has('onceOffFee') || has('perRollFee')) {
+                document.getElementById('moreOptionsDetails').open = true;
+            }
+            updateLabComparison();
+            updateCheaperAlternative();
+        }
+
+        // Builds a link encoding whatever's currently in Film Lookup, so
+        // opening it later (or sending it to someone else) reproduces this
+        // exact calculation. Only includes fields that actually have a value.
+        document.getElementById('shareLinkBtn').addEventListener('click', async () => {
+            const params = new URLSearchParams();
+            params.set('format', cheapestFormat);
+            const fields = {
+                process: document.getElementById('processSelect').value,
+                boxSpeed: document.getElementById('boxSpeed').value,
+                filmCost: document.getElementById('filmCost').value,
+                postageCost: document.getElementById('postageCost').value,
+                rolls: document.getElementById('rolls').value,
+                exposures: document.getElementById('exposures').value,
+                devSpeed: document.getElementById('devSpeed').value,
+                onceOffFee: document.getElementById('onceOffFee').value,
+                perRollFee: document.getElementById('perRollFee').value
+            };
+            Object.entries(fields).forEach(([key, value]) => {
+                if (value !== '' && value !== null) params.set(key, value);
+            });
+            const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+            const statusEl = document.getElementById('shareLinkStatus');
+            try {
+                await navigator.clipboard.writeText(url);
+                statusEl.textContent = '✓ Link copied';
+            } catch {
+                statusEl.textContent = url;
+            }
+            clearTimeout(applyUrlParams._statusTimer);
+            applyUrlParams._statusTimer = setTimeout(() => { statusEl.textContent = ''; }, 3000);
+        });
+
         // ---------- Clear Quick Calculate ----------
         // Resets just this film's numbers (not Target Speed, fees, or expired
         // details) so you can look up the cheapest film for the same Target
@@ -4233,7 +4308,8 @@ A lab charging different prices for C41 vs B&W vs E6, or for next-day vs same-we
                 cheapestFormat = gf.value;
                 localStorage.setItem('globalFormat', cheapestFormat);
             }
-            loadDefaults();
+            await loadDefaults();
+            applyUrlParams();
         })();
     </script>
 </body>
