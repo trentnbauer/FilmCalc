@@ -2327,12 +2327,13 @@
             localStorage.setItem('favouriteLabs', JSON.stringify([...favouriteLabs]));
         }
 
-        // For lab-ranked Dev Cost views (Per Lab / Per Film — one row per lab),
-        // pins any favourited lab(s) to the top of the displayed list ahead of
+        // Used by every Dev Cost view (Per Photo / Per Lab / Per Film / Per ISO)
+        // to pin any favourited lab(s) to the top of the displayed list ahead of
         // price order, so "my lab" doesn't get buried below cheaper options.
-        // Rows stay price-sorted within each group (favourites, then the rest);
-        // the true price rank still comes from priceSortedRows, so the amber
-        // "cheapest" star stays accurate even when a favourite is shown first.
+        // Rows stay price/sort-ordered within each group (favourites, then the
+        // rest); the true price rank still comes from priceSortedRows, so the
+        // amber "cheapest" star stays accurate even when a favourite is shown
+        // first.
         function reorderFavouriteLabsFirst(priceSortedRows) {
             const favs = priceSortedRows.filter(e => isFavLab(e.labName));
             const rest = priceSortedRows.filter(e => !isFavLab(e.labName));
@@ -2348,7 +2349,7 @@
             return `${entry.filmName}|${entry.labName}|${entry.stops}`;
         }
 
-        function renderIsoRow(entry, rank) {
+        function renderIsoRow(entry, rank, pinnedByFav) {
             const hiResBadge = entry.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">HI-RES</span>` : '';
             const turnaroundBadge = entry.turnaroundTime ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 align-middle">${escapeHtml(turnaroundLabels[entry.turnaroundTime] || entry.turnaroundTime)}</span>` : '';
             const direction = entry.stops > 0 ? 'Push' : 'Pull';
@@ -2356,8 +2357,13 @@
                 ? ` <span class="text-xs ${entry.overLimit ? 'text-red-600 dark:text-red-400 font-semibold' : 'opacity-70'}">(${direction} ${Math.abs(entry.stops)} stop${Math.abs(entry.stops) === 1 ? '' : 's'}${entry.overLimit ? ` — over its ${entry.maxPushPull}-stop limit` : ''})</span>`
                 : '';
             const isCheapest = rank === 0;
-            const rowBg = entry.overLimit ? 'bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700' : (isCheapest ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-white dark:bg-gray-800/50');
+            const rowBg = entry.overLimit ? 'bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700' : (isCheapest ? 'bg-amber-100 dark:bg-amber-900/30' : (pinnedByFav ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'bg-white dark:bg-gray-800/50'));
             const textColor = entry.overLimit ? 'text-red-700 dark:text-red-400' : (isCheapest ? 'text-amber-800 dark:text-amber-300 font-semibold' : 'text-gray-700 dark:text-gray-300');
+            const fav = isFavLab(entry.labName);
+            const star = `<button type="button" class="fav-star text-sm leading-none" data-fav-lab="${escapeHtml(entry.labName)}" title="${fav ? 'Unfavourite lab' : 'Favourite lab'}" onclick="event.stopPropagation()"><span class="${fav ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600'}">${fav ? '★' : '☆'}</span></button>`;
+            const pinnedFavNote = pinnedByFav
+                ? `<div class="text-[11px] text-indigo-600 dark:text-indigo-400 mt-0.5">📌 Shown first — this is your favourite lab</div>`
+                : '';
 
             const key = isoRowKey(entry);
             const isOpen = expandAllIso || expandedIsoRows.has(key);
@@ -2392,12 +2398,13 @@
             return `<div>
                 <div class="iso-row cursor-pointer px-3 py-2 rounded-lg text-sm ${rowBg}" data-iso-key="${escapeHtml(key)}">
                     <div class="flex justify-between items-start gap-2">
-                        <span class="${entry.overLimit ? 'font-semibold text-red-700 dark:text-red-400' : (isCheapest ? 'font-semibold text-amber-800 dark:text-amber-300' : 'text-gray-700 dark:text-gray-300')}">${isCheapest && !entry.overLimit ? '⭐ ' : ''}${escapeHtml(entry.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(entry.labName)}</span>${stopsLabel}${hiResBadge}${turnaroundBadge}</span>
+                        <span class="${entry.overLimit ? 'font-semibold text-red-700 dark:text-red-400' : (isCheapest ? 'font-semibold text-amber-800 dark:text-amber-300' : 'text-gray-700 dark:text-gray-300')}">${star} ${isCheapest && !entry.overLimit ? '⭐ ' : ''}${escapeHtml(entry.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(entry.labName)}</span>${stopsLabel}${hiResBadge}${turnaroundBadge}</span>
                         <span class="font-mono text-right leading-tight ${textColor} whitespace-nowrap flex items-center gap-1.5">
                             <span class="font-semibold">${CUR()}${entry.totalCostPerPhoto.toFixed(2)}/photo</span>
                             ${chevron}
                         </span>
                     </div>
+                    ${pinnedFavNote}
                     ${breakdown}
                 </div>
             </div>`;
@@ -2429,7 +2436,13 @@
             // of the chosen sort — so "cheapest" stays meaningful even when
             // sorting by turnaround or scan.
             const priceRank = (entries, entry) => entries.slice().sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto).indexOf(entry);
-            const renderBucket = (sorted, all) => sorted.map(e => renderIsoRow(e, priceRank(all, e))).join('');
+            // Favourited labs are pinned to the top of each bucket, ahead of
+            // whatever sort is active, without disturbing the true price rank
+            // used for the ⭐ "cheapest" marker.
+            const renderBucket = (sorted, all) => reorderFavouriteLabsFirst(sorted).map(e => {
+                const rank = priceRank(all, e);
+                return renderIsoRow(e, rank, isFavLab(e.labName) && rank !== 0);
+            }).join('');
 
             const nativeHtml = native.length
                 ? renderBucket(sortedNative, native)
@@ -2471,6 +2484,12 @@
             container.querySelectorAll('.cheapest-sort-pill').forEach(btn => btn.addEventListener('click', () => {
                 cheapestSort = btn.dataset.sort;
                 localStorage.setItem('cheapestSort', cheapestSort);
+                updateIsoPriceCalculator();
+            }));
+            // Favourite-lab stars.
+            container.querySelectorAll('.fav-star').forEach(star => star.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleFavLab(star.dataset.favLab);
                 updateIsoPriceCalculator();
             }));
             // Expand-all toggle.
@@ -2739,8 +2758,12 @@
                 const existing = byFilmNative.get(key);
                 if (!existing || e.totalCostPerPhoto < existing.totalCostPerPhoto) byFilmNative.set(key, e);
             });
-            const rows = [...byFilmNative.values()].sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto);
-            container.innerHTML = expandAllControl() + rows.map((e, i) => renderMatrixRow(e, i, 'photo')).join('');
+            const priceSortedRows = [...byFilmNative.values()].sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto);
+            const rows = reorderFavouriteLabsFirst(priceSortedRows);
+            container.innerHTML = expandAllControl() + rows.map(e => {
+                const rank = priceSortedRows.indexOf(e);
+                return renderMatrixRow(e, rank, 'photo', isFavLab(e.labName) && rank !== 0);
+            }).join('');
             wireExpandAll(container, updateCostPerPhotoTab);
             wireMatrixRows(container, updateCostPerPhotoTab);
         }
