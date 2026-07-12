@@ -121,8 +121,12 @@ jobs:
             For tiers 4/5, list open issues authored by ${{ github.repository_owner }}:
             ```
             gh issue list --repo ${{ github.repository }} --author ${{ github.repository_owner }} \
-              --state open --json number,title,body,labels,createdAt --jq 'sort_by(.createdAt)'
+              --state open --json number,title,body,labels,createdAt,author --jq 'sort_by(.createdAt)'
             ```
+            Note each issue's `author.login` as you go — that's who you'll @-mention below if you end
+            up punting on it, not the repo owner (they're often the same person today since this query
+            is scoped to the repo owner's own issues, but treat the mention as the issue's actual
+            reporter so this keeps working if that scope ever widens).
             Skip any issue already labelled `claude-attempted` — it's been handled or judged too
             ambiguous already; a human removing that label is the signal to retry it. From what's
             left, only act on:
@@ -147,10 +151,10 @@ jobs:
             vague, too large for one PR, or hinges on a decision only the repo owner can make (a
             design/infra tradeoff, a security-sensitive default, etc.), don't implement it — comment on
             the issue explaining what you tried in order to replicate it and what happened, plus
-            whatever else is unclear or the decision that's needed. Directly @-mention the repo owner
-            in that comment (`@${{ github.repository_owner }}`, e.g. "`@${{ github.repository_owner }}`
-            could you confirm/clarify ...") so they're notified that a response from them is what's
-            blocking progress.
+            whatever else is unclear or the decision that's needed. Directly @-mention that issue's
+            author (its `author.login` from the listing above) in the comment, e.g. "`@<their-login>`
+            could you confirm/clarify ..." — so whoever actually reported it is notified that a
+            response from them is what's blocking progress.
 
             If you can implement it: create a branch named `claude/issue-<number>-<short-slug>`,
             implement the change, verify it actually works (read the surrounding code so the change
