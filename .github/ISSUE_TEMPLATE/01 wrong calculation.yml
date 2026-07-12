@@ -1,0 +1,97 @@
+name: "🧮 Wrong calculation"
+description: A cost, push/pull, or recommendation figure looks incorrect
+title: "[Calc] "
+labels: ["bug", "calculation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting this. Costs depend on several inputs at once (exposure count in
+        particular — development is a flat **per-roll** fee, so a 24exp roll always costs more
+        *per photo* to develop than a 36exp roll at the same lab). Filling in the fields below
+        lets the numbers be reproduced exactly.
+
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where did you see it?
+      options:
+        - Film Lookup — headline cost per photo
+        - Film Lookup — "cheaper film in library" suggestion
+        - Film Lookup — Labs For This Roll list
+        - Dev Cost — Per Film
+        - Dev Cost — Per Photo
+        - Dev Cost — Per Lab
+        - Dev Cost — Per ISO
+        - Expired tab — recommended EI
+        - Somewhere else (describe below)
+    validations:
+      required: true
+
+  - type: textarea
+    id: inputs
+    attributes:
+      label: Exact inputs
+      description: Everything you had entered/selected. Copy the numbers exactly.
+      value: |
+        - Film Type (format): 
+        - Process: 
+        - Box Speed (ISO): 
+        - Shooting at (Target ISO): 
+        - Total Cost incl. Postage: 
+        - Rolls: 
+        - Exposures per Roll: 
+        - Film stock (if picked from library): 
+        - Lab / service tier: 
+        - Any extra fees (once-off / per-roll): 
+    validations:
+      required: true
+
+  - type: input
+    id: shown
+    attributes:
+      label: Figure the app showed
+      placeholder: "e.g. $1.08/photo total"
+    validations:
+      required: true
+
+  - type: input
+    id: expected
+    attributes:
+      label: Figure you expected
+      placeholder: "e.g. $0.95/photo total"
+    validations:
+      required: true
+
+  - type: textarea
+    id: working
+    attributes:
+      label: How did you work out the expected figure?
+      description: Show your maths if you can — it makes a genuine bug much easier to separate from a display/labelling problem.
+      placeholder: |
+        e.g. Film $30 ÷ 36 exp = $0.83/photo, dev $16 ÷ 36 = $0.44/photo, so I expected $1.27 total.
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot
+      description: |
+        **Please attach a screenshot** showing the figure *and* the inputs that produced it.
+        If the row has an expandable cost breakdown, please tap it open first — the breakdown
+        shows the film/dev split per photo and per roll, which usually identifies the cause immediately.
+        Drag an image into this box to upload it.
+      placeholder: Paste or drag your screenshot here.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checked
+    attributes:
+      label: Quick checks
+      description: These catch the most common false alarms — please tick whichever you've confirmed.
+      options:
+        - label: I opened the row's cost breakdown and the film/dev split still looks wrong
+        - label: I checked the exposure count (dev is a flat per-roll fee spread over the frames)
+        - label: I compared **total** cost (film + dev), not film-only, when judging "cheaper"
