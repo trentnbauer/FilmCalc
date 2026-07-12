@@ -2213,6 +2213,13 @@
         // Sort mode for the Cheapest Per ISO view. Persisted so a re-open keeps
         // the last choice. 'price' | 'turnaround' | 'scan'.
         let cheapestSort = localStorage.getItem('cheapestSort') || 'price';
+        // Per ISO filters — same idea as Film Lookup's Next Day / Hi-Res
+        // filter pills, not persisted across reloads (matches that
+        // precedent). isoFilterTurnaround is '' (all), 'next_day', or
+        // 'same_week' — mutually exclusive, so it's a single value rather
+        // than a set.
+        let isoFilterTurnaround = '';
+        let isoFilterHiRes = false;
         const turnaroundRank = { next_day: 0, same_week: 1, longer: 2 };
         function sortIsoEntries(entries) {
             const by = cheapestSort;
@@ -2481,7 +2488,15 @@
                 return;
             }
 
-            const { native, push, pull } = computeIsoPriceOptions(targetIso);
+            const { native: allNative, push: allPush, pull: allPull } = computeIsoPriceOptions(targetIso);
+            // Next Day / Same Week / Hi-Res filters narrow each bucket before
+            // sorting and ranking, so the ⭐ "cheapest" marker and bucket
+            // "no matches" messages reflect only what's actually shown —
+            // same idea as Film Lookup's Next Day / Hi-Res filter pills.
+            const matchesIsoFilters = e => (!isoFilterTurnaround || e.turnaroundTime === isoFilterTurnaround) && (!isoFilterHiRes || e.highResScan);
+            const native = allNative.filter(matchesIsoFilters);
+            const push = allPush.filter(matchesIsoFilters);
+            const pull = allPull.filter(matchesIsoFilters);
             const sortedNative = sortIsoEntries(native);
             const sortedPush = sortIsoEntries(push);
             const sortedPull = sortIsoEntries(pull);
@@ -2505,17 +2520,19 @@
                 return renderIsoRow(e, rank, pinReason);
             }).join('');
 
+            const noMatchMsg = (allBucket, emptyMsg) => `<p class="text-xs text-gray-400 text-center py-2">${allBucket.length ? 'No options match the current filters' : emptyMsg}</p>`;
             const nativeHtml = native.length
                 ? renderBucket(sortedNative, native)
-                : '<p class="text-xs text-gray-400 text-center py-2">No film natively rated at this ISO</p>';
+                : noMatchMsg(allNative, 'No film natively rated at this ISO');
             const pushHtml = push.length
                 ? renderBucket(sortedPush, push)
-                : '<p class="text-xs text-gray-400 text-center py-2">No film can be pushed to this ISO</p>';
+                : noMatchMsg(allPush, 'No film can be pushed to this ISO');
             const pullHtml = pull.length
                 ? renderBucket(sortedPull, pull)
-                : '<p class="text-xs text-gray-400 text-center py-2">No film can be pulled to this ISO</p>';
+                : noMatchMsg(allPull, 'No film can be pulled to this ISO');
 
             const sortPill = (mode, label, title) => `<button type="button" data-sort="${mode}" title="${title}" class="cheapest-sort-pill px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${cheapestSort === mode ? 'bg-indigo-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}">${label}</button>`;
+            const filterPill = (mode, active, label, title) => `<button type="button" data-filter="${mode}" title="${title}" class="cheapest-filter-pill px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${active ? 'bg-indigo-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}">${label}</button>`;
             const controls = `<div class="flex items-center justify-between gap-2 flex-wrap mb-3">
                 <div class="flex items-center gap-1.5 flex-wrap">
                     <span class="text-xs text-gray-400 dark:text-gray-500 font-semibold uppercase tracking-wide">Sort</span>
@@ -2524,6 +2541,12 @@
                     ${sortPill('scan', 'Scan', 'Hi-Res scans first, then by price')}
                 </div>
                 <button type="button" id="isoExpandAllBtn" class="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline">${expandAllIso ? 'Collapse all' : 'Expand all'}</button>
+            </div>
+            <div class="flex items-center gap-1.5 flex-wrap mb-3">
+                <span class="text-xs text-gray-400 dark:text-gray-500 font-semibold uppercase tracking-wide">Filter</span>
+                ${filterPill('next_day', isoFilterTurnaround === 'next_day', '⚡ Next Day', 'Show only options with next-day turnaround')}
+                ${filterPill('same_week', isoFilterTurnaround === 'same_week', 'Same Week', 'Show only options with same-week turnaround')}
+                ${filterPill('hires', isoFilterHiRes, 'HI-RES', 'Show only options with hi-res scans')}
             </div>`;
 
             container.innerHTML = controls + `<div class="space-y-4">
@@ -2545,6 +2568,17 @@
             container.querySelectorAll('.cheapest-sort-pill').forEach(btn => btn.addEventListener('click', () => {
                 cheapestSort = btn.dataset.sort;
                 localStorage.setItem('cheapestSort', cheapestSort);
+                updateIsoPriceCalculator();
+            }));
+            // Wire filter pills. Next Day / Same Week are mutually exclusive
+            // (clicking the active one clears it back to "all"); Hi-Res is
+            // an independent toggle.
+            container.querySelectorAll('.cheapest-filter-pill').forEach(btn => btn.addEventListener('click', () => {
+                if (btn.dataset.filter === 'hires') {
+                    isoFilterHiRes = !isoFilterHiRes;
+                } else {
+                    isoFilterTurnaround = isoFilterTurnaround === btn.dataset.filter ? '' : btn.dataset.filter;
+                }
                 updateIsoPriceCalculator();
             }));
             // Favourite-lab stars.
