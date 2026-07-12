@@ -1,0 +1,160 @@
+name: Daily Claude Run
+
+# Runs at 1am AEST (UTC+10, fixed year-round) every day. GitHub Actions
+# cron has no timezone support, so this is pinned to 15:00 UTC — in
+# Sydney/Melbourne that's 1am AEST but 2am AEDT during daylight saving
+# (Oct-Apr).
+#
+# Replaces the separate "Daily Security Auto-Fix" and "Daily Issue PRs"
+# workflows with one combined priority queue, so security work and issue
+# work interleave by priority instead of running as two unrelated jobs
+# (see the prompt below for the exact tier order).
+on:
+  schedule:
+    - cron: '0 15 * * *'
+  workflow_dispatch:
+
+concurrency:
+  # Prevent a manual run from overlapping with the scheduled one (or two
+  # manual runs from overlapping each other).
+  group: daily-claude-run
+  cancel-in-progress: false
+
+jobs:
+  daily-run:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      security-events: read
+      id-token: write
+      actions: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Ensure tracking label exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh label create "claude-attempted" \
+            --repo ${{ github.repository }} \
+            --color "5319e7" \
+            --description "Claude already handled this issue (PR opened, or skipped as too ambiguous). Remove to retry." \
+            --force
+
+      - name: Run Claude Code
+        id: claude
+        uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ github.token }}
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          additional_permissions: |
+            actions: read
+          claude_args: '--allowed-tools "Bash(gh:*),Bash(git:*),Read,Edit,Write,Grep,Glob"'
+          prompt: |
+            You are running as a scheduled, unattended job with no human present. Be conservative:
+            implement real, working fixes/features, and do not refactor or "improve" unrelated code.
+            Every change goes through its own PR for the repo owner to review — with exactly one
+            narrow exception (Tier 1 below) where you may merge automatically, and only when you are
+            genuinely confident. Never push to main directly, and never approve a PR (GitHub blocks
+            self-approval anyway).
+
+            Work through these eight tiers, strictly in order. Fully finish every item in a tier
+            (PR opened/merged, or skipped with a comment/note, plus tracking applied) before starting
+            the next item, and don't begin a lower tier while any higher tier still has unprocessed
+            items:
+
+            **Tier 1 — Critical security vulnerabilities (may auto-merge)**
+            **Tier 2 — High severity vulnerabilities**
+            **Tier 3 — Medium severity vulnerabilities**
+            **Tier 7 — Low severity vulnerabilities** (yes, out of numeric order — see the full list below)
+
+            For tiers 1/2/3/7, list this repo's open code scanning alerts:
+            ```
+            gh api repos/${{ github.repository }}/code-scanning/alerts --paginate \
+              -q '.[] | select(.state=="open")'
+            ```
+            Bucket each by `.rule.security_severity_level` (critical/high/medium/low); an alert with
+            no `security_severity_level` (i.e. `.rule.severity` of `error`/`warning`/`note` instead)
+            counts as Tier 7 (low) if `error`, and is skipped entirely if `warning` or `note` — those
+            are lint-style findings, not worth a standalone security PR.
+
+            For each alert, in its tier: don't just patch the flagged line — pull the SARIF for the
+            most recent analysis (`gh api -H "Accept: application/sarif+json" repos/${{ github.repository }}/code-scanning/analyses/<id>`)
+            and trace the codeFlows to the actual tainted source feeding the sink, then fix the root
+            cause. If it looks like a false positive (e.g. already-sanitized data the tool can't trace
+            through a custom helper), leave it and note why instead of guessing at a change — don't
+            open a PR for it.
+
+            Before starting work on an alert, check whether a PR already exists for it
+            (`gh pr list --state open --search "<rule-id> in:title"` or similar) and skip if so — it's
+            already been handled, don't open a duplicate.
+
+            If you do fix it: create a branch named `security-<rule-id>-<alert-number>-YYYY-MM-DD`
+            (today's date), commit, push, and open a PR stating the alert (rule id + file/line +
+            severity), the root cause, and how you verified the fix. For Tier 1 (critical) only: after
+            opening the PR, you may merge it immediately with `gh pr merge --merge` yourself, but ONLY
+            if every one of these holds —
+              - the vulnerability and fix are a well-understood, standard pattern (e.g. missing output
+                escaping, unsafe URL construction, injection via string concatenation) with a textbook
+                fix, not a judgment call between several valid approaches;
+              - the fix is minimal and localized — it touches only the vulnerable code, nothing else;
+              - you re-read the fixed code path end-to-end and confirmed it actually closes the hole;
+              - for changes to `index.html`, you've confirmed the file is still well-formed (e.g. parse
+                it with Python's `html.parser.HTMLParser` and confirm no errors) after your edit; for
+                changes to a `.github/workflows/*.yml` file, confirmed it's still valid YAML.
+            If any of those don't hold, leave the PR open for human review instead — same as every
+            other tier. Say explicitly in the PR body whether you merged it and why.
+
+            **Tier 4 — Open issues reporting a security vulnerability**
+            **Tier 5 — Bug reports**
+            **Tier 6 — Feature requests** (confirm in-scope first — see below)
+            **Tier 8 — Everything else** (any remaining open issue not covered above)
+
+            For tiers 4/5/6/8, list open issues authored by ${{ github.repository_owner }}:
+            ```
+            gh issue list --repo ${{ github.repository }} --author ${{ github.repository_owner }} \
+              --state open --json number,title,body,labels,createdAt --jq 'sort_by(.createdAt)'
+            ```
+            Skip any issue already labelled `claude-attempted` — it's been handled or judged too
+            ambiguous already; a human removing that label is the signal to retry it. Sort the
+            remainder into:
+              - Tier 4: the issue's title/body clearly describes a security vulnerability (regardless
+                of label) — a real exploit, data leak, injection, etc., not just "this looks unsafe".
+              - Tier 5: labelled `bug` (and not already Tier 4).
+              - Tier 6: labelled `enhancement` (and not already Tier 4/5). Before implementing, fetch
+                this repo's wiki Home page (`gh api repos/${{ github.repository }}/wiki` won't work —
+                instead `git clone` or `curl` `https://raw.githubusercontent.com/wiki/${{ github.repository }}/Home.md`)
+                and read its "What is and isn't this tool?" section. If the request conflicts with
+                that stated scope (e.g. anything resembling gear/inventory tracking rather than cost
+                calculation), do NOT implement it — comment explaining the scope conflict instead, then
+                label and move on.
+              - Tier 8: anything left over.
+
+            For each issue, in its tier: read it fully and decide whether it's implementable with
+            reasonable confidence in what "done" looks like — the same judgment call you'd make if a
+            human asked you to "just implement this issue" with no other context. If it's too vague,
+            too large for one PR, or hinges on a decision only the repo owner can make (a design/infra
+            tradeoff, a security-sensitive default, etc.), don't implement it — comment on the issue
+            explaining what's unclear or what decision is needed instead.
+
+            If you can implement it: create a branch named `claude/issue-<number>-<short-slug>`,
+            implement the change, verify it actually works (read the surrounding code so the change
+            matches existing conventions; sanity-check syntax — e.g. for `index.html`, confirm the
+            HTML/JS is well-formed), commit, and push. Open a PR: title describing the change, a body
+            explaining what and why, including `Fixes #<number>`, and a test-plan checklist of what you
+            verified. Do not merge issue-derived PRs yourself, even in Tier 4 — the Tier 1 auto-merge
+            exception applies only to code-scanning alerts, not issues, since a reported vulnerability
+            needs a human to confirm the report and the fix actually match.
+
+            Either way — PR opened, or skipped with a comment — label the issue:
+            `gh issue edit <number> --repo ${{ github.repository }} --add-label "claude-attempted"`
+
+            If a tier has nothing to do, move on to the next one silently. If every tier is empty, do
+            nothing at all — no branches, no PRs, no comments.
