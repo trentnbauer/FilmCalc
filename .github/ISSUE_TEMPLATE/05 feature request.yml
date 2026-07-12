@@ -1,0 +1,57 @@
+name: "💡 Feature request"
+description: Suggest a new feature or an improvement to an existing one
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe the situation you're in, not just the feature — it often turns out there's a simpler fix.
+      placeholder: "e.g. I shoot 6x7, so 120 rolls give me 10 frames, but the app assumes 12."
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like it to do?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part of the app would this affect?
+      multiple: true
+      options:
+        - Film Lookup tab
+        - Dev Cost tab
+        - Expired tab
+        - Library (film/lab management)
+        - Settings
+        - Import / Export
+        - Favourites / home lab
+        - Themes
+        - Preset data (films/labs YAML)
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: mockup
+    attributes:
+      label: Screenshot, sketch, or mockup (optional)
+      description: |
+        A marked-up screenshot showing roughly where this would live is enormously helpful —
+        even a rough scribble over an existing screen. Drag an image into this box to upload it.
+      placeholder: Paste or drag your image here.
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Anything you've tried as a workaround?
+    validations:
+      required: false
