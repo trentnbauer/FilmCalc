@@ -2,6 +2,12 @@
 # a screenshot-less "the numbers are wrong", which costs a round-trip.
 blank_issues_enabled: false
 contact_links:
+  - name: 🔒 Report a security vulnerability (private)
+    url: https://github.com/trentnbauer/FilmCalc/security/advisories/new
+    about: >
+      Do NOT open a public issue for a security vulnerability — that discloses it to everyone
+      before there's a fix. Use private vulnerability reporting instead, which only the maintainer
+      can see. See SECURITY.md for what's in scope and what to include.
   - name: 🎞️ Add your own films and labs
     url: https://github.com/trentnbauer/FilmCalc#readme
     about: >
