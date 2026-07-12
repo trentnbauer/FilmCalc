@@ -11,8 +11,6 @@ on:
       - "icon.ico"
       - "icon.svg"
       - "apple-touch-icon.png"
-      - "manifest.json"
-      - "sw.js"
       - "options.yaml"
       - "films/**"
       - "labs/**"

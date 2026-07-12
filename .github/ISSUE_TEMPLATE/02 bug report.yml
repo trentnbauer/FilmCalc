@@ -22,7 +22,6 @@ body:
         - Import / Export
         - Favourites (♥ films, ★ labs) or home lab setup
         - Themes / dark mode
-        - Install / PWA / offline
         - Something else
     validations:
       required: true
@@ -77,7 +76,6 @@ body:
         - Desktop — Chrome / Edge
         - Desktop — Firefox
         - Desktop — Safari
-        - Installed as an app (PWA / home screen)
         - Other
     validations:
       required: true

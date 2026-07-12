@@ -75,7 +75,7 @@ jobs:
         # don't belong here.
         run: |
           mkdir -p _site
-          cp index.html favicon.ico icon.ico icon.svg apple-touch-icon.png manifest.json sw.js options.yaml _site/
+          cp index.html favicon.ico icon.ico icon.svg apple-touch-icon.png options.yaml _site/
           cp -r films labs themes _site/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
