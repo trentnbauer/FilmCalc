@@ -1,0 +1,102 @@
+name: "🔒 Security hardening suggestion (non-sensitive)"
+description: Suggest a security improvement that is NOT an exploitable vulnerability
+title: "[Security] "
+labels: ["security"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## ⚠️ Stop — is this an exploitable vulnerability?
+
+        **If you have found a working exploit — XSS, injection, a way to execute script or steal
+        another user's data — do NOT use this form.** Filing it publicly discloses the flaw to
+        everyone before there's a fix.
+
+        👉 **[Report it privately here instead](https://github.com/trentnbauer/FilmCalc/security/advisories/new)**
+        (Security tab → Report a vulnerability). Only the maintainer can see it.
+
+        ---
+
+        **This form is for non-sensitive hardening suggestions only** — improvements that don't
+        hand anyone a working attack by being public. For example:
+
+        - A missing or weak security header / Content Security Policy
+        - An outdated or unpinned CDN dependency (Tailwind, js-yaml)
+        - Over-broad permissions in a GitHub Actions workflow
+        - A Dockerfile or nginx config that could be tightened
+        - A general "this pattern is risky" observation, with no working exploit
+
+        Please read [SECURITY.md](https://github.com/trentnbauer/FilmCalc/blob/main/.github/SECURITY.md)
+        for what's in and out of scope.
+
+  - type: checkboxes
+    id: not-exploit
+    attributes:
+      label: Confirm this is not an exploitable vulnerability
+      description: This is required. If you can't tick it, use private reporting instead.
+      options:
+        - label: I confirm I am **not** disclosing a working exploit, and that posting this publicly does not put users at risk.
+          required: true
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of hardening is this?
+      options:
+        - Missing / weak security header or CSP
+        - Outdated or unpinned dependency
+        - GitHub Actions workflow permissions or injection risk
+        - Dockerfile / nginx configuration
+        - Risky code pattern (no working exploit)
+        - Something else
+    validations:
+      required: true
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What's the concern?
+      description: Describe the weakness and why it matters. Keep it at the "pattern" level — no working payloads.
+    validations:
+      required: true
+
+  - type: input
+    id: where
+    attributes:
+      label: Where is it?
+      description: File, and function or line if you can.
+      placeholder: "e.g. index.html — sanitizeUrl(), or dockerfile, or .github/workflows/deploy.yml"
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested fix
+      description: What would you change? A concrete suggestion (or a link to the relevant guidance) is very welcome.
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot or scanner output (optional)
+      description: |
+        If this came from a scanner, header check, or audit tool, paste the relevant output or attach
+        a screenshot. Drag an image into this box to upload it.
+      placeholder: Paste or drag your screenshot here.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: hosting
+    attributes:
+      label: Which deployment does this apply to?
+      multiple: true
+      options:
+        - GitHub Pages (the public site)
+        - Self-hosted Docker image
+        - The GitHub Actions workflows
+        - The source itself (applies everywhere)
+    validations:
+      required: true
