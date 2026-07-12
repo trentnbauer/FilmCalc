@@ -4,7 +4,6 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="icon" type="image/svg+xml" href="/icon.svg">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-    <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#111827" media="(prefers-color-scheme: dark)">
     <meta charset="UTF-8">
@@ -64,7 +63,7 @@
         /* The "jump to results" button scrolls here — leave room for the sticky tab bar. */
         #labsForThisRollSection { scroll-margin-top: 4.5rem; }
 
-        /* Respect the PWA safe area on notched phones. */
+        /* Respect the safe area on notched phones. */
         body { padding-left: max(1rem, env(safe-area-inset-left)); padding-right: max(1rem, env(safe-area-inset-right)); }
 
         @media (prefers-reduced-motion: reduce) {
@@ -131,32 +130,35 @@
 
         <form id="calculatorForm" class="space-y-6">
 
-            <!-- Global film format — one control, applies everywhere (Film Lookup
-                 cheaper-alternative + Dev Cost ranking). Sits above the tabs so
-                 it's always visible. -->
-            <div class="flex items-center gap-2">
-                <label for="globalFormat" class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide shrink-0">Film Type</label>
+            <!-- Global film format — one control, applies everywhere it's used
+                 (Film Lookup cheaper-alternative, Dev Cost ranking, Library's
+                 film list). Sits above the tabs so it's always visible on
+                 those; hidden on Expired/Settings where it has no effect.
+                 Labelled "Format" to match the same field's name in Library
+                 (physical film size — 35mm/120/etc — not stock/process). -->
+            <div id="globalFormatRow" class="flex items-center gap-2">
+                <label for="globalFormat" class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide shrink-0">Format</label>
                 <select id="globalFormat" data-options="formats" class="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm"></select>
             </div>
 
             <div role="tablist" aria-label="Main sections" class="flex gap-1 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20 bg-white dark:bg-gray-800 -mx-6 md:-mx-8 px-6 md:px-8">
-                <button id="tabFilmBtn" type="button" role="tab" aria-selected="true" class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 transition-colors">
+                <button id="tabFilmBtn" type="button" role="tab" aria-selected="true" aria-controls="filmTabContent" tabindex="0" class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 transition-colors">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m-6 4h6m-6 4h3M5 3h14a1 1 0 011 1v16a1 1 0 01-1 1H5a1 1 0 01-1-1V4a1 1 0 011-1z"/></svg>
                     <span>Film Lookup</span>
                 </button>
-                <button id="tabCheapestBtn" type="button" role="tab" aria-selected="false" class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">
+                <button id="tabCheapestBtn" type="button" role="tab" aria-selected="false" aria-controls="cheapestTabContent" tabindex="-1" class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-2.2 0-4 1.1-4 2.5S9.8 13 12 13s4 1.1 4 2.5-1.8 2.5-4 2.5m0-10V6m0 12v-2m0-10a9 9 0 100 18 9 9 0 000-18z" transform="scale(0.92) translate(1,1)"/></svg>
                     <span>Dev Cost</span>
                 </button>
-                <button id="tabExpiredBtn" type="button" role="tab" aria-selected="false" class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">
+                <button id="tabExpiredBtn" type="button" role="tab" aria-selected="false" aria-controls="expiredTabContent" tabindex="-1" class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     <span>Expired</span>
                 </button>
-                <button id="tabLibraryBtn" type="button" role="tab" aria-selected="false" class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">
+                <button id="tabLibraryBtn" type="button" role="tab" aria-selected="false" aria-controls="libraryTabContent" tabindex="-1" class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
                     <span>Library</span>
                 </button>
-                <button id="tabSettingsBtn" type="button" role="tab" aria-selected="false" class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">
+                <button id="tabSettingsBtn" type="button" role="tab" aria-selected="false" aria-controls="settingsTabContent" tabindex="-1" class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                     <span>Settings</span>
                 </button>
@@ -171,7 +173,7 @@
                 </div>
             </div>
 
-            <div id="filmTabContent" class="space-y-4">
+            <div id="filmTabContent" role="tabpanel" aria-labelledby="tabFilmBtn" class="space-y-4">
                 <p class="text-xs text-gray-500 dark:text-gray-400">Cost out one specific roll by hand — enter the film and target speed, and see which lab is cheapest for it below. To browse and rank saved films by ISO, use the <span class="font-semibold">Dev Cost</span> tab.</p>
 
                 <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg">
@@ -182,7 +184,7 @@
                         <div class="grid grid-cols-2 gap-2">
                             <div>
                                 <label for="boxSpeed" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Box Speed (ISO)</label>
-                                <input type="number" inputmode="numeric" id="boxSpeed" placeholder="400" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                                <input type="number" inputmode="numeric" id="boxSpeed" min="0" placeholder="400" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                                 <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">The film's rated speed (on the box)</p>
                             </div>
                             <div>
@@ -192,16 +194,16 @@
                         </div>
                         <div>
                             <label for="filmCost" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Total Cost incl. Postage ($)</label>
-                            <input type="number" inputmode="decimal" id="filmCost" step="0.01" placeholder="e.g. 24.95" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                            <input type="number" inputmode="decimal" id="filmCost" step="0.01" min="0" placeholder="e.g. 24.95" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                         </div>
                         <div class="grid grid-cols-2 gap-2">
                             <div>
                                 <label for="rolls" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Rolls</label>
-                                <input type="number" inputmode="numeric" id="rolls" placeholder="1" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                                <input type="number" inputmode="numeric" id="rolls" min="1" placeholder="1" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                             </div>
                             <div>
                                 <label for="exposures" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Exposures per Roll</label>
-                                <input type="number" inputmode="numeric" id="exposures" placeholder="36" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                                <input type="number" inputmode="numeric" id="exposures" min="1" placeholder="36" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                                 <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">Dev is a flat per-roll fee, so more exposures = lower cost per photo.</p>
                             </div>
                         </div>
@@ -214,7 +216,7 @@
                         <label for="devSpeed" class="text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide">Shooting at (Target ISO)</label>
                         <button type="button" id="matchBoxSpeedBtn" class="text-[11px] text-indigo-500 dark:text-indigo-400 hover:underline">= box speed</button>
                     </div>
-                    <input type="number" inputmode="numeric" id="devSpeed" placeholder="same as box speed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                    <input type="number" inputmode="numeric" id="devSpeed" min="0" placeholder="same as box speed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                     <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">Only change this if you're pushing or pulling. Box 400 → shooting 800 = +1 stop push.</p>
                     <div id="pushPullWarning" class="mt-1"></div>
                 </div>
@@ -238,11 +240,11 @@
                     <div class="mt-2 grid grid-cols-2 gap-2 text-left">
                         <div>
                             <label for="onceOffFee" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Once-off Fee ($)</label>
-                            <input type="number" inputmode="decimal" id="onceOffFee" step="0.01" placeholder="e.g. shipping" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
+                            <input type="number" inputmode="decimal" id="onceOffFee" step="0.01" min="0" placeholder="e.g. shipping" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
                         </div>
                         <div>
                             <label for="perRollFee" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Per-roll Fee ($)</label>
-                            <input type="number" inputmode="decimal" id="perRollFee" step="0.01" placeholder="e.g. surcharge" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
+                            <input type="number" inputmode="decimal" id="perRollFee" step="0.01" min="0" placeholder="e.g. surcharge" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
                         </div>
                     </div>
                 </div>
@@ -252,7 +254,7 @@
             </div>
 
             <!-- Expired film reference calculator (own tab) -->
-            <div id="expiredTabContent" class="space-y-4 hidden">
+            <div id="expiredTabContent" role="tabpanel" aria-labelledby="tabExpiredBtn" class="space-y-4 hidden">
                 <p class="text-xs text-gray-500 dark:text-gray-400">Estimate how much slower to rate expired film. Older film loses sensitivity over time — roughly one stop per decade, faster if stored warm.</p>
                 <div class="text-xs text-gray-400 dark:text-gray-500 -mt-2 space-y-0.5">
                     <p><span class="font-semibold">Cold stored</span> — in a fridge or freezer.</p>
@@ -262,7 +264,7 @@
                 <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-100 dark:border-yellow-800/30 p-4 space-y-3">
                     <div>
                         <label for="expiredBoxSpeed" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Film Box Speed (ISO)</label>
-                        <input type="number" inputmode="numeric" id="expiredBoxSpeed" placeholder="400" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                        <input type="number" inputmode="numeric" id="expiredBoxSpeed" min="0" placeholder="400" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
@@ -282,7 +284,7 @@
                 </div>
             </div>
 
-            <div id="cheapestTabContent" class="space-y-6 hidden">
+            <div id="cheapestTabContent" role="tabpanel" aria-labelledby="tabCheapestBtn" class="space-y-6 hidden">
                 <div class="flex gap-1 bg-gray-100 dark:bg-gray-700/50 rounded-lg p-1">
                     <button id="cheapestSubFilmBtn" type="button" class="flex-1 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide bg-white dark:bg-gray-800 text-indigo-700 dark:text-indigo-400 shadow-sm transition-colors">Per Film</button>
                     <button id="cheapestSubPhotoBtn" type="button" class="flex-1 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 transition-colors">Per Photo</button>
@@ -293,7 +295,7 @@
                 <div id="cheapestSubIsoContent" class="space-y-6 hidden">
                     <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800/30 p-4 text-left">
                         <label for="isoCalcTargetSpeed" class="block text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">Shooting ISO</label>
-                        <input type="number" inputmode="numeric" id="isoCalcTargetSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                        <input type="number" inputmode="numeric" id="isoCalcTargetSpeed" min="0" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Enter the ISO you're shooting at. Lists every saved film shot at box speed (native), pushed up from a slower film, and pulled down from a faster one — ranked cheapest first, with anything beyond a film's own Max Push/Pull limit flagged in red.</p>
                     </div>
                     <div id="isoCalcResults">
@@ -323,7 +325,7 @@
                 </div>
             </div>
 
-            <div id="libraryTabContent" class="space-y-6 hidden">
+            <div id="libraryTabContent" role="tabpanel" aria-labelledby="tabLibraryBtn" class="space-y-6 hidden">
                 <button id="addWithAiBtn" type="button" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-lg font-medium text-sm shadow-sm">✨ Add with AI — paste a shop or lab page</button>
                 <div class="flex gap-1 bg-gray-100 dark:bg-gray-700/50 rounded-lg p-1">
                     <button id="librarySubFilmsBtn" type="button" class="flex-1 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide bg-white dark:bg-gray-800 text-indigo-700 dark:text-indigo-400 shadow-sm transition-colors">Films</button>
@@ -370,6 +372,7 @@
                     </div>
 
                     <button id="saveLabBtn" type="button" class="w-full bg-green-600 text-white py-2 rounded font-medium hover:bg-green-700">Save as Lab Profile</button>
+                    <p id="saveLabStatus" class="text-xs text-center min-h-[1rem]"></p>
                 </div>
             </div>
 
@@ -388,7 +391,7 @@
                     </div>
                     <div>
                         <label for="libraryBoxSpeed" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Box Speed (ISO)</label>
-                        <input type="number" id="libraryBoxSpeed" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                        <input type="number" inputmode="numeric" id="libraryBoxSpeed" min="0" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                     </div>
                     <div>
                         <label for="libraryMaxPushPull" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Max Push/Pull (stops)</label>
@@ -421,6 +424,7 @@
                     </div>
 
                     <button id="saveFilmBtn" type="button" class="w-full bg-blue-600 text-white py-2 rounded font-medium hover:bg-blue-700">Save as Film Profile</button>
+                    <p id="saveFilmStatus" class="text-xs text-center min-h-[1rem]"></p>
                 </div>
 
                 <p class="text-xs text-gray-400 dark:text-gray-500">Every saved film profile (built-in + custom), grouped by Box Speed. The cheapest cost-per-photo bundle at each ISO is highlighted, with its buy link and pack total if you saved one.</p>
@@ -433,7 +437,7 @@
             </div>
             </div>
 
-            <div id="settingsTabContent" class="space-y-5 hidden">
+            <div id="settingsTabContent" role="tabpanel" aria-labelledby="tabSettingsBtn" class="space-y-5 hidden">
                 <div>
                     <h3 class="font-semibold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest mb-2">Appearance</h3>
                     <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3 mb-3">
@@ -485,16 +489,6 @@
                 </div>
 
                 <div>
-                    <h3 class="font-semibold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest mb-2">App</h3>
-                    <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3">
-                        <h4 class="font-semibold text-gray-700 dark:text-gray-300 text-sm">Install App</h4>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Add this to your home screen or app list for quicker access, like a native app.</p>
-                        <button id="installAppBtn" type="button" class="hidden w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-medium">📲 Install App</button>
-                        <p id="installAppFallback" class="hidden text-xs text-gray-500 dark:text-gray-400">On iPhone/iPad: tap the Share button in Safari, then "Add to Home Screen". On Android/Chrome: use the browser menu → "Install app" or "Add to Home screen".</p>
-                    </div>
-                </div>
-
-                <div>
                     <h3 class="font-semibold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest mb-2">Data</h3>
                     <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-4">
                         <div class="space-y-2">
@@ -533,9 +527,9 @@
         </form>
 
         <div id="importModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 max-w-lg w-full relative max-h-[85vh] overflow-y-auto">
+            <div role="dialog" aria-modal="true" aria-labelledby="importModalTitle" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 max-w-lg w-full relative max-h-[85vh] overflow-y-auto">
                 <button id="importModalCloseBtn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-xl leading-none" aria-label="Close">✕</button>
-                <h2 class="text-lg font-bold mb-4 text-gray-900 dark:text-white">Import Data</h2>
+                <h2 id="importModalTitle" class="text-lg font-bold mb-4 text-gray-900 dark:text-white">Import Data</h2>
 
                 <div class="space-y-2 mb-5">
                     <h3 class="font-semibold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest">From the Project Library</h3>
@@ -559,9 +553,9 @@
 
 
         <div id="aiModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 max-w-lg w-full relative max-h-[85vh] overflow-y-auto">
+            <div role="dialog" aria-modal="true" aria-labelledby="aiModalTitle" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 max-w-lg w-full relative max-h-[85vh] overflow-y-auto">
                 <button id="aiModalCloseBtn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-xl leading-none" aria-label="Close">✕</button>
-                <h2 class="text-lg font-bold mb-1 text-gray-900 dark:text-white">✨ Add with AI</h2>
+                <h2 id="aiModalTitle" class="text-lg font-bold mb-1 text-gray-900 dark:text-white">✨ Add with AI</h2>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Paste a shop or lab page and let an AI build the entry for you. You'll review everything before it's saved.</p>
 
                 <div class="space-y-3">
@@ -646,9 +640,9 @@
 
 
         <div id="setupModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 max-w-lg w-full relative max-h-[85vh] overflow-y-auto">
+            <div role="dialog" aria-modal="true" aria-labelledby="setupModalTitle" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 max-w-lg w-full relative max-h-[85vh] overflow-y-auto">
                 <button id="setupModalCloseBtn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-xl leading-none" aria-label="Close">✕</button>
-                <h2 class="text-lg font-bold mb-1 text-gray-900 dark:text-white">Set Up Your Favourites</h2>
+                <h2 id="setupModalTitle" class="text-lg font-bold mb-1 text-gray-900 dark:text-white">Set Up Your Favourites</h2>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mb-5">Tell FilmCalc which lab you usually use and which film stocks you care about. You can change any of this later.</p>
 
                 <div class="space-y-2 mb-5">
@@ -926,46 +920,6 @@
             localStorage.setItem('devBannerDismissed', '1');
         });
 
-        // ---------- PWA install ----------
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').catch(() => {});
-            });
-        }
-
-        let deferredInstallPrompt = null;
-        const installAppBtn = document.getElementById('installAppBtn');
-        const installAppFallback = document.getElementById('installAppFallback');
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredInstallPrompt = e;
-            installAppBtn.classList.remove('hidden');
-            installAppFallback.classList.add('hidden');
-        });
-
-        window.addEventListener('appinstalled', () => {
-            deferredInstallPrompt = null;
-            installAppBtn.classList.add('hidden');
-        });
-
-        installAppBtn.addEventListener('click', async () => {
-            if (!deferredInstallPrompt) return;
-            deferredInstallPrompt.prompt();
-            await deferredInstallPrompt.userChoice;
-            deferredInstallPrompt = null;
-            installAppBtn.classList.add('hidden');
-        });
-
-        // Browsers without an install prompt (Safari/iOS, some others) — show
-        // manual instructions instead, once the person opens the Settings tab.
-        document.getElementById('tabSettingsBtn').addEventListener('click', () => {
-            if (!deferredInstallPrompt && !window.matchMedia('(display-mode: standalone)').matches) {
-                installAppFallback.classList.remove('hidden');
-            }
-        });
-
-
         // ---------- Expired film shooting-speed recommendation ----------
         // Rule-of-thumb estimate only: well-stored (cold) film loses sensitivity
         // more slowly than film left at room temperature or of unknown history.
@@ -1159,12 +1113,22 @@
         document.getElementById('defaultTierSelect').addEventListener('change', saveDefaultLabPref);
 
         // ---------- Delete all data ----------
+        // Every key this app writes to localStorage — kept as an explicit list
+        // (rather than clearing localStorage wholesale) so this never touches
+        // anything unrelated the browser/page might store. aiKey_* is prefix-
+        // matched since one exists per AI provider.
+        const APP_STORAGE_KEYS = [
+            'filmProfiles', 'labProfiles', 'upgradeThresholdPercent',
+            'globalProcess', 'globalFormat', 'activeTheme', 'theme',
+            'devBannerDismissed', 'currencySymbol', 'defaultLabPref',
+            'pinnedLabResults', 'cheapestSort', 'favouriteLabs', 'favouriteFilms',
+            'hasSeenImportPrompt'
+        ];
         document.getElementById('deleteAllDataBtn').addEventListener('click', () => {
             const confirmed = confirm('This will permanently delete every saved film, lab, and setting from this browser. This cannot be undone. Continue?');
             if (!confirmed) return;
-            localStorage.removeItem('filmProfiles');
-            localStorage.removeItem('labProfiles');
-            localStorage.removeItem('upgradeThresholdPercent');
+            APP_STORAGE_KEYS.forEach(k => localStorage.removeItem(k));
+            Object.keys(localStorage).filter(k => k.startsWith('aiKey_')).forEach(k => localStorage.removeItem(k));
             location.reload();
         });
 
@@ -1179,6 +1143,7 @@
 
         function setTabActive(btn, active) {
             btn.setAttribute('aria-selected', active ? 'true' : 'false');
+            btn.setAttribute('tabindex', active ? '0' : '-1');
             btn.classList.toggle('border-blue-600', active);
             btn.classList.toggle('text-blue-600', active);
             btn.classList.toggle('dark:text-blue-400', active);
@@ -1194,9 +1159,12 @@
                 setTabActive(tabs[key].btn, active);
             });
             document.getElementById('labsForThisRollSection').classList.toggle('hidden', tab !== 'film');
-            // Global Process/Format filters only apply to Film Lookup + Dev Cost.
-            // Global Process/Format filters live on the Dev Cost tab only. Film
-            // Lookup has its own per-entry Process + Format in the Film block.
+            // The global Format control drives Film Lookup, Dev Cost ranking,
+            // and Library's film list/dropdown — hide it on Expired/Settings
+            // where it has no effect.
+            document.getElementById('globalFormatRow').classList.toggle('hidden', tab === 'expired' || tab === 'settings');
+            // Global Process filter only applies to Dev Cost. Film Lookup has
+            // its own per-entry Process in the Film block.
             document.getElementById('globalFilters').classList.toggle('hidden', tab !== 'cheapest');
             if (tab === 'cheapest') refreshActiveCheapestSubTab();
         }
@@ -1262,7 +1230,7 @@
             if (typeof refreshActiveCheapestSubTab === 'function') refreshActiveCheapestSubTab();
             if (typeof updateLabComparison === 'function') updateLabComparison();
             if (typeof updateCheaperAlternative === 'function') updateCheaperAlternative();
-            // Film management list is filtered by Film Type too.
+            // Film management list is filtered by Format too.
             if (typeof updateLibraryFilmDropdown === 'function') updateLibraryFilmDropdown();
         }
         const globalProcessSel = document.getElementById('globalProcess');
@@ -1288,6 +1256,28 @@
 
 
         Object.keys(tabs).forEach(key => tabs[key].btn.addEventListener('click', () => switchTab(key)));
+
+        // Arrow-key navigation across the main tablist, per the standard tabs
+        // pattern — Left/Right (and Home/End) move focus and activate the
+        // newly-focused tab, matching how the roving tabindex above expects
+        // focus to land only on the active tab otherwise.
+        (function wireTabArrowKeys() {
+            const tabKeys = Object.keys(tabs);
+            tabKeys.forEach((key, i) => {
+                tabs[key].btn.addEventListener('keydown', (e) => {
+                    let targetIndex = null;
+                    if (e.key === 'ArrowRight') targetIndex = (i + 1) % tabKeys.length;
+                    else if (e.key === 'ArrowLeft') targetIndex = (i - 1 + tabKeys.length) % tabKeys.length;
+                    else if (e.key === 'Home') targetIndex = 0;
+                    else if (e.key === 'End') targetIndex = tabKeys.length - 1;
+                    if (targetIndex === null) return;
+                    e.preventDefault();
+                    const targetKey = tabKeys[targetIndex];
+                    switchTab(targetKey);
+                    tabs[targetKey].btn.focus();
+                });
+            });
+        })();
 
         // ---------- Default profiles & settings (loaded from config.yaml) ----------
         let defaultFilms = {};
@@ -1399,7 +1389,7 @@
                     <button type="button" class="removeTierBtn absolute top-2 right-2 text-red-400 hover:text-red-600 text-xs font-bold" aria-label="Remove Tier">✕</button>
                     <div>
                         <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Dev Cost ($)</label>
-                        <input type="number" class="tier-devCost w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" value="${devCost}">
+                        <input type="number" inputmode="decimal" min="0" step="0.01" class="tier-devCost w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" value="${devCost}">
                     </div>
                     <div>
                         <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Process</label>
@@ -1421,7 +1411,7 @@
                     <div class="grid grid-cols-2 gap-2 tier-pushpull-fields ${noPushPull ? 'hidden' : ''}">
                         <div>
                             <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Push/Pull Fee ($)</label>
-                            <input type="number" class="tier-pushPullCost w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" value="${pushPullCost}">
+                            <input type="number" inputmode="decimal" min="0" step="0.01" class="tier-pushPullCost w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" value="${pushPullCost}">
                         </div>
                         <div>
                             <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Push/Pull Fee Type</label>
@@ -1509,16 +1499,16 @@
                     <div class="grid grid-cols-2 gap-2 pr-6">
                         <div>
                             <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Rolls</label>
-                            <input type="number" class="bundle-rolls w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" value="${rolls}">
+                            <input type="number" inputmode="numeric" min="1" class="bundle-rolls w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" value="${rolls}">
                         </div>
                         <div>
                             <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Exposures per Roll</label>
-                            <input type="number" class="bundle-exposures w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" value="${exposures}">
+                            <input type="number" inputmode="numeric" min="1" class="bundle-exposures w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" value="${exposures}">
                         </div>
                     </div>
                     <div>
                         <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Total Cost incl. Postage ($)</label>
-                        <input type="number" step="0.01" class="bundle-filmCost w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" value="${filmCost}">
+                        <input type="number" inputmode="decimal" step="0.01" min="0" class="bundle-filmCost w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" value="${filmCost}">
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
@@ -1666,77 +1656,6 @@
             </div>`;
         }
 
-        // Compact one-line answer shown directly under Target Speed — the
-        // cheapest lab for this roll at a glance, without scrolling down to
-        // the full "Labs For This Roll" breakdown. Tapping it jumps there.
-        function renderQuickAnswer(pick, service) {
-            const el = document.getElementById('quickAnswer');
-            if (!el) return;
-            if (!pick) { el.innerHTML = ''; return; }
-            service = service || {};
-
-            const filmName = loadedFilmInfo && loadedFilmInfo.name ? escapeHtml(loadedFilmInfo.name) : '';
-            const filmLine = filmName
-                ? `<span class="block text-sm font-semibold text-green-900 dark:text-green-200">${filmName}</span>`
-                : '';
-
-            // Box speed + how far this target ISO pushes/pulls the loaded film.
-            const boxSpeed = parseInt(document.getElementById('boxSpeed').value) || 0;
-            const devSpeed = parseInt(document.getElementById('devSpeed').value) || 0;
-            const specBits = [];
-            if (boxSpeed) specBits.push(`Box ${boxSpeed} ISO`);
-            if (boxSpeed && devSpeed && boxSpeed !== devSpeed) {
-                const stops = Math.round(Math.abs(Math.log2(devSpeed / boxSpeed)) * 10) / 10;
-                const dir = devSpeed > boxSpeed ? 'push' : 'pull';
-                specBits.push(`${dir} ${stops} stop${stops === 1 ? '' : 's'} → ${devSpeed} ISO`);
-            } else if (boxSpeed && devSpeed) {
-                specBits.push('box speed (no push/pull)');
-            }
-            const specLine = specBits.length
-                ? `<span class="block text-xs text-green-800/80 dark:text-green-300/80 mt-0.5">${specBits.join(' · ')}</span>`
-                : '';
-
-            // Which service constraints produced this pick.
-            const badges = [];
-            if (service.hiRes) badges.push('<span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300">🔍 Hi-Res</span>');
-            if (service.nextDay) badges.push('<span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300">⚡ Next Day</span>');
-            const badgeLine = badges.length && !service.noMatch
-                ? `<span class="flex flex-wrap gap-1 mt-1.5">${badges.join('')}</span>`
-                : '';
-            const noMatchLine = service.noMatch
-                ? `<span class="block text-xs text-amber-700 dark:text-amber-400 mt-1.5">No lab matches those service options — showing the cheapest overall instead.</span>`
-                : '';
-
-            const heading = service.noMatch
-                ? '🏆 Cheapest'
-                : (service.nextDay || service.hiRes) ? '🏆 Cheapest match' : '🏆 Cheapest';
-
-            const buyUrl = loadedFilmInfo ? sanitizeUrl(loadedFilmInfo.buyLink) : '';
-            const buyLabel = loadedFilmInfo && loadedFilmInfo.storeName
-                ? `Buy from ${escapeHtml(loadedFilmInfo.storeName)}`
-                : 'Buy this film';
-            const buyLink = buyUrl
-                ? `<a href="${escapeHtml(buyUrl)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 mt-2 text-sm font-medium text-green-700 dark:text-green-300 hover:underline">🛒 ${buyLabel} ↗</a>`
-                : '';
-
-            el.innerHTML = `<div class="mt-2 rounded-lg bg-green-100 dark:bg-green-900/30 px-3 py-2">
-                <button type="button" id="quickAnswerJumpBtn" class="w-full text-left rounded hover:bg-green-200/60 dark:hover:bg-green-900/40 transition-colors -mx-1 px-1 py-0.5">
-                    <span class="text-xs font-semibold text-green-700 dark:text-green-400 uppercase tracking-wide">${heading}</span>
-                    ${filmLine}
-                    ${specLine}
-                    <span class="block text-xs text-green-800/90 dark:text-green-300/90 mt-0.5">at ${escapeHtml(pick.name)}</span>
-                    <span class="block font-mono text-sm text-green-800 dark:text-green-300 mt-0.5">${CUR()}${pick.costPerPhoto.toFixed(2)}/photo · ${CUR()}${pick.costPerRoll.toFixed(2)}/roll</span>
-                    ${badgeLine}
-                    ${noMatchLine}
-                    <span class="block text-xs text-green-700/70 dark:text-green-400/70 mt-1">Tap for the full lab comparison ↓</span>
-                </button>
-                ${buyLink}
-            </div>`;
-            document.getElementById('quickAnswerJumpBtn').addEventListener('click', () => {
-                document.getElementById('labsForThisRollSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
-            });
-        }
-
         // One-line recap of whatever film is currently costed out (from the
         // dropdown, the Target Speed auto-load, or manual entry), so the
         // manual fields can stay collapsed without hiding the numbers.
@@ -1779,7 +1698,6 @@
                 bestPicksContainer.innerHTML = '';
                 container.innerHTML = '<p class="text-sm text-gray-400 text-center">Fill in Target Speed, Total Cost, Rolls & Exposures to compare labs</p>';
                 renderPinnedResult(null);
-                renderQuickAnswer(null);
                 return;
             }
 
@@ -1803,7 +1721,6 @@
                 bestPicksContainer.innerHTML = '';
                 container.innerHTML = '<p class="text-sm text-gray-400 text-center">Save a lab profile to compare prices</p>';
                 renderPinnedResult(null);
-                renderQuickAnswer(null);
                 return;
             }
 
@@ -1849,7 +1766,6 @@
                 bestPicksContainer.innerHTML = '';
                 container.innerHTML = '<p class="text-sm text-gray-400 text-center">No saved lab has a service tier set to this film\'s process — check Lab Setup, or save a lab profile</p>';
                 renderPinnedResult(null);
-                renderQuickAnswer(null);
                 return;
             }
 
@@ -1914,7 +1830,6 @@
             }
 
             renderPinnedResult(rawCheapestTotal);
-            renderQuickAnswer(rawCheapestTotal, {});
 
             const resultsById = new Map(allResults.map(r => [r.id, r]));
 
@@ -2094,7 +2009,7 @@
                 if (f.hidden) return;
                 if ((parseInt(f.boxSpeed) || 0) !== boxSpeed) return;
                 if ((f.process || 'C41') !== process) return;
-                // Match the global Film Type filter (above the tabs).
+                // Match the global Format filter (above the tabs).
                 if ((f.format || '35mm') !== cheapestFormat) return;
                 const maxPushPull = parseFloat(f.maxPushPull) || 1;
                 if (stopsAbs > maxPushPull) return;
@@ -2340,10 +2255,20 @@
             return [...favs, ...rest];
         }
 
+        // Per Photo is grouped one row per FILM (not per lab), so it's the film
+        // favourite — not the lab favourite — that should pin a row to the top,
+        // the same way Per Lab pins by lab favourite. Mirrors
+        // reorderFavouriteLabsFirst exactly, just keyed on the film identity.
+        function reorderFavouriteFilmsFirst(priceSortedRows) {
+            const favs = priceSortedRows.filter(e => isFavFilm(filmKey(e.filmName, e.boxSpeed, e.format)));
+            const rest = priceSortedRows.filter(e => !isFavFilm(filmKey(e.filmName, e.boxSpeed, e.format)));
+            return [...favs, ...rest];
+        }
+
         // Per Film specifically also has a single configured "default" (home)
         // lab from the Favourites setup — that one takes priority over the
         // ordinary favourite-star pinning above, since it's the lab every other
-        // part of the app (Quick Answer, pinned comparisons) already treats as
+        // part of the app (Film Lookup, pinned comparisons) already treats as
         // "your" lab for cost purposes.
         function reorderDefaultThenFavouriteLabsFirst(priceSortedRows, defaultLabName) {
             const def = defaultLabName ? priceSortedRows.filter(e => e.labName === defaultLabName) : [];
@@ -2651,11 +2576,21 @@
             const chevron = `<span class="text-gray-400 dark:text-gray-500 transition-transform inline-block ${isOpen ? 'rotate-90' : ''}">▸</span>`;
             const fav = isFavLab(entry.labName);
             const star = `<button type="button" class="fav-star text-sm leading-none ${fav ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600'}" data-fav-lab="${escapeHtml(entry.labName)}" title="${fav ? 'Unfavourite lab' : 'Favourite lab'}" onclick="event.stopPropagation()">${fav ? '★' : '☆'}</button>`;
+            // Per Photo is grouped one row per film, so it also gets a ♥ film
+            // star — favouriting the lab shown wouldn't generalise across a
+            // film's other possible lab pairings the way it does elsewhere.
+            const filmFavKeyForRow = filmKey(entry.filmName, entry.boxSpeed, entry.format);
+            const favFilm = isFavFilm(filmFavKeyForRow);
+            const filmStar = keyPrefix === 'photo'
+                ? `<button type="button" class="fav-film-star text-sm leading-none ${favFilm ? 'text-red-400' : 'text-gray-300 dark:text-gray-600'}" data-fav-film="${escapeHtml(filmFavKeyForRow)}" title="${favFilm ? 'Unfavourite film' : 'Favourite film'}" onclick="event.stopPropagation()">${favFilm ? '♥' : '♡'}</button>`
+                : '';
             const pinnedFavNote = pinReason === 'default'
                 ? `<div class="text-[11px] text-indigo-600 dark:text-indigo-400 mt-0.5">🏠 Shown first — this is your default lab</div>`
-                : pinReason
-                    ? `<div class="text-[11px] text-indigo-600 dark:text-indigo-400 mt-0.5">📌 Shown first — this is your favourite lab</div>`
-                    : '';
+                : pinReason === 'favFilm'
+                    ? `<div class="text-[11px] text-indigo-600 dark:text-indigo-400 mt-0.5">📌 Shown first — this is a favourite film</div>`
+                    : pinReason
+                        ? `<div class="text-[11px] text-indigo-600 dark:text-indigo-400 mt-0.5">📌 Shown first — this is your favourite lab</div>`
+                        : '';
 
             const buyUrl = sanitizeUrl(entry.buyLink);
             const buyLink = buyUrl
@@ -2685,7 +2620,7 @@
             return `<div>
                 <div class="matrix-row cursor-pointer px-3 py-2 rounded-lg text-sm ${rowBg}" data-row-key="${escapeHtml(key)}">
                     <div class="flex justify-between items-start gap-2">
-                        <span class="${textColor}">${star} ${isCheapest ? '⭐ ' : ''}${escapeHtml(entry.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(entry.labName)}</span> <span class="text-xs opacity-70">(${entry.boxSpeed} ISO)</span>${hiResBadge}${turnaroundBadge}</span>
+                        <span class="${textColor}">${star}${filmStar} ${isCheapest ? '⭐ ' : ''}${escapeHtml(entry.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(entry.labName)}</span> <span class="text-xs opacity-70">(${entry.boxSpeed} ISO)</span>${hiResBadge}${turnaroundBadge}</span>
                         <span class="font-mono text-right leading-tight ${textColor} whitespace-nowrap flex items-center gap-1.5">
                             <span class="font-semibold">${CUR()}${entry.totalCostPerPhoto.toFixed(2)}/photo</span>
                             ${chevron}
@@ -2703,6 +2638,11 @@
             container.querySelectorAll('.fav-star').forEach(star => star.addEventListener('click', (e) => {
                 e.stopPropagation();
                 toggleFavLab(star.dataset.favLab);
+                rerender();
+            }));
+            container.querySelectorAll('.fav-film-star').forEach(star => star.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleFavFilm(star.dataset.favFilm);
                 rerender();
             }));
             container.querySelectorAll('.matrix-row').forEach(row => row.addEventListener('click', () => {
@@ -2758,7 +2698,9 @@
         }
 
         // Cheapest lab pairing for every film, ranked film-first (which film
-        // stock gives the best value overall) — box speed (native) only.
+        // stock gives the best value overall) — box speed (native) only. Rows
+        // are grouped one-per-film, so favourite FILMS (not labs) pin a row to
+        // the top here — the ♥ star on each row, not the ★ one.
         function updateCostPerPhotoTab() {
             const container = document.getElementById('costPerPhotoResults');
             const nativeMatrix = computeNativeFilmLabMatrix();
@@ -2773,10 +2715,11 @@
                 if (!existing || e.totalCostPerPhoto < existing.totalCostPerPhoto) byFilmNative.set(key, e);
             });
             const priceSortedRows = [...byFilmNative.values()].sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto);
-            const rows = reorderFavouriteLabsFirst(priceSortedRows);
+            const rows = reorderFavouriteFilmsFirst(priceSortedRows);
             container.innerHTML = expandAllControl() + rows.map(e => {
                 const rank = priceSortedRows.indexOf(e);
-                return renderMatrixRow(e, rank, 'photo', isFavLab(e.labName) && rank !== 0);
+                const isFav = isFavFilm(filmKey(e.filmName, e.boxSpeed, e.format));
+                return renderMatrixRow(e, rank, 'photo', isFav && rank !== 0 ? 'favFilm' : null);
             }).join('');
             wireExpandAll(container, updateCostPerPhotoTab);
             wireMatrixRows(container, updateCostPerPhotoTab);
@@ -2956,20 +2899,11 @@
 
         // Dev Speed defaults to Box Speed unless the user has explicitly typed a different value
         let devSpeedOverridden = false;
-        // Effective Max Push/Pull limit used by the warning above — 1 stop by
-        // default, overridden by the loaded film's own limit (Film Setup)
-        // whenever one's been loaded via Quick Calculate.
-        let loadedFilmMaxPushPull = 1;
-        // The film currently costed out in the Film Lookup tab — set whenever a film
-        // is loaded (via the saved-films dropdown or the Target Speed auto-load)
-        // and cleared on manual/blank entry. Used by the Cheapest quick answer so
-        // it can name the stock and offer its buy link, not just the lab + price.
-        let loadedFilmInfo = null; // { name, storeName, buyLink }
-        // True when the currently-loaded film was chosen by the Target Speed
-        // auto-recommender (not manually picked/typed). Lets a later Target Speed
-        // change re-run the recommendation instead of pushing the stuck film past
-        // its limit.
-        let autoLoadedFilm = false;
+        // Effective Max Push/Pull limit used by the warning above. Film Lookup is
+        // manual-entry only (no way to load a saved film's own limit into it), so
+        // this stays the fixed 1-stop default — per-film limits are only honoured
+        // in the Dev Cost → Per ISO view, which knows which film is which.
+        const loadedFilmMaxPushPull = 1;
         const boxSpeedInput = document.getElementById('boxSpeed');
         const devSpeedInput = document.getElementById('devSpeed');
         devSpeedInput.addEventListener('input', () => { devSpeedOverridden = true; });
@@ -3006,7 +2940,7 @@
 
         // Film Library's dropdown lists film stocks only (one entry per name),
         // for editing the whole film and its bundles at once. Filtered to the
-        // selected Film Type so managing a format shows only that format's
+        // selected Format so managing a format shows only that format's
         // stocks; the label includes the format so same-name/speed stocks in
         // different formats are distinguishable.
         function updateLibraryFilmDropdown() {
@@ -3082,9 +3016,6 @@
             document.getElementById('rolls').value = '';
             document.getElementById('exposures').value = '';
             document.getElementById('processSelect').value = 'C41';
-            loadedFilmMaxPushPull = 1;
-            loadedFilmInfo = null;
-            autoLoadedFilm = false;
             updateLabComparison();
             updateCheaperAlternative();
         });
@@ -3113,15 +3044,31 @@
             document.getElementById('libraryFilmName').focus();
         });
 
+        // Inline status line under a Save button — replaces alert() for both
+        // validation errors and success confirmation, so saving doesn't
+        // interrupt with a native dialog. Success clears itself after a beat;
+        // errors stay until the next attempt.
+        let statusTimers = {};
+        function setSaveStatus(elId, message, isError) {
+            const el = document.getElementById(elId);
+            if (!el) return;
+            clearTimeout(statusTimers[elId]);
+            el.textContent = message;
+            el.className = `text-xs text-center min-h-[1rem] ${isError ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`;
+            if (!isError) {
+                statusTimers[elId] = setTimeout(() => { el.textContent = ''; }, 2500);
+            }
+        }
+
         document.getElementById('saveFilmBtn').addEventListener('click', () => {
             const name = document.getElementById('libraryFilmName').value.trim();
-            if (!name) return alert('Enter Film Name');
+            if (!name) return setSaveStatus('saveFilmStatus', 'Enter a film name first.', true);
             const boxSpeed = document.getElementById('libraryBoxSpeed').value;
             const maxPushPull = parseFloat(document.getElementById('libraryMaxPushPull').value) || 1;
             const process = document.getElementById('libraryProcessSelect').value || 'C41';
             const format = document.getElementById('libraryFormatSelect').value || '35mm';
             const bundleBlocks = document.querySelectorAll('#filmBundlesContainer .bundle-block');
-            if (bundleBlocks.length === 0) return alert('Add at least one bundle');
+            if (bundleBlocks.length === 0) return setSaveStatus('saveFilmStatus', 'Add at least one bundle first.', true);
             const bundles = Array.from(bundleBlocks).map(block => ({
                 rolls: block.querySelector('.bundle-rolls').value,
                 exposures: block.querySelector('.bundle-exposures').value,
@@ -3144,13 +3091,14 @@
             localStorage.setItem('filmProfiles', JSON.stringify(saved));
             updateFilmDropdowns();
             document.getElementById('libraryFilmsDropdown').value = key;
+            setSaveStatus('saveFilmStatus', `✓ Saved "${name}"`, false);
         });
 
         document.getElementById('saveLabBtn').addEventListener('click', () => {
             const name = document.getElementById('labName').value.trim();
-            if (!name) return alert('Enter Lab Name');
+            if (!name) return setSaveStatus('saveLabStatus', 'Enter a lab name first.', true);
             const tierBlocks = document.querySelectorAll('#tiersContainer .tier-block');
-            if (tierBlocks.length === 0) return alert('Add at least one service tier');
+            if (tierBlocks.length === 0) return setSaveStatus('saveLabStatus', 'Add at least one service tier first.', true);
             const services = Array.from(tierBlocks).map(block => {
                 const processes = [];
                 block.querySelectorAll('.tier-process-btn').forEach(btn => {
@@ -3179,6 +3127,7 @@
             localStorage.setItem('labProfiles', JSON.stringify(saved));
             updateLabDropdown();
             document.getElementById('savedLabsDropdown').value = name;
+            setSaveStatus('saveLabStatus', `✓ Saved "${name}"`, false);
         });
 
         // ---------- Delete profiles ----------
@@ -3754,6 +3703,14 @@ A lab charging different prices for C41 vs B&W vs E6, or for next-day vs same-we
         document.getElementById('setupModalCloseBtn').addEventListener('click', closeSetupModal);
         document.getElementById('setupDoneBtn').addEventListener('click', closeSetupModal);
         setupModal.addEventListener('click', (e) => { if (e.target === setupModal) closeSetupModal(); });
+
+        // Escape closes whichever of the three modals is currently open.
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape') return;
+            if (!importModal.classList.contains('hidden')) closeImportModal();
+            else if (!document.getElementById('aiModal').classList.contains('hidden')) closeAiModal();
+            else if (!setupModal.classList.contains('hidden')) closeSetupModal();
+        });
 
         function populateSetupTierSelect(labName, selectedIndex) {
             const tierSel = document.getElementById('setupTierSelect');

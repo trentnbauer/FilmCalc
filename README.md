@@ -8,7 +8,10 @@ A lightweight, responsive, mobile-friendly web app for analog photographers to w
 
 ## Learn more
 
-- **[Features](https://github.com/trentnbauer/FilmCalc/wiki/Features)** — full feature list
+- **[Finding the cheapest lab for a roll](https://github.com/trentnbauer/FilmCalc/wiki/Finding-the-Cheapest-Lab)**
+- **[Comparing film stocks and labs](https://github.com/trentnbauer/FilmCalc/wiki/Comparing-Film-Stocks)**
+- **[Building your library](https://github.com/trentnbauer/FilmCalc/wiki/Building-Your-Library)**
+- **[Personalizing FilmCalc](https://github.com/trentnbauer/FilmCalc/wiki/Personalizing-FilmCalc)**
 - **[Self-Hosting](https://github.com/trentnbauer/FilmCalc/wiki/Self-Hosting)** — Docker setup and seeding default profiles via `config.yaml`
 - **[Wiki home](https://github.com/trentnbauer/FilmCalc/wiki)** — everything else
 
