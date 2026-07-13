@@ -667,8 +667,8 @@ function renderSetupFilmList() {
         return `<div class="flex items-center justify-between gap-2 px-2 py-1.5 rounded ${ignored ? 'opacity-50' : ''}">
             <span class="text-sm text-gray-700 dark:text-gray-300 truncate">${escapeHtml(f.name)} <span class="text-xs opacity-70">(${escapeHtml(f.boxSpeed || '?')} ISO · ${escapeHtml(f.format || '35mm')})</span></span>
             <span class="flex items-center gap-1 shrink-0">
-                <button type="button" class="setup-fav-btn text-base leading-none px-1 ${fav ? 'text-red-500' : 'text-gray-300 dark:text-gray-600'}" data-key="${escapeHtml(key)}" title="${fav ? 'Unfavourite' : 'Favourite'}">${fav ? '♥' : '♡'}</button>
-                <button type="button" class="setup-ignore-btn text-base leading-none px-1 ${ignored ? 'text-red-600 font-bold' : 'text-gray-300 dark:text-gray-600'}" data-key="${escapeHtml(key)}" title="${ignored ? 'Un-ignore' : 'Ignore this film'}">✕</button>
+                <button type="button" class="setup-fav-btn text-base leading-none px-1 ${fav ? 'text-red-500' : 'text-gray-300 dark:text-gray-600'}" data-key="${escapeHtml(key)}" title="${fav ? 'Unfavourite' : 'Favourite'}" aria-label="${fav ? 'Unfavourite' : 'Favourite'}">${fav ? '♥' : '♡'}</button>
+                <button type="button" class="setup-ignore-btn text-base leading-none px-1 ${ignored ? 'text-red-600 font-bold' : 'text-gray-300 dark:text-gray-600'}" data-key="${escapeHtml(key)}" title="${ignored ? 'Un-ignore' : 'Ignore this film'}" aria-label="${ignored ? 'Un-ignore' : 'Ignore this film'}">✕</button>
             </span>
         </div>`;
     }).join('');
