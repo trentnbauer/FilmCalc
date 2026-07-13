@@ -117,12 +117,14 @@ jobs:
         # Import modal fetches films/index.json and labs/index.json (and
         # whatever preset files they list) at runtime, so those folders
         # need to be live on the deployed site, not just the Docker image.
+        # js/ is index.html's own calculation engine (issue #61), loaded via
+        # <script src> — also needs to be live, not just present in the repo.
         # Docker/self-hosting files (Dockerfile, compose, README) still
         # don't belong here.
         run: |
           mkdir -p _site
           cp index.html favicon.ico icon.ico icon.svg apple-touch-icon.png options.yaml changelog.json _site/
-          cp -r films labs themes _site/
+          cp -r films labs themes js _site/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

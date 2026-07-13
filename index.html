@@ -797,6 +797,10 @@
 
     </div>
 
+    <!-- Dev Cost / Per ISO calculation engine — plain global functions (no
+         bundler), must load before the main script below since it calls
+         them. See js/dev-cost-calc.js and tests/dev-cost-calc.test.js. -->
+    <script src="js/dev-cost-calc.js"></script>
     <script>
         // ---------- HTML/URL escaping ----------
         // Film names, lab names, store names, and buy links all come from
@@ -835,11 +839,10 @@
         // native ratings). Using name alone as the storage key meant saving
         // "Kodak Foo" at 400 after loading "Kodak Foo" at 200 silently
         // overwrote the 200 entry instead of creating a second one.
-        // Films are keyed by name + box speed + format, so e.g. "Kodak Gold 200"
-        // in 35mm and 120 are distinct entries that don't overwrite each other.
-        function filmKey(name, boxSpeed, format) {
-            return `${name}|${boxSpeed || 0}|${format || '35mm'}`;
-        }
+        // filmKey() now lives in js/dev-cost-calc.js (loaded above, shared
+        // global scope) — films are keyed by name + box speed + format, so
+        // e.g. "Kodak Gold 200" in 35mm and 120 are distinct entries that
+        // don't overwrite each other.
 
         // Toggle helper for the Dev Cost tab's C41/B&W/E6 filter buttons.
         // Toggle helper for a lab service tier's C41/B&W/E6 process buttons.
@@ -914,13 +917,11 @@
             return true;
         }
 
-        // A lab service tier can support more than one process (e.g. a tier
-        // that handles both C41 and E6 at the same price) — a film only
-        // pairs with tiers whose processes include the film's own.
-        function tierMatchesFilmProcess(tier, film) {
-            const processes = Array.isArray(tier.processes) && tier.processes.length > 0 ? tier.processes : ['C41'];
-            return processes.includes(film.process || 'C41');
-        }
+        // tierMatchesFilmProcess() now lives in js/dev-cost-calc.js (loaded
+        // above, shared global scope): a lab service tier can support more
+        // than one process (e.g. a tier that handles both C41 and E6 at the
+        // same price) — a film only pairs with tiers whose processes
+        // include the film's own.
 
         const themeToggle = document.getElementById('themeToggle');
         const lightIcon = document.getElementById('themeToggleLightIcon');
@@ -1573,31 +1574,10 @@
         // ---------- Lab service tiers ----------
         // A lab can have multiple "service tiers" (e.g. standard vs hi-res scan,
         // next-day vs same-week turnaround), each with its own cost/turnaround/hi-res
-        // settings. normalizeLabServices() bridges the current { name, services: [...] }
-        // schema with the older flat single-tier schema so both keep working.
-        function normalizeLabServices(lab) {
-            if (Array.isArray(lab.services) && lab.services.length > 0) {
-                return lab.services.map(s => ({
-                    devCost: parseFloat(s.devCost) || 0,
-                    pushPullCost: parseFloat(s.pushPullCost) || 0,
-                    pushPullType: s.pushPullType || 'per_stop',
-                    turnaroundTime: s.turnaroundTime || 'same_week',
-                    highResScan: !!s.highResScan,
-                    noPushPull: !!s.noPushPull,
-                    processes: Array.isArray(s.processes) && s.processes.length > 0 ? s.processes : [s.process || 'C41']
-                }));
-            }
-            // Legacy flat schema fallback (pre-service-tiers saved profiles)
-            return [{
-                devCost: parseFloat(lab.devCost) || 0,
-                pushPullCost: parseFloat(lab.pushPullCost) || 0,
-                pushPullType: lab.pushPullType || 'per_stop',
-                turnaroundTime: lab.turnaroundTime || 'same_week',
-                highResScan: !!lab.highResScan,
-                noPushPull: !!lab.noPushPull,
-                processes: Array.isArray(lab.processes) && lab.processes.length > 0 ? lab.processes : [lab.process || 'C41']
-            }];
-        }
+        // settings. normalizeLabServices() — bridging the current
+        // { name, services: [...] } schema with the older flat single-tier
+        // schema — now lives in js/dev-cost-calc.js (loaded above, shared
+        // global scope).
 
         function tierBlockHTML(tier) {
             tier = tier || {};
@@ -1688,27 +1668,10 @@
         // A film stock can have multiple "bundles" (e.g. a 3-pack vs. a bulk
         // 10-pack, or 24exp vs 36exp), each with its own rolls/exposures/price/
         // store/buy-link — mirrors the lab service-tier pattern above.
-        // normalizeFilmBundles() bridges the current { name, boxSpeed, bundles: [...] }
-        // schema with the older flat single-bundle schema so both keep working.
-        function normalizeFilmBundles(film) {
-            if (Array.isArray(film.bundles) && film.bundles.length > 0) {
-                return film.bundles.map(b => ({
-                    rolls: parseInt(b.rolls) || 1,
-                    exposures: parseInt(b.exposures) || 36,
-                    filmCost: parseFloat(b.filmCost) || 0,
-                    storeName: b.storeName || '',
-                    buyLink: b.buyLink || ''
-                }));
-            }
-            // Legacy flat schema fallback (pre-bundles saved profiles)
-            return [{
-                rolls: parseInt(film.rolls) || 1,
-                exposures: parseInt(film.exposures) || 36,
-                filmCost: parseFloat(film.filmCost) || 0,
-                storeName: film.storeName || '',
-                buyLink: film.buyLink || ''
-            }];
-        }
+        // normalizeFilmBundles() — bridging the current
+        // { name, boxSpeed, bundles: [...] } schema with the older flat
+        // single-bundle schema — now lives in js/dev-cost-calc.js (loaded
+        // above, shared global scope).
 
         function bundleBlockHTML(bundle) {
             bundle = bundle || {};
@@ -2164,10 +2127,8 @@
         }
 
         // ---------- Film-only cost per photo (used for film-library comparisons) ----------
-        function computeCostPerPhoto(cost, rolls, exposures) {
-            const totalPhotos = (parseInt(rolls) || 0) * (parseInt(exposures) || 0);
-            return totalPhotos > 0 ? (parseFloat(cost) || 0) / totalPhotos : null;
-        }
+        // computeCostPerPhoto() now lives in js/dev-cost-calc.js (loaded
+        // above, shared global scope).
 
         // On the manual Film Lookup tab: after the user enters a film by hand, check
         // whether any saved film at the same box speed is cheaper per-photo on a
@@ -2368,158 +2329,10 @@
             renderDevCostFilterBar();
             refreshActiveCheapestSubTab();
         }));
-        const turnaroundRank = { next_day: 0, same_week: 1, longer: 2 };
-        function sortIsoEntries(entries) {
-            const by = cheapestSort;
-            return entries.slice().sort((a, b) => {
-                if (by === 'turnaround') {
-                    const ta = turnaroundRank[a.turnaroundTime] ?? 9, tb = turnaroundRank[b.turnaroundTime] ?? 9;
-                    if (ta !== tb) return ta - tb;
-                } else if (by === 'scan') {
-                    // Hi-res first, then by price.
-                    if (a.highResScan !== b.highResScan) return a.highResScan ? -1 : 1;
-                }
-                return a.totalCostPerPhoto - b.totalCostPerPhoto;
-            });
-        }
-
-        // Picks which lab+tier candidate represents a film in the Per ISO
-        // list for a given sort mode — mirrors the comparator in
-        // sortIsoEntries so the picked entry and the list order agree.
-        function pickIsoCandidate(candidates, sortMode) {
-            return candidates.reduce((best, c) => {
-                if (!best) return c;
-                if (sortMode === 'turnaround') {
-                    const rb = turnaroundRank[best.turnaroundTime] ?? 9, rc = turnaroundRank[c.turnaroundTime] ?? 9;
-                    if (rc !== rb) return rc < rb ? c : best;
-                } else if (sortMode === 'scan') {
-                    if (c.highResScan !== best.highResScan) return c.highResScan ? c : best;
-                }
-                return c.totalCostPerPhoto < best.totalCostPerPhoto ? c : best;
-            }, null);
-        }
-
-        function computeIsoPriceOptions(targetIso, filters) {
-            filters = filters || {};
-            const matchesFilters = tier => (!filters.turnaround || tier.turnaroundTime === filters.turnaround) && (!filters.hiRes || tier.highResScan);
-            const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
-            const allLabs = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') };
-            const labNames = Object.keys(allLabs).filter(n => !allLabs[n].hidden);
-
-            const native = [];
-            const push = [];
-            const pull = [];
-            if (labNames.length === 0) return { native, push, pull };
-
-            Object.values(allFilms).filter(f => !f.hidden && filmPassesProcessFilter(f)).forEach(f => {
-                const boxSpeed = parseInt(f.boxSpeed) || 0;
-                if (!boxSpeed) return;
-
-                const stopsSigned = Math.round(Math.log2(targetIso / boxSpeed) * 10) / 10;
-                const stopsAbs = Math.abs(stopsSigned);
-                const maxPushPull = parseFloat(f.maxPushPull) || 1;
-                const overLimit = stopsAbs > maxPushPull;
-
-                // Cheapest bundle for this film stock only — same "pick the
-                // best pack size" approach used everywhere else in the app.
-                let bestBundle = null, bestFilmCostPerPhoto = null;
-                normalizeFilmBundles(f).forEach(b => {
-                    const cpp = computeCostPerPhoto(b.filmCost, b.rolls, b.exposures);
-                    if (cpp !== null && cpp > 0 && (bestFilmCostPerPhoto === null || cpp < bestFilmCostPerPhoto)) {
-                        bestFilmCostPerPhoto = cpp;
-                        bestBundle = b;
-                    }
-                });
-                if (!bestBundle || !bestBundle.exposures) return;
-
-                // Every compatible lab+tier combination for this film at this
-                // ISO — kept as a full list (not collapsed to a single
-                // "cheapest" pick up front) so the Turnaround/Scan sort pills
-                // have real data to choose between, plus the cheapest hi-res +
-                // next-day tier, so the Recommended Pick Threshold can suggest
-                // a service upgrade.
-                const candidates = [];
-                let bestHrNd = null;
-                labNames.forEach(labName => {
-                    normalizeLabServices(allLabs[labName])
-                        .filter(tier => !(tier.noPushPull && stopsAbs > 0) && tierMatchesFilmProcess(tier, f) && tierPassesServiceFilter(tier))
-                        .forEach(tier => {
-                            const pushPullFee = stopsAbs > 0
-                                ? ((tier.pushPullType === 'per_stop') ? tier.pushPullCost * stopsAbs : tier.pushPullCost)
-                                : 0;
-                            const devCostPerPhoto = (tier.devCost + pushPullFee) / bestBundle.exposures;
-                            const totalCostPerPhoto = bestFilmCostPerPhoto + devCostPerPhoto;
-                            const candidate = {
-                                filmName: f.name,
-                                labName,
-                                stops: stopsSigned,
-                                overLimit,
-                                maxPushPull,
-                                filmCostPerPhoto: bestFilmCostPerPhoto,
-                                devCostPerPhoto,
-                                totalCostPerPhoto,
-                                highResScan: tier.highResScan,
-                                turnaroundTime: tier.turnaroundTime,
-                                // Extra fields for the expandable breakdown row.
-                                devCostBase: tier.devCost,
-                                pushPullFee,
-                                exposures: bestBundle.exposures,
-                                filmCostPerRoll: bestFilmCostPerPhoto * bestBundle.exposures,
-                                devCostPerRoll: tier.devCost + pushPullFee,
-                                totalCostPerRoll: totalCostPerPhoto * bestBundle.exposures,
-                                buyLink: bestBundle.buyLink,
-                                storeName: bestBundle.storeName
-                            };
-                            if (matchesFilters(tier)) candidates.push(candidate);
-                            if (tier.highResScan && tier.turnaroundTime === 'next_day' &&
-                                (!bestHrNd || totalCostPerPhoto < bestHrNd.totalCostPerPhoto)) {
-                                bestHrNd = candidate;
-                            }
-                        });
-                });
-                if (!candidates.length) return;
-                // Which single lab+tier represents this film in the list
-                // depends on the active sort: Price picks the true cheapest,
-                // but Turnaround/Scan pick the best match for that criterion
-                // (tie-broken by price) — otherwise every film would always
-                // be represented by its cheapest tier regardless of sort,
-                // which is usually the slowest/lowest-res one, making the
-                // Turnaround/Scan pills look like they do nothing.
-                const best = pickIsoCandidate(candidates, cheapestSort);
-                const bestPrice = cheapestSort === 'price' ? best : pickIsoCandidate(candidates, 'price');
-                // If a hi-res + next-day option exists and it's not already the
-                // displayed pick, flag it as a recommended upgrade when it's within
-                // the threshold of the cheapest — same rule as "Labs For This Roll".
-                if (bestHrNd && bestHrNd !== best && bestPrice.totalCostPerPhoto > 0) {
-                    const premium = (bestHrNd.totalCostPerPhoto - bestPrice.totalCostPerPhoto) / bestPrice.totalCostPerPhoto;
-                    const threshold = (parseFloat(localStorage.getItem('upgradeThresholdPercent')) || 4) / 100;
-                    if (premium >= 0 && premium < threshold) {
-                        best.upgrade = { pick: bestHrNd, premium };
-                    }
-                }
-                const bucket = stopsSigned === 0 ? native : (stopsSigned > 0 ? push : pull);
-                bucket.push(best);
-                // The home (default) lab and any favourited labs are pinned
-                // to the top of every Dev Cost view "even if they'd otherwise
-                // be beaten on price" — but Per ISO only ever kept the single
-                // best-across-all-labs pick per film, so a pinned lab that
-                // never happened to win a film outright would silently never
-                // appear at all (no row existed for the pin logic to move).
-                // Add its own pick here whenever it differs from the winner,
-                // so pinning has something to actually surface.
-                const pinnedLabNames = new Set([getDefaultLabPref()?.lab, ...favouriteLabs].filter(Boolean));
-                pinnedLabNames.forEach(labName => {
-                    if (labName === best.labName) return;
-                    const pinnedPick = pickIsoCandidate(candidates.filter(c => c.labName === labName), cheapestSort);
-                    if (pinnedPick) bucket.push(pinnedPick);
-                });
-            });
-
-            native.sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto);
-            push.sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto);
-            pull.sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto);
-            return { native, push, pull };
-        }
+        // sortIsoEntries(), pickIsoCandidate(), and computeIsoPriceOptions()
+        // now live in js/dev-cost-calc.js (loaded above, shared global
+        // scope) — see that file for the calculation logic and
+        // tests/dev-cost-calc.test.js for coverage.
 
         // Tracks which ISO rows are expanded (by a stable key), so re-renders
         // (sort changes, ISO tweaks) preserve open/closed state.
@@ -2553,39 +2366,15 @@
             localStorage.setItem('favouriteLabs', JSON.stringify([...favouriteLabs]));
         }
 
-        // Used by every Dev Cost view (Per Photo / Per Lab / Per Film / Per ISO)
-        // to pin any favourited lab(s) to the top of the displayed list ahead of
-        // price order, so "my lab" doesn't get buried below cheaper options.
-        // Rows stay price/sort-ordered within each group (favourites, then the
-        // rest); the true price rank still comes from priceSortedRows, so the
-        // amber "cheapest" star stays accurate even when a favourite is shown
-        // first.
-        function reorderFavouriteLabsFirst(priceSortedRows) {
-            const favs = priceSortedRows.filter(e => isFavLab(e.labName));
-            const rest = priceSortedRows.filter(e => !isFavLab(e.labName));
-            return [...favs, ...rest];
-        }
-
-        // Per Photo is grouped one row per FILM (not per lab), so it's the film
-        // favourite — not the lab favourite — that should pin a row to the top,
-        // the same way Per Lab pins by lab favourite. Mirrors
-        // reorderFavouriteLabsFirst exactly, just keyed on the film identity.
-        function reorderFavouriteFilmsFirst(priceSortedRows) {
-            const favs = priceSortedRows.filter(e => isFavFilm(filmKey(e.filmName, e.boxSpeed, e.format)));
-            const rest = priceSortedRows.filter(e => !isFavFilm(filmKey(e.filmName, e.boxSpeed, e.format)));
-            return [...favs, ...rest];
-        }
-
-        // Per Film specifically also has a single configured "default" (home)
-        // lab from the Favourites setup — pinned to the top since it's the lab
-        // every other part of the app (Film Lookup, pinned comparisons) already
-        // treats as "your" lab for cost purposes. Per Film uses real pinning
-        // (above) instead of favourite-lab reordering for everything else.
-        function reorderDefaultLabFirst(priceSortedRows, defaultLabName) {
-            const def = defaultLabName ? priceSortedRows.filter(e => e.labName === defaultLabName) : [];
-            const rest = priceSortedRows.filter(e => e.labName !== defaultLabName);
-            return [...def, ...rest];
-        }
+        // reorderFavouriteLabsFirst(), reorderFavouriteFilmsFirst(), and
+        // reorderDefaultLabFirst() now live in js/dev-cost-calc.js (loaded
+        // above, shared global scope) — pin favourited/default labs (or
+        // films, for the Per Photo view) to the top of a Dev Cost view's
+        // price-sorted list, ahead of whatever sort is active, without
+        // disturbing the true price rank used for the "cheapest" marker.
+        // Called with favouriteLabs/favouriteFilms directly now (a Set of
+        // names/keys) instead of the isFavLab/isFavFilm predicates, since
+        // the extracted functions take their dependencies as plain data.
 
         // Shared expand state for all Dev Cost views (Per Film / Photo / Lab /
         // ISO). Keyed by a per-row string so open/closed survives re-renders.
@@ -2681,7 +2470,17 @@
                 return;
             }
 
-            const { native: allNative, push: allPush, pull: allPull } = computeIsoPriceOptions(targetIso);
+            // The home (default) lab and any favourited labs are always
+            // surfaced by computeIsoPriceOptions() even if beaten on price
+            // (see pinnedLabNames in js/dev-cost-calc.js); upgradeThresholdPercent
+            // drives the "recommended upgrade" badge. Both are read from
+            // localStorage here (not inside the pure calc function) and
+            // passed in explicitly.
+            const pinnedLabNames = new Set([getDefaultLabPref()?.lab, ...favouriteLabs].filter(Boolean));
+            const upgradeThresholdPercent = parseFloat(localStorage.getItem('upgradeThresholdPercent')) || 4;
+            const baseOpts = { process: cheapestProcess, format: cheapestFormat, sortMode: cheapestSort, pinnedLabNames, upgradeThresholdPercent };
+
+            const { native: allNative, push: allPush, pull: allPull } = computeIsoPriceOptions(targetIso, allFilms, allLabs, baseOpts);
             // Next Day / Same Week / Hi-Res filters need to pick the cheapest
             // MATCHING tier per film (recomputed here), not just filter the
             // unfiltered cheapest-overall pick above — a film's cheapest lab
@@ -2692,11 +2491,11 @@
             // all" in the messaging below.
             const hasActiveDevCostFilter = devCostFilterTurnaround || devCostFilterHiRes;
             const { native, push, pull } = hasActiveDevCostFilter
-                ? computeIsoPriceOptions(targetIso, { turnaround: devCostFilterTurnaround, hiRes: devCostFilterHiRes })
+                ? computeIsoPriceOptions(targetIso, allFilms, allLabs, { ...baseOpts, turnaround: devCostFilterTurnaround, hiRes: devCostFilterHiRes })
                 : { native: allNative, push: allPush, pull: allPull };
-            const sortedNative = sortIsoEntries(native);
-            const sortedPush = sortIsoEntries(push);
-            const sortedPull = sortIsoEntries(pull);
+            const sortedNative = sortIsoEntries(native, cheapestSort);
+            const sortedPush = sortIsoEntries(push, cheapestSort);
+            const sortedPull = sortIsoEntries(pull, cheapestSort);
 
             // Rank for the ⭐ marker is always by price (cheapest), independent
             // of the chosen sort — so "cheapest" stays meaningful even when
@@ -2709,7 +2508,7 @@
             // of whatever sort is active, without disturbing the true price
             // rank used for the ⭐ "cheapest" marker.
             const defaultLabName = getDefaultLabPref()?.lab || null;
-            const renderBucket = (sorted, all) => reorderDefaultLabFirst(reorderFavouriteLabsFirst(sorted), defaultLabName).map(e => {
+            const renderBucket = (sorted, all) => reorderDefaultLabFirst(reorderFavouriteLabsFirst(sorted, favouriteLabs), defaultLabName).map(e => {
                 const rank = priceRank(all, e);
                 const pinReason = (e.labName === defaultLabName && rank !== 0)
                     ? 'default'
@@ -2795,108 +2594,12 @@
         document.getElementById('isoCalcTargetSpeed').addEventListener('input', updateIsoPriceCalculator);
 
         // ---------- Cost Per Photo / Cost Per Lab (native, no push/pull) ----------
-        // Builds every saved film's cheapest bundle paired with every saved
-        // lab's every service tier, at native box speed (no push/pull fee
-        // involved) — the shared dataset behind both the "Cost Per Photo"
-        // (grouped/ranked by film) and "Cost Per Lab" (grouped/ranked by lab)
-        // tabs below.
-        function computeNativeFilmLabMatrix(filters) {
-            filters = filters || {};
-            const matchesFilters = tier => (!filters.turnaround || tier.turnaroundTime === filters.turnaround) && (!filters.hiRes || tier.highResScan);
-            const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
-            const allLabs = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') };
-            const labNames = Object.keys(allLabs).filter(n => !allLabs[n].hidden);
-
-            const results = [];
-            Object.values(allFilms).filter(f => !f.hidden && filmPassesProcessFilter(f)).forEach(f => {
-                const boxSpeed = parseInt(f.boxSpeed) || 0;
-                if (!boxSpeed) return;
-
-                let bestBundle = null, bestFilmCostPerPhoto = null;
-                normalizeFilmBundles(f).forEach(b => {
-                    const cpp = computeCostPerPhoto(b.filmCost, b.rolls, b.exposures);
-                    if (cpp !== null && cpp > 0 && (bestFilmCostPerPhoto === null || cpp < bestFilmCostPerPhoto)) {
-                        bestFilmCostPerPhoto = cpp;
-                        bestBundle = b;
-                    }
-                });
-                if (!bestBundle || !bestBundle.exposures) return;
-
-                labNames.forEach(labName => {
-                    normalizeLabServices(allLabs[labName]).filter(tier => tierMatchesFilmProcess(tier, f) && tierPassesServiceFilter(tier) && matchesFilters(tier)).forEach(tier => {
-                        const devCostPerPhoto = tier.devCost / bestBundle.exposures;
-                        results.push({
-                            filmName: f.name,
-                            boxSpeed,
-                            format: f.format,
-                            labName,
-                            filmCostPerPhoto: bestFilmCostPerPhoto,
-                            devCostPerPhoto,
-                            totalCostPerPhoto: bestFilmCostPerPhoto + devCostPerPhoto,
-                            highResScan: tier.highResScan,
-                            turnaroundTime: tier.turnaroundTime,
-                            // Breakdown fields for the expandable row (native = no push/pull).
-                            devCostBase: tier.devCost,
-                            pushPullFee: 0,
-                            exposures: bestBundle.exposures,
-                            filmCostPerRoll: bestFilmCostPerPhoto * bestBundle.exposures,
-                            devCostPerRoll: tier.devCost,
-                            totalCostPerRoll: (bestFilmCostPerPhoto + devCostPerPhoto) * bestBundle.exposures,
-                            buyLink: bestBundle.buyLink,
-                            storeName: bestBundle.storeName
-                        });
-                    });
-                });
-            });
-            return results;
-        }
-
-        // Same shape as computeNativeFilmLabMatrix(), but every pairing is
-        // priced with exactly 1 stop of push/pull applied. 1 stop is used as
-        // the representative "cheapest possible push or pull" distance since
-        // this app's fee model (flat fee, or per-stop fee that only grows
-        // with distance) never gets cheaper at a larger push/pull — and push
-        // vs. pull cost exactly the same here, since fees are keyed on stop
-        // magnitude only, not direction.
-        function computeOneStopFilmLabMatrix(filters) {
-            filters = filters || {};
-            const matchesFilters = tier => (!filters.turnaround || tier.turnaroundTime === filters.turnaround) && (!filters.hiRes || tier.highResScan);
-            const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
-            const allLabs = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') };
-            const labNames = Object.keys(allLabs).filter(n => !allLabs[n].hidden);
-
-            const results = [];
-            Object.values(allFilms).filter(f => !f.hidden && filmPassesProcessFilter(f)).forEach(f => {
-                const boxSpeed = parseInt(f.boxSpeed) || 0;
-                if (!boxSpeed) return;
-
-                let bestBundle = null, bestFilmCostPerPhoto = null;
-                normalizeFilmBundles(f).forEach(b => {
-                    const cpp = computeCostPerPhoto(b.filmCost, b.rolls, b.exposures);
-                    if (cpp !== null && cpp > 0 && (bestFilmCostPerPhoto === null || cpp < bestFilmCostPerPhoto)) {
-                        bestFilmCostPerPhoto = cpp;
-                        bestBundle = b;
-                    }
-                });
-                if (!bestBundle || !bestBundle.exposures) return;
-
-                labNames.forEach(labName => {
-                    normalizeLabServices(allLabs[labName])
-                        .filter(tier => !tier.noPushPull && tierMatchesFilmProcess(tier, f) && tierPassesServiceFilter(tier) && matchesFilters(tier))
-                        .forEach(tier => {
-                            const devCostPerPhoto = (tier.devCost + tier.pushPullCost) / bestBundle.exposures;
-                            results.push({
-                                filmName: f.name,
-                                labName,
-                                filmCostPerPhoto: bestFilmCostPerPhoto,
-                                devCostPerPhoto,
-                                totalCostPerPhoto: bestFilmCostPerPhoto + devCostPerPhoto
-                            });
-                        });
-                });
-            });
-            return results;
-        }
+        // computeNativeFilmLabMatrix() and computeOneStopFilmLabMatrix() now
+        // live in js/dev-cost-calc.js (loaded above, shared global scope) —
+        // the shared datasets behind the "Cost Per Photo" (grouped/ranked by
+        // film) and "Cost Per Lab" (grouped/ranked by lab) tabs below.
+        // computeOneStopFilmLabMatrix() is the same shape, but every pairing
+        // is priced with exactly 1 stop of push/pull applied.
 
         // ---------- Pinned Dev Cost results (Per Film view) ----------
         // Unlike the ★ favourite-lab reorder used elsewhere, this snapshots the
@@ -3101,14 +2804,17 @@
         // the top here — the ♥ star on each row, not the ★ one.
         function updateCostPerPhotoTab() {
             const container = document.getElementById('costPerPhotoResults');
-            const allNativeMatrix = computeNativeFilmLabMatrix();
+            const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
+            const allLabs = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') };
+            const baseOpts = { process: cheapestProcess, format: cheapestFormat };
+            const allNativeMatrix = computeNativeFilmLabMatrix(allFilms, allLabs, baseOpts);
             if (allNativeMatrix.length === 0) {
                 container.innerHTML = '<p class="text-sm text-gray-400 text-center">Save at least one film and one lab profile to compare</p>';
                 return;
             }
-            const devCostFilters = { turnaround: devCostFilterTurnaround, hiRes: devCostFilterHiRes };
+            const devCostFilters = { ...baseOpts, turnaround: devCostFilterTurnaround, hiRes: devCostFilterHiRes };
             const hasActiveDevCostFilter = devCostFilterTurnaround || devCostFilterHiRes;
-            const nativeMatrix = hasActiveDevCostFilter ? computeNativeFilmLabMatrix(devCostFilters) : allNativeMatrix;
+            const nativeMatrix = hasActiveDevCostFilter ? computeNativeFilmLabMatrix(allFilms, allLabs, devCostFilters) : allNativeMatrix;
             if (nativeMatrix.length === 0) {
                 container.innerHTML = '<p class="text-sm text-gray-400 text-center">No options match the current filters</p>';
                 return;
@@ -3120,8 +2826,8 @@
                 if (!existing || e.totalCostPerPhoto < existing.totalCostPerPhoto) byFilmNative.set(key, e);
             });
             const priceSortedRows = [...byFilmNative.values()].sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto);
-            const rows = reorderFavouriteFilmsFirst(priceSortedRows);
-            const oneStopMatrix = hasActiveDevCostFilter ? computeOneStopFilmLabMatrix(devCostFilters) : computeOneStopFilmLabMatrix();
+            const rows = reorderFavouriteFilmsFirst(priceSortedRows, favouriteFilms);
+            const oneStopMatrix = hasActiveDevCostFilter ? computeOneStopFilmLabMatrix(allFilms, allLabs, devCostFilters) : computeOneStopFilmLabMatrix(allFilms, allLabs, baseOpts);
             container.innerHTML = expandAllControl() + rows.map(e => {
                 const rank = priceSortedRows.indexOf(e);
                 const isFav = isFavFilm(filmKey(e.filmName, e.boxSpeed, e.format));
@@ -3138,14 +2844,17 @@
         // starred. Rows expand to a full cost breakdown.
         function updateCostPerLabTab() {
             const container = document.getElementById('costPerLabResults');
-            const allNativeMatrix = computeNativeFilmLabMatrix();
+            const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
+            const allLabs = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') };
+            const baseOpts = { process: cheapestProcess, format: cheapestFormat };
+            const allNativeMatrix = computeNativeFilmLabMatrix(allFilms, allLabs, baseOpts);
             if (allNativeMatrix.length === 0) {
                 container.innerHTML = '<p class="text-sm text-gray-400 text-center">Save at least one film and one lab profile to compare</p>';
                 return;
             }
-            const devCostFilters = { turnaround: devCostFilterTurnaround, hiRes: devCostFilterHiRes };
+            const devCostFilters = { ...baseOpts, turnaround: devCostFilterTurnaround, hiRes: devCostFilterHiRes };
             const hasActiveDevCostFilter = devCostFilterTurnaround || devCostFilterHiRes;
-            const nativeMatrix = hasActiveDevCostFilter ? computeNativeFilmLabMatrix(devCostFilters) : allNativeMatrix;
+            const nativeMatrix = hasActiveDevCostFilter ? computeNativeFilmLabMatrix(allFilms, allLabs, devCostFilters) : allNativeMatrix;
             if (nativeMatrix.length === 0) {
                 container.innerHTML = '<p class="text-sm text-gray-400 text-center">No options match the current filters</p>';
                 return;
@@ -3156,8 +2865,8 @@
                 if (!existing || e.totalCostPerPhoto < existing.totalCostPerPhoto) byLabNative.set(e.labName, e);
             });
             const priceSortedRows = [...byLabNative.values()].sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto);
-            const rows = reorderFavouriteLabsFirst(priceSortedRows);
-            const oneStopMatrix = hasActiveDevCostFilter ? computeOneStopFilmLabMatrix(devCostFilters) : computeOneStopFilmLabMatrix();
+            const rows = reorderFavouriteLabsFirst(priceSortedRows, favouriteLabs);
+            const oneStopMatrix = hasActiveDevCostFilter ? computeOneStopFilmLabMatrix(allFilms, allLabs, devCostFilters) : computeOneStopFilmLabMatrix(allFilms, allLabs, baseOpts);
             container.innerHTML = expandAllControl() + rows.map(e => {
                 const rank = priceSortedRows.indexOf(e);
                 const rowHtml = renderMatrixRow(e, rank, 'lab', isFavLab(e.labName) && rank !== 0);
@@ -3274,6 +2983,7 @@
             }
 
             const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
+            const allLabs = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') };
             const film = allFilms[selectedKey];
             if (!film) {
                 container.innerHTML = pinnedBlock + '<p class="text-sm text-gray-400 text-center">Pick a film to compare labs</p>';
@@ -3282,7 +2992,7 @@
                 return;
             }
 
-            const priceSortedRows = computeNativeFilmLabMatrix({ turnaround: devCostFilterTurnaround, hiRes: devCostFilterHiRes })
+            const priceSortedRows = computeNativeFilmLabMatrix(allFilms, allLabs, { process: cheapestProcess, format: cheapestFormat, turnaround: devCostFilterTurnaround, hiRes: devCostFilterHiRes })
                 .filter(e => filmKey(e.filmName, e.boxSpeed, e.format) === selectedKey)
                 .sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto);
 

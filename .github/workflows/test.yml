@@ -1,0 +1,32 @@
+name: Dev Cost calc tests
+
+# Runs the node:test suite covering js/dev-cost-calc.js — the pure
+# calculation engine extracted from index.html (issue #61). Scoped to the
+# files that can actually affect it, so unrelated PRs (docs, workflows,
+# theme YAML) don't pay for a Node setup they don't need.
+on:
+  pull_request:
+    paths:
+      - "js/**"
+      - "tests/**"
+  push:
+    branches: [main]
+    paths:
+      - "js/**"
+      - "tests/**"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run tests
+        run: node --test tests/
