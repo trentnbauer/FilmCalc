@@ -23,6 +23,7 @@ const {
     computeIsoPriceOptions,
     computeNativeFilmLabMatrix,
     computeOneStopFilmLabMatrix,
+    findHiResFastestUpgrade,
     reorderFavouriteLabsFirst,
     reorderFavouriteFilmsFirst,
     reorderDefaultLabFirst
@@ -276,4 +277,40 @@ test('reorderDefaultLabFirst pins the named lab ahead, others keep their order',
     assert.deepEqual(reorderDefaultLabFirst(rows, 'B').map(r => r.labName), ['B', 'A', 'C']);
     // A null/unset default lab is a no-op.
     assert.deepEqual(reorderDefaultLabFirst(rows, null).map(r => r.labName), ['A', 'B', 'C']);
+});
+
+// ---------- findHiResFastestUpgrade (issue: apply the "cheapest hi-res +
+// fastest" recommendation from Film Lookup to Lab Costs' Per Film/Photo) ----------
+
+test('findHiResFastestUpgrade recommends a hi-res+next-day tier within threshold', () => {
+    const cheapest = { labName: 'Cheap Lab', totalCostPerPhoto: 0.78, highResScan: false, turnaroundTime: 'same_week' };
+    // 0.81 is (0.81-0.78)/0.78 = 3.85% more — within a 4% threshold.
+    const hiResFastest = { labName: 'Fast Lab', totalCostPerPhoto: 0.81, highResScan: true, turnaroundTime: 'next_day' };
+    const candidates = [cheapest, hiResFastest, { labName: 'Other', totalCostPerPhoto: 0.90, highResScan: false, turnaroundTime: 'same_week' }];
+    const upgrade = findHiResFastestUpgrade(candidates, cheapest, 4);
+    assert.ok(upgrade, 'expected an upgrade recommendation within threshold');
+    assert.equal(upgrade.pick.labName, 'Fast Lab');
+    assert.equal(upgrade.baselineCostPerPhoto, 0.78);
+    assert.ok(Math.abs(upgrade.premium - (0.81 - 0.78) / 0.78) < 1e-9);
+});
+
+test('findHiResFastestUpgrade returns undefined beyond the threshold', () => {
+    const cheapest = { labName: 'Cheap Lab', totalCostPerPhoto: 0.78, highResScan: false, turnaroundTime: 'same_week' };
+    // 1.10 is ~41% more — well outside a 4% threshold.
+    const hiResFastest = { labName: 'Fast Lab', totalCostPerPhoto: 1.10, highResScan: true, turnaroundTime: 'next_day' };
+    const upgrade = findHiResFastestUpgrade([cheapest, hiResFastest], cheapest, 4);
+    assert.equal(upgrade, undefined);
+});
+
+test('findHiResFastestUpgrade returns undefined when the cheapest is already hi-res+next-day', () => {
+    const cheapest = { labName: 'Cheap Lab', totalCostPerPhoto: 0.78, highResScan: true, turnaroundTime: 'next_day' };
+    const upgrade = findHiResFastestUpgrade([cheapest], cheapest, 4);
+    assert.equal(upgrade, undefined);
+});
+
+test('findHiResFastestUpgrade returns undefined when no candidate is hi-res+next-day', () => {
+    const cheapest = { labName: 'Cheap Lab', totalCostPerPhoto: 0.78, highResScan: false, turnaroundTime: 'same_week' };
+    const other = { labName: 'Other', totalCostPerPhoto: 0.85, highResScan: true, turnaroundTime: 'same_week' };
+    const upgrade = findHiResFastestUpgrade([cheapest, other], cheapest, 4);
+    assert.equal(upgrade, undefined);
 });
