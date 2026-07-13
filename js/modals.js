@@ -609,7 +609,7 @@ document.addEventListener('keydown', (e) => {
 function populateSetupTierSelect(labName, selectedIndex) {
     const tierSel = document.getElementById('setupTierSelect');
     if (!labName) { tierSel.classList.add('hidden'); tierSel.innerHTML = ''; return; }
-    const allLabs = { ...defaultLabs, ...readJSON('labProfiles', {}) };
+    const allLabs = getAllLabs();
     const lab = allLabs[labName];
     if (!lab) { tierSel.classList.add('hidden'); tierSel.innerHTML = ''; return; }
     const tiers = normalizeLabServices(lab);
@@ -620,7 +620,7 @@ function populateSetupTierSelect(labName, selectedIndex) {
 function populateSetupLabSelect() {
     const labSel = document.getElementById('setupLabSelect');
     const pref = getDefaultLabPref();
-    const allLabs = { ...defaultLabs, ...readJSON('labProfiles', {}) };
+    const allLabs = getAllLabs();
     const names = Object.keys(allLabs).filter(n => !allLabs[n].hidden);
     labSel.innerHTML = '<option value="">None (always show cheapest)</option>' + names.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
     if (pref && pref.lab && names.includes(pref.lab)) {
