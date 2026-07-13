@@ -446,20 +446,21 @@
             </div>
 
             <div id="cheapestFilmsTabContent" class="space-y-6">
-                <div class="theme-section-bg bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800/30">
-                    <label class="theme-section-text block text-sm font-semibold text-blue-800 dark:text-blue-400 mb-2 uppercase tracking-wide">Film Management</label>
-                    <!-- The global Format row (#globalFormatRow) is moved here by
-                         switchTab() while the Library tab is active, instead of
-                         sitting in the page header — it's what "Load a saved
-                         film" and every save below are scoped to. -->
-                    <div id="filmManagementFormatSlot" class="mb-2"></div>
-                    <select id="libraryFilmsDropdown" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 mb-2 text-sm"><option value="">-- Load a saved film --</option></select>
-                    <button id="deleteFilmBtn" type="button" class="w-full border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 py-1.5 rounded text-sm font-semibold transition-colors">Delete Selected Film</button>
-                </div>
-
                 <div class="theme-section-bg bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg space-y-3">
                     <h2 class="theme-section-text font-semibold text-blue-800 dark:text-blue-400 text-sm uppercase tracking-wide">Film Setup</h2>
-                    <p class="text-xs text-gray-400 dark:text-gray-500 -mt-2">Saves under whichever Format is selected above.</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 -mt-2">Narrow the list and choose what new/edited films save as with Format and Process below — issue #116 moved both to the top so "Load a saved film" isn't every film at once.</p>
+                    <!-- The global Format row (#globalFormatRow) is moved here by
+                         switchTab() while the Library tab is active, instead of
+                         sitting in the page header. -->
+                    <div id="filmManagementFormatSlot"></div>
+                    <div>
+                        <label for="libraryProcessFilter" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Process</label>
+                        <select id="libraryProcessFilter" data-options="processes" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm"></select>
+                    </div>
+                    <div>
+                        <select id="libraryFilmsDropdown" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 mb-2 text-sm"><option value="">-- Load a saved film --</option></select>
+                        <button id="deleteFilmBtn" type="button" class="w-full border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 py-1.5 rounded text-sm font-semibold transition-colors">Delete Selected Film</button>
+                    </div>
                     <div>
                         <label for="libraryFilmName" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Film Name</label>
                         <input type="text" id="libraryFilmName" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" placeholder="e.g. Kodak Gold 200">
@@ -472,12 +473,6 @@
                         <label for="libraryMaxPushPull" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Max Push/Pull (stops)</label>
                         <input type="number" id="libraryMaxPushPull" min="0" step="0.5" value="1" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
                         <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Applies to the whole film stock, not individual bundles. The Film Lookup tab warns if this film is loaded and pushed/pulled further than this.</p>
-                    </div>
-
-                    <div>
-                        <label for="libraryProcessSelect" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Process</label>
-                        <select id="libraryProcessSelect" data-options="processes" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600"></select>
-                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Only lab service tiers set to the same process are considered for this film.</p>
                     </div>
 
                     <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
@@ -1006,6 +1001,12 @@
         // one format — so it defaults to the first format.
         let cheapestProcess = localStorage.getItem('globalProcess') || 'ALL';
         let cheapestFormat = localStorage.getItem('globalFormat') || '35mm';
+        // Library's own Process filter (issue #116) — deliberately separate
+        // from cheapestProcess above: that one has an "ALL" option (a Dev
+        // Cost browsing filter), but Library's list narrows AND decides what
+        // a new/edited film saves as, so — like Format — it's always one
+        // concrete process, never "ALL".
+        let libraryProcess = localStorage.getItem('libraryProcess') || 'C41';
         function filmPassesProcessFilter(f) {
             if (cheapestProcess !== 'ALL' && (f.process || 'C41') !== cheapestProcess) return false;
             if ((f.format || '35mm') !== cheapestFormat) return false;
@@ -1345,6 +1346,21 @@
             localStorage.setItem('globalFormat', cheapestFormat);
             applyGlobalFilterChange();
         });
+
+        // Library's own Process filter (issue #116) — narrows "Load a saved
+        // film" and decides what a new/edited film gets saved as, same role
+        // Format already plays there. setLibraryProcess() is also called from
+        // "Save to Library" on the Film tab, to carry that quick-calc's
+        // process across so the saved-under list still shows the new film.
+        const libraryProcessSel = document.getElementById('libraryProcessFilter');
+        libraryProcessSel.value = libraryProcess;
+        function setLibraryProcess(value) {
+            libraryProcess = value;
+            libraryProcessSel.value = value;
+            localStorage.setItem('libraryProcess', libraryProcess);
+            updateLibraryFilmDropdown();
+        }
+        libraryProcessSel.addEventListener('change', () => setLibraryProcess(libraryProcessSel.value));
 
         // Service preference (Next Day / Hi-Res) is no longer a manual filter —
         // the Recommended Pick Threshold surfaces the best-value hi-res/next-day
@@ -1822,12 +1838,14 @@
         // for editing the whole film and its bundles at once. Filtered to the
         // selected Format so managing a format shows only that format's
         // stocks; the label includes the format so same-name/speed stocks in
-        // different formats are distinguishable.
+        // different formats are distinguishable. Also filtered by Process
+        // (issue #116) for the same reason — otherwise it's every saved film
+        // stock at once, which gets unwieldy fast.
         function updateLibraryFilmDropdown() {
             updateDropdown(
                 'libraryFilmsDropdown', defaultFilms, 'filmProfiles',
                 f => `${f.name} (${f.boxSpeed || '?'} ISO · ${f.format || '35mm'})`,
-                f => (f.format || '35mm') === cheapestFormat
+                f => (f.format || '35mm') === cheapestFormat && (f.process || 'C41') === libraryProcess
             );
         }
 
@@ -1847,7 +1865,6 @@
                 document.getElementById('libraryFilmName').value = '';
                 document.getElementById('libraryBoxSpeed').value = '';
                 document.getElementById('libraryMaxPushPull').value = '1';
-                document.getElementById('libraryProcessSelect').value = 'C41';
                 document.getElementById('filmHiddenCheckbox').checked = false;
                 resetBundles([{}]);
                 return;
@@ -1855,7 +1872,6 @@
             document.getElementById('libraryFilmName').value = film.name;
             document.getElementById('libraryBoxSpeed').value = film.boxSpeed || '';
             document.getElementById('libraryMaxPushPull').value = film.maxPushPull ?? 1;
-            document.getElementById('libraryProcessSelect').value = film.process || 'C41';
             document.getElementById('filmHiddenCheckbox').checked = !!film.hidden;
             resetBundles(normalizeFilmBundles(film));
         });
@@ -2001,11 +2017,11 @@
             switchTab('library');
             switchLibrarySubTab('films');
 
+            setLibraryProcess(document.getElementById('processSelect').value);
             document.getElementById('libraryFilmsDropdown').value = '';
             document.getElementById('libraryFilmName').value = '';
             document.getElementById('libraryBoxSpeed').value = boxSpeed || '';
             document.getElementById('libraryMaxPushPull').value = '1';
-            document.getElementById('libraryProcessSelect').value = document.getElementById('processSelect').value;
             resetBundles([{ rolls, exposures, filmCost, storeName: '', buyLink: '' }]);
             document.getElementById('libraryFilmName').focus();
         });
@@ -2031,7 +2047,7 @@
             if (!name) return setSaveStatus('saveFilmStatus', 'Enter a film name first.', true);
             const boxSpeed = document.getElementById('libraryBoxSpeed').value;
             const maxPushPull = parseFloat(document.getElementById('libraryMaxPushPull').value) || 1;
-            const process = document.getElementById('libraryProcessSelect').value || 'C41';
+            const process = libraryProcess || 'C41';
             const format = cheapestFormat || '35mm';
             const bundleBlocks = document.querySelectorAll('#filmBundlesContainer .bundle-block');
             if (bundleBlocks.length === 0) return setSaveStatus('saveFilmStatus', 'Add at least one bundle first.', true);
@@ -2270,6 +2286,12 @@
                 gf.value = [...gf.options].some(o => o.value === cheapestFormat) ? cheapestFormat : (FORMAT_OPTIONS[0]?.value || '35mm');
                 cheapestFormat = gf.value;
                 localStorage.setItem('globalFormat', cheapestFormat);
+            }
+            const lp = document.getElementById('libraryProcessFilter');
+            if (lp) {
+                lp.value = [...lp.options].some(o => o.value === libraryProcess) ? libraryProcess : (PROCESS_OPTIONS[0]?.value || 'C41');
+                libraryProcess = lp.value;
+                localStorage.setItem('libraryProcess', libraryProcess);
             }
             await loadDefaults();
             applyUrlParams();
