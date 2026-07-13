@@ -28,7 +28,7 @@ function renderUpgradeNote(upgrade) {
     const costPhrase = premium < 0.001
         ? `costs the same (${CUR()}${pick.totalCostPerPhoto.toFixed(2)}/photo)`
         : `is only ${(premium * 100).toFixed(1)}% more (${CUR()}${pick.totalCostPerPhoto.toFixed(2)} vs ${CUR()}${baselineCostPerPhoto.toFixed(2)}/photo)`;
-    return `<div class="text-[11px] theme-recommended-text text-amber-700 dark:text-amber-400 mt-0.5">💡 Cheapest Hi-Res + Fastest ${costPhrase} — ${escapeHtml(pick.labName)}, Hi-Res, Next Day</div>`;
+    return `<div class="text-xs theme-recommended-text text-amber-700 dark:text-amber-400 mt-0.5">💡 Cheapest Hi-Res + Fastest ${costPhrase} — ${escapeHtml(pick.labName)}, Hi-Res, Next Day</div>`;
 }
 
 // ---------- Dev Cost tab's Per ISO / Per Photo / Per Film / Per Lab sub-nav ----------
@@ -140,11 +140,11 @@ function renderRowFooterLinks(entry) {
     const locality = bundleLocalityLabel(entry);
     const localityBadge = locality ? ` <span class="text-amber-600 dark:text-amber-400" title="This price is only valid in ${escapeHtml(locality.replace(/ only$/, ''))}">(${escapeHtml(locality)})</span>` : '';
     const buyLink = buyUrl
-        ? `<a href="${escapeHtml(buyUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-[11px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:underline">🛒 ${entry.storeName ? 'Buy from ' + escapeHtml(entry.storeName) : 'Buy film'} ↗</a>${localityBadge}`
+        ? `<a href="${escapeHtml(buyUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-xs px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:underline">🛒 ${entry.storeName ? 'Buy from ' + escapeHtml(entry.storeName) : 'Buy film'} ↗</a>${localityBadge}`
         : '';
     const dirUrl = labDirectionsUrl(entry.labName);
     const directionsLink = dirUrl
-        ? `<a href="${escapeHtml(dirUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-[11px] px-1.5 py-0.5 rounded bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:underline">📍 Directions ↗</a>`
+        ? `<a href="${escapeHtml(dirUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-xs px-1.5 py-0.5 rounded bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:underline">📍 Directions ↗</a>`
         : '';
     return (buyLink || directionsLink)
         ? `<div class="pt-1.5 flex justify-between items-center gap-2"><span>${buyLink}</span><span>${directionsLink}</span></div>`
@@ -182,9 +182,9 @@ function renderIsoRow(entry, rank, pinReason) {
     const fav = isFavLab(entry.labName);
     const star = `<button type="button" class="fav-star text-sm leading-none" data-fav-lab="${escapeHtml(entry.labName)}" title="${fav ? 'Unfavourite lab' : 'Favourite lab'}" aria-label="${fav ? 'Unfavourite lab' : 'Favourite lab'}" onclick="event.stopPropagation()"><span class="${fav ? 'theme-favourite-text text-amber-400' : 'text-gray-300 dark:text-gray-600'}">${fav ? '★' : '☆'}</span></button>`;
     const pinnedFavNote = pinReason === 'default'
-        ? `<div class="text-[11px] theme-default-lab-text text-indigo-600 dark:text-indigo-400 mt-0.5">🏠 Shown first — this is your default lab</div>`
+        ? `<div class="text-xs theme-default-lab-text text-indigo-600 dark:text-indigo-400 mt-0.5">🏠 Shown first — this is your default lab</div>`
         : pinReason
-            ? `<div class="text-[11px] theme-favourite-text text-indigo-600 dark:text-indigo-400 mt-0.5">📌 Shown first — this is your favourite lab</div>`
+            ? `<div class="text-xs theme-favourite-text text-indigo-600 dark:text-indigo-400 mt-0.5">📌 Shown first — this is your favourite lab</div>`
             : '';
     const upgradeNote = renderUpgradeNote(entry.upgrade);
 
@@ -200,7 +200,7 @@ function renderIsoRow(entry, rank, pinReason) {
                 <span class="font-mono text-right leading-tight ${semanticRowText} ${textColor} whitespace-nowrap flex items-center gap-1.5">
                     <span>
                         <span class="font-semibold block">${CUR()}${entry.totalCostPerPhoto.toFixed(2)}/photo</span>
-                        <span class="text-[11px] opacity-70 font-normal block">${CUR()}${entry.devCostPerRoll.toFixed(2)}/roll dev</span>
+                        <span class="text-xs opacity-70 font-normal block">${CUR()}${entry.devCostPerRoll.toFixed(2)}/roll dev</span>
                     </span>
                     ${chevron}
                 </span>
@@ -486,11 +486,11 @@ function renderMatrixRow(entry, rank, keyPrefix, pinReason, upgrade) {
         ? `<button type="button" class="fav-film-star text-sm leading-none ${favFilm ? 'theme-favourite-text text-red-400' : 'text-gray-300 dark:text-gray-600'}" data-fav-film="${escapeHtml(filmFavKeyForRow)}" title="${favFilm ? 'Unfavourite film' : 'Favourite film'}" aria-label="${favFilm ? 'Unfavourite film' : 'Favourite film'}" onclick="event.stopPropagation()">${favFilm ? '♥' : '♡'}</button>`
         : '';
     const pinnedFavNote = pinReason === 'default'
-        ? `<div class="text-[11px] theme-default-lab-text text-indigo-600 dark:text-indigo-400 mt-0.5">🏠 Shown first — this is your default lab</div>`
+        ? `<div class="text-xs theme-default-lab-text text-indigo-600 dark:text-indigo-400 mt-0.5">🏠 Shown first — this is your default lab</div>`
         : pinReason === 'favFilm'
-            ? `<div class="text-[11px] theme-favourite-text text-indigo-600 dark:text-indigo-400 mt-0.5">📌 Shown first — this is a favourite film</div>`
+            ? `<div class="text-xs theme-favourite-text text-indigo-600 dark:text-indigo-400 mt-0.5">📌 Shown first — this is a favourite film</div>`
             : pinReason
-                ? `<div class="text-[11px] theme-favourite-text text-indigo-600 dark:text-indigo-400 mt-0.5">★ Shown first — this is your favourite lab</div>`
+                ? `<div class="text-xs theme-favourite-text text-indigo-600 dark:text-indigo-400 mt-0.5">★ Shown first — this is your favourite lab</div>`
                 : '';
 
     const breakdown = renderRowBreakdown(entry, isOpen);
@@ -502,7 +502,7 @@ function renderMatrixRow(entry, rank, keyPrefix, pinReason, upgrade) {
                 <span class="font-mono text-right leading-tight ${semanticRowText} ${textColor} whitespace-nowrap flex items-center gap-1.5">
                     <span>
                         <span class="font-semibold block">${CUR()}${entry.totalCostPerPhoto.toFixed(2)}/photo</span>
-                        <span class="text-[11px] opacity-70 font-normal block">${CUR()}${entry.devCostPerRoll.toFixed(2)}/roll dev</span>
+                        <span class="text-xs opacity-70 font-normal block">${CUR()}${entry.devCostPerRoll.toFixed(2)}/roll dev</span>
                     </span>
                     ${chevron}
                 </span>
@@ -716,11 +716,11 @@ function renderPinnedDevCostBlock() {
         const pinLocality = bundleLocalityLabel(p);
         const pinLocalityBadge = pinLocality ? ` <span class="text-amber-600 dark:text-amber-400" title="This price is only valid in ${escapeHtml(pinLocality.replace(/ only$/, ''))}">(${escapeHtml(pinLocality)})</span>` : '';
         const buyLink = buyUrl
-            ? `<a href="${escapeHtml(buyUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-[11px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:underline">🛒 ${p.storeName ? 'Buy from ' + escapeHtml(p.storeName) : 'Buy film'} ↗</a>${pinLocalityBadge}`
+            ? `<a href="${escapeHtml(buyUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-xs px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:underline">🛒 ${p.storeName ? 'Buy from ' + escapeHtml(p.storeName) : 'Buy film'} ↗</a>${pinLocalityBadge}`
             : '';
         const dirUrl = labDirectionsUrl(p.labName);
         const directionsLink = dirUrl
-            ? `<a href="${escapeHtml(dirUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-[11px] px-1.5 py-0.5 rounded bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:underline">📍 Directions ↗</a>`
+            ? `<a href="${escapeHtml(dirUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-xs px-1.5 py-0.5 rounded bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:underline">📍 Directions ↗</a>`
             : '';
         const footer = (buyLink || directionsLink)
             ? `<div class="pt-1.5 flex justify-between items-center gap-2"><span>${buyLink}</span><span>${directionsLink}</span></div>`
@@ -745,7 +745,7 @@ function renderPinnedDevCostBlock() {
                     <span class="font-mono text-right leading-tight text-indigo-800 dark:text-indigo-300 whitespace-nowrap flex items-center gap-1.5">
                         <span>
                             <span class="font-semibold block">${CUR()}${p.totalCostPerPhoto.toFixed(2)}/photo</span>
-                            <span class="text-[11px] opacity-70 font-normal block">${CUR()}${p.devCostPerRoll.toFixed(2)}/roll dev</span>
+                            <span class="text-xs opacity-70 font-normal block">${CUR()}${p.devCostPerRoll.toFixed(2)}/roll dev</span>
                         </span>
                         ${chevron}
                     </span>
