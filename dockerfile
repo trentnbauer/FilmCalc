@@ -21,6 +21,10 @@ COPY films /usr/share/nginx/html/films
 COPY labs /usr/share/nginx/html/labs
 COPY themes /usr/share/nginx/html/themes
 
+# index.html's own calculation engine (issue #61), loaded via <script src>
+# — also needs to be served alongside the app, not just live in the repo.
+COPY js /usr/share/nginx/html/js
+
 # docker-compose.yml mounts a named volume at exactly this path so
 # config.yaml survives container recreation. That mount only works
 # correctly if config.yaml already exists here as a regular file at
