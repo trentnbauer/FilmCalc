@@ -25,6 +25,10 @@ COPY themes /usr/share/nginx/html/themes
 # — also needs to be served alongside the app, not just live in the repo.
 COPY js /usr/share/nginx/html/js
 
+# Prebuilt Tailwind CSS (issue #74) — the checked-in copy here, since Docker
+# has no Node to regenerate it. See css/README.md.
+COPY css /usr/share/nginx/html/css
+
 # docker-compose.yml mounts a named volume at exactly this path so
 # config.yaml survives container recreation. That mount only works
 # correctly if config.yaml already exists here as a regular file at

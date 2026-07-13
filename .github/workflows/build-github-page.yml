@@ -31,6 +31,13 @@ jobs:
         uses: actions/checkout@v4
       - name: Stamp build version into index.html
         run: sed -i "s/%%FILMCALC_VERSION%%/$(git rev-parse --short HEAD)/" index.html
+      - name: Build Tailwind CSS
+        # Regenerated into the working tree so the next step stages it, same
+        # pattern as the preset manifests/changelog.json below; not committed
+        # back. The checked-in css/tailwind.css is just the fallback for
+        # offline/local Docker builds, which have no Node to run this step —
+        # see css/README.md.
+        run: npx --yes tailwindcss@3.4.17 -i css/tailwind.src.css -o css/tailwind.css --minify
       - name: Generate preset manifests
         # films/index.json and labs/index.json are the browser's stand-in for a
         # directory listing (static hosting can't enumerate a folder). Rather
@@ -119,12 +126,13 @@ jobs:
         # need to be live on the deployed site, not just the Docker image.
         # js/ is index.html's own calculation engine (issue #61), loaded via
         # <script src> — also needs to be live, not just present in the repo.
-        # Docker/self-hosting files (Dockerfile, compose, README) still
-        # don't belong here.
+        # css/ is the prebuilt Tailwind CSS (issue #74), just regenerated
+        # above. Docker/self-hosting files (Dockerfile, compose, README)
+        # still don't belong here.
         run: |
           mkdir -p _site
           cp index.html favicon.ico icon.ico icon.svg apple-touch-icon.png options.yaml changelog.json _site/
-          cp -r films labs themes js _site/
+          cp -r films labs themes js css _site/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
