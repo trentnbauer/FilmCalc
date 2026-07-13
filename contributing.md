@@ -190,14 +190,18 @@ device. It just won't ship with the project.
 
 <br>
 
-**Films** are bought online and shipped, so pricing is broadly national — one `us-retailers.yaml`
-covers the whole US.
+**Films** bought from a nationwide chain (Woolworths, JB Hi-Fi — walk in anywhere, no postage) are
+broadly national — one `us-retailers.yaml` covers the whole US. But a film's price from an
+online-only or single-location shop is only really valid near that shop, since buyers elsewhere pay
+postage on top — that's what a bundle's `availability` field is for (see DATA_SPEC.md). Any bundle
+that isn't `national` goes in a city file instead, e.g. `melbourne-retailers.yaml`, right alongside
+that same film's national bundles from other files.
 
 **Labs** are physical places you post film to or walk into, so they only matter locally. A Melbourne
 shooter has no use for a London lab's pricing — hence `melbourne.yaml`, `london.yaml`, and so on.
 
 Users choose which files to import in the app, so keeping them separate means nobody wades through
-prices in a currency they don't use.
+prices in a currency (or postage zone) they don't use.
 
 </details>
 

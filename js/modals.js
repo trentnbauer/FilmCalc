@@ -791,6 +791,31 @@ function buildFilmProfilesFromEntries(entries) {
     return result;
 }
 
+// Same film stock can now be split across multiple preset files by
+// locality (e.g. "Kodak Gold" has national bundles in
+// australian-retailers.yaml and Melbourne-only ones in
+// melbourne-retailers.yaml — issue #114) — importing several presets
+// in one go must combine their bundles for a shared filmKey, not have the
+// later file's entry silently replace the earlier one's. Bundles are
+// matched by storeName+rolls+exposures so re-importing the same preset
+// updates that store's price in place instead of duplicating it, while a
+// different store/file's bundles are added alongside.
+function mergeFilmBundles(existing, incoming) {
+    const keyOf = b => `${b.storeName || ''}|${b.rolls}|${b.exposures}`;
+    const byKey = new Map((existing || []).map(b => [keyOf(b), b]));
+    (incoming || []).forEach(b => byKey.set(keyOf(b), b));
+    return [...byKey.values()];
+}
+function mergeFilmProfiles(saved, incoming) {
+    Object.keys(incoming).forEach(key => {
+        const existing = saved[key];
+        saved[key] = (existing && Array.isArray(existing.bundles) && Array.isArray(incoming[key].bundles))
+            ? { ...incoming[key], bundles: mergeFilmBundles(existing.bundles, incoming[key].bundles) }
+            : incoming[key];
+    });
+    return saved;
+}
+
 // Merges one parsed YAML document (combined config.yaml shape, or a
 // standalone films.yaml/labs.yaml array) into localStorage. Shared by
 // both the preset-picker and file-upload import paths below.
@@ -801,7 +826,7 @@ function applyParsedImport(parsed) {
         if (Array.isArray(parsed.films)) {
             let saved = readJSON('filmProfiles', {});
             const incoming = buildFilmProfilesFromEntries(parsed.films);
-            Object.assign(saved, incoming);
+            mergeFilmProfiles(saved, incoming);
             result.films += Object.keys(incoming).length;
             localStorage.setItem('filmProfiles', JSON.stringify(saved));
         }
@@ -827,7 +852,7 @@ function applyParsedImport(parsed) {
             } else if (isFilmFile) {
                 let saved = readJSON('filmProfiles', {});
                 const incoming = buildFilmProfilesFromEntries(parsed);
-                Object.assign(saved, incoming);
+                mergeFilmProfiles(saved, incoming);
                 result.films += Object.keys(incoming).length;
                 localStorage.setItem('filmProfiles', JSON.stringify(saved));
             } else {

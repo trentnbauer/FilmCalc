@@ -1,0 +1,726 @@
+label: Melbourne Retailers
+films:
+  - name: Kodak Gold
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 3
+        exposures: 36
+        filmCost: 52.5
+        storeName: Walkens
+        buyLink: >-
+          https://walkens.com.au/products/kodak-gold-200-35mm-24exp-3-pack-copy?variant=46212077715645&country=AU&currency=AUD&utm_medium=product_sync&utm_source=google&utm_content=sag_organic&utm_campaign=sag_organic&gad_source=1&gad_campaignid=17181065002&gbraid=0AAAAADBByy702yk-BGUXuaKWjQkZuYXfL&gclid=CjwKCAjwx7LSBhB3EiwAjcodxMOmoI8wokqx_tSQCbG6Kwub1Ibff7oeDZZ-IuABCkf46Zxc1LY61RoCiuAQAvD_BwE
+        availability: city
+        state: Victoria
+        city: Melbourne
+      - rolls: 1
+        exposures: 36
+        filmCost: 25.00
+        storeName: FilmNeverDie
+        buyLink: https://filmneverdie.com/products/kodak-gold-200-35mm-36-exp
+        availability: city
+        state: Victoria
+        city: Melbourne
+      - rolls: 1
+        exposures: 36
+        filmCost: 19.00
+        storeName: Ikigai Film Lab
+        buyLink: https://ikigaifilmlab.com.au/store/kodak-gold-200-35mm-film
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Kodak Ultramax
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 3
+        exposures: 36
+        filmCost: 60
+        storeName: Walkens
+        buyLink: >-
+          https://walkens.com.au/products/kodak-ultramax-400-35mm-36exp-3-pack?variant=46212088463549&country=AU&currency=AUD&utm_medium=product_sync&utm_source=google&utm_content=sag_organic&utm_campaign=sag_organic&gad_source=1&gad_campaignid=17181065002&gbraid=0AAAAADBByy702yk-BGUXuaKWjQkZuYXfL&gclid=CjwKCAjwx7LSBhB3EiwAjcodxKiS0Zql1QCEv34utnT491kY9NR92r-DHULGNBttjogbU9u4xN_GDhoCIT0QAvD_BwE
+        availability: city
+        state: Victoria
+        city: Melbourne
+      - rolls: 1
+        exposures: 36
+        filmCost: 25.00
+        storeName: FilmNeverDie
+        buyLink: https://filmneverdie.com/products/kodak-ultramax-400-35mm-36-exp
+        availability: city
+        state: Victoria
+        city: Melbourne
+      - rolls: 1
+        exposures: 36
+        filmCost: 19.95
+        storeName: Ikigai Film Lab
+        buyLink: https://ikigaifilmlab.com.au/store/kodak-ultramax-400-35mm-film
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Kodak Porta
+    boxSpeed: 800
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 40
+        storeName: Walkens
+        buyLink: >-
+          https://walkens.com.au/products/kodak-portra-800-35mm?variant=44814089420989&country=AU&currency=AUD&utm_medium=product_sync&utm_source=google&utm_content=sag_organic&utm_campaign=sag_organic&gad_source=1&gad_campaignid=17181065002&gbraid=0AAAAADBByy702yk-BGUXuaKWjQkZuYXfL&gclid=CjwKCAjwx7LSBhB3EiwAjcodxJoVRduVX3CsCFBgc_FO8MYXKcOuhKOGEbq8iqr6BSzsYI9pAFSZ7hoCCuQQAvD_BwE
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: FujiFilm Color
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 21
+        storeName: Walkens
+        buyLink: >-
+          https://walkens.com.au/products/fujifilm-400-35mm?variant=44813990822077&country=AU&currency=AUD&utm_medium=product_sync&utm_source=google&utm_content=sag_organic&utm_campaign=sag_organic&gad_source=1&gad_campaignid=17181065002&gbraid=0AAAAADBByy5tpW6BX3WlkcSGm1Gyi-dsT&gclid=CjwKCAjwmdLSBhANEiwAkREMN4V4LSyyE5GssWC83m3Fhtp8McyViuFbAsccgz7TYtu8BSoq5cgtNhoC53kQAvD_BwE
+        availability: city
+        state: Victoria
+        city: Melbourne
+      - rolls: 1
+        exposures: 36
+        filmCost: 25.00
+        storeName: FilmNeverDie
+        buyLink: https://filmneverdie.com/products/fujifilm-400-35mm-36-exp
+        availability: city
+        state: Victoria
+        city: Melbourne
+      - rolls: 1
+        exposures: 36
+        filmCost: 21.00
+        storeName: Ikigai Film Lab
+        buyLink: https://ikigaifilmlab.com.au/store/fuji-400-35mm-film-36-exp
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: FujiFilm Color
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 19.5
+        storeName: Walkens
+        buyLink: >-
+          https://walkens.com.au/products/fujifilm-200-35mm?variant=44813910671549&country=AU&currency=AUD&utm_medium=product_sync&utm_source=google&utm_content=sag_organic&utm_campaign=sag_organic&gad_source=1&gad_campaignid=17181065002&gbraid=0AAAAADBByy5tpW6BX3WlkcSGm1Gyi-dsT&gclid=CjwKCAjwmdLSBhANEiwAkREMN_LxbJYNfRjd6PKiYkStf04JewuhHF_63iiar-UERmvtivsel9Pc5BoCDC4QAvD_BwE
+        availability: city
+        state: Victoria
+        city: Melbourne
+      - rolls: 1
+        exposures: 36
+        filmCost: 23.50
+        storeName: FilmNeverDie
+        buyLink: https://filmneverdie.com/products/fujifilm-200-35mm-36-exp
+        availability: city
+        state: Victoria
+        city: Melbourne
+      - rolls: 1
+        exposures: 36
+        filmCost: 19.50
+        storeName: Ikigai Film Lab
+        buyLink: https://ikigaifilmlab.com.au/store/kodak-gold-200-35mm-film-cy4lk
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Kodak Portra 160
+    boxSpeed: 160
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 25.00
+        storeName: FilmNeverDie
+        buyLink: https://filmneverdie.com/products/kodak-portra-160-35mm-36-exp
+        availability: city
+        state: Victoria
+        city: Melbourne
+      - rolls: 1
+        exposures: 36
+        filmCost: 28.00
+        storeName: Ikigai Film Lab
+        buyLink: https://ikigaifilmlab.com.au/store/kodak-portra-160-35mm-36-exposures-film
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Kodak Portra 800
+    boxSpeed: 800
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 42.00
+        storeName: FilmNeverDie
+        buyLink: https://filmneverdie.com/products/kodak-portra-800-35mm-36exp
+        availability: city
+        state: Victoria
+        city: Melbourne
+      - rolls: 1
+        exposures: 36
+        filmCost: 35.00
+        storeName: Ikigai Film Lab
+        buyLink: https://ikigaifilmlab.com.au/store/kodak-portra-800-35mm-36exp
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Kodak Ektar 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 32.00
+        storeName: FilmNeverDie
+        buyLink: https://filmneverdie.com/products/kodak-ektar-100-iso-35mm-36exp
+        availability: city
+        state: Victoria
+        city: Melbourne
+      - rolls: 1
+        exposures: 36
+        filmCost: 29.95
+        storeName: Ikigai Film Lab
+        buyLink: https://ikigaifilmlab.com.au/store/kodak-ektar-100-35mm
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Fujifilm Superia Premium 400
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 39.00
+        storeName: Ikigai Film Lab
+        buyLink: https://ikigaifilmlab.com.au/store/fujifilm-superia-premium-400-35mm-36-exp
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Kodak Colorplus
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 22.00
+        storeName: FilmNeverDie
+        buyLink: https://filmneverdie.com/products/kodak-colorplus-200-35mm-36-exp
+        availability: city
+        state: Victoria
+        city: Melbourne
+      - rolls: 1
+        exposures: 36
+        filmCost: 15.80
+        storeName: Ikigai Film Lab
+        buyLink: https://ikigaifilmlab.com.au/store/kodak-colorplus-35mm-36exp
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Kodak Pro Image 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 20.00
+        storeName: Ikigai Film Lab
+        buyLink: https://ikigaifilmlab.com.au/store/kodak-professional-pro-image-100-35mm-film
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Kodak Kodacolor 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 16.95
+        storeName: Ikigai Film Lab
+        buyLink: https://ikigaifilmlab.com.au/store/kodak-kodacolor-100-36-exp
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Kodak Kodacolor 200
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 16.95
+        storeName: Ikigai Film Lab
+        buyLink: https://ikigaifilmlab.com.au/store/kodak-kodacolor-200-35mm-36-exp
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Lucky Color C200
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 17.00
+        storeName: Ikigai Film Lab
+        buyLink: https://ikigaifilmlab.com.au/store/lucky-color-c200-35mm-36-exp
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Harman Phoenix II
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 19.95
+        storeName: Ikigai Film Lab
+        buyLink: https://ikigaifilmlab.com.au/store/harman-phoenix-200-ii-35mm-36exp
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Harman Switch Azure
+    boxSpeed: 125
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 19.95
+        storeName: Ikigai Film Lab
+        buyLink: https://ikigaifilmlab.com.au/store/harman-switch-azure-35mm-36-exp
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Lomography 800
+    boxSpeed: 800
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 26
+        storeName: Walkens
+        buyLink: https://walkens.com.au/products/lomography-color-negative-400-120
+        availability: city
+        state: Victoria
+        city: Melbourne
+      - rolls: 1
+        exposures: 36
+        filmCost: 30.00
+        storeName: Ikigai Film Lab
+        buyLink: https://ikigaifilmlab.com.au/store/kodak-gold-800-lomography-800-35mm-36exp
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Kodak Portra 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 36
+        storeName: Walkens
+        buyLink: https://walkens.com.au/products/kodak-portra-400-120-film
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Kodak Portra 160
+    boxSpeed: 160
+    maxPushPull: 2
+    process: C41
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 38
+        storeName: Walkens
+        buyLink: https://walkens.com.au/products/kodak-portra-160-120-film
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Kodak Portra 800
+    boxSpeed: 800
+    maxPushPull: 2
+    process: C41
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 43
+        storeName: Walkens
+        buyLink: https://walkens.com.au/products/kodak-portra-800-120-film
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Kodak Ektar 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: C41
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 29
+        storeName: Walkens
+        buyLink: https://walkens.com.au/products/kodak-ektar-100-120-film
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Kodak Gold 200
+    boxSpeed: 200
+    maxPushPull: 2
+    process: C41
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 18.5
+        storeName: Walkens
+        buyLink: https://walkens.com.au/products/eastman-kodak-gold-200-120-film
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Kodak Tri-X 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 18.5
+        storeName: Walkens
+        buyLink: https://walkens.com.au/products/kodak-tri-x-400-120-film
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Kodak T-Max 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 20.5
+        storeName: Walkens
+        buyLink: https://walkens.com.au/products/kodak-t-max-400-120-film
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Kodak T-Max 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 23
+        storeName: Walkens
+        buyLink: https://walkens.com.au/products/kodak-t-max-100-120-film
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Kodak Ektachrome E100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: E6
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 50
+        storeName: Walkens
+        buyLink: https://walkens.com.au/products/kodak-ektachrome-e100-120-film
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Ilford HP5+ 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 16
+        storeName: Walkens
+        buyLink: https://walkens.com.au/products/ilford-hp5-400-120-film
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Ilford FP4+ 125
+    boxSpeed: 125
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 16
+        storeName: Walkens
+        buyLink: https://walkens.com.au/products/ilford-fp4-125-120-film
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Ilford Delta 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 17.5
+        storeName: Walkens
+        buyLink: https://walkens.com.au/products/ilford-delta-100-120-film
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Ilford Delta 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 17.5
+        storeName: Walkens
+        buyLink: https://walkens.com.au/products/ilford-delta-400-120-film
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Ilford Delta 3200
+    boxSpeed: 3200
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 17
+        storeName: Walkens
+        buyLink: https://walkens.com.au/products/ilford-delta-3200-120-film
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Ilford XP2 Super 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 15
+        storeName: Walkens
+        buyLink: https://walkens.com.au/products/ilford-xp2-super-400-120-film
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Kentmere Pan 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 12
+        storeName: Walkens
+        buyLink: https://walkens.com.au/products/kentmere-pan-100-120-film
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Kentmere Pan 200
+    boxSpeed: 200
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 12
+        storeName: Walkens
+        buyLink: https://walkens.com.au/products/kentmere-pan-200-120-film
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Kentmere Pan 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 12
+        storeName: Walkens
+        buyLink: https://walkens.com.au/products/kentmere-pan-400-120-film
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Fujifilm Neopan Acros 100 II
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 25
+        storeName: Walkens
+        buyLink: https://walkens.com.au/products/fujifilm-neopan-acros-100-ii-120-film
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Lomography Color Negative 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 26
+        storeName: Walkens
+        buyLink: https://walkens.com.au/products/lomography-color-negative-400-120
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Lomography Color Negative 800
+    boxSpeed: 800
+    maxPushPull: 2
+    process: C41
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 29
+        storeName: Walkens
+        buyLink: https://walkens.com.au/products/lomography-color-negative-800-120
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Fomapan Classic 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 14
+        storeName: Walkens
+        buyLink: https://walkens.com.au/products/foma-fomapan-classic-100-120-film
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Fomapan Creative 200
+    boxSpeed: 200
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 15
+        storeName: Walkens
+        buyLink: https://walkens.com.au/products/foma-fomapan-creative-200-120-film
+        availability: city
+        state: Victoria
+        city: Melbourne
+  - name: Fomapan Action 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 14
+        storeName: Walkens
+        buyLink: https://walkens.com.au/products/foma-fomapan-action-400-120-film
+        availability: city
+        state: Victoria
+        city: Melbourne

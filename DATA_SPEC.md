@@ -27,7 +27,13 @@ doesn't conform.
 
 ## Film entries
 
-Goes in a file under `films/`, grouped **by country**.
+Goes in a file under `films/`, grouped **by country** — unless every bundle for this film has a
+non-`national` `availability` (see below), in which case it's grouped **by city instead** (e.g.
+`melbourne-retailers.yaml`), same as labs. A film that has both national bundles (from a nationwide
+chain) and city-scoped bundles (from a local online shop) for the *same* name/boxSpeed/format is
+perfectly normal — it appears as two separate entries, one in the country file with just its national
+bundles, one in the city file with just its city-scoped bundles. The app merges them back together at
+import time by name+boxSpeed+format.
 
 ```yaml
 - name: Kodak Portra 400
@@ -130,8 +136,9 @@ After the YAML, add a short note with exactly these three things:
 
    | | Filename | Label |
    |---|---|---|
-   | **Films** (by country) | `us-retailers.yaml`, `uk-retailers.yaml` | `US Retailers`, `UK Retailers` |
-   | **Labs** (by city) | `london.yaml`, `new-york.yaml` | `London Labs`, `New York Labs` |
+   | **Films, national** | `us-retailers.yaml`, `uk-retailers.yaml` | `US Retailers`, `UK Retailers` |
+   | **Films, city-scoped** (any bundle with `availability: state` or `city`) | `melbourne-retailers.yaml`, `sydney-retailers.yaml` | `Melbourne Retailers`, `Sydney Retailers` |
+   | **Labs** (always by city) | `london.yaml`, `new-york.yaml` | `London Labs`, `New York Labs` |
 
    Then check the existing files and tell the user which case applies:
    - **The file already exists** → they should open it and paste your entry at the bottom of the list.
