@@ -2391,6 +2391,20 @@
                 }
                 const bucket = stopsSigned === 0 ? native : (stopsSigned > 0 ? push : pull);
                 bucket.push(best);
+                // The home (default) lab and any favourited labs are pinned
+                // to the top of every Dev Cost view "even if they'd otherwise
+                // be beaten on price" — but Per ISO only ever kept the single
+                // best-across-all-labs pick per film, so a pinned lab that
+                // never happened to win a film outright would silently never
+                // appear at all (no row existed for the pin logic to move).
+                // Add its own pick here whenever it differs from the winner,
+                // so pinning has something to actually surface.
+                const pinnedLabNames = new Set([getDefaultLabPref()?.lab, ...favouriteLabs].filter(Boolean));
+                pinnedLabNames.forEach(labName => {
+                    if (labName === best.labName) return;
+                    const pinnedPick = pickIsoCandidate(candidates.filter(c => c.labName === labName), cheapestSort);
+                    if (pinnedPick) bucket.push(pinnedPick);
+                });
             });
 
             native.sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto);
