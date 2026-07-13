@@ -853,6 +853,22 @@
             }
         }
 
+        // Every saved-data read in this app goes through localStorage +
+        // JSON.parse. A bare JSON.parse(localStorage.getItem(key) || '{}')
+        // throws on any malformed value — a corrupted write, a browser
+        // extension touching storage, manual devtools tampering — and an
+        // uncaught SyntaxError here takes down the very next render with no
+        // recovery path (issue #90). Centralising the read means every call
+        // site degrades to `fallback` instead of crashing the app.
+        function readJSON(key, fallback) {
+            try {
+                const raw = localStorage.getItem(key);
+                return raw === null ? fallback : JSON.parse(raw);
+            } catch {
+                return fallback;
+            }
+        }
+
         // Film stocks are identified by name + box speed together, not name
         // alone — the same name can legitimately exist at more than one box
         // speed (e.g. a reformulated stock, or a film sold at two different
@@ -1094,7 +1110,7 @@
         // Persisted as { lab, tierIndex }. Drives the Film Lookup headline to
         // show the user's usual lab instead of the theoretical cheapest.
         function getDefaultLabPref() {
-            try { return JSON.parse(localStorage.getItem('defaultLabPref') || 'null'); } catch { return null; }
+            return readJSON('defaultLabPref', null);
         }
         function tierDescription(tier) {
             const parts = [];
@@ -1107,7 +1123,7 @@
         function populateDefaultTierSelect(labName, selectedIndex) {
             const tierSel = document.getElementById('defaultTierSelect');
             if (!labName) { tierSel.classList.add('hidden'); tierSel.innerHTML = ''; return; }
-            const allLabs = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') };
+            const allLabs = { ...defaultLabs, ...readJSON('labProfiles', {}) };
             const lab = allLabs[labName];
             if (!lab) { tierSel.classList.add('hidden'); tierSel.innerHTML = ''; return; }
             const tiers = normalizeLabServices(lab);
@@ -1119,7 +1135,7 @@
             const labSel = document.getElementById('defaultLabSelect');
             if (!labSel) return;
             const pref = getDefaultLabPref();
-            const allLabs = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') };
+            const allLabs = { ...defaultLabs, ...readJSON('labProfiles', {}) };
             const names = Object.keys(allLabs).filter(n => !allLabs[n].hidden);
             labSel.innerHTML = '<option value="">None (show cheapest)</option>' + names.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
             if (pref && pref.lab && names.includes(pref.lab)) {
@@ -1526,13 +1542,13 @@
         // Favourite labs — persisted set of lab names. Favourited labs are
         // always shown in Dev Cost views (even if they'd otherwise be beaten on
         // price), but rows still sort by price. Toggled via the star on each row.
-        let favouriteLabs = new Set(JSON.parse(localStorage.getItem('favouriteLabs') || '[]'));
+        let favouriteLabs = new Set(readJSON('favouriteLabs', []));
         function isFavLab(name) { return favouriteLabs.has(name); }
 
         // Favourite film stocks — keyed by filmKey(name, boxSpeed, format). Kept
         // in its own localStorage key (never on the film object), so favourites
         // are personal and are NOT included in exports.
-        let favouriteFilms = new Set(JSON.parse(localStorage.getItem('favouriteFilms') || '[]'));
+        let favouriteFilms = new Set(readJSON('favouriteFilms', []));
         function isFavFilm(key) { return favouriteFilms.has(key); }
         function toggleFavFilm(key) {
             if (favouriteFilms.has(key)) favouriteFilms.delete(key); else favouriteFilms.add(key);
@@ -1542,7 +1558,7 @@
         // Google Maps directions link for a lab, from its saved address (falling
         // back to searching by lab name). Returns '' if neither is available.
         function labDirectionsUrl(labName) {
-            const allLabs = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') };
+            const allLabs = { ...defaultLabs, ...readJSON('labProfiles', {}) };
             const lab = allLabs[labName];
             const query = (lab && lab.address && lab.address.trim()) ? lab.address.trim() : labName;
             if (!query) return '';
@@ -1580,7 +1596,7 @@
             const allContainer = document.getElementById('filmAllOptions');
             if (!bestContainer || !allContainer) return;
 
-            const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
+            const allFilms = { ...defaultFilms, ...readJSON('filmProfiles', {}) };
 
             let idCounter = 0;
             const entries = Object.values(allFilms).flatMap(f => {
@@ -1684,7 +1700,7 @@
         function updateDropdown(id, data, storageKey, labelFn, filterFn) {
             const dropdown = document.getElementById(id);
             const current = dropdown.value;
-            const saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
+            const saved = readJSON(storageKey, {});
             const all = { ...data, ...saved };
             dropdown.innerHTML = '<option value="">-- Load profile --</option>';
             Object.keys(all)
@@ -1720,7 +1736,7 @@
 
         document.getElementById('libraryFilmsDropdown').addEventListener('change', (e) => {
             const key = e.target.value;
-            const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
+            const allFilms = { ...defaultFilms, ...readJSON('filmProfiles', {}) };
             const film = allFilms[key];
             if (!film) {
                 document.getElementById('libraryFilmName').value = '';
@@ -1740,7 +1756,7 @@
         });
 
         document.getElementById('savedLabsDropdown').addEventListener('change', (e) => {
-            const p = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') }[e.target.value];
+            const p = { ...defaultLabs, ...readJSON('labProfiles', {}) }[e.target.value];
             if (!p) {
                 document.getElementById('labHiddenCheckbox').checked = false;
                 document.getElementById('labAddress').value = '';
@@ -1931,7 +1947,7 @@
             // existing entry in place, keep its Name, Box Speed and Format the
             // same while changing anything else.
             const key = filmKey(name, boxSpeed, format);
-            let saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
+            let saved = readJSON('filmProfiles', {});
             saved[key] = { name, boxSpeed, maxPushPull, process, format, hidden: document.getElementById('filmHiddenCheckbox').checked, bundles };
             localStorage.setItem('filmProfiles', JSON.stringify(saved));
             updateFilmDropdowns();
@@ -1959,7 +1975,7 @@
                     processes: processes.length > 0 ? processes : ['C41']
                 };
             });
-            let saved = JSON.parse(localStorage.getItem('labProfiles') || '{}');
+            let saved = readJSON('labProfiles', {});
             saved[name] = {
                 name,
                 hidden: document.getElementById('labHiddenCheckbox').checked,
@@ -1980,11 +1996,11 @@
             const dropdown = document.getElementById('libraryFilmsDropdown');
             const key = dropdown.value;
             if (!key) return alert('Select a saved film to delete');
-            if (defaultFilms[key] && !JSON.parse(localStorage.getItem('filmProfiles') || '{}')[key]) {
+            if (defaultFilms[key] && !readJSON('filmProfiles', {})[key]) {
                 return alert('Built-in film profiles can\'t be deleted, only custom saved ones.');
             }
             if (!confirm('Delete this saved film and all its bundles?')) return;
-            let saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
+            let saved = readJSON('filmProfiles', {});
             delete saved[key];
             localStorage.setItem('filmProfiles', JSON.stringify(saved));
             updateFilmDropdowns();
@@ -1994,11 +2010,11 @@
             const dropdown = document.getElementById('savedLabsDropdown');
             const name = dropdown.value;
             if (!name) return alert('Select a saved lab to delete');
-            if (defaultLabs[name] && !JSON.parse(localStorage.getItem('labProfiles') || '{}')[name]) {
+            if (defaultLabs[name] && !readJSON('labProfiles', {})[name]) {
                 return alert('Built-in lab profiles can\'t be deleted, only custom saved ones.');
             }
             if (!confirm('Delete this saved lab and all its service tiers?')) return;
-            let saved = JSON.parse(localStorage.getItem('labProfiles') || '{}');
+            let saved = readJSON('labProfiles', {});
             delete saved[name];
             localStorage.setItem('labProfiles', JSON.stringify(saved));
             updateLabDropdown();
@@ -2006,7 +2022,7 @@
 
         // ---------- Export / Import (single config.yaml: films + labs + settings) ----------
         function buildFilmsArray() {
-            const saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
+            const saved = readJSON('filmProfiles', {});
             const all = { ...defaultFilms, ...saved };
             return Object.values(all).map(f => ({
                 name: f.name,
@@ -2020,7 +2036,7 @@
         }
 
         function buildLabsArray() {
-            const saved = JSON.parse(localStorage.getItem('labProfiles') || '{}');
+            const saved = readJSON('labProfiles', {});
             const all = { ...defaultLabs, ...saved };
             return Object.values(all).map(l => ({
                 name: l.name,

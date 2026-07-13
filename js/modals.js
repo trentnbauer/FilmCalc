@@ -50,7 +50,7 @@ async function loadChangelog() {
         localStorage.removeItem('changelogLastSeenPR');
     }
 
-    const seen = new Set(JSON.parse(localStorage.getItem('changelogSeenPRs') || '[]'));
+    const seen = new Set(readJSON('changelogSeenPRs', []));
     const newEntries = changelogEntries.filter(e => !seen.has(e.number));
     if (newEntries.length === 0) return;
     if (isFirstEverVisit) {
@@ -61,7 +61,7 @@ async function loadChangelog() {
 }
 
 function markChangelogSeen(numbers) {
-    const seen = new Set(JSON.parse(localStorage.getItem('changelogSeenPRs') || '[]'));
+    const seen = new Set(readJSON('changelogSeenPRs', []));
     numbers.forEach(n => seen.add(n));
     localStorage.setItem('changelogSeenPRs', JSON.stringify([...seen]));
 }
@@ -458,7 +458,7 @@ document.getElementById('aiAddBtn').addEventListener('click', () => {
     if (!aiPendingEntries) return;
     const { kind, list } = aiPendingEntries;
     if (kind === 'film') {
-        const saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
+        const saved = readJSON('filmProfiles', {});
         list.forEach(f => {
             const key = filmKey(f.name, parseInt(f.boxSpeed) || 0, f.format || '35mm');
             saved[key] = {
@@ -480,7 +480,7 @@ document.getElementById('aiAddBtn').addEventListener('click', () => {
         localStorage.setItem('filmProfiles', JSON.stringify(saved));
         updateFilmDropdowns();
     } else {
-        const saved = JSON.parse(localStorage.getItem('labProfiles') || '{}');
+        const saved = readJSON('labProfiles', {});
         list.forEach(l => {
             saved[l.name] = {
                 name: l.name,
@@ -572,7 +572,7 @@ document.addEventListener('keydown', (e) => {
 function populateSetupTierSelect(labName, selectedIndex) {
     const tierSel = document.getElementById('setupTierSelect');
     if (!labName) { tierSel.classList.add('hidden'); tierSel.innerHTML = ''; return; }
-    const allLabs = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') };
+    const allLabs = { ...defaultLabs, ...readJSON('labProfiles', {}) };
     const lab = allLabs[labName];
     if (!lab) { tierSel.classList.add('hidden'); tierSel.innerHTML = ''; return; }
     const tiers = normalizeLabServices(lab);
@@ -583,7 +583,7 @@ function populateSetupTierSelect(labName, selectedIndex) {
 function populateSetupLabSelect() {
     const labSel = document.getElementById('setupLabSelect');
     const pref = getDefaultLabPref();
-    const allLabs = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') };
+    const allLabs = { ...defaultLabs, ...readJSON('labProfiles', {}) };
     const names = Object.keys(allLabs).filter(n => !allLabs[n].hidden);
     labSel.innerHTML = '<option value="">None (always show cheapest)</option>' + names.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
     if (pref && pref.lab && names.includes(pref.lab)) {
@@ -616,7 +616,7 @@ document.getElementById('redoFavouritesBtn').addEventListener('click', openSetup
 // Film list with ♥ (favourite) and ✕ (ignore/hide) toggles.
 function renderSetupFilmList() {
     const listEl = document.getElementById('setupFilmList');
-    const saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
+    const saved = readJSON('filmProfiles', {});
     const all = { ...defaultFilms, ...saved };
     const keys = Object.keys(all);
     if (keys.length === 0) {
@@ -642,7 +642,7 @@ function renderSetupFilmList() {
     }));
     listEl.querySelectorAll('.setup-ignore-btn').forEach(btn => btn.addEventListener('click', () => {
         const key = btn.dataset.key;
-        const savedNow = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
+        const savedNow = readJSON('filmProfiles', {});
         // Ignoring a preset film needs it materialised into saved profiles
         // first, since defaults themselves aren't editable.
         const base = savedNow[key] || { ...(defaultFilms[key] || {}) };
@@ -753,14 +753,14 @@ function applyParsedImport(parsed) {
     if (parsed && !Array.isArray(parsed) && (parsed.films || parsed.labs || parsed.settings)) {
         // Combined config.yaml shape
         if (Array.isArray(parsed.films)) {
-            let saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
+            let saved = readJSON('filmProfiles', {});
             const incoming = buildFilmProfilesFromEntries(parsed.films);
             Object.assign(saved, incoming);
             result.films += Object.keys(incoming).length;
             localStorage.setItem('filmProfiles', JSON.stringify(saved));
         }
         if (Array.isArray(parsed.labs)) {
-            let saved = JSON.parse(localStorage.getItem('labProfiles') || '{}');
+            let saved = readJSON('labProfiles', {});
             parsed.labs.forEach(l => { if (l.name) { saved[l.name] = l; result.labs++; } });
             localStorage.setItem('labProfiles', JSON.stringify(saved));
         }
@@ -775,11 +775,11 @@ function applyParsedImport(parsed) {
             const isLabFile = 'services' in parsed[0] || 'devCost' in parsed[0];
             const isFilmFile = 'boxSpeed' in parsed[0] || 'filmCost' in parsed[0] || 'bundles' in parsed[0];
             if (isLabFile) {
-                let saved = JSON.parse(localStorage.getItem('labProfiles') || '{}');
+                let saved = readJSON('labProfiles', {});
                 parsed.forEach(l => { if (l.name) { saved[l.name] = l; result.labs++; } });
                 localStorage.setItem('labProfiles', JSON.stringify(saved));
             } else if (isFilmFile) {
-                let saved = JSON.parse(localStorage.getItem('filmProfiles') || '{}');
+                let saved = readJSON('filmProfiles', {});
                 const incoming = buildFilmProfilesFromEntries(parsed);
                 Object.assign(saved, incoming);
                 result.films += Object.keys(incoming).length;

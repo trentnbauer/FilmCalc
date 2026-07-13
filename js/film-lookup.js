@@ -28,7 +28,7 @@
 // state. Multiple pins are supported so you can line up several labs
 // (e.g. a fast one vs. a cheap one) side by side.
 function pinLabResult(r) {
-    const pins = JSON.parse(localStorage.getItem('pinnedLabResults') || '[]');
+    const pins = readJSON('pinnedLabResults', []);
     pins.push({
         pinId: Date.now() + Math.random(),
         name: r.name,
@@ -44,7 +44,7 @@ function pinLabResult(r) {
 }
 
 function unpinLabResult(pinId) {
-    let pins = JSON.parse(localStorage.getItem('pinnedLabResults') || '[]');
+    let pins = readJSON('pinnedLabResults', []);
     pins = pins.filter(p => p.pinId !== pinId);
     localStorage.setItem('pinnedLabResults', JSON.stringify(pins));
     updateLabComparison();
@@ -53,7 +53,7 @@ function unpinLabResult(pinId) {
 function renderPinnedResult(currentCheapest) {
     const container = document.getElementById('pinnedResultDisplay');
     if (!container) return;
-    const pins = JSON.parse(localStorage.getItem('pinnedLabResults') || '[]');
+    const pins = readJSON('pinnedLabResults', []);
     if (pins.length === 0) { container.innerHTML = ''; return; }
 
     container.innerHTML = pins.map(pinned => {
@@ -200,7 +200,7 @@ function updateLabComparison() {
     const stops = warningStops;
     const currentProcess = document.getElementById('processSelect').value || 'C41';
 
-    const allLabs = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') };
+    const allLabs = { ...defaultLabs, ...readJSON('labProfiles', {}) };
     const names = Object.keys(allLabs).filter(n => !allLabs[n].hidden);
 
     if (names.length === 0) {
@@ -446,8 +446,8 @@ function updateCheaperAlternative() {
     }
 
     const stopsAbs = Math.round(Math.abs(Math.log2(devSpeed / boxSpeed)) * 10) / 10;
-    const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
-    const allLabs = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') };
+    const allFilms = { ...defaultFilms, ...readJSON('filmProfiles', {}) };
+    const allLabs = { ...defaultLabs, ...readJSON('labProfiles', {}) };
     const labNames = Object.keys(allLabs).filter(n => !allLabs[n].hidden);
     if (labNames.length === 0) { container.innerHTML = ''; return; }
 
