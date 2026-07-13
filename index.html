@@ -172,7 +172,7 @@
                 </button>
                 <button id="tabCheapestBtn" type="button" role="tab" aria-selected="false" aria-controls="cheapestTabContent" tabindex="-1" class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-2.2 0-4 1.1-4 2.5S9.8 13 12 13s4 1.1 4 2.5-1.8 2.5-4 2.5m0-10V6m0 12v-2m0-10a9 9 0 100 18 9 9 0 000-18z" transform="scale(0.92) translate(1,1)"/></svg>
-                    <span>Dev Cost</span>
+                    <span>Lab Costs</span>
                 </button>
                 <button id="tabExpiredBtn" type="button" role="tab" aria-selected="false" aria-controls="expiredTabContent" tabindex="-1" class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 py-2.5 font-semibold text-xs uppercase tracking-wide border-b-2 border-transparent text-gray-400 dark:text-gray-500 transition-colors">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -200,20 +200,20 @@
                  match the same field's name in Library (physical film size —
                  35mm/120/etc — not stock/process). -->
             <div id="globalFormatRow" class="flex items-center gap-2">
-                <label for="globalFormat" class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide shrink-0" title="Physical film size — 35mm, 120, etc. Applies across Film Lookup, Dev Cost, and the Library's film list.">Format</label>
-                <select id="globalFormat" data-options="formats" title="Physical film size — 35mm, 120, etc. Applies across Film Lookup, Dev Cost, and the Library's film list." class="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm"></select>
+                <label for="globalFormat" class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide shrink-0" title="Physical film size — 35mm, 120, etc. Applies across Film Lookup, Lab Costs, and the Library's film list.">Format</label>
+                <select id="globalFormat" data-options="formats" title="Physical film size — 35mm, 120, etc. Applies across Film Lookup, Lab Costs, and the Library's film list." class="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm"></select>
             </div>
 
             <!-- Dev Cost process filter. Hidden on other tabs (toggled in switchTab). -->
             <div id="globalFilters" class="hidden">
                 <div>
-                    <label for="globalProcess" class="block text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1" title="Development chemistry — C41, B&amp;W, E6, ECN-2. Narrows every Dev Cost view to films/labs of this process only.">Process</label>
-                    <select id="globalProcess" data-options="processes" data-include-all="All processes" title="Development chemistry — C41, B&amp;W, E6, ECN-2. Narrows every Dev Cost view to films/labs of this process only." class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm"></select>
+                    <label for="globalProcess" class="block text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1" title="Development chemistry — C41, B&amp;W, E6, ECN-2. Narrows every Lab Costs view to films/labs of this process only.">Process</label>
+                    <select id="globalProcess" data-options="processes" data-include-all="All processes" title="Development chemistry — C41, B&amp;W, E6, ECN-2. Narrows every Lab Costs view to films/labs of this process only." class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm"></select>
                 </div>
             </div>
 
             <div id="filmTabContent" role="tabpanel" aria-labelledby="tabFilmBtn" class="space-y-4">
-                <p class="text-xs text-gray-500 dark:text-gray-400">Cost out one specific roll by hand — enter the film and target speed, and see which lab is cheapest for it below. To browse and rank saved films by ISO, use the <span class="font-semibold">Dev Cost</span> tab.</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Cost out one specific roll by hand — enter the film and target speed, and see which lab is cheapest for it below. To browse and rank saved films by ISO, use the <span class="font-semibold">Lab Costs</span> tab.</p>
 
                 <div class="theme-section-bg bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                     <div class="p-4 pb-0">
