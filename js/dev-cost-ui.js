@@ -189,8 +189,8 @@ function updateIsoPriceCalculator() {
         return;
     }
 
-    const allFilms = { ...defaultFilms, ...readJSON('filmProfiles', {}) };
-    const allLabs = { ...defaultLabs, ...readJSON('labProfiles', {}) };
+    const allFilms = getAllFilms();
+    const allLabs = getAllLabs();
     const hasFilms = Object.values(allFilms).some(f => !f.hidden && (parseInt(f.boxSpeed) || 0) > 0);
     const hasLabs = Object.values(allLabs).some(l => !l.hidden);
     if (!hasFilms || !hasLabs) {
@@ -534,8 +534,8 @@ function renderPushPullSubLine(entry, contextLabel) {
 // the top here — the ♥ star on each row, not the ★ one.
 function updateCostPerPhotoTab() {
     const container = document.getElementById('costPerPhotoResults');
-    const allFilms = { ...defaultFilms, ...readJSON('filmProfiles', {}) };
-    const allLabs = { ...defaultLabs, ...readJSON('labProfiles', {}) };
+    const allFilms = getAllFilms();
+    const allLabs = getAllLabs();
     const baseOpts = { process: cheapestProcess, format: cheapestFormat };
     const allNativeMatrix = computeNativeFilmLabMatrix(allFilms, allLabs, baseOpts);
     if (allNativeMatrix.length === 0) {
@@ -592,8 +592,8 @@ function updateCostPerPhotoTab() {
 // starred. Rows expand to a full cost breakdown.
 function updateCostPerLabTab() {
     const container = document.getElementById('costPerLabResults');
-    const allFilms = { ...defaultFilms, ...readJSON('filmProfiles', {}) };
-    const allLabs = { ...defaultLabs, ...readJSON('labProfiles', {}) };
+    const allFilms = getAllFilms();
+    const allLabs = getAllLabs();
     const baseOpts = { process: cheapestProcess, format: cheapestFormat };
     const allNativeMatrix = computeNativeFilmLabMatrix(allFilms, allLabs, baseOpts);
     if (allNativeMatrix.length === 0) {
@@ -634,7 +634,7 @@ function populateCheapestFilmDropdown() {
     const select = document.getElementById('cheapestFilmSelect');
     if (!select) return;
     const prev = select.value;
-    const allFilms = { ...defaultFilms, ...readJSON('filmProfiles', {}) };
+    const allFilms = getAllFilms();
     const films = Object.values(allFilms)
         .filter(f => !f.hidden && filmPassesProcessFilter(f) && (parseInt(f.boxSpeed) || 0) > 0)
         .sort((a, b) => a.name.localeCompare(b.name) || (parseInt(a.boxSpeed) || 0) - (parseInt(b.boxSpeed) || 0));
@@ -730,8 +730,8 @@ function updateCostPerFilmTab() {
         return;
     }
 
-    const allFilms = { ...defaultFilms, ...readJSON('filmProfiles', {}) };
-    const allLabs = { ...defaultLabs, ...readJSON('labProfiles', {}) };
+    const allFilms = getAllFilms();
+    const allLabs = getAllLabs();
     const film = allFilms[selectedKey];
     if (!film) {
         container.innerHTML = pinnedBlock + '<p class="text-sm text-gray-400 text-center">Pick a film to compare labs</p>';

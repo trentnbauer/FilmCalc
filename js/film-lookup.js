@@ -200,7 +200,7 @@ function updateLabComparison() {
     const stops = warningStops;
     const currentProcess = document.getElementById('processSelect').value || 'C41';
 
-    const allLabs = { ...defaultLabs, ...readJSON('labProfiles', {}) };
+    const allLabs = getAllLabs();
     const names = Object.keys(allLabs).filter(n => !allLabs[n].hidden);
 
     if (names.length === 0) {
@@ -446,8 +446,8 @@ function updateCheaperAlternative() {
     }
 
     const stopsAbs = Math.round(Math.abs(Math.log2(devSpeed / boxSpeed)) * 10) / 10;
-    const allFilms = { ...defaultFilms, ...readJSON('filmProfiles', {}) };
-    const allLabs = { ...defaultLabs, ...readJSON('labProfiles', {}) };
+    const allFilms = getAllFilms();
+    const allLabs = getAllLabs();
     const labNames = Object.keys(allLabs).filter(n => !allLabs[n].hidden);
     if (labNames.length === 0) { container.innerHTML = ''; return; }
 

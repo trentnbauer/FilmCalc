@@ -889,6 +889,15 @@
             }
         }
 
+        // The built-in presets (defaultFilms/defaultLabs, populated by
+        // loadDefaults() from config.yaml) merged with whatever the user has
+        // saved locally — the "full library" every calc/render function
+        // reads from. Centralises `{ ...defaultFilms, ...readJSON('filmProfiles', {}) }`,
+        // which used to be duplicated at every call site across
+        // index.html/js/dev-cost-ui.js/js/film-lookup.js/js/modals.js.
+        function getAllFilms() { return { ...defaultFilms, ...readJSON('filmProfiles', {}) }; }
+        function getAllLabs() { return { ...defaultLabs, ...readJSON('labProfiles', {}) }; }
+
         // Film stocks are identified by name + box speed together, not name
         // alone — the same name can legitimately exist at more than one box
         // speed (e.g. a reformulated stock, or a film sold at two different
@@ -1143,7 +1152,7 @@
         function populateDefaultTierSelect(labName, selectedIndex) {
             const tierSel = document.getElementById('defaultTierSelect');
             if (!labName) { tierSel.classList.add('hidden'); tierSel.innerHTML = ''; return; }
-            const allLabs = { ...defaultLabs, ...readJSON('labProfiles', {}) };
+            const allLabs = getAllLabs();
             const lab = allLabs[labName];
             if (!lab) { tierSel.classList.add('hidden'); tierSel.innerHTML = ''; return; }
             const tiers = normalizeLabServices(lab);
@@ -1155,7 +1164,7 @@
             const labSel = document.getElementById('defaultLabSelect');
             if (!labSel) return;
             const pref = getDefaultLabPref();
-            const allLabs = { ...defaultLabs, ...readJSON('labProfiles', {}) };
+            const allLabs = getAllLabs();
             const names = Object.keys(allLabs).filter(n => !allLabs[n].hidden);
             labSel.innerHTML = '<option value="">None (show cheapest)</option>' + names.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
             if (pref && pref.lab && names.includes(pref.lab)) {
@@ -1578,7 +1587,7 @@
         // Google Maps directions link for a lab, from its saved address (falling
         // back to searching by lab name). Returns '' if neither is available.
         function labDirectionsUrl(labName) {
-            const allLabs = { ...defaultLabs, ...readJSON('labProfiles', {}) };
+            const allLabs = getAllLabs();
             const lab = allLabs[labName];
             const query = (lab && lab.address && lab.address.trim()) ? lab.address.trim() : labName;
             if (!query) return '';
@@ -1616,7 +1625,7 @@
             const allContainer = document.getElementById('filmAllOptions');
             if (!bestContainer || !allContainer) return;
 
-            const allFilms = { ...defaultFilms, ...readJSON('filmProfiles', {}) };
+            const allFilms = getAllFilms();
 
             let idCounter = 0;
             const entries = Object.values(allFilms).flatMap(f => {
@@ -1756,7 +1765,7 @@
 
         document.getElementById('libraryFilmsDropdown').addEventListener('change', (e) => {
             const key = e.target.value;
-            const allFilms = { ...defaultFilms, ...readJSON('filmProfiles', {}) };
+            const allFilms = getAllFilms();
             const film = allFilms[key];
             if (!film) {
                 document.getElementById('libraryFilmName').value = '';
@@ -1776,7 +1785,7 @@
         });
 
         document.getElementById('savedLabsDropdown').addEventListener('change', (e) => {
-            const p = { ...defaultLabs, ...readJSON('labProfiles', {}) }[e.target.value];
+            const p = getAllLabs()[e.target.value];
             if (!p) {
                 document.getElementById('labHiddenCheckbox').checked = false;
                 document.getElementById('labAddress').value = '';
