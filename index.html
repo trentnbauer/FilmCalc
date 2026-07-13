@@ -9,10 +9,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>FilmCalc — Film Cost Calculator</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Prebuilt Tailwind v3.4.17 CSS (issue #74) — replaces the
+         cdn.tailwindcss.com Play CDN, which ships Tailwind's whole JIT
+         compiler to the browser and recompiles on every load. Generated
+         from tailwind.config.js + css/tailwind.src.css; see css/README.md
+         to regenerate after adding new utility classes. -->
+    <link rel="stylesheet" href="css/tailwind.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js" integrity="sha512-CSBhVREyzHAjAFfBlIBakjoRUKp5h7VSweP0InR/pAJyptH7peuhCsqAI/snV+TwZmXZqoUklpXp6R6wMnYf5Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script>
-        tailwind.config = { darkMode: 'class', }
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark')
         } else {
