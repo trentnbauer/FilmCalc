@@ -36,6 +36,7 @@ jobs:
           VALID_FORMATS = {"35mm", "120", "110", "127", "220", "sheet"}
           VALID_TURNAROUND = {"next_day", "same_week", "longer"}
           VALID_PUSHPULL_TYPE = {"per_stop", "flat"}
+          VALID_AVAILABILITY = {"national", "state", "city"}
 
           errors = []
 
@@ -73,6 +74,13 @@ jobs:
                           err(path, f"{bw}: filmCost must be a number, not text (write 24.95, not '$24.95')")
                       if b.get("rolls") == 0 or b.get("exposures") == 0:
                           err(path, f"{bw}: rolls and exposures must be greater than 0")
+                      avail = b.get("availability", "national")
+                      if avail not in VALID_AVAILABILITY:
+                          err(path, f"{bw}: availability '{avail}' must be one of {sorted(VALID_AVAILABILITY)}")
+                      if avail in ("state", "city") and not b.get("state"):
+                          err(path, f"{bw}: availability '{avail}' needs a 'state'")
+                      if avail == "city" and not b.get("city"):
+                          err(path, f"{bw}: availability 'city' needs a 'city'")
 
           # ---- labs ----
           for path in sorted(glob.glob("labs/*.yaml") + glob.glob("labs/*.yml")):

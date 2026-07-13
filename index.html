@@ -873,6 +873,36 @@
             }
         }
 
+        // Best-effort "prefill my location" for the film bundle Availability
+        // fields (issue #114) — only ever runs when the user clicks "Use my
+        // location", never automatically, since it sends their IP to a
+        // third-party geolocation service (ipapi.co, no key required). Result
+        // is cached for the rest of the session so repeated clicks across
+        // multiple bundles don't re-hit the API. Fails silently (returns
+        // null) on network error, rate limiting, or an ad-blocker — the
+        // fields are freely editable by hand either way.
+        let geoLocationCache = null;
+        let geoLocationPromise = null;
+        async function fetchGeoLocation() {
+            if (geoLocationCache) return geoLocationCache;
+            if (geoLocationPromise) return geoLocationPromise;
+            geoLocationPromise = (async () => {
+                try {
+                    const res = await fetch('https://ipapi.co/json/');
+                    if (!res.ok) return null;
+                    const data = await res.json();
+                    if (data.error) return null;
+                    geoLocationCache = { country: data.country_name || '', state: data.region || '', city: data.city || '' };
+                    return geoLocationCache;
+                } catch {
+                    return null;
+                } finally {
+                    geoLocationPromise = null;
+                }
+            })();
+            return geoLocationPromise;
+        }
+
         // Every saved-data read in this app goes through localStorage +
         // JSON.parse. A bare JSON.parse(localStorage.getItem(key) || '{}')
         // throws on any malformed value — a corrupted write, a browser
@@ -1523,6 +1553,11 @@
             const filmCost = escapeHtml(bundle.filmCost ?? '');
             const storeName = escapeHtml(bundle.storeName || '');
             const buyLink = escapeHtml(bundle.buyLink || '');
+            const availability = bundle.availability || 'national';
+            const state = escapeHtml(bundle.state || '');
+            const city = escapeHtml(bundle.city || '');
+            const localityHidden = availability === 'national' ? 'hidden' : '';
+            const cityHidden = availability === 'city' ? '' : 'hidden';
             return `
                 <div class="bundle-block bg-white dark:bg-gray-800/60 border border-blue-200 dark:border-blue-800 rounded-lg p-3 space-y-2 relative">
                     <button type="button" class="removeBundleBtn absolute top-2 right-2 text-red-400 hover:text-red-600 text-xs font-bold" aria-label="Remove Bundle">✕</button>
@@ -1550,6 +1585,27 @@
                             <input type="url" class="bundle-buyLink w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" value="${buyLink}">
                         </div>
                     </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Price valid where? <span class="opacity-70 font-normal">(local shops often bake postage into the price)</span></label>
+                        <div class="flex items-center gap-2">
+                            <select class="bundle-availability flex-1 border p-2 rounded dark:bg-gray-700 dark:border-gray-600">
+                                <option value="national" ${availability === 'national' ? 'selected' : ''}>Country-wide</option>
+                                <option value="state" ${availability === 'state' ? 'selected' : ''}>State/region-wide only</option>
+                                <option value="city" ${availability === 'city' ? 'selected' : ''}>City-only</option>
+                            </select>
+                            <button type="button" class="bundle-useLocationBtn shrink-0 px-2 py-2 rounded border border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 text-xs font-medium hover:bg-blue-50 dark:hover:bg-blue-900/20" title="Fill State/City from my current location (uses your IP address, via a third-party lookup)">📍 Use my location</button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 bundle-locality-fields ${localityHidden}">
+                        <div>
+                            <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">State/Region</label>
+                            <input type="text" class="bundle-state w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" value="${state}">
+                        </div>
+                        <div class="bundle-city-field ${cityHidden}">
+                            <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">City</label>
+                            <input type="text" class="bundle-city w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" value="${city}">
+                        </div>
+                    </div>
                 </div>`;
         }
 
@@ -1558,6 +1614,26 @@
             container.insertAdjacentHTML('beforeend', bundleBlockHTML(bundle));
             const newBlock = container.lastElementChild;
             newBlock.querySelector('.removeBundleBtn').addEventListener('click', () => newBlock.remove());
+            const availabilitySelect = newBlock.querySelector('.bundle-availability');
+            const localityFields = newBlock.querySelector('.bundle-locality-fields');
+            const cityField = newBlock.querySelector('.bundle-city-field');
+            availabilitySelect.addEventListener('change', () => {
+                const value = availabilitySelect.value;
+                localityFields.classList.toggle('hidden', value === 'national');
+                cityField.classList.toggle('hidden', value !== 'city');
+            });
+            newBlock.querySelector('.bundle-useLocationBtn').addEventListener('click', async (e) => {
+                const btn = e.currentTarget;
+                const originalLabel = btn.textContent;
+                btn.disabled = true;
+                btn.textContent = '…';
+                const geo = await fetchGeoLocation();
+                btn.disabled = false;
+                btn.textContent = originalLabel;
+                if (!geo) return;
+                if (geo.state) newBlock.querySelector('.bundle-state').value = geo.state;
+                if (geo.city) newBlock.querySelector('.bundle-city').value = geo.city;
+            });
         }
 
         function resetBundles(bundles) {
@@ -1959,13 +2035,19 @@
             const format = cheapestFormat || '35mm';
             const bundleBlocks = document.querySelectorAll('#filmBundlesContainer .bundle-block');
             if (bundleBlocks.length === 0) return setSaveStatus('saveFilmStatus', 'Add at least one bundle first.', true);
-            const bundles = Array.from(bundleBlocks).map(block => ({
-                rolls: block.querySelector('.bundle-rolls').value,
-                exposures: block.querySelector('.bundle-exposures').value,
-                filmCost: block.querySelector('.bundle-filmCost').value,
-                storeName: block.querySelector('.bundle-storeName').value.trim(),
-                buyLink: block.querySelector('.bundle-buyLink').value.trim()
-            }));
+            const bundles = Array.from(bundleBlocks).map(block => {
+                const availability = block.querySelector('.bundle-availability').value;
+                return {
+                    rolls: block.querySelector('.bundle-rolls').value,
+                    exposures: block.querySelector('.bundle-exposures').value,
+                    filmCost: block.querySelector('.bundle-filmCost').value,
+                    storeName: block.querySelector('.bundle-storeName').value.trim(),
+                    buyLink: block.querySelector('.bundle-buyLink').value.trim(),
+                    availability,
+                    state: availability !== 'national' ? block.querySelector('.bundle-state').value.trim() : '',
+                    city: availability === 'city' ? block.querySelector('.bundle-city').value.trim() : ''
+                };
+            });
 
             // Name + Box Speed + Format together are this film's identity —
             // that's the only thing that decides which entry gets written.
@@ -2053,13 +2135,19 @@
         function buildFilmsArray() {
             const saved = readJSON('filmProfiles', {});
             const all = { ...defaultFilms, ...saved };
+            // `hidden` is a personal, per-install preference (the ✕ toggle in
+            // Setup) — not a property of the film stock itself, so it's never
+            // carried into exported data. This keeps exports safe to share or
+            // submit upstream (per DATA_SPEC.md, library films are always
+            // `hidden: false`) without leaking what the exporting user
+            // happens to have hidden locally.
             return Object.values(all).map(f => ({
                 name: f.name,
                 boxSpeed: Number(f.boxSpeed) || 0,
                 maxPushPull: Number(f.maxPushPull ?? 1),
                 process: f.process || 'C41',
                 format: f.format || '35mm',
-                hidden: !!f.hidden,
+                hidden: false,
                 bundles: normalizeFilmBundles(f)
             }));
         }

@@ -137,8 +137,10 @@ function renderRowChevron(isOpen) {
 // address.
 function renderRowFooterLinks(entry) {
     const buyUrl = sanitizeUrl(entry.buyLink);
+    const locality = bundleLocalityLabel(entry);
+    const localityBadge = locality ? ` <span class="text-amber-600 dark:text-amber-400" title="This price is only valid in ${escapeHtml(locality.replace(/ only$/, ''))}">(${escapeHtml(locality)})</span>` : '';
     const buyLink = buyUrl
-        ? `<a href="${escapeHtml(buyUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-[11px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:underline">🛒 ${entry.storeName ? 'Buy from ' + escapeHtml(entry.storeName) : 'Buy film'} ↗</a>`
+        ? `<a href="${escapeHtml(buyUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-[11px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:underline">🛒 ${entry.storeName ? 'Buy from ' + escapeHtml(entry.storeName) : 'Buy film'} ↗</a>${localityBadge}`
         : '';
     const dirUrl = labDirectionsUrl(entry.labName);
     const directionsLink = dirUrl
@@ -389,7 +391,8 @@ function toggleDevCostPin(entry) {
             highResScan: entry.highResScan, turnaroundTime: entry.turnaroundTime,
             devCostBase: entry.devCostBase, pushPullFee: entry.pushPullFee, exposures: entry.exposures,
             filmCostPerRoll: entry.filmCostPerRoll, devCostPerRoll: entry.devCostPerRoll, totalCostPerRoll: entry.totalCostPerRoll,
-            buyLink: entry.buyLink, storeName: entry.storeName
+            buyLink: entry.buyLink, storeName: entry.storeName,
+            availability: entry.availability, state: entry.state, city: entry.city
         });
     }
     localStorage.setItem('pinnedDevCostResults', JSON.stringify(pins));
@@ -665,8 +668,10 @@ function renderPinnedDevCostBlock() {
         const hiResBadge = p.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">HI-RES</span>` : '';
         const turnaroundBadge = p.turnaroundTime ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 align-middle">${escapeHtml(turnaroundLabels[p.turnaroundTime] || p.turnaroundTime)}</span>` : '';
         const buyUrl = sanitizeUrl(p.buyLink);
+        const pinLocality = bundleLocalityLabel(p);
+        const pinLocalityBadge = pinLocality ? ` <span class="text-amber-600 dark:text-amber-400" title="This price is only valid in ${escapeHtml(pinLocality.replace(/ only$/, ''))}">(${escapeHtml(pinLocality)})</span>` : '';
         const buyLink = buyUrl
-            ? `<a href="${escapeHtml(buyUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-[11px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:underline">🛒 ${p.storeName ? 'Buy from ' + escapeHtml(p.storeName) : 'Buy film'} ↗</a>`
+            ? `<a href="${escapeHtml(buyUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-[11px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:underline">🛒 ${p.storeName ? 'Buy from ' + escapeHtml(p.storeName) : 'Buy film'} ↗</a>${pinLocalityBadge}`
             : '';
         const dirUrl = labDirectionsUrl(p.labName);
         const directionsLink = dirUrl
