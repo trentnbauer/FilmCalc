@@ -3245,16 +3245,11 @@
             bestContainer.innerHTML = isoSpeeds.map(iso => {
                 const cheapest = byIso[iso][0];
                 const isOverallCheapest = cheapest.id === overallCheapest.id;
-                const semanticBg = isOverallCheapest ? 'theme-recommended-bg' : 'theme-cheapest-bg';
-                const semanticText = isOverallCheapest ? 'theme-recommended-text' : 'theme-cheapest-text';
-                const bg = isOverallCheapest ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-green-100 dark:bg-green-900/30';
-                const labelColor = isOverallCheapest ? 'text-amber-700 dark:text-amber-400' : 'text-green-700 dark:text-green-400';
-                const textColor = isOverallCheapest ? 'text-amber-800 dark:text-amber-300' : 'text-green-800 dark:text-green-400';
                 const label = isOverallCheapest ? `⭐ Cheapest Overall (${iso} ISO)` : `🏆 Cheapest ${iso} ISO`;
-                return `<div class="px-3 py-3 rounded-lg text-sm ${semanticBg} ${bg}">
-                    <div class="text-xs font-semibold ${semanticText} ${labelColor} uppercase tracking-wide mb-1">${label}</div>
-                    <div class="font-semibold ${semanticText} ${textColor}">${escapeHtml(cheapest.name)}${renderBuyLink(cheapest)}</div>
-                    <div class="font-mono ${semanticText} ${textColor} mt-1">
+                return `<div class="px-3 py-3 rounded-lg text-sm theme-cheapest-bg bg-green-100 dark:bg-green-900/30">
+                    <div class="text-xs font-semibold theme-cheapest-text text-green-700 dark:text-green-400 uppercase tracking-wide mb-1">${label}</div>
+                    <div class="font-semibold theme-cheapest-text text-green-800 dark:text-green-400">${escapeHtml(cheapest.name)}${renderBuyLink(cheapest)}</div>
+                    <div class="font-mono theme-cheapest-text text-green-800 dark:text-green-400 mt-1">
                         <span class="font-semibold">${CUR()}${cheapest.costPerPhoto.toFixed(2)}/photo</span>
                         <span class="text-xs opacity-80"> · ${CUR()}${cheapest.packTotalCost.toFixed(2)} pack total · ${cheapest.rolls} Roll${cheapest.rolls == 1 ? '' : 's'} × ${cheapest.exposures}exp</span>
                     </div>
