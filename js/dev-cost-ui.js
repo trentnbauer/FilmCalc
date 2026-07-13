@@ -360,6 +360,51 @@ document.getElementById('isoCalcTargetSpeed').addEventListener('input', updateIs
 // computeOneStopFilmLabMatrix() is the same shape, but every pairing
 // is priced with exactly 1 stop of push/pull applied.
 
+// Issue #96: Per Film/Per Photo/Per Lab were re-deriving the full film×lab
+// cross product from scratch on every render, even when only a row
+// expand/collapse, a favourite toggle, or switching between these three
+// tabs triggered it and the saved film/lab data hadn't actually changed.
+// Wraps each pure compute function in a single-entry cache keyed on the
+// raw filmProfiles/labProfiles localStorage strings — a save, delete, or
+// import naturally changes that string, so there's no separate "dirty"
+// flag to remember to set — plus process/format/turnaround/hiRes, the only
+// opts that change what the matrix itself contains. Shared across every
+// call site below, so switching sub-tabs at the same filter state reuses
+// the same cached result, not just repeat calls to the same function.
+// defaultFilms/defaultLabs (config.yaml) aren't part of the key since they
+// only ever populate once, before startup's loadDefaults() resolves —
+// invalidateFilmLabMatrixCache() (called there) covers that one edge case
+// defensively rather than hashing their content on every call.
+function memoizeFilmLabMatrix(computeFn) {
+    let cache = null; // { filmsRaw, labsRaw, process, format, turnaround, hiRes, result }
+    const memoized = (allFilms, allLabs, opts) => {
+        opts = opts || {};
+        const filmsRaw = localStorage.getItem('filmProfiles');
+        const labsRaw = localStorage.getItem('labProfiles');
+        const process = opts.process || '', format = opts.format || '', turnaround = opts.turnaround || '', hiRes = !!opts.hiRes;
+        // Compared field-by-field, not joined into one string — the raw
+        // localStorage JSON can contain arbitrary characters (a film/lab
+        // name, address, etc.), so concatenating it with a fixed separator
+        // risks two different underlying values producing the same key.
+        if (cache && cache.filmsRaw === filmsRaw && cache.labsRaw === labsRaw &&
+            cache.process === process && cache.format === format &&
+            cache.turnaround === turnaround && cache.hiRes === hiRes) {
+            return cache.result;
+        }
+        const result = computeFn(allFilms, allLabs, opts);
+        cache = { filmsRaw, labsRaw, process, format, turnaround, hiRes, result };
+        return result;
+    };
+    memoized.invalidate = () => { cache = null; };
+    return memoized;
+}
+const cachedNativeFilmLabMatrix = memoizeFilmLabMatrix(computeNativeFilmLabMatrix);
+const cachedOneStopFilmLabMatrix = memoizeFilmLabMatrix(computeOneStopFilmLabMatrix);
+function invalidateFilmLabMatrixCache() {
+    cachedNativeFilmLabMatrix.invalidate();
+    cachedOneStopFilmLabMatrix.invalidate();
+}
+
 // ---------- Pinned Dev Cost results (Per Film view) ----------
 // Unlike the ★ favourite-lab reorder used elsewhere, this snapshots the
 // actual numbers for one specific film+lab combo, so it survives
@@ -545,7 +590,7 @@ function updateCostPerPhotoTab() {
     const allFilms = getAllFilms();
     const allLabs = getAllLabs();
     const baseOpts = { process: cheapestProcess, format: cheapestFormat };
-    const allNativeMatrix = computeNativeFilmLabMatrix(allFilms, allLabs, baseOpts);
+    const allNativeMatrix = cachedNativeFilmLabMatrix(allFilms, allLabs, baseOpts);
     if (allNativeMatrix.length === 0) {
         container.innerHTML = '<p class="text-sm text-gray-400 text-center">Save at least one film and one lab profile to compare</p>';
         return;
@@ -572,7 +617,7 @@ function updateCostPerPhotoTab() {
     });
     const priceSortedRows = [...byFilmNative.values()].sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto);
     const rows = reorderFavouriteFilmsFirst(priceSortedRows, favouriteFilms);
-    const oneStopMatrix = hasActiveDevCostFilter ? computeOneStopFilmLabMatrix(allFilms, allLabs, devCostFilters) : computeOneStopFilmLabMatrix(allFilms, allLabs, baseOpts);
+    const oneStopMatrix = hasActiveDevCostFilter ? cachedOneStopFilmLabMatrix(allFilms, allLabs, devCostFilters) : cachedOneStopFilmLabMatrix(allFilms, allLabs, baseOpts);
 
     const upgradeThresholdPercent = parseFloat(localStorage.getItem('upgradeThresholdPercent')) || 4;
     const allCandidatesByFilm = new Map();
@@ -603,14 +648,14 @@ function updateCostPerLabTab() {
     const allFilms = getAllFilms();
     const allLabs = getAllLabs();
     const baseOpts = { process: cheapestProcess, format: cheapestFormat };
-    const allNativeMatrix = computeNativeFilmLabMatrix(allFilms, allLabs, baseOpts);
+    const allNativeMatrix = cachedNativeFilmLabMatrix(allFilms, allLabs, baseOpts);
     if (allNativeMatrix.length === 0) {
         container.innerHTML = '<p class="text-sm text-gray-400 text-center">Save at least one film and one lab profile to compare</p>';
         return;
     }
     const devCostFilters = { ...baseOpts, turnaround: devCostFilterTurnaround, hiRes: devCostFilterHiRes };
     const hasActiveDevCostFilter = devCostFilterTurnaround || devCostFilterHiRes;
-    const nativeMatrix = hasActiveDevCostFilter ? computeNativeFilmLabMatrix(allFilms, allLabs, devCostFilters) : allNativeMatrix;
+    const nativeMatrix = hasActiveDevCostFilter ? cachedNativeFilmLabMatrix(allFilms, allLabs, devCostFilters) : allNativeMatrix;
     if (nativeMatrix.length === 0) {
         container.innerHTML = '<p class="text-sm text-gray-400 text-center">No options match the current filters</p>';
         return;
@@ -622,7 +667,7 @@ function updateCostPerLabTab() {
     });
     const priceSortedRows = [...byLabNative.values()].sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto);
     const rows = reorderFavouriteLabsFirst(priceSortedRows, favouriteLabs);
-    const oneStopMatrix = hasActiveDevCostFilter ? computeOneStopFilmLabMatrix(allFilms, allLabs, devCostFilters) : computeOneStopFilmLabMatrix(allFilms, allLabs, baseOpts);
+    const oneStopMatrix = hasActiveDevCostFilter ? cachedOneStopFilmLabMatrix(allFilms, allLabs, devCostFilters) : cachedOneStopFilmLabMatrix(allFilms, allLabs, baseOpts);
     container.innerHTML = expandAllControl() + rows.map(e => {
         const rank = priceSortedRows.indexOf(e);
         const rowHtml = renderMatrixRow(e, rank, 'lab', isFavLab(e.labName) && rank !== 0);
@@ -757,7 +802,7 @@ function updateCostPerFilmTab() {
     // objects (not a second computeNativeFilmLabMatrix() call) so
     // findHiResFastestUpgrade()'s "is this already the cheapest?" identity
     // check actually works.
-    const allCandidatesForFilm = computeNativeFilmLabMatrix(allFilms, allLabs, { process: cheapestProcess, format: cheapestFormat })
+    const allCandidatesForFilm = cachedNativeFilmLabMatrix(allFilms, allLabs, { process: cheapestProcess, format: cheapestFormat })
         .filter(e => filmKey(e.filmName, e.boxSpeed, e.format) === selectedKey);
     const priceSortedRows = allCandidatesForFilm
         .filter(e => (!devCostFilterTurnaround || e.turnaroundTime === devCostFilterTurnaround) && (!devCostFilterHiRes || e.highResScan))

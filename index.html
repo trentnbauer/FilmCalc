@@ -1416,6 +1416,13 @@
             } catch (e) {
                 console.error('Error loading config.yaml', e);
             } finally {
+                // defaultFilms/defaultLabs just changed, but the Dev Cost
+                // matrix cache (issue #96) is keyed on filmProfiles/
+                // labProfiles' localStorage strings, which this doesn't
+                // touch — clear it so a later Lab Costs render doesn't
+                // reuse a matrix computed before config.yaml's defaults
+                // loaded in.
+                if (typeof invalidateFilmLabMatrixCache === 'function') invalidateFilmLabMatrixCache();
                 updateFilmDropdowns();
                 updateLabDropdown();
                 applyConfigSettings();
