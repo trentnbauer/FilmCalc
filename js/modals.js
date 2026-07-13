@@ -16,17 +16,19 @@
 // recent changes, generated at build time into changelog.json from
 // merged PR titles — see .github/workflows/build-github-page.yml.
 // #53 asked for the popup to appear automatically when new entries
-// have landed since this browser last saw the changelog (tracked by
-// the highest PR number seen); #66 was that auto-popup never
-// actually happened — only the unread dot did. First-ever visitors
-// don't get the whole project history flagged as "new" — their
-// baseline is set quietly on first load, with no popup or dot.
+// have landed since this browser last saw the changelog; #66 was
+// that auto-popup never actually happened — only the unread dot did.
+// First-ever visitors don't get the whole project history flagged as
+// "new" — their baseline is set quietly on first load, with no popup.
 // #78: the auto-popup was showing the ENTIRE project history, not
-// just what's landed since last time — openChangelogModal(sinceNumber)
-// filters to entries newer than the previously-seen PR when it's
-// called from the auto-popup path. The manual footer-button click
-// still shows the full list, since that's an explicit "show me
-// everything" action.
+// just what's landed since last time.
+//
+// #83: tracking only the highest PR number seen breaks when PRs merge
+// out of order — a user who saw up through #63, then #62 merges
+// later (its number is lower than the already-seen #63), would never
+// get a popup for #62 since "highest seen" never moved backwards. Now
+// tracks the actual SET of seen PR numbers in localStorage, so "new"
+// means "not in that set", regardless of merge order.
 let changelogEntries = [];
 
 async function loadChangelog() {
@@ -36,24 +38,43 @@ async function loadChangelog() {
     } catch { /* offline / no changelog.json — nothing to show */ }
     if (!Array.isArray(changelogEntries) || changelogEntries.length === 0) return;
 
-    const latestSeen = parseInt(localStorage.getItem('changelogLastSeenPR') || '0', 10);
-    const latestKnown = Math.max(...changelogEntries.map(e => e.number));
-    if (latestSeen === 0) {
-        localStorage.setItem('changelogLastSeenPR', String(latestKnown));
-    } else if (latestKnown > latestSeen) {
-        openChangelogModal(latestSeen);
+    // A true first-ever visit has neither key. A pre-#83 returning visitor
+    // has the old single-number key but not the new set — migrate them by
+    // treating everything up through their old high-watermark as seen
+    // (same coverage as before, just in the new per-PR-number format).
+    const isFirstEverVisit = localStorage.getItem('changelogSeenPRs') === null && localStorage.getItem('changelogLastSeenPR') === null;
+    if (localStorage.getItem('changelogSeenPRs') === null) {
+        const oldLastSeen = parseInt(localStorage.getItem('changelogLastSeenPR') || '0', 10);
+        const migrated = oldLastSeen > 0 ? changelogEntries.filter(e => e.number <= oldLastSeen).map(e => e.number) : [];
+        localStorage.setItem('changelogSeenPRs', JSON.stringify(migrated));
+        localStorage.removeItem('changelogLastSeenPR');
+    }
+
+    const seen = new Set(JSON.parse(localStorage.getItem('changelogSeenPRs') || '[]'));
+    const newEntries = changelogEntries.filter(e => !seen.has(e.number));
+    if (newEntries.length === 0) return;
+    if (isFirstEverVisit) {
+        markChangelogSeen(changelogEntries.map(e => e.number)); // quiet baseline, no popup
+    } else {
+        openChangelogModal(newEntries.map(e => e.number));
     }
 }
 
-// sinceNumber (optional): when given, only entries newer than it are
-// shown — used for the auto-popup. Omitted for the manual button
-// click, which always shows the full history.
-function renderChangelogList(sinceNumber) {
+function markChangelogSeen(numbers) {
+    const seen = new Set(JSON.parse(localStorage.getItem('changelogSeenPRs') || '[]'));
+    numbers.forEach(n => seen.add(n));
+    localStorage.setItem('changelogSeenPRs', JSON.stringify([...seen]));
+}
+
+// onlyNumbers (optional): a list of PR numbers to show, used for the
+// auto-popup so it only lists what's actually new. Omitted for the
+// manual button click, which always shows the full history.
+function renderChangelogList(onlyNumbers) {
     const container = document.getElementById('changelogList');
     const all = Array.isArray(changelogEntries) ? changelogEntries : [];
-    const entries = sinceNumber ? all.filter(e => e.number > sinceNumber) : all;
+    const entries = onlyNumbers ? all.filter(e => onlyNumbers.includes(e.number)) : all;
     if (entries.length === 0) {
-        const msg = sinceNumber ? 'No new changes.' : 'No changelog available.';
+        const msg = onlyNumbers ? 'No new changes.' : 'No changelog available.';
         container.innerHTML = `<p class="text-xs text-gray-400 text-center py-2">${msg}</p>`;
         return;
     }
@@ -72,11 +93,11 @@ function renderChangelogList(sinceNumber) {
 }
 
 const changelogModal = document.getElementById('changelogModal');
-function openChangelogModal(sinceNumber) {
-    renderChangelogList(sinceNumber);
+function openChangelogModal(onlyNumbers) {
+    renderChangelogList(onlyNumbers);
     changelogModal.classList.remove('hidden');
     if (changelogEntries.length) {
-        localStorage.setItem('changelogLastSeenPR', String(Math.max(...changelogEntries.map(e => e.number))));
+        markChangelogSeen(changelogEntries.map(e => e.number));
     }
 }
 function closeChangelogModal() { changelogModal.classList.add('hidden'); }
