@@ -14,6 +14,23 @@
 //
 // Extracted from index.html as part of #61 (single-file app split).
 
+// Renders the same "cheapest hi-res + fastest" recommendation Film Lookup
+// shows as its own card, but as a single-line note attached under a row —
+// the { pick, premium, baselineCostPerPhoto } shape computed by
+// findHiResFastestUpgrade() (js/dev-cost-calc.js) for Per Film/Photo, or
+// inlined directly in computeIsoPriceOptions() for Per ISO.
+function renderUpgradeNote(upgrade) {
+    if (!upgrade) return '';
+    const { pick, premium, baselineCostPerPhoto } = upgrade;
+    // A tie (or near-tie) in the underlying data is common enough — two
+    // labs' dev + push/pull fees can land on the exact same total — that
+    // "only 0.0% more" reads oddly; "costs the same" is the honest phrasing.
+    const costPhrase = premium < 0.001
+        ? `costs the same (${CUR()}${pick.totalCostPerPhoto.toFixed(2)}/photo)`
+        : `is only ${(premium * 100).toFixed(1)}% more (${CUR()}${pick.totalCostPerPhoto.toFixed(2)} vs ${CUR()}${baselineCostPerPhoto.toFixed(2)}/photo)`;
+    return `<div class="text-[11px] theme-recommended-text text-amber-700 dark:text-amber-400 mt-0.5">💡 Cheapest Hi-Res + Fastest ${costPhrase} — ${escapeHtml(pick.labName)}, Hi-Res, Next Day</div>`;
+}
+
 // ---------- Dev Cost tab's Per ISO / Per Photo / Per Film / Per Lab sub-nav ----------
 const cheapestSubTabs = {
     iso: { btn: document.getElementById('cheapestSubIsoBtn'), content: document.getElementById('cheapestSubIsoContent'), update: () => updateIsoPriceCalculator() },
@@ -113,6 +130,7 @@ function renderIsoRow(entry, rank, pinReason) {
         : pinReason
             ? `<div class="text-[11px] theme-favourite-text text-indigo-600 dark:text-indigo-400 mt-0.5">📌 Shown first — this is your favourite lab</div>`
             : '';
+    const upgradeNote = renderUpgradeNote(entry.upgrade);
 
     const key = isoRowKey(entry);
     const isOpen = expandAllIso || expandedIsoRows.has(key);
@@ -157,6 +175,7 @@ function renderIsoRow(entry, rank, pinReason) {
                 </span>
             </div>
             ${pinnedFavNote}
+            ${upgradeNote}
             ${breakdown}
         </div>
     </div>`;
@@ -360,7 +379,8 @@ function matrixRowKey(keyPrefix, entry) {
     return `${keyPrefix}|${entry.filmName}|${entry.boxSpeed}|${entry.format || '35mm'}|${entry.labName}`;
 }
 
-function renderMatrixRow(entry, rank, keyPrefix, pinReason) {
+function renderMatrixRow(entry, rank, keyPrefix, pinReason, upgrade) {
+    const upgradeNote = renderUpgradeNote(upgrade);
     const hiResBadge = entry.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">HI-RES</span>` : '';
     const turnaroundBadge = entry.turnaroundTime ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 align-middle">${escapeHtml(turnaroundLabels[entry.turnaroundTime] || entry.turnaroundTime)}</span>` : '';
     const isCheapest = rank === 0;
@@ -435,6 +455,7 @@ function renderMatrixRow(entry, rank, keyPrefix, pinReason) {
                 </span>
             </div>
             ${pinnedFavNote}
+            ${upgradeNote}
             ${breakdown}
         </div>
     </div>`;
@@ -523,7 +544,14 @@ function updateCostPerPhotoTab() {
     }
     const devCostFilters = { ...baseOpts, turnaround: devCostFilterTurnaround, hiRes: devCostFilterHiRes };
     const hasActiveDevCostFilter = devCostFilterTurnaround || devCostFilterHiRes;
-    const nativeMatrix = hasActiveDevCostFilter ? computeNativeFilmLabMatrix(allFilms, allLabs, devCostFilters) : allNativeMatrix;
+    // Filtered as a client-side subset of allNativeMatrix's own objects
+    // (not a second computeNativeFilmLabMatrix() call) so the upgrade
+    // recommendation below — computed from the unfiltered per-film
+    // candidates — can identity-match "is this row already the cheapest?"
+    // even while a turnaround/hi-res filter pill is narrowing what's shown.
+    const nativeMatrix = hasActiveDevCostFilter
+        ? allNativeMatrix.filter(e => (!devCostFilterTurnaround || e.turnaroundTime === devCostFilterTurnaround) && (!devCostFilterHiRes || e.highResScan))
+        : allNativeMatrix;
     if (nativeMatrix.length === 0) {
         container.innerHTML = '<p class="text-sm text-gray-400 text-center">No options match the current filters</p>';
         return;
@@ -537,10 +565,21 @@ function updateCostPerPhotoTab() {
     const priceSortedRows = [...byFilmNative.values()].sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto);
     const rows = reorderFavouriteFilmsFirst(priceSortedRows, favouriteFilms);
     const oneStopMatrix = hasActiveDevCostFilter ? computeOneStopFilmLabMatrix(allFilms, allLabs, devCostFilters) : computeOneStopFilmLabMatrix(allFilms, allLabs, baseOpts);
+
+    const upgradeThresholdPercent = parseFloat(localStorage.getItem('upgradeThresholdPercent')) || 4;
+    const allCandidatesByFilm = new Map();
+    allNativeMatrix.forEach(e => {
+        const key = `${e.filmName}__${e.boxSpeed}__${e.format}`;
+        if (!allCandidatesByFilm.has(key)) allCandidatesByFilm.set(key, []);
+        allCandidatesByFilm.get(key).push(e);
+    });
+
     container.innerHTML = expandAllControl() + rows.map(e => {
         const rank = priceSortedRows.indexOf(e);
         const isFav = isFavFilm(filmKey(e.filmName, e.boxSpeed, e.format));
-        const rowHtml = renderMatrixRow(e, rank, 'photo', isFav && rank !== 0 ? 'favFilm' : null);
+        const key = `${e.filmName}__${e.boxSpeed}__${e.format}`;
+        const upgrade = findHiResFastestUpgrade(allCandidatesByFilm.get(key) || [e], e, upgradeThresholdPercent);
+        const rowHtml = renderMatrixRow(e, rank, 'photo', isFav && rank !== 0 ? 'favFilm' : null, upgrade);
         const bestOneStop = oneStopMatrix.filter(o => o.filmName === e.filmName).sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto)[0];
         return rowHtml + renderPushPullSubLine(bestOneStop, bestOneStop ? bestOneStop.labName : '');
     }).join('');
@@ -701,8 +740,17 @@ function updateCostPerFilmTab() {
         return;
     }
 
-    const priceSortedRows = computeNativeFilmLabMatrix(allFilms, allLabs, { process: cheapestProcess, format: cheapestFormat, turnaround: devCostFilterTurnaround, hiRes: devCostFilterHiRes })
-        .filter(e => filmKey(e.filmName, e.boxSpeed, e.format) === selectedKey)
+    // Unfiltered (ignoring the Next Day/Same Week/Hi-Res filter pills) so
+    // the upgrade recommendation below can surface a hi-res+fastest option
+    // even while some other filter is narrowing the visible rows. The
+    // filtered, displayed rows are a client-side subset of these SAME
+    // objects (not a second computeNativeFilmLabMatrix() call) so
+    // findHiResFastestUpgrade()'s "is this already the cheapest?" identity
+    // check actually works.
+    const allCandidatesForFilm = computeNativeFilmLabMatrix(allFilms, allLabs, { process: cheapestProcess, format: cheapestFormat })
+        .filter(e => filmKey(e.filmName, e.boxSpeed, e.format) === selectedKey);
+    const priceSortedRows = allCandidatesForFilm
+        .filter(e => (!devCostFilterTurnaround || e.turnaroundTime === devCostFilterTurnaround) && (!devCostFilterHiRes || e.highResScan))
         .sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto);
 
     if (priceSortedRows.length === 0) {
@@ -712,13 +760,15 @@ function updateCostPerFilmTab() {
         return;
     }
 
+    const upgradeThresholdPercent = parseFloat(localStorage.getItem('upgradeThresholdPercent')) || 4;
+    const upgrade = findHiResFastestUpgrade(allCandidatesForFilm, priceSortedRows[0], upgradeThresholdPercent);
     const defaultLabName = getDefaultLabPref()?.lab || null;
     const rows = reorderDefaultLabFirst(priceSortedRows, defaultLabName);
     const entriesByPinKey = new Map(priceSortedRows.map(e => [matrixRowKey('film', e), e]));
     container.innerHTML = pinnedBlock + expandAllControl() + rows.map(e => {
         const rank = priceSortedRows.indexOf(e);
         const pinReason = (e.labName === defaultLabName && rank !== 0) ? 'default' : null;
-        return renderMatrixRow(e, rank, 'film', pinReason);
+        return renderMatrixRow(e, rank, 'film', pinReason, rank === 0 ? upgrade : undefined);
     }).join('');
     wireExpandAll(container, updateCostPerFilmTab);
     wireMatrixRows(container, updateCostPerFilmTab);

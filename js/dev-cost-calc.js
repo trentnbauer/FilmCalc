@@ -237,7 +237,7 @@ function computeIsoPriceOptions(targetIso, allFilms, allLabs, opts) {
             const premium = (bestHrNd.totalCostPerPhoto - bestPrice.totalCostPerPhoto) / bestPrice.totalCostPerPhoto;
             const threshold = upgradeThresholdPercent / 100;
             if (premium >= 0 && premium < threshold) {
-                best.upgrade = { pick: bestHrNd, premium };
+                best.upgrade = { pick: bestHrNd, premium, baselineCostPerPhoto: bestPrice.totalCostPerPhoto };
             }
         }
         const bucket = stopsSigned === 0 ? native : (stopsSigned > 0 ? push : pull);
@@ -359,6 +359,31 @@ function computeOneStopFilmLabMatrix(allFilms, allLabs, opts) {
     return results;
 }
 
+// Given every lab+tier candidate for a single film (unfiltered by any
+// active turnaround/hi-res UI filter — the recommendation should surface
+// options outside the current filter, same as computeIsoPriceOptions'
+// own upgrade logic below), finds whether the cheapest hi-res + next-day
+// tier is worth recommending as an upgrade over `cheapest`: it must
+// exist, not already be the cheapest, and cost within thresholdPercent
+// more. Returns { pick, premium, baselineCostPerPhoto } or undefined.
+// Used by the Per Film / Per Photo views in js/dev-cost-ui.js — Per ISO
+// has its own copy of this same rule inlined in computeIsoPriceOptions,
+// since its candidate shape is built up differently.
+function findHiResFastestUpgrade(candidates, cheapest, thresholdPercent) {
+    if (!cheapest || cheapest.totalCostPerPhoto <= 0) return undefined;
+    let bestHrNd = null;
+    candidates.forEach(c => {
+        if (c.highResScan && c.turnaroundTime === 'next_day' && (!bestHrNd || c.totalCostPerPhoto < bestHrNd.totalCostPerPhoto)) {
+            bestHrNd = c;
+        }
+    });
+    if (!bestHrNd || bestHrNd === cheapest) return undefined;
+    const premium = (bestHrNd.totalCostPerPhoto - cheapest.totalCostPerPhoto) / cheapest.totalCostPerPhoto;
+    const threshold = (thresholdPercent ?? 4) / 100;
+    if (premium < 0 || premium >= threshold) return undefined;
+    return { pick: bestHrNd, premium, baselineCostPerPhoto: cheapest.totalCostPerPhoto };
+}
+
 // Used by every Dev Cost view (Per Photo / Per Lab / Per Film / Per ISO) to
 // pin any favourited lab(s) to the top of the displayed list ahead of price
 // order, so "my lab" doesn't get buried below cheaper options. Rows stay
@@ -409,6 +434,7 @@ if (typeof module !== 'undefined' && module.exports) {
         computeIsoPriceOptions,
         computeNativeFilmLabMatrix,
         computeOneStopFilmLabMatrix,
+        findHiResFastestUpgrade,
         reorderFavouriteLabsFirst,
         reorderFavouriteFilmsFirst,
         reorderDefaultLabFirst
