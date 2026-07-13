@@ -1,0 +1,95 @@
+name: "🏪 Add a lab"
+description: Request a new photo lab be added to the presets
+title: "[Add Lab] "
+labels: ["data", "enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Presets aim to cover **mainstream, readily available** labs. Rare or hard-to-reach labs are
+        generally left out on purpose — you can always add one yourself in the Library tab without it
+        shipping as a preset.
+
+        Once submitted, an automated check reads this form (including any screenshot) and opens a
+        pull request for a maintainer to review — you don't need to write any YAML yourself. If
+        anything's unclear it'll leave a comment on this issue asking you to clarify instead.
+
+        Adding a film stock instead? Use the **Add a film stock** template — this one's labs only.
+
+  - type: input
+    id: name
+    attributes:
+      label: Name
+      placeholder: "e.g. Hillvale Photo Melbourne"
+    validations:
+      required: true
+
+  - type: input
+    id: country
+    attributes:
+      label: Country
+      placeholder: "e.g. Australia"
+    validations:
+      required: true
+
+  - type: input
+    id: state
+    attributes:
+      label: State / region
+      placeholder: "e.g. Victoria"
+    validations:
+      required: true
+
+  - type: input
+    id: city
+    attributes:
+      label: City
+      description: Labs are grouped by city — this decides which file the entry belongs in.
+      placeholder: "e.g. Melbourne"
+    validations:
+      required: true
+
+  - type: textarea
+    id: lab-details
+    attributes:
+      label: Lab details
+      description: One block per service tier — copy the block if the lab offers several.
+      value: |
+        - Address:
+        - Website:
+        - Service tier:
+          - Development cost per roll:
+          - Push/pull fee (and whether it's per-stop or flat):
+          - Turnaround (next day / same week / longer):
+          - Hi-res scan? (yes/no):
+          - Processes handled (C41 / BW / E6 / ECN-2):
+    validations:
+      required: true
+
+  - type: input
+    id: source
+    attributes:
+      label: Source link
+      description: The lab's pricing page.
+      placeholder: "https://…"
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot (optional but helpful)
+      description: |
+        A screenshot of the pricing page preserves what you saw, since prices change.
+        Drag an image into this box to upload it.
+      placeholder: Paste or drag your screenshot here.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirmations
+      options:
+        - label: This is a mainstream lab that's reliably available (not a rare or hard-to-reach one)
+        - label: The price given is the **regular** price, not a sale price
