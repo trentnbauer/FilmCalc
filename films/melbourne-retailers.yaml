@@ -1,4 +1,7 @@
 label: Melbourne Retailers
+country: Australia
+state: Victoria
+city: Melbourne
 films:
   - name: Kodak Gold
     boxSpeed: 200

@@ -36,6 +36,11 @@ bundles, one in the city file with just its city-scoped bundles. The app merges 
 import time by name+boxSpeed+format.
 
 ```yaml
+label: Melbourne Retailers
+country: Australia
+state: Victoria
+city: Melbourne
+films:
 - name: Kodak Portra 400
   boxSpeed: 400
   maxPushPull: 2
@@ -52,6 +57,16 @@ import time by name+boxSpeed+format.
     state: Victoria
     city: Melbourne
 ```
+
+### File-level fields (top of the file, not per-film)
+
+| Field | Rules |
+|---|---|
+| `label` | Shown in the app's Import screen. |
+| `country` | **Required.** The country this file's films are grouped by — always present, even for a city-scoped file (a city file's presets are still within one country). A GitHub Actions workflow (`sync-preset-index.yml`) reads this — plus `state`/`city` below — straight out of the file to (re)generate `films/index.json` automatically. Never hand-edit that JSON file; it's a generated artifact. |
+| `state` / `city` | Present **only** if every bundle in this file is city/state-scoped (see `availability` below) — that's what makes this a city file (`melbourne-retailers.yaml`) instead of a country file (`australian-retailers.yaml`). Omit both for a country-wide file. |
+
+### Per-film fields
 
 | Field | Rules |
 |---|---|
@@ -78,6 +93,11 @@ import time by name+boxSpeed+format.
 Goes in a file under `labs/`, grouped **by city**.
 
 ```yaml
+label: Melbourne Labs
+country: Australia
+state: Victoria
+city: Melbourne
+labs:
 - name: Example Photo Lab
   hidden: false
   address: 1 Example Street, Melbourne VIC 3000, Australia
@@ -94,6 +114,15 @@ Goes in a file under `labs/`, grouped **by city**.
     processes:
     - C41
 ```
+
+### File-level fields (top of the file, not per-lab)
+
+| Field | Rules |
+|---|---|
+| `label` | Shown in the app's Import screen. |
+| `country` / `state` / `city` | **All three required.** A lab is always tied to one physical place, unlike a film (which can be national). As with films, a workflow (`sync-preset-index.yml`) regenerates `labs/index.json` from these — never hand-edit that file. |
+
+### Per-lab fields
 
 | Field | Rules |
 |---|---|
@@ -142,10 +171,14 @@ After the YAML, add a short note with exactly these three things:
 
    Then check the existing files and tell the user which case applies:
    - **The file already exists** → they should open it and paste your entry at the bottom of the list.
-   - **It doesn't exist** → they need to create it, and the file must start with a `label:` line, e.g.
+   - **It doesn't exist** → they need to create it, and the file must start with `label:`, `country:`,
+     and — for a city-scoped film file or any lab file — `state:`/`city:` too. Don't touch
+     `films/index.json` or `labs/index.json`; a GitHub Actions workflow regenerates those
+     automatically from these fields after the PR merges.
 
      ```yaml
      label: US Retailers
+     country: United States
      films:
      - name: Kodak Portra 400
        ...

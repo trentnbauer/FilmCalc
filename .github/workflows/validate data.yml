@@ -53,6 +53,8 @@ jobs:
               if not isinstance(doc, dict) or "films" not in doc:
                   err(path, "expected a top-level 'films:' list")
                   continue
+              if not doc.get("country"):
+                  err(path, "missing top-level 'country' — films/index.json is generated from this")
               for i, film in enumerate(doc["films"] or []):
                   where = f"film #{i+1} ({film.get('name', 'unnamed')})"
                   for key in ("name", "boxSpeed", "process", "bundles"):
@@ -92,6 +94,9 @@ jobs:
               if not isinstance(doc, dict) or "labs" not in doc:
                   err(path, "expected a top-level 'labs:' list")
                   continue
+              for key in ("country", "state", "city"):
+                  if not doc.get(key):
+                      err(path, f"missing top-level '{key}' — labs/index.json is generated from this")
               for i, lab in enumerate(doc["labs"] or []):
                   where = f"lab #{i+1} ({lab.get('name', 'unnamed')})"
                   if "name" not in lab:

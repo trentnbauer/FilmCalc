@@ -1,3 +1,9 @@
 [
-  { "file": "melbourne.yaml", "label": "Melbourne Labs" }
+  {
+    "file": "melbourne.yaml",
+    "label": "Melbourne Labs",
+    "country": "Australia",
+    "state": "Victoria",
+    "city": "Melbourne"
+  }
 ]
