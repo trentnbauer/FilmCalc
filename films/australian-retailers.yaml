@@ -1,4 +1,5 @@
 label: Australian-Retailers
+country: Australia
 films:
   - name: Kodak Gold
     boxSpeed: 200

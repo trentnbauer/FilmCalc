@@ -1,5 +1,21 @@
 [
-  { "file": "australian-retailers.yaml", "label": "Australian Retailers" },
-  { "file": "melbourne-retailers.yaml", "label": "Melbourne Retailers" },
-  { "file": "sydney-retailers.yaml", "label": "Sydney Retailers" }
+  {
+    "file": "australian-retailers.yaml",
+    "label": "Australian-Retailers",
+    "country": "Australia"
+  },
+  {
+    "file": "melbourne-retailers.yaml",
+    "label": "Melbourne Retailers",
+    "country": "Australia",
+    "state": "Victoria",
+    "city": "Melbourne"
+  },
+  {
+    "file": "sydney-retailers.yaml",
+    "label": "Sydney Retailers",
+    "country": "Australia",
+    "state": "New South Wales",
+    "city": "Sydney"
+  }
 ]

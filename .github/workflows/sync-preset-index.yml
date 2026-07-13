@@ -1,0 +1,66 @@
+name: Sync preset index manifests
+
+# films/index.json and labs/index.json are the manifest the app fetches to
+# discover which preset files exist (static hosting has no real directory
+# listing). Their content — file, label, country, state, city — all comes
+# from each YAML file's own top-level fields, so contributors and the
+# film-lab-intake bot only ever need to touch the YAML; this workflow keeps
+# the manifests in sync automatically instead of anyone hand-editing them
+# (see #114/#116 follow-up: region metadata belongs in the data, not
+# duplicated by hand into a second file that can drift).
+on:
+  push:
+    branches: [main]
+    paths:
+      - "films/**.yaml"
+      - "films/**.yml"
+      - "labs/**.yaml"
+      - "labs/**.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Regenerate films/index.json and labs/index.json from the YAML files
+        run: |
+          python3 - <<'PY'
+          import glob, json, yaml
+
+          def build_index(folder):
+              entries = []
+              for path in sorted(glob.glob(f"{folder}/*.yaml") + glob.glob(f"{folder}/*.yml")):
+                  doc = yaml.safe_load(open(path, encoding="utf-8"))
+                  if not isinstance(doc, dict):
+                      continue
+                  filename = path.split("/")[-1]
+                  entry = {"file": filename, "label": doc.get("label") or filename}
+                  for key in ("country", "state", "city"):
+                      if doc.get(key):
+                          entry[key] = doc[key]
+                  entries.append(entry)
+              return entries
+
+          for folder in ("films", "labs"):
+              entries = build_index(folder)
+              with open(f"{folder}/index.json", "w", encoding="utf-8", newline="\n") as f:
+                  json.dump(entries, f, indent=2)
+                  f.write("\n")
+          PY
+
+      - name: Commit if the manifests changed
+        run: |
+          if git diff --quiet -- films/index.json labs/index.json; then
+            echo "Manifests already up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add films/index.json labs/index.json
+          git commit -m "Sync films/index.json and labs/index.json from preset data [skip ci]"
+          git push

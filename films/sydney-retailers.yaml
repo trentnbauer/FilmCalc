@@ -1,4 +1,7 @@
 label: Sydney Retailers
+country: Australia
+state: New South Wales
+city: Sydney
 films:
   - name: FujiFilm Color
     boxSpeed: 200

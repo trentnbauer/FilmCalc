@@ -706,9 +706,11 @@ document.getElementById('importBtn').addEventListener('click', openImportModal);
 importModalCloseBtn.addEventListener('click', closeImportModal);
 importModal.addEventListener('click', (e) => { if (e.target === importModal) closeImportModal(); });
 
-// { file: "australian-retailers.yaml", label: "Australian Retailers" }
-// entries per folder — label is optional and falls back to the
-// filename if the manifest doesn't provide one.
+// { file: "australian-retailers.yaml", label: "Australian Retailers",
+//   country: "Australia", state: "Victoria", city: "Melbourne" } entries per
+// folder — label/state/city are optional. No state/city means a
+// country-wide preset (only really applies to films — a lab is always tied
+// to one physical place).
 async function fetchManifest(folder) {
     try {
         const res = await fetch(`${folder}/index.json`);
@@ -732,13 +734,96 @@ function labelFromParsed(parsed) {
 
 let presetEntries = [];
 let presetListLoaded = false;
+
+function presetCheckboxHtml(i) {
+    const e = presetEntries[i];
+    return `<label class="flex items-center gap-2 text-sm px-2 py-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-700/40 cursor-pointer">
+        <input type="checkbox" class="import-preset-checkbox rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500" data-index="${i}">
+        <span class="flex-1 text-gray-700 dark:text-gray-300">${escapeHtml(e.label)}</span>
+        <span class="text-xs px-1.5 py-0.5 rounded font-semibold uppercase ${e.type === 'Film' ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' : 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300'}">${e.type}</span>
+    </label>`;
+}
+
+// Groups preset indices as Country -> { countryWide: [...], states: { State
+// -> { City -> [...] } } }. A preset with no country (shouldn't normally
+// happen — only a missing/misconfigured manifest entry) falls under
+// "Other" rather than disappearing.
+function buildPresetTree() {
+    const tree = {};
+    presetEntries.forEach((e, i) => {
+        const country = e.country || 'Other';
+        if (!tree[country]) tree[country] = { countryWide: [], states: {} };
+        if (e.state) {
+            const cities = tree[country].states[e.state] || (tree[country].states[e.state] = {});
+            const city = e.city || 'Other';
+            (cities[city] || (cities[city] = [])).push(i);
+        } else {
+            tree[country].countryWide.push(i);
+        }
+    });
+    return tree;
+}
+
+// Renders the Country -> State -> City tree as nested <details> — native
+// expand/collapse, no extra JS state to track. Country-wide presets (no
+// state/city) sit directly under their country, alongside the state list.
+// Everything starts collapsed except a lone country (nothing to hide) or
+// whatever applyGeoDefaultsToPresetTree() opens once the geo lookup lands.
+function renderPresetTree(tree) {
+    const countries = Object.keys(tree).sort();
+    const singleCountry = countries.length === 1;
+    return countries.map(country => {
+        const { countryWide, states } = tree[country];
+        const stateNames = Object.keys(states).sort();
+        const statesHtml = stateNames.map(state => {
+            const cities = states[state];
+            const cityNames = Object.keys(cities).sort();
+            const citiesHtml = cityNames.map(city => `
+                <div class="pl-3 py-1">
+                    <p class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide px-2">${escapeHtml(city)}</p>
+                    ${cities[city].map(presetCheckboxHtml).join('')}
+                </div>`).join('');
+            return `
+                <details class="preset-state-group pl-3" data-state="${escapeHtml(state)}">
+                    <summary class="cursor-pointer select-none text-xs font-semibold text-gray-500 dark:text-gray-400 py-1.5">${escapeHtml(state)}</summary>
+                    ${citiesHtml}
+                </details>`;
+        }).join('');
+        return `
+            <details class="preset-country-group" data-country="${escapeHtml(country)}" ${singleCountry ? 'open' : ''}>
+                <summary class="cursor-pointer select-none text-sm font-semibold text-gray-700 dark:text-gray-300 py-1.5">${escapeHtml(country)}</summary>
+                <div class="pl-2">
+                    ${countryWide.map(presetCheckboxHtml).join('')}
+                    ${statesHtml}
+                </div>
+            </details>`;
+    }).join('');
+}
+
+// Best-effort: expand the visitor's own country/state so the relevant
+// presets are visible without clicking through the whole tree. Runs after
+// the tree's already rendered and interactive, so a slow/blocked/failed
+// geo lookup just leaves everything as rendered — never blocks the modal.
+async function applyGeoDefaultsToPresetTree() {
+    const geo = await fetchGeoLocation();
+    if (!geo || !geo.country) return;
+    const countryEl = [...importPresetList.querySelectorAll('details.preset-country-group')]
+        .find(d => d.dataset.country.toLowerCase() === geo.country.toLowerCase());
+    if (!countryEl) return;
+    countryEl.open = true;
+    if (!geo.state) return;
+    const stateEl = [...countryEl.querySelectorAll('details.preset-state-group')]
+        .find(d => d.dataset.state.toLowerCase() === geo.state.toLowerCase());
+    if (stateEl) stateEl.open = true;
+}
+
 async function loadPresetList() {
     if (presetListLoaded) return;
     presetListLoaded = true;
     const [films, labs] = await Promise.all([fetchManifest('films'), fetchManifest('labs')]);
     const rawEntries = [
-        ...films.map(f => ({ folder: 'films', file: f.file, label: f.label || f.file, type: 'Film' })),
-        ...labs.map(l => ({ folder: 'labs', file: l.file, label: l.label || l.file, type: 'Lab' }))
+        ...films.map(f => ({ folder: 'films', file: f.file, label: f.label || f.file, type: 'Film', country: f.country, state: f.state, city: f.city })),
+        ...labs.map(l => ({ folder: 'labs', file: l.file, label: l.label || l.file, type: 'Lab', country: l.country, state: l.state, city: l.city }))
     ];
     // Prefer the label embedded inside each file over the manifest's, so
     // renaming a preset only means editing its own YAML.
@@ -751,18 +836,14 @@ async function loadPresetList() {
         importPresetList.innerHTML = '<p class="text-xs text-gray-400 text-center py-2">No presets found — upload a file instead.</p>';
         return;
     }
-    importPresetList.innerHTML = presetEntries.map((e, i) => `
-        <label class="flex items-center gap-2 text-sm px-2 py-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-700/40 cursor-pointer">
-            <input type="checkbox" class="import-preset-checkbox rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500" data-index="${i}">
-            <span class="flex-1 text-gray-700 dark:text-gray-300">${escapeHtml(e.label)}</span>
-            <span class="text-xs px-1.5 py-0.5 rounded font-semibold uppercase ${e.type === 'Film' ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' : 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300'}">${e.type}</span>
-        </label>`).join('');
+    importPresetList.innerHTML = renderPresetTree(buildPresetTree());
     importPresetList.querySelectorAll('.import-preset-checkbox').forEach(cb => {
         cb.addEventListener('change', () => {
             const anyChecked = [...importPresetList.querySelectorAll('.import-preset-checkbox')].some(c => c.checked);
             importSelectedPresetsBtn.disabled = !anyChecked;
         });
     });
+    applyGeoDefaultsToPresetTree();
 }
 
 // Builds a { name -> film } map from an imported array of film entries.

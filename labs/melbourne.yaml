@@ -1,4 +1,7 @@
 label: Melbourne Labs
+country: Australia
+state: Victoria
+city: Melbourne
 labs:
 - name: Hillvale Photo Melbourne
   hidden: false
