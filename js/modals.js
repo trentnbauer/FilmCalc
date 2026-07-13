@@ -344,7 +344,7 @@ function renderAiPreview(kind, list) {
         ).join('');
         return `<div class="border border-gray-200 dark:border-gray-600 rounded-lg p-2">
             <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">${escapeHtml(e.name)}</p>
-            <p class="text-[11px] text-gray-400 dark:text-gray-500">${escapeHtml(e.address || 'No address')}</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500">${escapeHtml(e.address || 'No address')}</p>
             <div class="mt-1 space-y-0.5">${tiers}</div>
         </div>`;
     }).join('');
@@ -780,7 +780,7 @@ function renderPresetTree(tree) {
             const cityNames = Object.keys(cities).sort();
             const citiesHtml = cityNames.map(city => `
                 <div class="pl-3 py-1">
-                    <p class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide px-2">${escapeHtml(city)}</p>
+                    <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide px-2">${escapeHtml(city)}</p>
                     ${cities[city].map(presetCheckboxHtml).join('')}
                 </div>`).join('');
             return `

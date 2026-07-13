@@ -371,7 +371,7 @@ function updateLabComparison() {
         const chevron = `<span class="text-gray-400 dark:text-gray-500 transition-transform inline-block ${isOpen ? 'rotate-90' : ''}">▸</span>`;
         const dirUrl = labDirectionsUrl(r.name);
         const directionsLink = dirUrl
-            ? `<a href="${escapeHtml(dirUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-[11px] px-1.5 py-0.5 rounded bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:underline">📍 Directions ↗</a>`
+            ? `<a href="${escapeHtml(dirUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-xs px-1.5 py-0.5 rounded bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:underline">📍 Directions ↗</a>`
             : '';
         const breakdown = isOpen
             ? `<div class="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700 text-xs space-y-1">
@@ -564,7 +564,7 @@ function updateCheaperAlternative() {
         // (dev is a flat per-roll fee spread over more frames), spell that
         // out — otherwise "$0.61 film beats $0.42 film" looks wrong.
         const exposureNote = (bestAlt.exposures && exposures && bestAlt.exposures !== exposures && bestAlt.devCpp < currentDevCpp - 0.001)
-            ? `<p class="text-[11px] text-blue-700/70 dark:text-blue-400/70 mt-0.5">Its dev is cheaper per photo because it's ${bestAlt.exposures} exp vs your ${exposures} — the flat per-roll dev fee is spread over more frames.</p>`
+            ? `<p class="text-xs text-blue-700/70 dark:text-blue-400/70 mt-0.5">Its dev is cheaper per photo because it's ${bestAlt.exposures} exp vs your ${exposures} — the flat per-roll dev fee is spread over more frames.</p>`
             : '';
         altBlock = `<div class="mt-2 rounded-md bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/40 px-3 py-1.5">
             <p class="text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wide">💡 Cheaper film in library <span class="normal-case opacity-70">(total film + dev)</span></p>
