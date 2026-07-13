@@ -939,6 +939,12 @@
         // actually happened — only the unread dot did. First-ever visitors
         // don't get the whole project history flagged as "new" — their
         // baseline is set quietly on first load, with no popup or dot.
+        // #78: the auto-popup was showing the ENTIRE project history, not
+        // just what's landed since last time — openChangelogModal(sinceNumber)
+        // filters to entries newer than the previously-seen PR when it's
+        // called from the auto-popup path. The manual footer-button click
+        // still shows the full list, since that's an explicit "show me
+        // everything" action.
         let changelogEntries = [];
 
         async function loadChangelog() {
@@ -953,17 +959,23 @@
             if (latestSeen === 0) {
                 localStorage.setItem('changelogLastSeenPR', String(latestKnown));
             } else if (latestKnown > latestSeen) {
-                openChangelogModal();
+                openChangelogModal(latestSeen);
             }
         }
 
-        function renderChangelogList() {
+        // sinceNumber (optional): when given, only entries newer than it are
+        // shown — used for the auto-popup. Omitted for the manual button
+        // click, which always shows the full history.
+        function renderChangelogList(sinceNumber) {
             const container = document.getElementById('changelogList');
-            if (!Array.isArray(changelogEntries) || changelogEntries.length === 0) {
-                container.innerHTML = '<p class="text-xs text-gray-400 text-center py-2">No changelog available.</p>';
+            const all = Array.isArray(changelogEntries) ? changelogEntries : [];
+            const entries = sinceNumber ? all.filter(e => e.number > sinceNumber) : all;
+            if (entries.length === 0) {
+                const msg = sinceNumber ? 'No new changes.' : 'No changelog available.';
+                container.innerHTML = `<p class="text-xs text-gray-400 text-center py-2">${msg}</p>`;
                 return;
             }
-            container.innerHTML = changelogEntries.map(e => {
+            container.innerHTML = entries.map(e => {
                 const date = new Date(e.mergedAt);
                 const dateLabel = isNaN(date) ? '' : date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
                 const safeUrl = sanitizeUrl(e.url);
@@ -978,15 +990,15 @@
         }
 
         const changelogModal = document.getElementById('changelogModal');
-        function openChangelogModal() {
-            renderChangelogList();
+        function openChangelogModal(sinceNumber) {
+            renderChangelogList(sinceNumber);
             changelogModal.classList.remove('hidden');
             if (changelogEntries.length) {
                 localStorage.setItem('changelogLastSeenPR', String(Math.max(...changelogEntries.map(e => e.number))));
             }
         }
         function closeChangelogModal() { changelogModal.classList.add('hidden'); }
-        document.getElementById('changelogBtn').addEventListener('click', openChangelogModal);
+        document.getElementById('changelogBtn').addEventListener('click', () => openChangelogModal());
         document.getElementById('changelogModalCloseBtn').addEventListener('click', closeChangelogModal);
         changelogModal.addEventListener('click', (e) => { if (e.target === changelogModal) closeChangelogModal(); });
 
