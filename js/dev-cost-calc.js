@@ -31,7 +31,10 @@ function normalizeFilmBundles(film) {
             exposures: parseInt(b.exposures) || 36,
             filmCost: parseFloat(b.filmCost) || 0,
             storeName: b.storeName || '',
-            buyLink: b.buyLink || ''
+            buyLink: b.buyLink || '',
+            availability: b.availability || 'national',
+            state: b.state || '',
+            city: b.city || ''
         }));
     }
     return [{
@@ -39,8 +42,21 @@ function normalizeFilmBundles(film) {
         exposures: parseInt(film.exposures) || 36,
         filmCost: parseFloat(film.filmCost) || 0,
         storeName: film.storeName || '',
-        buyLink: film.buyLink || ''
+        buyLink: film.buyLink || '',
+        availability: film.availability || 'national',
+        state: film.state || '',
+        city: film.city || ''
     }];
+}
+
+// Short "X only" label for a bundle/entry whose price isn't valid
+// country-wide (issue #114) — e.g. a local shop's price baking in postage
+// that doesn't apply elsewhere. Returns '' for national (or unset)
+// availability, so callers can drop it in without an extra falsy check.
+function bundleLocalityLabel(entry) {
+    if (!entry || !entry.availability || entry.availability === 'national') return '';
+    const place = entry.availability === 'city' ? entry.city : entry.state;
+    return place ? `${place} only` : '';
 }
 
 // Bridges the current { name, services: [...] } schema with the older flat
@@ -211,7 +227,10 @@ function computeIsoPriceOptions(targetIso, allFilms, allLabs, opts) {
                         devCostPerRoll: tier.devCost + pushPullFee,
                         totalCostPerRoll: totalCostPerPhoto * bestBundle.exposures,
                         buyLink: bestBundle.buyLink,
-                        storeName: bestBundle.storeName
+                        storeName: bestBundle.storeName,
+                        availability: bestBundle.availability,
+                        state: bestBundle.state,
+                        city: bestBundle.city
                     };
                     if (matchesFilters(tier)) candidates.push(candidate);
                     if (tier.highResScan && tier.turnaroundTime === 'next_day' &&
@@ -307,7 +326,10 @@ function computeNativeFilmLabMatrix(allFilms, allLabs, opts) {
                     devCostPerRoll: tier.devCost,
                     totalCostPerRoll: (bestFilmCostPerPhoto + devCostPerPhoto) * bestBundle.exposures,
                     buyLink: bestBundle.buyLink,
-                    storeName: bestBundle.storeName
+                    storeName: bestBundle.storeName,
+                    availability: bestBundle.availability,
+                    state: bestBundle.state,
+                    city: bestBundle.city
                 });
             });
         });

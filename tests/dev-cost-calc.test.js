@@ -72,7 +72,7 @@ test('filmKey distinguishes same name at different box speeds/formats', () => {
 
 test('normalizeFilmBundles falls back to the legacy flat schema', () => {
     const bundles = normalizeFilmBundles({ rolls: '3', exposures: '24', filmCost: '9.5' });
-    assert.deepEqual(bundles, [{ rolls: 3, exposures: 24, filmCost: 9.5, storeName: '', buyLink: '' }]);
+    assert.deepEqual(bundles, [{ rolls: 3, exposures: 24, filmCost: 9.5, storeName: '', buyLink: '', availability: 'national', state: '', city: '' }]);
 });
 
 test('normalizeLabServices falls back to the legacy flat schema', () => {

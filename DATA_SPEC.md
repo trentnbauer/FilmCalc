@@ -42,6 +42,9 @@ Goes in a file under `films/`, grouped **by country**.
     filmCost: 28.50
     storeName: Walkens
     buyLink: https://walkens.com.au/products/example
+    availability: city
+    state: Victoria
+    city: Melbourne
 ```
 
 | Field | Rules |
@@ -58,6 +61,9 @@ Goes in a file under `films/`, grouped **by country**.
 | `filmCost` | Price of the **whole pack**, including postage if the page states it. Plain number. Regular price. |
 | `storeName` | Short shop name, e.g. `Walkens`, `B&H`, `Analogue Wonderland`. |
 | `buyLink` | The product page URL. Strip tracking junk (`utm_*`, `gclid`, etc.) if you can. Use `''` if there genuinely isn't one. |
+| `availability` | How widely this price is actually valid, since a local shop's price often bakes in postage that doesn't apply elsewhere. One of: `national` (ships/delivers anywhere in the country — the default if omitted), `state` (only valid within one state/region), `city` (only valid in one city, e.g. a shop with no shipping or in-store-only pricing). |
+| `state` | Required if `availability` is `state` or `city`. The state/region the price is valid in, e.g. `Victoria`. Omit (or `''`) for `national`. |
+| `city` | Required if `availability` is `city`. The city the price is valid in, e.g. `Melbourne`. Omit (or `''`) otherwise. |
 
 ---
 

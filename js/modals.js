@@ -191,7 +191,10 @@ Output a top-level key "films:" containing a list. Each film:
     exposures: <frames per roll: 36 or 24 for 35mm; 12 for 120>
     filmCost: <price of the WHOLE pack, plain number>
     storeName: <short shop name>
-    buyLink: <product URL, tracking params stripped>`;
+    buyLink: <product URL, tracking params stripped>
+    availability: <national | state | city — national if the shop ships/delivers anywhere in the country (the default), state if the price only holds within one state/region, city if it's local-only (no shipping, or in-store/local-delivery pricing)>
+    state: <state/region the price is valid in — only if availability is state or city, omit otherwise>
+    city: <city the price is valid in — only if availability is city, omit otherwise>`;
 
     const labSpec = `${common}
 
@@ -325,9 +328,12 @@ function renderAiPreview(kind, list) {
     const el = document.getElementById('aiPreview');
     el.innerHTML = list.map(e => {
         if (kind === 'film') {
-            const bundles = (e.bundles || []).map(b =>
-                `<div class="flex justify-between text-xs text-gray-500 dark:text-gray-400"><span>${escapeHtml(b.rolls)}× roll${b.rolls > 1 ? 's' : ''} · ${escapeHtml(b.exposures)} exp · ${escapeHtml(b.storeName || '—')}</span><span class="font-mono">${CUR()}${(parseFloat(b.filmCost) || 0).toFixed(2)}</span></div>`
-            ).join('');
+            const bundles = (e.bundles || []).map(b => {
+                const locality = b.availability && b.availability !== 'national'
+                    ? ` · ${escapeHtml(b.availability === 'city' ? b.city : b.state) || b.availability}-only`
+                    : '';
+                return `<div class="flex justify-between text-xs text-gray-500 dark:text-gray-400"><span>${escapeHtml(b.rolls)}× roll${b.rolls > 1 ? 's' : ''} · ${escapeHtml(b.exposures)} exp · ${escapeHtml(b.storeName || '—')}${locality}</span><span class="font-mono">${CUR()}${(parseFloat(b.filmCost) || 0).toFixed(2)}</span></div>`;
+            }).join('');
             return `<div class="border border-gray-200 dark:border-gray-600 rounded-lg p-2">
                 <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">${escapeHtml(e.name)} <span class="opacity-70 font-normal">(${escapeHtml(e.boxSpeed)} ISO · ${escapeHtml(e.format || '35mm')} · ${escapeHtml(e.process || 'C41')} · ±${escapeHtml(e.maxPushPull ?? 1)} stop)</span></p>
                 <div class="mt-1 space-y-0.5">${bundles}</div>
@@ -509,7 +515,10 @@ document.getElementById('aiAddBtn').addEventListener('click', () => {
                     exposures: parseInt(b.exposures) || 36,
                     filmCost: parseFloat(b.filmCost) || 0,
                     storeName: b.storeName || '',
-                    buyLink: sanitizeUrl(b.buyLink) || ''
+                    buyLink: sanitizeUrl(b.buyLink) || '',
+                    availability: b.availability || 'national',
+                    state: b.state || '',
+                    city: b.city || ''
                 }))
             };
         });

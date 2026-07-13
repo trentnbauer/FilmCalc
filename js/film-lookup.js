@@ -508,7 +508,7 @@ function updateCheaperAlternative() {
             if (devCpp === null) return;
             const totalCpp = filmCpp + devCpp;
             if (bestAlt === null || totalCpp < bestAlt.totalCpp) {
-                bestAlt = { name: f.name, storeName: b.storeName, buyLink: b.buyLink, filmCpp, devCpp, totalCpp, exposures: parseInt(b.exposures) || 0 };
+                bestAlt = { name: f.name, storeName: b.storeName, buyLink: b.buyLink, filmCpp, devCpp, totalCpp, exposures: parseInt(b.exposures) || 0, availability: b.availability, state: b.state, city: b.city };
             }
         });
     });
@@ -555,8 +555,10 @@ function updateCheaperAlternative() {
         const saving = currentTotal - bestAlt.totalCpp;
         const buyUrl = sanitizeUrl(bestAlt.buyLink);
         const buyLabel = bestAlt.storeName ? `Buy from ${escapeHtml(bestAlt.storeName)}` : 'Buy this film';
+        const altLocality = bundleLocalityLabel(bestAlt);
+        const altLocalityBadge = altLocality ? ` <span class="text-amber-600 dark:text-amber-400">(${escapeHtml(altLocality)})</span>` : '';
         const buyLink = buyUrl
-            ? ` · <a href="${escapeHtml(buyUrl)}" target="_blank" rel="noopener noreferrer" class="font-medium text-blue-600 dark:text-blue-400 hover:underline">🛒 ${buyLabel} ↗</a>`
+            ? ` · <a href="${escapeHtml(buyUrl)}" target="_blank" rel="noopener noreferrer" class="font-medium text-blue-600 dark:text-blue-400 hover:underline">🛒 ${buyLabel} ↗</a>${altLocalityBadge}`
             : '';
         // If the alternative wins mainly because it has more exposures
         // (dev is a flat per-roll fee spread over more frames), spell that
