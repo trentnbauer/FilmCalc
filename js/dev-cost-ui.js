@@ -124,7 +124,7 @@ function renderIsoRow(entry, rank, pinReason) {
     const rowBg = entry.overLimit ? 'bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700' : (isCheapest ? 'bg-green-100 dark:bg-green-900/30' : (pinReason ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'bg-white dark:bg-gray-800/50'));
     const textColor = entry.overLimit ? 'text-red-700 dark:text-red-400' : (isCheapest ? 'text-green-800 dark:text-green-400 font-semibold' : 'text-gray-700 dark:text-gray-300');
     const fav = isFavLab(entry.labName);
-    const star = `<button type="button" class="fav-star text-sm leading-none" data-fav-lab="${escapeHtml(entry.labName)}" title="${fav ? 'Unfavourite lab' : 'Favourite lab'}" onclick="event.stopPropagation()"><span class="${fav ? 'theme-favourite-text text-amber-400' : 'text-gray-300 dark:text-gray-600'}">${fav ? '★' : '☆'}</span></button>`;
+    const star = `<button type="button" class="fav-star text-sm leading-none" data-fav-lab="${escapeHtml(entry.labName)}" title="${fav ? 'Unfavourite lab' : 'Favourite lab'}" aria-label="${fav ? 'Unfavourite lab' : 'Favourite lab'}" onclick="event.stopPropagation()"><span class="${fav ? 'theme-favourite-text text-amber-400' : 'text-gray-300 dark:text-gray-600'}">${fav ? '★' : '☆'}</span></button>`;
     const pinnedFavNote = pinReason === 'default'
         ? `<div class="text-[11px] theme-default-lab-text text-indigo-600 dark:text-indigo-400 mt-0.5">🏠 Shown first — this is your default lab</div>`
         : pinReason
@@ -396,10 +396,10 @@ function renderMatrixRow(entry, rank, keyPrefix, pinReason, upgrade) {
     const fav = isFavLab(entry.labName);
     const star = keyPrefix === 'film'
         ? ''
-        : `<button type="button" class="fav-star text-sm leading-none ${fav ? 'theme-favourite-text text-amber-400' : 'text-gray-300 dark:text-gray-600'}" data-fav-lab="${escapeHtml(entry.labName)}" title="${fav ? 'Unfavourite lab' : 'Favourite lab'}" onclick="event.stopPropagation()">${fav ? '★' : '☆'}</button>`;
+        : `<button type="button" class="fav-star text-sm leading-none ${fav ? 'theme-favourite-text text-amber-400' : 'text-gray-300 dark:text-gray-600'}" data-fav-lab="${escapeHtml(entry.labName)}" title="${fav ? 'Unfavourite lab' : 'Favourite lab'}" aria-label="${fav ? 'Unfavourite lab' : 'Favourite lab'}" onclick="event.stopPropagation()">${fav ? '★' : '☆'}</button>`;
     const pinned = keyPrefix === 'film' ? isDevCostPinned(entry) : false;
     const pinBtn = keyPrefix === 'film'
-        ? `<button type="button" class="dev-cost-pin-btn text-sm leading-none ${pinned ? 'text-indigo-500' : 'text-gray-300 dark:text-gray-600'}" data-pin-row-key="${escapeHtml(matrixRowKey(keyPrefix, entry))}" title="${pinned ? 'Unpin' : 'Pin for comparison'}" onclick="event.stopPropagation()">📌</button>`
+        ? `<button type="button" class="dev-cost-pin-btn text-sm leading-none ${pinned ? 'text-indigo-500' : 'text-gray-300 dark:text-gray-600'}" data-pin-row-key="${escapeHtml(matrixRowKey(keyPrefix, entry))}" title="${pinned ? 'Unpin' : 'Pin for comparison'}" aria-label="${pinned ? 'Unpin' : 'Pin for comparison'}" onclick="event.stopPropagation()">📌</button>`
         : '';
     // Per Photo is grouped one row per film, so it also gets a ♥ film
     // star — favouriting the lab shown wouldn't generalise across a
@@ -407,7 +407,7 @@ function renderMatrixRow(entry, rank, keyPrefix, pinReason, upgrade) {
     const filmFavKeyForRow = filmKey(entry.filmName, entry.boxSpeed, entry.format);
     const favFilm = isFavFilm(filmFavKeyForRow);
     const filmStar = keyPrefix === 'photo'
-        ? `<button type="button" class="fav-film-star text-sm leading-none ${favFilm ? 'theme-favourite-text text-red-400' : 'text-gray-300 dark:text-gray-600'}" data-fav-film="${escapeHtml(filmFavKeyForRow)}" title="${favFilm ? 'Unfavourite film' : 'Favourite film'}" onclick="event.stopPropagation()">${favFilm ? '♥' : '♡'}</button>`
+        ? `<button type="button" class="fav-film-star text-sm leading-none ${favFilm ? 'theme-favourite-text text-red-400' : 'text-gray-300 dark:text-gray-600'}" data-fav-film="${escapeHtml(filmFavKeyForRow)}" title="${favFilm ? 'Unfavourite film' : 'Favourite film'}" aria-label="${favFilm ? 'Unfavourite film' : 'Favourite film'}" onclick="event.stopPropagation()">${favFilm ? '♥' : '♡'}</button>`
         : '';
     const pinnedFavNote = pinReason === 'default'
         ? `<div class="text-[11px] theme-default-lab-text text-indigo-600 dark:text-indigo-400 mt-0.5">🏠 Shown first — this is your default lab</div>`
@@ -686,7 +686,7 @@ function renderPinnedDevCostBlock() {
         return `<div>
             <div class="matrix-row cursor-pointer px-3 py-2 rounded-lg text-sm bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800" data-row-key="${escapeHtml(key)}" title="Tap for cost breakdown">
                 <div class="flex justify-between items-start gap-2">
-                    <span class="text-indigo-800 dark:text-indigo-300"><button type="button" class="unpin-dev-cost-btn text-red-400 hover:text-red-600 text-xs font-bold mr-1" data-unpin-id="${p.pinId}" title="Unpin" onclick="event.stopPropagation()">✕</button>${escapeHtml(p.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(p.labName)}</span> <span class="text-xs opacity-70">(${p.boxSpeed} ISO)</span>${hiResBadge}${turnaroundBadge}</span>
+                    <span class="text-indigo-800 dark:text-indigo-300"><button type="button" class="unpin-dev-cost-btn text-red-400 hover:text-red-600 text-xs font-bold mr-1" data-unpin-id="${p.pinId}" title="Unpin" aria-label="Unpin" onclick="event.stopPropagation()">✕</button>${escapeHtml(p.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(p.labName)}</span> <span class="text-xs opacity-70">(${p.boxSpeed} ISO)</span>${hiResBadge}${turnaroundBadge}</span>
                     <span class="font-mono text-right leading-tight text-indigo-800 dark:text-indigo-300 whitespace-nowrap flex items-center gap-1.5">
                         <span>
                             <span class="font-semibold block">${CUR()}${p.totalCostPerPhoto.toFixed(2)}/photo</span>
