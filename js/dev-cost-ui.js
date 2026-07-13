@@ -111,9 +111,63 @@ function isoRowKey(entry) {
     return `${entry.filmName}|${entry.labName}|${entry.stops}`;
 }
 
-function renderIsoRow(entry, rank, pinReason) {
+// ---------- Shared row-rendering fragments (issue #93) ----------
+// renderIsoRow (Per ISO) and renderMatrixRow (Per Film/Photo/Lab) build
+// visually distinct rows — Per ISO has push/pull direction + an
+// over-limit danger state; the matrix rows juggle three different
+// star/pin roles depending on which view they're in — so they aren't
+// unified into one shell, but the pieces that genuinely are identical
+// (badges, footer links, and the expanded cost breakdown) are shared
+// here instead of duplicated in both.
+
+// Hi-res/turnaround badges shown on every Dev Cost row.
+function renderRowBadges(entry) {
     const hiResBadge = entry.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">HI-RES</span>` : '';
     const turnaroundBadge = entry.turnaroundTime ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 align-middle">${escapeHtml(turnaroundLabels[entry.turnaroundTime] || entry.turnaroundTime)}</span>` : '';
+    return hiResBadge + turnaroundBadge;
+}
+
+// Expand/collapse chevron shown on every Dev Cost row.
+function renderRowChevron(isOpen) {
+    return `<span class="text-gray-400 dark:text-gray-500 transition-transform inline-block ${isOpen ? 'rotate-90' : ''}">▸</span>`;
+}
+
+// "Buy film" / "Get directions" links shown in every row's expanded
+// breakdown, when the entry has a buy link and/or a geocodable lab
+// address.
+function renderRowFooterLinks(entry) {
+    const buyUrl = sanitizeUrl(entry.buyLink);
+    const buyLink = buyUrl
+        ? `<a href="${escapeHtml(buyUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-[11px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:underline">🛒 ${entry.storeName ? 'Buy from ' + escapeHtml(entry.storeName) : 'Buy film'} ↗</a>`
+        : '';
+    const dirUrl = labDirectionsUrl(entry.labName);
+    const directionsLink = dirUrl
+        ? `<a href="${escapeHtml(dirUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-[11px] px-1.5 py-0.5 rounded bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:underline">📍 Directions ↗</a>`
+        : '';
+    return (buyLink || directionsLink)
+        ? `<div class="pt-1.5 flex justify-between items-center gap-2"><span>${buyLink}</span><span>${directionsLink}</span></div>`
+        : '';
+}
+
+// Expanded per-photo/per-roll cost breakdown shown on every Dev Cost row
+// (Per ISO/Photo/Film/Lab) when it's tapped open.
+function renderRowBreakdown(entry, isOpen) {
+    if (!isOpen) return '';
+    return `<div class="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700 text-xs space-y-1">
+            <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Film (per photo)</span><span class="font-mono">${CUR()}${entry.filmCostPerPhoto.toFixed(2)}</span></div>
+            <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Development (per photo) <span class="opacity-60">= dev/roll ÷ ${entry.exposures} exp</span></span><span class="font-mono">${CUR()}${(entry.devCostBase / entry.exposures).toFixed(2)}</span></div>
+            ${entry.pushPullFee > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Push/pull fee (per photo)</span><span class="font-mono">${CUR()}${(entry.pushPullFee / entry.exposures).toFixed(2)}</span></div>` : ''}
+            <div class="flex justify-between text-gray-500 dark:text-gray-400 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>Film cost (per roll)</span><span class="font-mono">${CUR()}${entry.filmCostPerRoll.toFixed(2)}</span></div>
+            <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Development (per roll)</span><span class="font-mono">${CUR()}${entry.devCostPerRoll.toFixed(2)}</span></div>
+            <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>Scan</span><span>${entry.highResScan ? 'Hi-res' : 'Standard'}</span></div>
+            <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>Turnaround</span><span>${escapeHtml(turnaroundLabels[entry.turnaroundTime] || entry.turnaroundTime || '—')}</span></div>
+            <div class="flex justify-between font-semibold text-gray-700 dark:text-gray-300 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>Total per roll (${entry.exposures} exp)</span><span class="font-mono">${CUR()}${entry.totalCostPerRoll.toFixed(2)}</span></div>
+            ${renderRowFooterLinks(entry)}
+        </div>`;
+}
+
+function renderIsoRow(entry, rank, pinReason) {
+    const badges = renderRowBadges(entry);
     const direction = entry.stops > 0 ? 'Push' : 'Pull';
     const stopsLabel = entry.stops !== 0
         ? ` <span class="text-xs ${entry.overLimit ? 'theme-danger-text text-red-600 dark:text-red-400 font-semibold' : 'opacity-70'}">(${direction} ${Math.abs(entry.stops)} stop${Math.abs(entry.stops) === 1 ? '' : 's'}${entry.overLimit ? ` — over its ${entry.maxPushPull}-stop limit` : ''})</span>`
@@ -134,38 +188,13 @@ function renderIsoRow(entry, rank, pinReason) {
 
     const key = isoRowKey(entry);
     const isOpen = expandAllIso || expandedIsoRows.has(key);
-    const chevron = `<span class="text-gray-400 dark:text-gray-500 transition-transform inline-block ${isOpen ? 'rotate-90' : ''}">▸</span>`;
-
-    // Expandable breakdown: full per-photo + per-roll cost line items.
-    const buyUrl = sanitizeUrl(entry.buyLink);
-    const buyLink = buyUrl
-        ? `<a href="${escapeHtml(buyUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-[11px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:underline">🛒 ${entry.storeName ? 'Buy from ' + escapeHtml(entry.storeName) : 'Buy film'} ↗</a>`
-        : '';
-    const dirUrl = labDirectionsUrl(entry.labName);
-    const directionsLink = dirUrl
-        ? `<a href="${escapeHtml(dirUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-[11px] px-1.5 py-0.5 rounded bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:underline">📍 Directions ↗</a>`
-        : '';
-    const footer = (buyLink || directionsLink)
-        ? `<div class="pt-1.5 flex justify-between items-center gap-2"><span>${buyLink}</span><span>${directionsLink}</span></div>`
-        : '';
-    const breakdown = isOpen
-        ? `<div class="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700 text-xs space-y-1">
-                <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Film (per photo)</span><span class="font-mono">${CUR()}${entry.filmCostPerPhoto.toFixed(2)}</span></div>
-                <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Development (per photo) <span class="opacity-60">= dev/roll ÷ ${entry.exposures} exp</span></span><span class="font-mono">${CUR()}${(entry.devCostBase / entry.exposures).toFixed(2)}</span></div>
-                ${entry.pushPullFee > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Push/pull fee (per photo)</span><span class="font-mono">${CUR()}${(entry.pushPullFee / entry.exposures).toFixed(2)}</span></div>` : ''}
-                <div class="flex justify-between text-gray-500 dark:text-gray-400 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>Film cost (per roll)</span><span class="font-mono">${CUR()}${entry.filmCostPerRoll.toFixed(2)}</span></div>
-                <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Development (per roll)</span><span class="font-mono">${CUR()}${entry.devCostPerRoll.toFixed(2)}</span></div>
-                <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>Scan</span><span>${entry.highResScan ? 'Hi-res' : 'Standard'}</span></div>
-                <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>Turnaround</span><span>${escapeHtml(turnaroundLabels[entry.turnaroundTime] || entry.turnaroundTime || '—')}</span></div>
-                <div class="flex justify-between font-semibold text-gray-700 dark:text-gray-300 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>Total per roll (${entry.exposures} exp)</span><span class="font-mono">${CUR()}${entry.totalCostPerRoll.toFixed(2)}</span></div>
-                ${footer}
-            </div>`
-        : '';
+    const chevron = renderRowChevron(isOpen);
+    const breakdown = renderRowBreakdown(entry, isOpen);
 
     return `<div>
         <div class="iso-row cursor-pointer px-3 py-2 rounded-lg text-sm ${semanticRowBg} ${rowBg}" data-iso-key="${escapeHtml(key)}" title="Tap for cost breakdown">
             <div class="flex justify-between items-start gap-2">
-                <span class="${semanticRowText} ${entry.overLimit ? 'font-semibold text-red-700 dark:text-red-400' : (isCheapest ? 'font-semibold text-green-800 dark:text-green-400' : 'text-gray-700 dark:text-gray-300')}">${star} ${isCheapest && !entry.overLimit ? '⭐ ' : ''}${escapeHtml(entry.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(entry.labName)}</span>${stopsLabel}${hiResBadge}${turnaroundBadge}</span>
+                <span class="${semanticRowText} ${entry.overLimit ? 'font-semibold text-red-700 dark:text-red-400' : (isCheapest ? 'font-semibold text-green-800 dark:text-green-400' : 'text-gray-700 dark:text-gray-300')}">${star} ${isCheapest && !entry.overLimit ? '⭐ ' : ''}${escapeHtml(entry.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(entry.labName)}</span>${stopsLabel}${badges}</span>
                 <span class="font-mono text-right leading-tight ${semanticRowText} ${textColor} whitespace-nowrap flex items-center gap-1.5">
                     <span>
                         <span class="font-semibold block">${CUR()}${entry.totalCostPerPhoto.toFixed(2)}/photo</span>
@@ -381,8 +410,7 @@ function matrixRowKey(keyPrefix, entry) {
 
 function renderMatrixRow(entry, rank, keyPrefix, pinReason, upgrade) {
     const upgradeNote = renderUpgradeNote(upgrade);
-    const hiResBadge = entry.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">HI-RES</span>` : '';
-    const turnaroundBadge = entry.turnaroundTime ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 align-middle">${escapeHtml(turnaroundLabels[entry.turnaroundTime] || entry.turnaroundTime)}</span>` : '';
+    const badges = renderRowBadges(entry);
     const isCheapest = rank === 0;
     const semanticRowBg = isCheapest ? 'theme-cheapest-bg' : '';
     const semanticRowText = isCheapest ? 'theme-cheapest-text' : '';
@@ -390,7 +418,7 @@ function renderMatrixRow(entry, rank, keyPrefix, pinReason, upgrade) {
     const textColor = isCheapest ? 'text-green-800 dark:text-green-400 font-semibold' : 'text-gray-600 dark:text-gray-400';
     const key = matrixRowKey(keyPrefix, entry);
     const isOpen = expandAllIso || expandedIsoRows.has(key);
-    const chevron = `<span class="text-gray-400 dark:text-gray-500 transition-transform inline-block ${isOpen ? 'rotate-90' : ''}">▸</span>`;
+    const chevron = renderRowChevron(isOpen);
     // Per Film swaps the ★ favourite-lab star for a 📌 pin toggle — see
     // the pinned-results block above updateCostPerFilmTab for why.
     const fav = isFavLab(entry.labName);
@@ -417,35 +445,12 @@ function renderMatrixRow(entry, rank, keyPrefix, pinReason, upgrade) {
                 ? `<div class="text-[11px] theme-favourite-text text-indigo-600 dark:text-indigo-400 mt-0.5">★ Shown first — this is your favourite lab</div>`
                 : '';
 
-    const buyUrl = sanitizeUrl(entry.buyLink);
-    const buyLink = buyUrl
-        ? `<a href="${escapeHtml(buyUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-[11px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:underline">🛒 ${entry.storeName ? 'Buy from ' + escapeHtml(entry.storeName) : 'Buy film'} ↗</a>`
-        : '';
-    const dirUrl = labDirectionsUrl(entry.labName);
-    const directionsLink = dirUrl
-        ? `<a href="${escapeHtml(dirUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-[11px] px-1.5 py-0.5 rounded bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:underline">📍 Directions ↗</a>`
-        : '';
-    const footer = (buyLink || directionsLink)
-        ? `<div class="pt-1.5 flex justify-between items-center gap-2"><span>${buyLink}</span><span>${directionsLink}</span></div>`
-        : '';
-    const breakdown = isOpen
-        ? `<div class="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700 text-xs space-y-1">
-                <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Film (per photo)</span><span class="font-mono">${CUR()}${entry.filmCostPerPhoto.toFixed(2)}</span></div>
-                <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Development (per photo) <span class="opacity-60">= dev/roll ÷ ${entry.exposures} exp</span></span><span class="font-mono">${CUR()}${(entry.devCostBase / entry.exposures).toFixed(2)}</span></div>
-                ${entry.pushPullFee > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Push/pull fee (per photo)</span><span class="font-mono">${CUR()}${(entry.pushPullFee / entry.exposures).toFixed(2)}</span></div>` : ''}
-                <div class="flex justify-between text-gray-500 dark:text-gray-400 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>Film cost (per roll)</span><span class="font-mono">${CUR()}${entry.filmCostPerRoll.toFixed(2)}</span></div>
-                <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Development (per roll)</span><span class="font-mono">${CUR()}${entry.devCostPerRoll.toFixed(2)}</span></div>
-                <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>Scan</span><span>${entry.highResScan ? 'Hi-res' : 'Standard'}</span></div>
-                <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>Turnaround</span><span>${escapeHtml(turnaroundLabels[entry.turnaroundTime] || entry.turnaroundTime || '—')}</span></div>
-                <div class="flex justify-between font-semibold text-gray-700 dark:text-gray-300 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>Total per roll (${entry.exposures} exp)</span><span class="font-mono">${CUR()}${entry.totalCostPerRoll.toFixed(2)}</span></div>
-                ${footer}
-            </div>`
-        : '';
+    const breakdown = renderRowBreakdown(entry, isOpen);
 
     return `<div>
         <div class="matrix-row cursor-pointer px-3 py-2 rounded-lg text-sm ${semanticRowBg} ${rowBg}" data-row-key="${escapeHtml(key)}" title="Tap for cost breakdown">
             <div class="flex justify-between items-start gap-2">
-                <span class="${semanticRowText} ${textColor}">${star}${filmStar}${pinBtn} ${isCheapest ? '⭐ ' : ''}${escapeHtml(entry.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(entry.labName)}</span> <span class="text-xs opacity-70">(${entry.boxSpeed} ISO)</span>${hiResBadge}${turnaroundBadge}</span>
+                <span class="${semanticRowText} ${textColor}">${star}${filmStar}${pinBtn} ${isCheapest ? '⭐ ' : ''}${escapeHtml(entry.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(entry.labName)}</span> <span class="text-xs opacity-70">(${entry.boxSpeed} ISO)</span>${badges}</span>
                 <span class="font-mono text-right leading-tight ${semanticRowText} ${textColor} whitespace-nowrap flex items-center gap-1.5">
                     <span>
                         <span class="font-semibold block">${CUR()}${entry.totalCostPerPhoto.toFixed(2)}/photo</span>
