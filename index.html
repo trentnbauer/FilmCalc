@@ -776,9 +776,8 @@
     </div>
 
     <p class="text-center text-xs text-gray-500 dark:text-gray-500 pb-4">
-        <button type="button" id="changelogBtn" class="underline decoration-dotted hover:text-blue-500 relative" title="View what's changed">
+        <button type="button" id="changelogBtn" class="underline decoration-dotted hover:text-blue-500" title="View what's changed">
             FilmCalc build %%FILMCALC_VERSION%%
-            <span id="changelogUnreadDot" class="hidden absolute -top-0.5 -right-1.5 w-1.5 h-1.5 rounded-full bg-blue-500"></span>
         </button> <br>
         Originally vibe coded by Gemini, with further features built by Claude (Anthropic). <br>
         Source code: <a href="https://github.com/trentnbauer/FilmCalc" class="underline hover:text-blue-500">github.com/trentnbauer/FilmCalc</a>
@@ -930,10 +929,12 @@
         // Footer version is a clickable button (issue #53) that pops up
         // recent changes, generated at build time into changelog.json from
         // merged PR titles — see .github/workflows/build-github-page.yml.
-        // An unread dot appears when new entries have landed since this
-        // browser last opened the popup (tracked by the highest PR number
-        // seen). First-ever visitors don't get the whole project history
-        // flagged as "new" — their baseline is set quietly on first load.
+        // #53 asked for the popup to appear automatically when new entries
+        // have landed since this browser last saw the changelog (tracked by
+        // the highest PR number seen); #66 was that auto-popup never
+        // actually happened — only the unread dot did. First-ever visitors
+        // don't get the whole project history flagged as "new" — their
+        // baseline is set quietly on first load, with no popup or dot.
         let changelogEntries = [];
 
         async function loadChangelog() {
@@ -948,7 +949,7 @@
             if (latestSeen === 0) {
                 localStorage.setItem('changelogLastSeenPR', String(latestKnown));
             } else if (latestKnown > latestSeen) {
-                document.getElementById('changelogUnreadDot').classList.remove('hidden');
+                openChangelogModal();
             }
         }
 
@@ -976,7 +977,6 @@
         function openChangelogModal() {
             renderChangelogList();
             changelogModal.classList.remove('hidden');
-            document.getElementById('changelogUnreadDot').classList.add('hidden');
             if (changelogEntries.length) {
                 localStorage.setItem('changelogLastSeenPR', String(Math.max(...changelogEntries.map(e => e.number))));
             }
