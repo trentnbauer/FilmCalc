@@ -798,6 +798,26 @@
         </div>
     </div>
 
+    <!-- Generic confirm gate for destructive actions (issue #92) — replaces
+         window.confirm() so it matches the app's own styling instead of a
+         native browser dialog. Promise-based via showConfirm(); see
+         js/modals.js. -->
+    <div id="confirmModal" class="hidden fixed inset-0 bg-black/50 z-[70] flex items-center justify-center p-4">
+        <div role="alertdialog" aria-modal="true" aria-labelledby="confirmModalMessage" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 max-w-sm w-full relative">
+            <p id="confirmModalMessage" class="text-sm text-gray-800 dark:text-gray-200 mb-5"></p>
+            <div class="flex justify-end gap-2">
+                <button type="button" id="confirmModalCancelBtn" class="px-4 py-2 rounded-lg text-sm font-semibold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600">Cancel</button>
+                <button type="button" id="confirmModalConfirmBtn" class="px-4 py-2 rounded-lg text-sm font-semibold bg-red-600 hover:bg-red-700 text-white">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global toast for transient success/error messages (issue #92) —
+         replaces window.alert() for feedback that has no single natural
+         inline spot (e.g. results shown after a modal that then closes).
+         See showToast() in js/modals.js. -->
+    <div id="toast" role="status" aria-live="polite" class="hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-[70] max-w-sm w-[calc(100%-2rem)] px-4 py-3 rounded-lg shadow-lg text-sm font-medium text-center text-white"></div>
+
     </div>
 
     <!-- Dev Cost / Per ISO calculation engine — plain global functions (no
@@ -1175,8 +1195,8 @@
             'pinnedLabResults', 'pinnedDevCostResults', 'cheapestSort', 'favouriteLabs', 'favouriteFilms',
             'hasSeenImportPrompt'
         ];
-        document.getElementById('deleteAllDataBtn').addEventListener('click', () => {
-            const confirmed = confirm('This will permanently delete every saved film, lab, and setting from this browser. This cannot be undone. Continue?');
+        document.getElementById('deleteAllDataBtn').addEventListener('click', async () => {
+            const confirmed = await showConfirm('This will permanently delete every saved film, lab, and setting from this browser. This cannot be undone. Continue?', 'Delete Everything');
             if (!confirmed) return;
             APP_STORAGE_KEYS.forEach(k => localStorage.removeItem(k));
             Object.keys(localStorage).filter(k => k.startsWith('aiKey_')).forEach(k => localStorage.removeItem(k));
@@ -1992,28 +2012,28 @@
         });
 
         // ---------- Delete profiles ----------
-        document.getElementById('deleteFilmBtn').addEventListener('click', () => {
+        document.getElementById('deleteFilmBtn').addEventListener('click', async () => {
             const dropdown = document.getElementById('libraryFilmsDropdown');
             const key = dropdown.value;
-            if (!key) return alert('Select a saved film to delete');
+            if (!key) return showToast('Select a saved film to delete', true);
             if (defaultFilms[key] && !readJSON('filmProfiles', {})[key]) {
-                return alert('Built-in film profiles can\'t be deleted, only custom saved ones.');
+                return showToast('Built-in film profiles can\'t be deleted, only custom saved ones.', true);
             }
-            if (!confirm('Delete this saved film and all its bundles?')) return;
+            if (!(await showConfirm('Delete this saved film and all its bundles?', 'Delete'))) return;
             let saved = readJSON('filmProfiles', {});
             delete saved[key];
             localStorage.setItem('filmProfiles', JSON.stringify(saved));
             updateFilmDropdowns();
         });
 
-        document.getElementById('deleteLabBtn').addEventListener('click', () => {
+        document.getElementById('deleteLabBtn').addEventListener('click', async () => {
             const dropdown = document.getElementById('savedLabsDropdown');
             const name = dropdown.value;
-            if (!name) return alert('Select a saved lab to delete');
+            if (!name) return showToast('Select a saved lab to delete', true);
             if (defaultLabs[name] && !readJSON('labProfiles', {})[name]) {
-                return alert('Built-in lab profiles can\'t be deleted, only custom saved ones.');
+                return showToast('Built-in lab profiles can\'t be deleted, only custom saved ones.', true);
             }
-            if (!confirm('Delete this saved lab and all its service tiers?')) return;
+            if (!(await showConfirm('Delete this saved lab and all its service tiers?', 'Delete'))) return;
             let saved = readJSON('labProfiles', {});
             delete saved[name];
             localStorage.setItem('labProfiles', JSON.stringify(saved));
@@ -2122,7 +2142,7 @@
         }
 
         document.getElementById('writeConfigBtn').addEventListener('click', async () => {
-            if (!confirm('This will overwrite config.yaml on the server with your current saved films, labs, and settings. Continue?')) return;
+            if (!(await showConfirm('This will overwrite config.yaml on the server with your current saved films, labs, and settings. Continue?', 'Overwrite'))) return;
             try {
                 const yamlText = jsyaml.dump(buildConfig(), { indent: 2 });
                 const res = await fetch('config.yaml', {
@@ -2131,12 +2151,12 @@
                     body: yamlText
                 });
                 if (res.ok) {
-                    alert('config.yaml updated on the server.');
+                    showToast('config.yaml updated on the server.');
                 } else {
-                    alert(`Could not write config.yaml (server responded with ${res.status}).`);
+                    showToast(`Could not write config.yaml (server responded with ${res.status}).`, true);
                 }
             } catch (e) {
-                alert('Could not write config.yaml — check your network settings.');
+                showToast('Could not write config.yaml — check your network settings.', true);
             }
         });
 
