@@ -2275,6 +2275,22 @@
             });
         }
 
+        // Picks which lab+tier candidate represents a film in the Per ISO
+        // list for a given sort mode — mirrors the comparator in
+        // sortIsoEntries so the picked entry and the list order agree.
+        function pickIsoCandidate(candidates, sortMode) {
+            return candidates.reduce((best, c) => {
+                if (!best) return c;
+                if (sortMode === 'turnaround') {
+                    const rb = turnaroundRank[best.turnaroundTime] ?? 9, rc = turnaroundRank[c.turnaroundTime] ?? 9;
+                    if (rc !== rb) return rc < rb ? c : best;
+                } else if (sortMode === 'scan') {
+                    if (c.highResScan !== best.highResScan) return c.highResScan ? c : best;
+                }
+                return c.totalCostPerPhoto < best.totalCostPerPhoto ? c : best;
+            }, null);
+        }
+
         function computeIsoPriceOptions(targetIso) {
             const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
             const allLabs = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') };
@@ -2306,10 +2322,14 @@
                 });
                 if (!bestBundle || !bestBundle.exposures) return;
 
-                // Cheapest compatible lab tier for this specific film at this
-                // specific ISO — plus the cheapest hi-res + next-day tier, so the
-                // Recommended Pick Threshold can suggest a service upgrade.
-                let best = null, bestHrNd = null;
+                // Every compatible lab+tier combination for this film at this
+                // ISO — kept as a full list (not collapsed to a single
+                // "cheapest" pick up front) so the Turnaround/Scan sort pills
+                // have real data to choose between, plus the cheapest hi-res +
+                // next-day tier, so the Recommended Pick Threshold can suggest
+                // a service upgrade.
+                const candidates = [];
+                let bestHrNd = null;
                 labNames.forEach(labName => {
                     normalizeLabServices(allLabs[labName])
                         .filter(tier => !(tier.noPushPull && stopsAbs > 0) && tierMatchesFilmProcess(tier, f) && tierPassesServiceFilter(tier))
@@ -2340,19 +2360,28 @@
                                 buyLink: bestBundle.buyLink,
                                 storeName: bestBundle.storeName
                             };
-                            if (!best || totalCostPerPhoto < best.totalCostPerPhoto) best = candidate;
+                            candidates.push(candidate);
                             if (tier.highResScan && tier.turnaroundTime === 'next_day' &&
                                 (!bestHrNd || totalCostPerPhoto < bestHrNd.totalCostPerPhoto)) {
                                 bestHrNd = candidate;
                             }
                         });
                 });
-                if (!best) return;
+                if (!candidates.length) return;
+                // Which single lab+tier represents this film in the list
+                // depends on the active sort: Price picks the true cheapest,
+                // but Turnaround/Scan pick the best match for that criterion
+                // (tie-broken by price) — otherwise every film would always
+                // be represented by its cheapest tier regardless of sort,
+                // which is usually the slowest/lowest-res one, making the
+                // Turnaround/Scan pills look like they do nothing.
+                const best = pickIsoCandidate(candidates, cheapestSort);
+                const bestPrice = cheapestSort === 'price' ? best : pickIsoCandidate(candidates, 'price');
                 // If a hi-res + next-day option exists and it's not already the
-                // cheapest, flag it as a recommended upgrade when it's within the
-                // threshold of the cheapest — same rule as "Labs For This Roll".
-                if (bestHrNd && bestHrNd !== best && best.totalCostPerPhoto > 0) {
-                    const premium = (bestHrNd.totalCostPerPhoto - best.totalCostPerPhoto) / best.totalCostPerPhoto;
+                // displayed pick, flag it as a recommended upgrade when it's within
+                // the threshold of the cheapest — same rule as "Labs For This Roll".
+                if (bestHrNd && bestHrNd !== best && bestPrice.totalCostPerPhoto > 0) {
+                    const premium = (bestHrNd.totalCostPerPhoto - bestPrice.totalCostPerPhoto) / bestPrice.totalCostPerPhoto;
                     const threshold = (parseFloat(localStorage.getItem('upgradeThresholdPercent')) || 4) / 100;
                     if (premium >= 0 && premium < threshold) {
                         best.upgrade = { pick: bestHrNd, premium };
@@ -2451,10 +2480,10 @@
                 ? ` <span class="text-xs ${entry.overLimit ? 'theme-danger-text text-red-600 dark:text-red-400 font-semibold' : 'opacity-70'}">(${direction} ${Math.abs(entry.stops)} stop${Math.abs(entry.stops) === 1 ? '' : 's'}${entry.overLimit ? ` — over its ${entry.maxPushPull}-stop limit` : ''})</span>`
                 : '';
             const isCheapest = rank === 0;
-            const semanticRowBg = entry.overLimit ? 'theme-danger-bg' : (isCheapest ? 'theme-recommended-bg' : '');
-            const semanticRowText = entry.overLimit ? 'theme-danger-text' : (isCheapest ? 'theme-recommended-text' : '');
-            const rowBg = entry.overLimit ? 'bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700' : (isCheapest ? 'bg-amber-100 dark:bg-amber-900/30' : (pinReason ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'bg-white dark:bg-gray-800/50'));
-            const textColor = entry.overLimit ? 'text-red-700 dark:text-red-400' : (isCheapest ? 'text-amber-800 dark:text-amber-300 font-semibold' : 'text-gray-700 dark:text-gray-300');
+            const semanticRowBg = entry.overLimit ? 'theme-danger-bg' : (isCheapest ? 'theme-cheapest-bg' : '');
+            const semanticRowText = entry.overLimit ? 'theme-danger-text' : (isCheapest ? 'theme-cheapest-text' : '');
+            const rowBg = entry.overLimit ? 'bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700' : (isCheapest ? 'bg-green-100 dark:bg-green-900/30' : (pinReason ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'bg-white dark:bg-gray-800/50'));
+            const textColor = entry.overLimit ? 'text-red-700 dark:text-red-400' : (isCheapest ? 'text-green-800 dark:text-green-400 font-semibold' : 'text-gray-700 dark:text-gray-300');
             const fav = isFavLab(entry.labName);
             const star = `<button type="button" class="fav-star text-sm leading-none" data-fav-lab="${escapeHtml(entry.labName)}" title="${fav ? 'Unfavourite lab' : 'Favourite lab'}" onclick="event.stopPropagation()"><span class="${fav ? 'theme-favourite-text text-amber-400' : 'text-gray-300 dark:text-gray-600'}">${fav ? '★' : '☆'}</span></button>`;
             const pinnedFavNote = pinReason === 'default'
@@ -2496,7 +2525,7 @@
             return `<div>
                 <div class="iso-row cursor-pointer px-3 py-2 rounded-lg text-sm ${semanticRowBg} ${rowBg}" data-iso-key="${escapeHtml(key)}" title="Tap for cost breakdown">
                     <div class="flex justify-between items-start gap-2">
-                        <span class="${semanticRowText} ${entry.overLimit ? 'font-semibold text-red-700 dark:text-red-400' : (isCheapest ? 'font-semibold text-amber-800 dark:text-amber-300' : 'text-gray-700 dark:text-gray-300')}">${star} ${isCheapest && !entry.overLimit ? '⭐ ' : ''}${escapeHtml(entry.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(entry.labName)}</span>${stopsLabel}${hiResBadge}${turnaroundBadge}</span>
+                        <span class="${semanticRowText} ${entry.overLimit ? 'font-semibold text-red-700 dark:text-red-400' : (isCheapest ? 'font-semibold text-green-800 dark:text-green-400' : 'text-gray-700 dark:text-gray-300')}">${star} ${isCheapest && !entry.overLimit ? '⭐ ' : ''}${escapeHtml(entry.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(entry.labName)}</span>${stopsLabel}${hiResBadge}${turnaroundBadge}</span>
                         <span class="font-mono text-right leading-tight ${semanticRowText} ${textColor} whitespace-nowrap flex items-center gap-1.5">
                             <span>
                                 <span class="font-semibold block">${CUR()}${entry.totalCostPerPhoto.toFixed(2)}/photo</span>
@@ -2809,10 +2838,10 @@
             const hiResBadge = entry.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">HI-RES</span>` : '';
             const turnaroundBadge = entry.turnaroundTime ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 align-middle">${escapeHtml(turnaroundLabels[entry.turnaroundTime] || entry.turnaroundTime)}</span>` : '';
             const isCheapest = rank === 0;
-            const semanticRowBg = isCheapest ? 'theme-recommended-bg' : '';
-            const semanticRowText = isCheapest ? 'theme-recommended-text' : '';
-            const rowBg = isCheapest ? 'bg-amber-100 dark:bg-amber-900/30' : (pinReason ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'bg-white dark:bg-gray-800/50');
-            const textColor = isCheapest ? 'text-amber-800 dark:text-amber-300 font-semibold' : 'text-gray-600 dark:text-gray-400';
+            const semanticRowBg = isCheapest ? 'theme-cheapest-bg' : '';
+            const semanticRowText = isCheapest ? 'theme-cheapest-text' : '';
+            const rowBg = isCheapest ? 'bg-green-100 dark:bg-green-900/30' : (pinReason ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'bg-white dark:bg-gray-800/50');
+            const textColor = isCheapest ? 'text-green-800 dark:text-green-400 font-semibold' : 'text-gray-600 dark:text-gray-400';
             const key = matrixRowKey(keyPrefix, entry);
             const isOpen = expandAllIso || expandedIsoRows.has(key);
             const chevron = `<span class="text-gray-400 dark:text-gray-500 transition-transform inline-block ${isOpen ? 'rotate-90' : ''}">▸</span>`;
@@ -2930,9 +2959,11 @@
             const hiResBadge = entry.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">HI-RES</span>` : '';
             const turnaroundBadge = entry.turnaroundTime ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 align-middle">${escapeHtml(turnaroundLabels[entry.turnaroundTime] || entry.turnaroundTime)}</span>` : '';
             const isCheapest = rank === 0;
-            return `<div class="flex justify-between items-start px-3 py-2 rounded-lg text-sm ${isCheapest ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-white dark:bg-gray-800/50'}">
-                <span class="${isCheapest ? 'font-semibold text-amber-800 dark:text-amber-300' : 'text-gray-700 dark:text-gray-300'}">${isCheapest ? '⭐ ' : ''}${escapeHtml(entry.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(entry.labName)}</span> <span class="text-xs opacity-70">(${entry.boxSpeed} ISO)</span>${hiResBadge}${turnaroundBadge}</span>
-                <span class="font-mono text-right leading-tight ${isCheapest ? 'text-amber-800 dark:text-amber-300 font-semibold' : 'text-gray-600 dark:text-gray-400'}">
+            const semanticRowBg = isCheapest ? 'theme-cheapest-bg' : '';
+            const semanticRowText = isCheapest ? 'theme-cheapest-text' : '';
+            return `<div class="flex justify-between items-start px-3 py-2 rounded-lg text-sm ${semanticRowBg} ${isCheapest ? 'bg-green-100 dark:bg-green-900/30' : 'bg-white dark:bg-gray-800/50'}">
+                <span class="${semanticRowText} ${isCheapest ? 'font-semibold text-green-800 dark:text-green-400' : 'text-gray-700 dark:text-gray-300'}">${isCheapest ? '⭐ ' : ''}${escapeHtml(entry.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(entry.labName)}</span> <span class="text-xs opacity-70">(${entry.boxSpeed} ISO)</span>${hiResBadge}${turnaroundBadge}</span>
+                <span class="font-mono text-right leading-tight ${semanticRowText} ${isCheapest ? 'text-green-800 dark:text-green-400 font-semibold' : 'text-gray-600 dark:text-gray-400'}">
                     <div class="font-semibold">${CUR()}${entry.totalCostPerPhoto.toFixed(2)}/photo</div>
                     <div class="text-xs opacity-80">${CUR()}${entry.filmCostPerPhoto.toFixed(2)} film + ${CUR()}${entry.devCostPerPhoto.toFixed(2)} dev</div>
                 </span>
