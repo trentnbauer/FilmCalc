@@ -336,6 +336,15 @@
                     <button id="cheapestSubIsoBtn" type="button" title="Every option — native, pushed, or pulled — for a shooting ISO you enter" class="flex-1 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 transition-colors">Per ISO</button>
                 </div>
 
+                <!-- Shared across all four Dev Cost sub-tabs (issue #49 — this
+                     used to only apply to Per ISO). Wired in the script below. -->
+                <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="text-xs text-gray-400 dark:text-gray-500 font-semibold uppercase tracking-wide">Filter</span>
+                    <button type="button" data-filter="next_day" title="Show only options with next-day turnaround" class="dev-cost-filter-pill px-2.5 py-1 rounded-full text-xs font-semibold transition-colors bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">⚡ Next Day</button>
+                    <button type="button" data-filter="same_week" title="Show only options with same-week turnaround" class="dev-cost-filter-pill px-2.5 py-1 rounded-full text-xs font-semibold transition-colors bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">Same Week</button>
+                    <button type="button" data-filter="hires" title="Show only options with hi-res scans" class="dev-cost-filter-pill px-2.5 py-1 rounded-full text-xs font-semibold transition-colors bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">HI-RES</button>
+                </div>
+
                 <div id="cheapestSubIsoContent" class="space-y-6 hidden">
                     <div class="theme-section-bg bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800/30 p-4 text-left">
                         <label for="isoCalcTargetSpeed" class="theme-section-text block text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">Shooting ISO</label>
@@ -2329,13 +2338,36 @@
         // Sort mode for the Cheapest Per ISO view. Persisted so a re-open keeps
         // the last choice. 'price' | 'turnaround' | 'scan'.
         let cheapestSort = localStorage.getItem('cheapestSort') || 'price';
-        // Per ISO filters — same idea as Film Lookup's Next Day / Hi-Res
+        // Dev Cost filters — Next Day / Same Week / Hi-Res, shared across all
+        // four sub-tabs (Per Film / Per Photo / Per Lab / Per ISO) via one
+        // filter bar shown above the sub-nav (issue #49 — this used to only
+        // apply to Per ISO). Same idea as Film Lookup's Next Day / Hi-Res
         // filter pills, not persisted across reloads (matches that
-        // precedent). isoFilterTurnaround is '' (all), 'next_day', or
+        // precedent). devCostFilterTurnaround is '' (all), 'next_day', or
         // 'same_week' — mutually exclusive, so it's a single value rather
         // than a set.
-        let isoFilterTurnaround = '';
-        let isoFilterHiRes = false;
+        let devCostFilterTurnaround = '';
+        let devCostFilterHiRes = false;
+        function renderDevCostFilterBar() {
+            document.querySelectorAll('.dev-cost-filter-pill').forEach(btn => {
+                const active = btn.dataset.filter === 'hires' ? devCostFilterHiRes : devCostFilterTurnaround === btn.dataset.filter;
+                btn.classList.toggle('bg-indigo-600', active);
+                btn.classList.toggle('text-white', active);
+                btn.classList.toggle('bg-gray-100', !active);
+                btn.classList.toggle('dark:bg-gray-700', !active);
+                btn.classList.toggle('text-gray-600', !active);
+                btn.classList.toggle('dark:text-gray-300', !active);
+            });
+        }
+        document.querySelectorAll('.dev-cost-filter-pill').forEach(btn => btn.addEventListener('click', () => {
+            if (btn.dataset.filter === 'hires') {
+                devCostFilterHiRes = !devCostFilterHiRes;
+            } else {
+                devCostFilterTurnaround = devCostFilterTurnaround === btn.dataset.filter ? '' : btn.dataset.filter;
+            }
+            renderDevCostFilterBar();
+            refreshActiveCheapestSubTab();
+        }));
         const turnaroundRank = { next_day: 0, same_week: 1, longer: 2 };
         function sortIsoEntries(entries) {
             const by = cheapestSort;
@@ -2658,9 +2690,9 @@
             // allNative/allPush/allPull (unfiltered) are kept only to tell
             // "no matches for this filter" apart from "no film at this ISO at
             // all" in the messaging below.
-            const hasActiveIsoFilter = isoFilterTurnaround || isoFilterHiRes;
-            const { native, push, pull } = hasActiveIsoFilter
-                ? computeIsoPriceOptions(targetIso, { turnaround: isoFilterTurnaround, hiRes: isoFilterHiRes })
+            const hasActiveDevCostFilter = devCostFilterTurnaround || devCostFilterHiRes;
+            const { native, push, pull } = hasActiveDevCostFilter
+                ? computeIsoPriceOptions(targetIso, { turnaround: devCostFilterTurnaround, hiRes: devCostFilterHiRes })
                 : { native: allNative, push: allPush, pull: allPull };
             const sortedNative = sortIsoEntries(native);
             const sortedPush = sortIsoEntries(push);
@@ -2697,7 +2729,6 @@
                 : noMatchMsg(allPull, 'No film can be pulled to this ISO');
 
             const sortPill = (mode, label, title) => `<button type="button" data-sort="${mode}" title="${title}" class="cheapest-sort-pill px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${cheapestSort === mode ? 'bg-indigo-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}">${label}</button>`;
-            const filterPill = (mode, active, label, title) => `<button type="button" data-filter="${mode}" title="${title}" class="cheapest-filter-pill px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${active ? 'bg-indigo-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}">${label}</button>`;
             const controls = `<div class="flex items-center justify-between gap-2 flex-wrap mb-3">
                 <div class="flex items-center gap-1.5 flex-wrap">
                     <span class="text-xs text-gray-400 dark:text-gray-500 font-semibold uppercase tracking-wide">Sort</span>
@@ -2706,12 +2737,6 @@
                     ${sortPill('scan', 'Scan', 'Hi-Res scans first, then by price')}
                 </div>
                 <button type="button" id="isoExpandAllBtn" class="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline">${expandAllIso ? 'Collapse all' : 'Expand all'}</button>
-            </div>
-            <div class="flex items-center gap-1.5 flex-wrap mb-3">
-                <span class="text-xs text-gray-400 dark:text-gray-500 font-semibold uppercase tracking-wide">Filter</span>
-                ${filterPill('next_day', isoFilterTurnaround === 'next_day', '⚡ Next Day', 'Show only options with next-day turnaround')}
-                ${filterPill('same_week', isoFilterTurnaround === 'same_week', 'Same Week', 'Show only options with same-week turnaround')}
-                ${filterPill('hires', isoFilterHiRes, 'HI-RES', 'Show only options with hi-res scans')}
             </div>`;
 
             container.innerHTML = controls + `<div class="space-y-4">
@@ -2733,17 +2758,6 @@
             container.querySelectorAll('.cheapest-sort-pill').forEach(btn => btn.addEventListener('click', () => {
                 cheapestSort = btn.dataset.sort;
                 localStorage.setItem('cheapestSort', cheapestSort);
-                updateIsoPriceCalculator();
-            }));
-            // Wire filter pills. Next Day / Same Week are mutually exclusive
-            // (clicking the active one clears it back to "all"); Hi-Res is
-            // an independent toggle.
-            container.querySelectorAll('.cheapest-filter-pill').forEach(btn => btn.addEventListener('click', () => {
-                if (btn.dataset.filter === 'hires') {
-                    isoFilterHiRes = !isoFilterHiRes;
-                } else {
-                    isoFilterTurnaround = isoFilterTurnaround === btn.dataset.filter ? '' : btn.dataset.filter;
-                }
                 updateIsoPriceCalculator();
             }));
             // Favourite-lab stars.
@@ -2786,7 +2800,9 @@
         // involved) — the shared dataset behind both the "Cost Per Photo"
         // (grouped/ranked by film) and "Cost Per Lab" (grouped/ranked by lab)
         // tabs below.
-        function computeNativeFilmLabMatrix() {
+        function computeNativeFilmLabMatrix(filters) {
+            filters = filters || {};
+            const matchesFilters = tier => (!filters.turnaround || tier.turnaroundTime === filters.turnaround) && (!filters.hiRes || tier.highResScan);
             const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
             const allLabs = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') };
             const labNames = Object.keys(allLabs).filter(n => !allLabs[n].hidden);
@@ -2807,7 +2823,7 @@
                 if (!bestBundle || !bestBundle.exposures) return;
 
                 labNames.forEach(labName => {
-                    normalizeLabServices(allLabs[labName]).filter(tier => tierMatchesFilmProcess(tier, f) && tierPassesServiceFilter(tier)).forEach(tier => {
+                    normalizeLabServices(allLabs[labName]).filter(tier => tierMatchesFilmProcess(tier, f) && tierPassesServiceFilter(tier) && matchesFilters(tier)).forEach(tier => {
                         const devCostPerPhoto = tier.devCost / bestBundle.exposures;
                         results.push({
                             filmName: f.name,
@@ -2842,7 +2858,9 @@
         // with distance) never gets cheaper at a larger push/pull — and push
         // vs. pull cost exactly the same here, since fees are keyed on stop
         // magnitude only, not direction.
-        function computeOneStopFilmLabMatrix() {
+        function computeOneStopFilmLabMatrix(filters) {
+            filters = filters || {};
+            const matchesFilters = tier => (!filters.turnaround || tier.turnaroundTime === filters.turnaround) && (!filters.hiRes || tier.highResScan);
             const allFilms = { ...defaultFilms, ...JSON.parse(localStorage.getItem('filmProfiles') || '{}') };
             const allLabs = { ...defaultLabs, ...JSON.parse(localStorage.getItem('labProfiles') || '{}') };
             const labNames = Object.keys(allLabs).filter(n => !allLabs[n].hidden);
@@ -2864,7 +2882,7 @@
 
                 labNames.forEach(labName => {
                     normalizeLabServices(allLabs[labName])
-                        .filter(tier => !tier.noPushPull && tierMatchesFilmProcess(tier, f) && tierPassesServiceFilter(tier))
+                        .filter(tier => !tier.noPushPull && tierMatchesFilmProcess(tier, f) && tierPassesServiceFilter(tier) && matchesFilters(tier))
                         .forEach(tier => {
                             const devCostPerPhoto = (tier.devCost + tier.pushPullCost) / bestBundle.exposures;
                             results.push({
@@ -3083,9 +3101,16 @@
         // the top here — the ♥ star on each row, not the ★ one.
         function updateCostPerPhotoTab() {
             const container = document.getElementById('costPerPhotoResults');
-            const nativeMatrix = computeNativeFilmLabMatrix();
-            if (nativeMatrix.length === 0) {
+            const allNativeMatrix = computeNativeFilmLabMatrix();
+            if (allNativeMatrix.length === 0) {
                 container.innerHTML = '<p class="text-sm text-gray-400 text-center">Save at least one film and one lab profile to compare</p>';
+                return;
+            }
+            const devCostFilters = { turnaround: devCostFilterTurnaround, hiRes: devCostFilterHiRes };
+            const hasActiveDevCostFilter = devCostFilterTurnaround || devCostFilterHiRes;
+            const nativeMatrix = hasActiveDevCostFilter ? computeNativeFilmLabMatrix(devCostFilters) : allNativeMatrix;
+            if (nativeMatrix.length === 0) {
+                container.innerHTML = '<p class="text-sm text-gray-400 text-center">No options match the current filters</p>';
                 return;
             }
             const byFilmNative = new Map();
@@ -3096,7 +3121,7 @@
             });
             const priceSortedRows = [...byFilmNative.values()].sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto);
             const rows = reorderFavouriteFilmsFirst(priceSortedRows);
-            const oneStopMatrix = computeOneStopFilmLabMatrix();
+            const oneStopMatrix = hasActiveDevCostFilter ? computeOneStopFilmLabMatrix(devCostFilters) : computeOneStopFilmLabMatrix();
             container.innerHTML = expandAllControl() + rows.map(e => {
                 const rank = priceSortedRows.indexOf(e);
                 const isFav = isFavFilm(filmKey(e.filmName, e.boxSpeed, e.format));
@@ -3113,9 +3138,16 @@
         // starred. Rows expand to a full cost breakdown.
         function updateCostPerLabTab() {
             const container = document.getElementById('costPerLabResults');
-            const nativeMatrix = computeNativeFilmLabMatrix();
-            if (nativeMatrix.length === 0) {
+            const allNativeMatrix = computeNativeFilmLabMatrix();
+            if (allNativeMatrix.length === 0) {
                 container.innerHTML = '<p class="text-sm text-gray-400 text-center">Save at least one film and one lab profile to compare</p>';
+                return;
+            }
+            const devCostFilters = { turnaround: devCostFilterTurnaround, hiRes: devCostFilterHiRes };
+            const hasActiveDevCostFilter = devCostFilterTurnaround || devCostFilterHiRes;
+            const nativeMatrix = hasActiveDevCostFilter ? computeNativeFilmLabMatrix(devCostFilters) : allNativeMatrix;
+            if (nativeMatrix.length === 0) {
+                container.innerHTML = '<p class="text-sm text-gray-400 text-center">No options match the current filters</p>';
                 return;
             }
             const byLabNative = new Map();
@@ -3125,7 +3157,7 @@
             });
             const priceSortedRows = [...byLabNative.values()].sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto);
             const rows = reorderFavouriteLabsFirst(priceSortedRows);
-            const oneStopMatrix = computeOneStopFilmLabMatrix();
+            const oneStopMatrix = hasActiveDevCostFilter ? computeOneStopFilmLabMatrix(devCostFilters) : computeOneStopFilmLabMatrix();
             container.innerHTML = expandAllControl() + rows.map(e => {
                 const rank = priceSortedRows.indexOf(e);
                 const rowHtml = renderMatrixRow(e, rank, 'lab', isFavLab(e.labName) && rank !== 0);
@@ -3250,7 +3282,7 @@
                 return;
             }
 
-            const priceSortedRows = computeNativeFilmLabMatrix()
+            const priceSortedRows = computeNativeFilmLabMatrix({ turnaround: devCostFilterTurnaround, hiRes: devCostFilterHiRes })
                 .filter(e => filmKey(e.filmName, e.boxSpeed, e.format) === selectedKey)
                 .sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto);
 
