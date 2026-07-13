@@ -160,7 +160,7 @@ Then carry on from **[step 4](#4️⃣-upload-it-to-github)**.
 Completely fine — and genuinely useful.
 
 **[Open an issue](https://github.com/trentnbauer/FilmCalc/issues/new/choose)**, pick *"Add a film
-stock or lab"*, and paste the shop link with the details.
+stock"* or *"Add a lab"*, and paste the shop link with the details.
 
 </details>
 

@@ -1,34 +1,26 @@
-name: "➕ Add a film stock or lab"
-description: Request a new film stock or lab be added to the presets
-title: "[Add] "
+name: "🎞️ Add a film stock"
+description: Request a new film stock be added to the presets
+title: "[Add Film] "
 labels: ["data", "enhancement"]
 body:
   - type: markdown
     attributes:
       value: |
-        Presets aim to cover **mainstream, readily available** stocks and labs. Rare, limited-run,
-        novelty, or frequently-out-of-stock films are generally left out on purpose — you can always
-        add them yourself in the Library tab without them shipping as a preset.
+        Presets aim to cover **mainstream, readily available** stocks. Rare, limited-run, novelty, or
+        frequently-out-of-stock films are generally left out on purpose — you can always add them
+        yourself in the Library tab without them shipping as a preset.
 
         Once submitted, an automated check reads this form (including any screenshot) and opens a
         pull request for a maintainer to review — you don't need to write any YAML yourself. If
         anything's unclear it'll leave a comment on this issue asking you to clarify instead.
 
-  - type: dropdown
-    id: kind
-    attributes:
-      label: What should be added?
-      options:
-        - A film stock
-        - A lab
-    validations:
-      required: true
+        Adding a lab instead? Use the **Add a lab** template — this one's film stocks only.
 
   - type: input
     id: name
     attributes:
       label: Name
-      placeholder: "e.g. Kodak Portra 400 (120), or Hillvale Photo Melbourne"
+      placeholder: "e.g. Kodak Portra 400 (120)"
     validations:
       required: true
 
@@ -36,24 +28,15 @@ body:
     id: country
     attributes:
       label: Country
-      description: Films are grouped by country and labs are grouped by city — this decides which file the entry belongs in.
+      description: Films are grouped by country — this decides which file the entry belongs in.
       placeholder: "e.g. Australia"
     validations:
       required: true
 
-  - type: input
-    id: city
-    attributes:
-      label: City
-      description: Required for labs (a lab is always tied to a physical location). For a film, only fill this in if the price is local/city-specific — see "Availability" below.
-      placeholder: "e.g. Melbourne"
-    validations:
-      required: false
-
   - type: dropdown
     id: availability
     attributes:
-      label: Availability (films only)
+      label: Availability
       description: |
         Could someone ANYWHERE in the country walk into a store and get this exact price with zero
         shipping cost — like Woolworths or JB Hi-Fi? If so, pick Country-wide. If it's an online-only
@@ -66,7 +49,7 @@ body:
         - State/region-wide only
         - City-only (mail order/local pickup — postage applies elsewhere)
     validations:
-      required: false
+      required: true
 
   - type: input
     id: state
@@ -77,10 +60,19 @@ body:
     validations:
       required: false
 
+  - type: input
+    id: city
+    attributes:
+      label: City
+      description: Required if you picked "City-only" above.
+      placeholder: "e.g. Melbourne"
+    validations:
+      required: false
+
   - type: textarea
     id: film-details
     attributes:
-      label: Film details (skip if requesting a lab)
+      label: Film details
       value: |
         - Format (35mm / 120 / 110 / …):
         - Box speed (ISO):
@@ -90,30 +82,13 @@ body:
         - Regular price (not sale price):
         - Where to buy (link):
     validations:
-      required: false
-
-  - type: textarea
-    id: lab-details
-    attributes:
-      label: Lab details (skip if requesting a film)
-      description: One block per service tier — copy the block if the lab offers several.
-      value: |
-        - Address: 
-        - Website: 
-        - Service tier: 
-          - Development cost per roll: 
-          - Push/pull fee (and whether it's per-stop or flat): 
-          - Turnaround (next day / same week / longer): 
-          - Hi-res scan? (yes/no): 
-          - Processes handled (C41 / BW / E6 / ECN-2): 
-    validations:
-      required: false
+      required: true
 
   - type: input
     id: source
     attributes:
       label: Source link
-      description: The retailer or lab page with current pricing.
+      description: The retailer page with current pricing.
       placeholder: "https://…"
     validations:
       required: true
@@ -134,5 +109,5 @@ body:
     attributes:
       label: Confirmations
       options:
-        - label: This is a mainstream stock/lab that's reliably available (not a rare or limited run)
+        - label: This is a mainstream stock that's reliably available (not a rare or limited run)
         - label: The price given is the **regular** price, not a sale price
