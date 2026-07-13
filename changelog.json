@@ -1,0 +1,110 @@
+[
+  {
+    "number": 59,
+    "title": "Fix Per ISO not showing the home lab",
+    "mergedAt": "2026-07-13T02:14:08Z",
+    "url": "https://github.com/trentnbauer/FilmCalc/pull/59"
+  },
+  {
+    "number": 58,
+    "title": "Fix Library tab cheapest-price color for full theme consistency",
+    "mergedAt": "2026-07-13T02:12:11Z",
+    "url": "https://github.com/trentnbauer/FilmCalc/pull/58"
+  },
+  {
+    "number": 56,
+    "title": "Fix Dev Cost per-ISO sort and cheapest-row color consistency",
+    "mergedAt": "2026-07-13T01:54:19Z",
+    "url": "https://github.com/trentnbauer/FilmCalc/pull/56"
+  },
+  {
+    "number": 52,
+    "title": "Fix Per ISO Next Day/Hi-Res filters returning no results",
+    "mergedAt": "2026-07-12T13:27:10Z",
+    "url": "https://github.com/trentnbauer/FilmCalc/pull/52"
+  },
+  {
+    "number": 50,
+    "title": "Fix footer version stamping (issue #45)",
+    "mergedAt": "2026-07-12T13:10:52Z",
+    "url": "https://github.com/trentnbauer/FilmCalc/pull/50"
+  },
+  {
+    "number": 47,
+    "title": "Theme grouping cards + add theme picker to first-run setup",
+    "mergedAt": "2026-07-12T12:43:37Z",
+    "url": "https://github.com/trentnbauer/FilmCalc/pull/47"
+  },
+  {
+    "number": 44,
+    "title": "Add a bookmarklet that jumps from a shop page into Add with AI",
+    "mergedAt": "2026-07-12T12:17:35Z",
+    "url": "https://github.com/trentnbauer/FilmCalc/pull/44"
+  },
+  {
+    "number": 35,
+    "title": "Add Next Day / Same Week / Hi-Res filters to Dev Cost > Per ISO",
+    "mergedAt": "2026-07-12T11:55:13Z",
+    "url": "https://github.com/trentnbauer/FilmCalc/pull/35"
+  },
+  {
+    "number": 37,
+    "title": "Show per-roll development cost (incl. push/pull) under the per-photo cost",
+    "mergedAt": "2026-07-12T11:55:04Z",
+    "url": "https://github.com/trentnbauer/FilmCalc/pull/37"
+  },
+  {
+    "number": 33,
+    "title": "Document that theme YAML colors accept CSS names, not just hex",
+    "mergedAt": "2026-07-12T11:54:08Z",
+    "url": "https://github.com/trentnbauer/FilmCalc/pull/33"
+  },
+  {
+    "number": 31,
+    "title": "Add a version identifier to the footer",
+    "mergedAt": "2026-07-12T11:51:47Z",
+    "url": "https://github.com/trentnbauer/FilmCalc/pull/31"
+  },
+  {
+    "number": 30,
+    "title": "Only show the push/pull warning once the Quick Calculate form is filled in",
+    "mergedAt": "2026-07-12T11:15:21Z",
+    "url": "https://github.com/trentnbauer/FilmCalc/pull/30"
+  },
+  {
+    "number": 38,
+    "title": "Add Forest, Midnight, Monochrome, and Colorblind Safe themes",
+    "mergedAt": "2026-07-12T11:14:42Z",
+    "url": "https://github.com/trentnbauer/FilmCalc/pull/38"
+  },
+  {
+    "number": 32,
+    "title": "Route the tab bar, active tab, dropdowns, and logo through theme colors",
+    "mergedAt": "2026-07-12T11:06:27Z",
+    "url": "https://github.com/trentnbauer/FilmCalc/pull/32"
+  },
+  {
+    "number": 29,
+    "title": "Pin the default (home) lab first in Dev Cost > Per ISO",
+    "mergedAt": "2026-07-12T10:57:55Z",
+    "url": "https://github.com/trentnbauer/FilmCalc/pull/29"
+  },
+  {
+    "number": 23,
+    "title": "Move Format control below the tab bar to stop tabs shifting position",
+    "mergedAt": "2026-07-12T10:38:07Z",
+    "url": "https://github.com/trentnbauer/FilmCalc/pull/23"
+  },
+  {
+    "number": 21,
+    "title": "Let themes customize cheapest/recommended/favourite/warning/danger colors",
+    "mergedAt": "2026-07-12T10:29:46Z",
+    "url": "https://github.com/trentnbauer/FilmCalc/pull/21"
+  },
+  {
+    "number": 14,
+    "title": "Add shareable calculated URLs for Film Lookup",
+    "mergedAt": "2026-07-12T10:00:13Z",
+    "url": "https://github.com/trentnbauer/FilmCalc/pull/14"
+  }
+]

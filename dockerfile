@@ -11,6 +11,7 @@ COPY favicon.ico /usr/share/nginx/html/favicon.ico
 COPY icon.ico /usr/share/nginx/html/icon.ico
 COPY icon.svg /usr/share/nginx/html/icon.svg
 COPY apple-touch-icon.png /usr/share/nginx/html/apple-touch-icon.png
+COPY changelog.json /usr/share/nginx/html/changelog.json
 COPY default.conf /etc/nginx/conf.d/default.conf
 
 # Settings → Import fetches films/index.json and labs/index.json (and

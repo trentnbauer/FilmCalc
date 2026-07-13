@@ -12,6 +12,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  pull-requests: read
 
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 concurrency:
@@ -66,6 +67,49 @@ jobs:
                   out.write('\n')
               print(f'{folder}/index.json -> {len(entries)} preset(s): ' + ', '.join(f["file"] for f in entries))
           PY
+      - name: Generate changelog.json
+        # Footer "What's new" popup (issue #53) reads this at runtime. Built
+        # from merged PR titles rather than hand-maintained, so it can't go
+        # stale — but a PR that only touched .github/workflows/** is a CI/repo
+        # change, not something an end user would recognize as "new in the
+        # app", so those are filtered out. Regenerated into the working tree
+        # (not committed back) same as the preset manifests above; the
+        # checked-in changelog.json is just the fallback for local/offline
+        # Docker builds that skip this step.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr list --repo "${{ github.repository }}" --state merged --limit 200 \
+            --json number,title,mergedAt,url > /tmp/merged-prs.json
+
+          python3 - <<'PY'
+          import json, subprocess
+
+          with open('/tmp/merged-prs.json', encoding='utf-8') as f:
+              prs = json.load(f)
+
+          entries = []
+          for pr in prs:
+              files = subprocess.run(
+                  ['gh', 'pr', 'view', str(pr['number']), '--json', 'files', '-q', '.files[].path'],
+                  capture_output=True, text=True, check=True
+              ).stdout.splitlines()
+              if files and all(p.startswith('.github/') for p in files):
+                  continue
+              entries.append({
+                  'number': pr['number'],
+                  'title': pr['title'],
+                  'mergedAt': pr['mergedAt'],
+                  'url': pr['url'],
+              })
+
+          entries.sort(key=lambda e: e['mergedAt'], reverse=True)
+
+          with open('changelog.json', 'w', encoding='utf-8') as out:
+              json.dump(entries, out, indent=2, ensure_ascii=False)
+              out.write('\n')
+          print(f'changelog.json -> {len(entries)} entries')
+          PY
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Stage site files
@@ -77,7 +121,7 @@ jobs:
         # don't belong here.
         run: |
           mkdir -p _site
-          cp index.html favicon.ico icon.ico icon.svg apple-touch-icon.png options.yaml _site/
+          cp index.html favicon.ico icon.ico icon.svg apple-touch-icon.png options.yaml changelog.json _site/
           cp -r films labs themes _site/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
