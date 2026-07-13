@@ -192,7 +192,7 @@ Output a top-level key "films:" containing a list. Each film:
     filmCost: <price of the WHOLE pack, plain number>
     storeName: <short shop name>
     buyLink: <product URL, tracking params stripped>
-    availability: <national | state | city — national if the shop ships/delivers anywhere in the country (the default), state if the price only holds within one state/region, city if it's local-only (no shipping, or in-store/local-delivery pricing)>
+    availability: <national | state | city. The test is "no postage anywhere in the country", NOT "does the shop ship nationally": use national only if someone anywhere in the country could get this exact price without paying shipping, e.g. a nationwide walk-in chain like Woolworths or JB Hi-Fi (this is the default). If it's an online-only or single-location shop — even one that technically ships nationwide, like a Melbourne-based online film shop — buyers outside its home area pay postage on top of this price, so use state or city instead.>
     state: <state/region the price is valid in — only if availability is state or city, omit otherwise>
     city: <city the price is valid in — only if availability is city, omit otherwise>`;
 
