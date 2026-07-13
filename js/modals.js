@@ -107,6 +107,42 @@ changelogModal.addEventListener('click', (e) => { if (e.target === changelogModa
 
 loadChangelog();
 
+// ---------- Confirm modal + toast (issue #92) ----------
+// Replaces window.confirm()/window.alert() with the app's own styling —
+// native dialogs block the main thread and look jarring next to the app's
+// own modal system, especially on mobile. showConfirm() is Promise-based so
+// callers just `if (!(await showConfirm(...))) return;` in place of the old
+// `if (!confirm(...)) return;`. showToast() is for transient success/error
+// feedback that has no single natural inline spot to live in (e.g. a result
+// shown after the modal that triggered it has already closed).
+const confirmModal = document.getElementById('confirmModal');
+let confirmResolve = null;
+function showConfirm(message, confirmLabel) {
+    document.getElementById('confirmModalMessage').textContent = message;
+    document.getElementById('confirmModalConfirmBtn').textContent = confirmLabel || 'Confirm';
+    confirmModal.classList.remove('hidden');
+    return new Promise(resolve => { confirmResolve = resolve; });
+}
+function resolveConfirm(result) {
+    confirmModal.classList.add('hidden');
+    if (confirmResolve) { confirmResolve(result); confirmResolve = null; }
+}
+document.getElementById('confirmModalCancelBtn').addEventListener('click', () => resolveConfirm(false));
+document.getElementById('confirmModalConfirmBtn').addEventListener('click', () => resolveConfirm(true));
+confirmModal.addEventListener('click', (e) => { if (e.target === confirmModal) resolveConfirm(false); });
+
+let toastTimer;
+function showToast(message, isError) {
+    const el = document.getElementById('toast');
+    if (!el) return;
+    clearTimeout(toastTimer);
+    el.textContent = message;
+    el.classList.toggle('bg-red-600', !!isError);
+    el.classList.toggle('bg-gray-900', !isError);
+    el.classList.toggle('dark:bg-gray-700', !isError);
+    el.classList.remove('hidden');
+    toastTimer = setTimeout(() => el.classList.add('hidden'), 4000);
+}
 
 // ---------- Add with AI ----------
 // Bring-your-own-key. The key lives ONLY in this variable, never in
@@ -508,7 +544,7 @@ document.getElementById('aiAddBtn').addEventListener('click', () => {
     updateCheaperAlternative();
     const n = list.length;
     closeAiModal();
-    alert(`Added ${n} ${kind === 'film' ? 'film stock' : 'lab'}(s) to your Library. Double-check the prices against the shop page.`);
+    showToast(`Added ${n} ${kind === 'film' ? 'film stock' : 'lab'}(s) to your Library. Double-check the prices against the shop page.`);
 });
 
 document.getElementById('addWithAiBtn').addEventListener('click', openAiModal);
@@ -563,7 +599,8 @@ setupModal.addEventListener('click', (e) => { if (e.target === setupModal) close
 // Escape closes whichever modal is currently open.
 document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
-    if (!importModal.classList.contains('hidden')) closeImportModal();
+    if (!confirmModal.classList.contains('hidden')) resolveConfirm(false);
+    else if (!importModal.classList.contains('hidden')) closeImportModal();
     else if (!document.getElementById('aiModal').classList.contains('hidden')) closeAiModal();
     else if (!setupModal.classList.contains('hidden')) closeSetupModal();
     else if (!changelogModal.classList.contains('hidden')) closeChangelogModal();
@@ -832,10 +869,10 @@ function finishImport(results) {
     if (settingsImported) upgradeThresholdInput.value = localStorage.getItem('upgradeThresholdPercent');
     updateLabComparison();
     if (errors > 0 && filmsImported === 0 && labsImported === 0 && !settingsImported) {
-        alert('Could not read the selected file(s) — are they valid YAML?');
+        showToast('Could not read the selected file(s) — are they valid YAML?', true);
         closeImportModal();
     } else {
-        alert(`Imported ${filmsImported} film profile(s), ${labsImported} lab profile(s)${settingsImported ? ', and settings' : ''}.`);
+        showToast(`Imported ${filmsImported} film profile(s), ${labsImported} lab profile(s)${settingsImported ? ', and settings' : ''}.`);
         closeImportModal();
         // Step 2: let them pick a home lab and favourite/ignore stocks.
         openSetupModal();
@@ -864,7 +901,7 @@ document.getElementById('importFile').addEventListener('change', (e) => {
 }));
 importDropzone.addEventListener('drop', (e) => {
     const files = Array.from(e.dataTransfer?.files || []).filter(f => /\.ya?ml$/i.test(f.name));
-    if (!files.length) { alert('Please drop .yaml or .yml files.'); return; }
+    if (!files.length) { showToast('Please drop .yaml or .yml files.', true); return; }
     Promise.all(files.map(readYamlFile)).then(finishImport);
 });
 
