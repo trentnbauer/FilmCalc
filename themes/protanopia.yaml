@@ -1,0 +1,39 @@
+# Hex or a standard CSS color name both work — see themes/ocean.yaml for
+# details and the full list of customizable slots.
+#
+# Palette tuned specifically for protanopia (red-blind) — reds lose most of
+# their perceived brightness and shift toward dark brown/black for a
+# protanope, so unlike a generic red-green-safe palette this avoids warm
+# red-orange hues (including vermillion) for anything meant to stay bright
+# and legible. Leans on teal, gold, and blue instead of green/amber for
+# cheapest/recommended, and uses a blue-violet for danger rather than
+# reusing black twice or any hue with a red component.
+label: Protanopia
+light:
+  pageBg: "#f5f5f5"
+  cardBg: "#ffffff"
+  accent: "#0072b2"
+  cheapestBg: "#d3f0ee"
+  cheapestText: "#00807a"
+  recommendedBg: "#faf1cf"
+  recommendedText: "#a4820a"
+  favourite: "#b5568f"
+  defaultLab: "#0072b2"
+  warningBg: "#fdead0"
+  warningText: "#c98400"
+  dangerBg: "#ece4f7"
+  dangerText: "#5b2c87"
+dark:
+  pageBg: "#0e1420"
+  cardBg: "#161f2e"
+  accent: "#56b4e9"
+  cheapestBg: "#0d2e2c"
+  cheapestText: "#3fd6cc"
+  recommendedBg: "#3a3106"
+  recommendedText: "#f0d24a"
+  favourite: "#e2a3c9"
+  defaultLab: "#56b4e9"
+  warningBg: "#3a2a06"
+  warningText: "#f2b93a"
+  dangerBg: "#241a33"
+  dangerText: "#c9a3f2"

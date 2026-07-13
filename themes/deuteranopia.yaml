@@ -1,15 +1,14 @@
 # Hex or a standard CSS color name both work — see themes/ocean.yaml for
 # details and the full list of customizable slots.
 #
-# Built on the Okabe-Ito palette (Okabe & Ito, 2008), a set of colors chosen
-# to stay distinguishable under the common forms of color vision deficiency
-# (protanopia, deuteranopia, tritanopia) — deliberately avoids the red/green
-# pairing that causes the most confusion. cheapest/recommended use
-# blue-green vs. orange (a standard colorblind-safe contrast) rather than
-# green vs. amber; danger uses black instead of a second red-family color,
+# Palette tuned for deuteranopia (green-blind, the most common form of color
+# vision deficiency) — built on the Okabe-Ito palette (Okabe & Ito, 2008),
+# which stays distinguishable under deuteranopia by replacing the red/green
+# pairing with blue-green vs. orange for cheapest/recommended, rather than
+# green vs. amber. Danger uses black instead of a second red-family color,
 # since Okabe-Ito only has one clearly "red" hue (vermillion, used for
 # warning) and reusing a near-red for danger would undo the point.
-label: Colorblind Safe
+label: Deuteranopia
 light:
   pageBg: "#f5f5f5"
   cardBg: "#ffffff"

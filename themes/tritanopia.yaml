@@ -1,0 +1,39 @@
+# Hex or a standard CSS color name both work — see themes/ocean.yaml for
+# details and the full list of customizable slots.
+#
+# Palette tuned for tritanopia (blue-blind — confuses blue with green, and
+# yellow with violet/pink), the opposite problem from protanopia/deuteranopia.
+# Tritanopia leaves red vs. green perfectly distinguishable, so unlike the
+# other two colorblind themes, cheapest/danger can safely use the app's
+# normal green/red logic. The hues to avoid instead are blue and yellow, so
+# recommended/warning/favourite/defaultLab lean into red-oranges, magenta,
+# and deep violet rather than gold or blue.
+label: Tritanopia
+light:
+  pageBg: "#f5f5f5"
+  cardBg: "#ffffff"
+  accent: "#b23a48"
+  cheapestBg: "#dcefdc"
+  cheapestText: "#2e7d32"
+  recommendedBg: "#fbe2d8"
+  recommendedText: "#c1440e"
+  favourite: "#9c27b0"
+  defaultLab: "#5c4b8a"
+  warningBg: "#f3ddc9"
+  warningText: "#a0522d"
+  dangerBg: "#fbe0e0"
+  dangerText: "#c62828"
+dark:
+  pageBg: "#0e1420"
+  cardBg: "#161f2e"
+  accent: "#e0768a"
+  cheapestBg: "#123018"
+  cheapestText: "#6fcf73"
+  recommendedBg: "#3a1c0a"
+  recommendedText: "#ff9a5a"
+  favourite: "#d78fe0"
+  defaultLab: "#9884d6"
+  warningBg: "#3a2410"
+  warningText: "#e0a05a"
+  dangerBg: "#3a1414"
+  dangerText: "#ef9a9a"
