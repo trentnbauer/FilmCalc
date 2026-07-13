@@ -192,7 +192,7 @@ Output a top-level key "films:" containing a list. Each film:
     filmCost: <price of the WHOLE pack, plain number>
     storeName: <short shop name>
     buyLink: <product URL, tracking params stripped>
-    availability: <national | state | city — national if the shop ships/delivers anywhere in the country (the default), state if the price only holds within one state/region, city if it's local-only (no shipping, or in-store/local-delivery pricing)>
+    availability: <national | state | city. The test is "no postage anywhere in the country", NOT "does the shop ship nationally": use national only if someone anywhere in the country could get this exact price without paying shipping, e.g. a nationwide walk-in chain like Woolworths or JB Hi-Fi (this is the default). If it's an online-only or single-location shop — even one that technically ships nationwide, like a Melbourne-based online film shop — buyers outside its home area pay postage on top of this price, so use state or city instead.>
     state: <state/region the price is valid in — only if availability is state or city, omit otherwise>
     city: <city the price is valid in — only if availability is city, omit otherwise>`;
 
@@ -791,6 +791,31 @@ function buildFilmProfilesFromEntries(entries) {
     return result;
 }
 
+// Same film stock can now be split across multiple preset files by
+// locality (e.g. "Kodak Gold" has national bundles in
+// australian-retailers.yaml and Melbourne-only ones in
+// melbourne-retailers.yaml — issue #114) — importing several presets
+// in one go must combine their bundles for a shared filmKey, not have the
+// later file's entry silently replace the earlier one's. Bundles are
+// matched by storeName+rolls+exposures so re-importing the same preset
+// updates that store's price in place instead of duplicating it, while a
+// different store/file's bundles are added alongside.
+function mergeFilmBundles(existing, incoming) {
+    const keyOf = b => `${b.storeName || ''}|${b.rolls}|${b.exposures}`;
+    const byKey = new Map((existing || []).map(b => [keyOf(b), b]));
+    (incoming || []).forEach(b => byKey.set(keyOf(b), b));
+    return [...byKey.values()];
+}
+function mergeFilmProfiles(saved, incoming) {
+    Object.keys(incoming).forEach(key => {
+        const existing = saved[key];
+        saved[key] = (existing && Array.isArray(existing.bundles) && Array.isArray(incoming[key].bundles))
+            ? { ...incoming[key], bundles: mergeFilmBundles(existing.bundles, incoming[key].bundles) }
+            : incoming[key];
+    });
+    return saved;
+}
+
 // Merges one parsed YAML document (combined config.yaml shape, or a
 // standalone films.yaml/labs.yaml array) into localStorage. Shared by
 // both the preset-picker and file-upload import paths below.
@@ -801,7 +826,7 @@ function applyParsedImport(parsed) {
         if (Array.isArray(parsed.films)) {
             let saved = readJSON('filmProfiles', {});
             const incoming = buildFilmProfilesFromEntries(parsed.films);
-            Object.assign(saved, incoming);
+            mergeFilmProfiles(saved, incoming);
             result.films += Object.keys(incoming).length;
             localStorage.setItem('filmProfiles', JSON.stringify(saved));
         }
@@ -827,7 +852,7 @@ function applyParsedImport(parsed) {
             } else if (isFilmFile) {
                 let saved = readJSON('filmProfiles', {});
                 const incoming = buildFilmProfilesFromEntries(parsed);
-                Object.assign(saved, incoming);
+                mergeFilmProfiles(saved, incoming);
                 result.films += Object.keys(incoming).length;
                 localStorage.setItem('filmProfiles', JSON.stringify(saved));
             } else {

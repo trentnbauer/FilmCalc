@@ -27,7 +27,13 @@ doesn't conform.
 
 ## Film entries
 
-Goes in a file under `films/`, grouped **by country**.
+Goes in a file under `films/`, grouped **by country** — unless every bundle for this film has a
+non-`national` `availability` (see below), in which case it's grouped **by city instead** (e.g.
+`melbourne-retailers.yaml`), same as labs. A film that has both national bundles (from a nationwide
+chain) and city-scoped bundles (from a local online shop) for the *same* name/boxSpeed/format is
+perfectly normal — it appears as two separate entries, one in the country file with just its national
+bundles, one in the city file with just its city-scoped bundles. The app merges them back together at
+import time by name+boxSpeed+format.
 
 ```yaml
 - name: Kodak Portra 400
@@ -61,7 +67,7 @@ Goes in a file under `films/`, grouped **by country**.
 | `filmCost` | Price of the **whole pack**, including postage if the page states it. Plain number. Regular price. |
 | `storeName` | Short shop name, e.g. `Walkens`, `B&H`, `Analogue Wonderland`. |
 | `buyLink` | The product page URL. Strip tracking junk (`utm_*`, `gclid`, etc.) if you can. Use `''` if there genuinely isn't one. |
-| `availability` | How widely this price is actually valid, since a local shop's price often bakes in postage that doesn't apply elsewhere. One of: `national` (ships/delivers anywhere in the country — the default if omitted), `state` (only valid within one state/region), `city` (only valid in one city, e.g. a shop with no shipping or in-store-only pricing). |
+| `availability` | Whether this exact price is achievable **without paying postage**, since a shop that merely ships nationally still charges buyers outside its home area for shipping on top of `filmCost` — that's a real extra cost this field exists to flag, not just "does the shop deliver here." The test: could someone anywhere in the country walk into a physical store (or otherwise get it at this price with zero shipping cost), the way they could with a national chain like Woolworths or JB Hi-Fi? If yes, use `national` (the default if omitted). If this price is really only achievable by buyers near the shop's own city/region — an online-only or single-location shop that ships everywhere but charges for it, e.g. Walkens (Melbourne) — that's `state` or `city`, **even though the shop technically ships nationwide.** "Ships nationally" is not the test; "no postage anywhere in the country" is. |
 | `state` | Required if `availability` is `state` or `city`. The state/region the price is valid in, e.g. `Victoria`. Omit (or `''`) for `national`. |
 | `city` | Required if `availability` is `city`. The city the price is valid in, e.g. `Melbourne`. Omit (or `''`) otherwise. |
 
@@ -130,8 +136,9 @@ After the YAML, add a short note with exactly these three things:
 
    | | Filename | Label |
    |---|---|---|
-   | **Films** (by country) | `us-retailers.yaml`, `uk-retailers.yaml` | `US Retailers`, `UK Retailers` |
-   | **Labs** (by city) | `london.yaml`, `new-york.yaml` | `London Labs`, `New York Labs` |
+   | **Films, national** | `us-retailers.yaml`, `uk-retailers.yaml` | `US Retailers`, `UK Retailers` |
+   | **Films, city-scoped** (any bundle with `availability: state` or `city`) | `melbourne-retailers.yaml`, `sydney-retailers.yaml` | `Melbourne Retailers`, `Sydney Retailers` |
+   | **Labs** (always by city) | `london.yaml`, `new-york.yaml` | `London Labs`, `New York Labs` |
 
    Then check the existing files and tell the user which case applies:
    - **The file already exists** → they should open it and paste your entry at the bottom of the list.

@@ -1,3 +1,5 @@
 [
-  { "file": "australian-retailers.yaml", "label": "Australian Retailers" }
+  { "file": "australian-retailers.yaml", "label": "Australian Retailers" },
+  { "file": "melbourne-retailers.yaml", "label": "Melbourne Retailers" },
+  { "file": "sydney-retailers.yaml", "label": "Sydney Retailers" }
 ]

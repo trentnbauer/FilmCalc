@@ -54,11 +54,17 @@ body:
     id: availability
     attributes:
       label: Availability (films only)
-      description: A local shop's price often bakes in postage or in-store pickup that isn't valid elsewhere. How widely does this price actually apply?
+      description: |
+        Could someone ANYWHERE in the country walk into a store and get this exact price with zero
+        shipping cost — like Woolworths or JB Hi-Fi? If so, pick Country-wide. If it's an online-only
+        or single-location shop that charges buyers outside its own city/region for postage on top of
+        this price — even if it technically ships nationwide, e.g. a Melbourne-based online film shop —
+        pick State or City instead. "Ships nationally" is NOT the test; "no postage anywhere in the
+        country" is.
       options:
-        - Country-wide (ships/delivers nationally)
+        - Country-wide (walk-in price, no postage anywhere)
         - State/region-wide only
-        - City-only (no shipping, or local delivery/pickup only)
+        - City-only (mail order/local pickup — postage applies elsewhere)
     validations:
       required: false
 
