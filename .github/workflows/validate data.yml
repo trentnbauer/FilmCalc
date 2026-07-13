@@ -8,12 +8,14 @@ on:
     paths:
       - "films/**"
       - "labs/**"
+      - "themes/**"
       - "options.yaml"
   push:
     branches: [main]
     paths:
       - "films/**"
       - "labs/**"
+      - "themes/**"
       - "options.yaml"
 
 permissions:
@@ -103,6 +105,44 @@ jobs:
                       for p in (s.get("processes") or []):
                           if p not in VALID_PROCESSES:
                               err(path, f"{sw}: process '{p}' must be one of {sorted(VALID_PROCESSES)}")
+
+          # ---- themes ----
+          # Mirrors js/themes.js's own loadThemeList()/applyThemeVars() — a
+          # theme needs at least one of light:/dark: (see #82: this whole
+          # folder used to be invisible to CI, so a typo'd colour key would
+          # sit there silently doing nothing instead of failing the PR).
+          VALID_THEME_KEYS = {
+              "pageBg", "cardBg", "accent",
+              "cheapestBg", "cheapestText", "recommendedBg", "recommendedText",
+              "favourite", "defaultLab", "warningBg", "warningText",
+              "dangerBg", "dangerText", "sectionBg", "sectionText",
+          }
+          for path in sorted(glob.glob("themes/*.yaml") + glob.glob("themes/*.yml")):
+              try:
+                  doc = yaml.safe_load(open(path))
+              except yaml.YAMLError as e:
+                  err(path, f"not valid YAML — check your indentation (spaces, never tabs).\n    {e}")
+                  continue
+              if not isinstance(doc, dict):
+                  err(path, "expected a top-level mapping with light:/dark: blocks")
+                  continue
+              if not doc.get("light") and not doc.get("dark"):
+                  err(path, "needs at least one of 'light:' or 'dark:' — a theme with neither is ignored at runtime")
+                  continue
+              if "label" in doc and not isinstance(doc["label"], str):
+                  err(path, "'label' must be plain text")
+              for mode in ("light", "dark"):
+                  block = doc.get(mode)
+                  if block is None:
+                      continue
+                  if not isinstance(block, dict):
+                      err(path, f"'{mode}:' must be a mapping of colour keys, not a list/scalar")
+                      continue
+                  for key, value in block.items():
+                      if key not in VALID_THEME_KEYS:
+                          err(path, f"{mode}.{key}: not a recognised colour key (typo? valid keys: {sorted(VALID_THEME_KEYS)})")
+                      elif not isinstance(value, str):
+                          err(path, f"{mode}.{key}: must be a colour string (hex like \"#0369a1\" or a CSS colour name), not {type(value).__name__}")
 
           # ---- options ----
           try:
