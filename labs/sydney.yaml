@@ -132,3 +132,157 @@ labs:
           - BW
           - E6
           - ECN2
+  - name: Rewind Photo Lab
+    hidden: false
+    address: 338-356 Mitchell Road, Alexandria NSW 2015, Australia
+    phone: +61 2 8041 7049
+    email: mail@rewindphotolab.com.au
+    website: https://rewindphotolab.com.au
+    services:
+      - devCost: 11
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 14
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - BW
+          - E6
+      - devCost: 20
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 23
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - BW
+          - E6
+      - devCost: 25
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: false
+        tiffScan: true
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 28
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: false
+        tiffScan: true
+        noPushPull: true
+        processes:
+          - BW
+          - E6
+      - devCost: 40
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: true
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 43
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: true
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - BW
+          - E6
+      - devCost: 45
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: true
+        tiffScan: true
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 48
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: true
+        tiffScan: true
+        noPushPull: true
+        processes:
+          - BW
+          - E6
+  - name: Photoland
+    hidden: false
+    address: Shop 5, 60 Elizabeth Street, Sydney NSW 2000, Australia
+    phone: +61 2 9235 1933
+    website: https://www.photoland.com.au
+    services:
+      - devCost: 16.95
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 34.95
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 44.95
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 44.95
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: true
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 54.95
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: true
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 59.95
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 69.95
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: true
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
