@@ -202,7 +202,7 @@ function renderIsoRow(entry, rank, pinReason) {
                 <span class="font-mono text-right leading-tight ${semanticRowText} ${textColor} whitespace-nowrap flex items-center gap-1.5">
                     <span>
                         <span class="font-semibold block">${CUR()}${entry.totalCostPerPhoto.toFixed(2)}/photo</span>
-                        <span class="text-xs opacity-70 font-normal block">${CUR()}${entry.devCostPerRoll.toFixed(2)}/roll dev</span>
+                        <span class="text-xs opacity-70 font-semibold block">${CUR()}${entry.devCostPerRoll.toFixed(2)}/roll dev</span>
                     </span>
                     ${chevron}
                 </span>
@@ -510,7 +510,7 @@ function renderMatrixRow(entry, rank, keyPrefix, pinReason, upgrade) {
                 <span class="font-mono text-right leading-tight ${semanticRowText} ${textColor} whitespace-nowrap flex items-center gap-1.5">
                     <span>
                         <span class="font-semibold block">${CUR()}${entry.totalCostPerPhoto.toFixed(2)}/photo</span>
-                        <span class="text-xs opacity-70 font-normal block">${CUR()}${entry.devCostPerRoll.toFixed(2)}/roll dev</span>
+                        <span class="text-xs opacity-70 font-semibold block">${CUR()}${entry.devCostPerRoll.toFixed(2)}/roll dev</span>
                     </span>
                     ${chevron}
                 </span>
@@ -753,7 +753,7 @@ function renderPinnedDevCostBlock() {
                     <span class="font-mono text-right leading-tight text-indigo-800 dark:text-indigo-300 whitespace-nowrap flex items-center gap-1.5">
                         <span>
                             <span class="font-semibold block">${CUR()}${p.totalCostPerPhoto.toFixed(2)}/photo</span>
-                            <span class="text-xs opacity-70 font-normal block">${CUR()}${p.devCostPerRoll.toFixed(2)}/roll dev</span>
+                            <span class="text-xs opacity-70 font-semibold block">${CUR()}${p.devCostPerRoll.toFixed(2)}/roll dev</span>
                         </span>
                         ${chevron}
                     </span>
