@@ -137,8 +137,15 @@ jobs:
                      commit on the same branch). Say in the PR description that you adjusted or replaced
                      Copilot's suggestion and why.
                    - Looks like a false positive (already-sanitized data the tool can't trace through a
-                     custom helper) → don't open a PR. `git push origin --delete <branch>` and move on,
-                     no PR, no comment needed.
+                     custom helper, or input that isn't actually attacker-controllable) → don't open a
+                     PR. `git push origin --delete <branch>`, then dismiss it — you can't call the
+                     dismissal API yourself (same reason you can't list alerts), so instead append
+                     `{"number": <alert number>, "comment": "<why, ≤280 chars, this becomes the
+                     dismissal comment on the alert>"}` to
+                     `${{ runner.temp }}/security-alerts/dismissals.json` (an array; create it as `[]`
+                     first if it doesn't already exist). A step after you finish applies these for real —
+                     without an entry here, the alert just stays open with nothing recorded, even though
+                     you decided it was fine.
                - If `autofix_status` is `"commit_failed"` or `"unavailable"`: the branch exists but is
                  empty (still just main). Implement the fix yourself from the SARIF trace (or, if there
                  was no `sarif_file` either, from the alert's rule id and file location — read the
@@ -211,3 +218,14 @@ jobs:
 
             If a tier has nothing to do, move on to the next one silently. If every tier is empty, do
             nothing at all — no branches, no PRs, no comments.
+
+      - name: Apply Tier 1 false-positive dismissals
+        # Same reason as the prep step: Claude's own token can't call the
+        # code-scanning API to actually dismiss an alert it judged a false
+        # positive, so it wrote its verdict to dismissals.json instead. This
+        # runs regardless of the Claude step's own outcome, so any
+        # dismissals it did manage to record still get applied.
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash .github/scripts/apply-security-dismissals.sh
