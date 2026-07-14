@@ -193,6 +193,14 @@ films:
         availability: city
         state: Victoria
         city: Melbourne
+      - rolls: 1
+        exposures: 36
+        filmCost: 39.95
+        storeName: Teds Cameras
+        buyLink: https://www.teds.com.au/products/kodak-portra-800-colour-film-35mm-36exp
+        availability: city
+        state: Victoria
+        city: Melbourne
   - name: Kodak Ektar 100
     boxSpeed: 100
     maxPushPull: 1
