@@ -544,7 +544,7 @@ function updateCheaperAlternative() {
     const costBlock = `<div class="mt-1 rounded-lg ${c.semanticBg} ${c.bg} px-4 py-3 text-center">
         <p class="text-xs font-semibold ${c.semanticText} ${c.label} uppercase tracking-wide">${headingLabel}</p>
         <p class="font-mono text-3xl font-bold ${c.semanticText} ${c.big} mt-0.5">${CUR()}${currentTotal.toFixed(2)}</p>
-        <p class="text-xs ${c.semanticText} ${c.sub} mt-0.5">${CUR()}${currentFilmCostPerPhoto.toFixed(2)} film + ${CUR()}${currentDevCpp.toFixed(2)} dev${stopsAbs > 0 ? ` · at ${devSpeed} ISO` : ''}</p>
+        <p class="text-xs ${c.semanticText} ${c.sub} mt-0.5"><span class="font-semibold">${CUR()}${currentFilmCostPerPhoto.toFixed(2)}</span> film + ${CUR()}${currentDevCpp.toFixed(2)} dev${stopsAbs > 0 ? ` · at ${devSpeed} ISO` : ''}</p>
         ${cheapestNote}
     </div>`;
 
