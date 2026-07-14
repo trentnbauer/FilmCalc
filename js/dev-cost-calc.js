@@ -81,6 +81,7 @@ function normalizeLabServices(lab) {
             highResScan: !!s.highResScan,
             tiffScan: !!s.tiffScan,
             noPushPull: !!s.noPushPull,
+            mailInCost: parseFloat(s.mailInCost) || 0,
             processes: Array.isArray(s.processes) && s.processes.length > 0 ? s.processes : [s.process || 'C41']
         }));
     }
@@ -92,6 +93,7 @@ function normalizeLabServices(lab) {
         highResScan: !!lab.highResScan,
         tiffScan: !!lab.tiffScan,
         noPushPull: !!lab.noPushPull,
+        mailInCost: parseFloat(lab.mailInCost) || 0,
         processes: Array.isArray(lab.processes) && lab.processes.length > 0 ? lab.processes : [lab.process || 'C41']
     }];
 }
@@ -278,7 +280,7 @@ function computeIsoPriceOptions(targetIso, allFilms, allLabs, opts) {
                     const pushPullFee = stopsAbs > 0
                         ? ((tier.pushPullType === 'per_stop') ? tier.pushPullCost * stopsAbs : tier.pushPullCost)
                         : 0;
-                    const devCostPerPhoto = (tier.devCost + pushPullFee) / bestBundle.exposures;
+                    const devCostPerPhoto = (tier.devCost + pushPullFee + tier.mailInCost) / bestBundle.exposures;
                     const totalCostPerPhoto = bestFilmCostPerPhoto + devCostPerPhoto;
                     const candidate = {
                         filmName: f.name,
@@ -295,9 +297,10 @@ function computeIsoPriceOptions(targetIso, allFilms, allLabs, opts) {
                         // Extra fields for the expandable breakdown row.
                         devCostBase: tier.devCost,
                         pushPullFee,
+                        mailInFee: tier.mailInCost,
                         exposures: bestBundle.exposures,
                         filmCostPerRoll: bestFilmCostPerPhoto * bestBundle.exposures,
-                        devCostPerRoll: tier.devCost + pushPullFee,
+                        devCostPerRoll: tier.devCost + pushPullFee + tier.mailInCost,
                         totalCostPerRoll: totalCostPerPhoto * bestBundle.exposures,
                         buyLink: bestBundle.buyLink,
                         storeName: bestBundle.storeName,
@@ -380,7 +383,7 @@ function computeNativeFilmLabMatrix(allFilms, allLabs, opts) {
 
         labNames.forEach(labName => {
             normalizeLabServices(allLabs[labName]).filter(tier => tierMatchesFilmProcess(tier, f) && matchesFilters(tier)).forEach(tier => {
-                const devCostPerPhoto = tier.devCost / bestBundle.exposures;
+                const devCostPerPhoto = (tier.devCost + tier.mailInCost) / bestBundle.exposures;
                 results.push({
                     filmName: f.name,
                     boxSpeed,
@@ -395,9 +398,10 @@ function computeNativeFilmLabMatrix(allFilms, allLabs, opts) {
                     // Breakdown fields for the expandable row (native = no push/pull).
                     devCostBase: tier.devCost,
                     pushPullFee: 0,
+                    mailInFee: tier.mailInCost,
                     exposures: bestBundle.exposures,
                     filmCostPerRoll: bestFilmCostPerPhoto * bestBundle.exposures,
-                    devCostPerRoll: tier.devCost,
+                    devCostPerRoll: tier.devCost + tier.mailInCost,
                     totalCostPerRoll: (bestFilmCostPerPhoto + devCostPerPhoto) * bestBundle.exposures,
                     buyLink: bestBundle.buyLink,
                     storeName: bestBundle.storeName,
@@ -441,7 +445,7 @@ function computeOneStopFilmLabMatrix(allFilms, allLabs, opts) {
             normalizeLabServices(allLabs[labName])
                 .filter(tier => !tier.noPushPull && tierMatchesFilmProcess(tier, f) && matchesFilters(tier))
                 .forEach(tier => {
-                    const devCostPerPhoto = (tier.devCost + tier.pushPullCost) / bestBundle.exposures;
+                    const devCostPerPhoto = (tier.devCost + tier.pushPullCost + tier.mailInCost) / bestBundle.exposures;
                     results.push({
                         filmName: f.name,
                         labName,
