@@ -16,6 +16,8 @@ const {
     normalizeFilmBundles,
     normalizeLabServices,
     computeCostPerPhoto,
+    bundleCostForRolls,
+    computeBundleBreakEven,
     tierMatchesFilmProcess,
     filmMatchesProcessAndFormat,
     sortIsoEntries,
@@ -370,4 +372,66 @@ test('findHiResFastestUpgrade returns undefined when no candidate is hi-res+next
     const other = { labName: 'Other', totalCostPerPhoto: 0.85, highResScan: true, turnaroundTime: 'same_week' };
     const upgrade = findHiResFastestUpgrade([cheapest, other], cheapest, 4);
     assert.equal(upgrade, undefined);
+});
+
+// ---------- computeBundleBreakEven (issue #161: "buy the 5-pack once
+// you're shooting N+ rolls" note for films with multiple bundle sizes) ----------
+
+test('computeBundleBreakEven: finds the roll count where the bulk pack starts winning', () => {
+    // Single roll: $10/roll. 5-pack: $45 flat ($9/roll average) — cheaper
+    // per photo overall, so it's the bundle the app already shows as
+    // "cheapest per photo". But buying it outright only pays off once you
+    // need enough rolls: ceil(R/5)*45 vs ceil(R/1)*10 —
+    //   R=4: 45 vs 40 (singles still cheaper)
+    //   R=5: 45 vs 50 (5-pack now cheaper or equal) <- crossover
+    const single = { rolls: 1, filmCost: 10, exposures: 36 };
+    const fivePack = { rolls: 5, filmCost: 45, exposures: 36 };
+    const result = computeBundleBreakEven([single, fivePack]);
+    assert.ok(result, 'expected a break-even result');
+    assert.equal(result.breakEvenRolls, 5);
+    assert.equal(result.bulkBundle.rolls, 5);
+    assert.equal(result.smallerBundle.rolls, 1);
+});
+
+test('computeBundleBreakEven: returns null for a single bundle', () => {
+    assert.equal(computeBundleBreakEven([{ rolls: 1, filmCost: 10, exposures: 36 }]), null);
+    assert.equal(computeBundleBreakEven([]), null);
+    assert.equal(computeBundleBreakEven(null), null);
+});
+
+test('computeBundleBreakEven: returns null when the cheapest-per-photo bundle is already the smallest', () => {
+    // Single roll is BOTH the smallest pack and the cheapest per photo
+    // (a markup on the 5-pack, e.g. a "convenience" bulk price) — nothing
+    // to warn about buying prematurely.
+    const single = { rolls: 1, filmCost: 8, exposures: 36 }; // $8/roll
+    const fivePack = { rolls: 5, filmCost: 50, exposures: 36 }; // $10/roll
+    assert.equal(computeBundleBreakEven([single, fivePack]), null);
+});
+
+test('computeBundleBreakEven: ignores bundles with a different exposures count', () => {
+    // The 5-pack has a better rate ($9/roll) but is 24exp, not 36exp like
+    // the single roll — not a fair roll-for-roll comparison, so it's
+    // excluded and no break-even is computed.
+    const single = { rolls: 1, filmCost: 10, exposures: 36 };
+    const fivePack24 = { rolls: 5, filmCost: 45, exposures: 24 };
+    assert.equal(computeBundleBreakEven([single, fivePack24]), null);
+});
+
+test('computeBundleBreakEven: picks the closest smaller pack when there are 3+ sizes', () => {
+    // 1-roll $10, 3-pack $27 ($9/roll), 5-pack $20 ($4/roll, clearly bulk
+    // cheapest). Closest-smaller-than-bulk is the 3-pack, not the single.
+    const single = { rolls: 1, filmCost: 10, exposures: 36 };
+    const threePack = { rolls: 3, filmCost: 27, exposures: 36 };
+    const fivePack = { rolls: 5, filmCost: 20, exposures: 36 };
+    const result = computeBundleBreakEven([single, threePack, fivePack]);
+    assert.ok(result);
+    assert.equal(result.bulkBundle.rolls, 5);
+    assert.equal(result.smallerBundle.rolls, 3);
+});
+
+test('bundleCostForRolls: rounds up to whole packs, never fractional', () => {
+    const fivePack = { rolls: 5, filmCost: 45 };
+    assert.equal(bundleCostForRolls(fivePack, 1), 45); // 1 roll still costs a whole pack
+    assert.equal(bundleCostForRolls(fivePack, 5), 45);
+    assert.equal(bundleCostForRolls(fivePack, 6), 90); // needs a second pack
 });
