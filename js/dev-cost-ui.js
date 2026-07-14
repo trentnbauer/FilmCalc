@@ -50,15 +50,43 @@ function switchCheapestSubTab(sub) {
         cheapestSubTabs[key].content.classList.toggle('hidden', !active);
         setSubTabActive(cheapestSubTabs[key].btn, active);
     });
+    renderDevCostActiveFilters();
     cheapestSubTabs[sub].update();
 }
 
 function refreshActiveCheapestSubTab() {
+    renderDevCostActiveFilters();
     cheapestSubTabs[activeCheapestSubTab].update();
 }
 
 Object.keys(cheapestSubTabs).forEach(key => cheapestSubTabs[key].btn.addEventListener('click', () => switchCheapestSubTab(key)));
 document.getElementById('cheapestFilmSelect').addEventListener('change', () => updateCostPerFilmTab());
+
+// Builds a link encoding the currently-selected film plus the active
+// Format/Process filters, so opening it later (or sending it to someone
+// else) reopens Lab Costs -> Per Film with the same comparison already
+// showing — mirrors Film Lookup's own Share Link button (issue #160),
+// just for a saved-library comparison instead of a manual one-off roll.
+// See applyUrlParams()'s ?cheapestFilm= handling in index.html.
+document.getElementById('cheapestFilmShareBtn').addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    const filmValue = document.getElementById('cheapestFilmSelect').value;
+    if (!filmValue) return;
+    const params = new URLSearchParams();
+    params.set('cheapestFilm', filmValue);
+    params.set('format', cheapestFormat);
+    if (cheapestProcess && cheapestProcess !== 'ALL') params.set('process', cheapestProcess);
+    const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+    const statusEl = document.getElementById('cheapestFilmShareStatus');
+    try {
+        await navigator.clipboard.writeText(url);
+        statusEl.textContent = '✓ Link copied';
+    } catch {
+        statusEl.textContent = url;
+    }
+    clearTimeout(btn._shareStatusTimer);
+    btn._shareStatusTimer = setTimeout(() => { statusEl.textContent = ''; }, 3000);
+});
 
 // ---------- ISO Price Calculator ----------
 // For a given shooting ISO, lists every saved film that could reach
@@ -106,6 +134,52 @@ document.querySelectorAll('.dev-cost-filter-pill').forEach(btn => btn.addEventLi
     renderDevCostFilterBar();
     refreshActiveCheapestSubTab();
 }));
+
+// Consolidated "what's narrowing these results" row (see #devCostActiveFilters
+// in index.html) — the Process select and the filter pills above each show
+// their own active state individually, but an empty results list otherwise
+// gives no single place to see (or clear) everything that's currently
+// filtering it out. Format is deliberately excluded: it isn't really an
+// optional filter (a camera is always one format), and its own dropdown is
+// already visible right above this row. Called from switchCheapestSubTab()/
+// refreshActiveCheapestSubTab() (covers pill + sub-tab changes) and from
+// index.html's applyGlobalFilterChange() (covers the Process dropdown).
+function renderDevCostActiveFilters() {
+    const el = document.getElementById('devCostActiveFilters');
+    if (!el) return;
+    const chips = [];
+    if (typeof cheapestProcess !== 'undefined' && cheapestProcess && cheapestProcess !== 'ALL') {
+        const label = (typeof PROCESS_OPTIONS !== 'undefined' && PROCESS_OPTIONS.find(o => o.value === cheapestProcess)?.label) || cheapestProcess;
+        chips.push({
+            label: `Process: ${label}`,
+            clear: () => {
+                cheapestProcess = 'ALL';
+                localStorage.setItem('globalProcess', cheapestProcess);
+                const gp = document.getElementById('globalProcess');
+                if (gp) gp.value = cheapestProcess;
+                refreshActiveCheapestSubTab();
+            }
+        });
+    }
+    if (devCostFilterTurnaround) {
+        chips.push({
+            label: devCostFilterTurnaround === 'next_day' ? '⚡ Next Day' : 'Same Week',
+            clear: () => { devCostFilterTurnaround = ''; renderDevCostFilterBar(); refreshActiveCheapestSubTab(); }
+        });
+    }
+    if (devCostFilterHiRes) chips.push({ label: 'HI-RES', clear: () => { devCostFilterHiRes = false; renderDevCostFilterBar(); refreshActiveCheapestSubTab(); } });
+    if (devCostFilterTiff) chips.push({ label: 'TIFF', clear: () => { devCostFilterTiff = false; renderDevCostFilterBar(); refreshActiveCheapestSubTab(); } });
+
+    if (!chips.length) {
+        el.innerHTML = '';
+        el.classList.add('hidden');
+        return;
+    }
+    el.classList.remove('hidden');
+    el.innerHTML = `<span class="text-xs text-gray-400 dark:text-gray-500 font-semibold uppercase tracking-wide">Active</span>` +
+        chips.map((c, i) => `<button type="button" data-chip-index="${i}" class="active-filter-chip inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-900/70 transition-colors" title="Clear this filter">${escapeHtml(c.label)} <span aria-hidden="true">✕</span></button>`).join('');
+    el.querySelectorAll('.active-filter-chip').forEach(btn => btn.addEventListener('click', () => chips[parseInt(btn.dataset.chipIndex)].clear()));
+}
 // sortIsoEntries(), pickIsoCandidate(), and computeIsoPriceOptions()
 // now live in js/dev-cost-calc.js (loaded above, shared global
 // scope) — see that file for the calculation logic and
@@ -800,6 +874,7 @@ function updateCostPerFilmTab() {
     const container = document.getElementById('cheapestFilmResults');
     const select = document.getElementById('cheapestFilmSelect');
     const selectedKey = select.value;
+    document.getElementById('cheapestFilmShareBtn').disabled = !selectedKey;
     const pinnedBlock = renderPinnedDevCostBlock();
 
     if (!selectedKey) {
