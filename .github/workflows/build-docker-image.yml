@@ -106,74 +106,22 @@ jobs:
         run: sed -i "s/%%FILMCALC_VERSION%%/$(git rev-parse --short HEAD)/" index.html
 
       - name: Generate preset manifests
-        # Keep films/index.json and labs/index.json in sync with whatever *.yaml
-        # files exist, so the Docker image's Import list matches the folder —
-        # same generator as the Pages deploy workflow. Runs before the build so
-        # the COPY films/labs step picks up fresh manifests.
-        run: |
-          python3 - <<'PY'
-          import glob, json, os, re
-
-          def label_from_file(path):
-              with open(path, encoding='utf-8') as fh:
-                  for line in fh:
-                      m = re.match(r'label:\s*(.+?)\s*$', line)
-                      if m:
-                          return m.group(1).strip().strip('"\'')
-                      if line.lstrip().startswith('- '):
-                          break
-              stem = os.path.splitext(os.path.basename(path))[0]
-              return re.sub(r'[-_]+', ' ', stem).title()
-
-          for folder in ('films', 'labs', 'themes'):
-              files = sorted(
-                  os.path.basename(p) for p in glob.glob(f'{folder}/*.yaml') + glob.glob(f'{folder}/*.yml')
-              )
-              entries = [{'file': f, 'label': label_from_file(os.path.join(folder, f))} for f in files]
-              with open(f'{folder}/index.json', 'w', encoding='utf-8') as out:
-                  json.dump(entries, out, indent=2, ensure_ascii=False)
-                  out.write('\n')
-              print(f'{folder}/index.json -> {len(entries)} preset(s): ' + ', '.join(f["file"] for f in entries))
-          PY
+        # Keep films/index.json, labs/index.json and themes/index.json in sync
+        # with whatever *.yaml files exist, so the Docker image's Import list
+        # matches the folder. Runs before the build so the COPY films/labs
+        # step picks up fresh manifests. See
+        # .github/scripts/generate-manifests.py for the generator itself,
+        # shared with build-github-page.yml (issue #165).
+        run: python3 .github/scripts/generate-manifests.py films labs themes
 
       - name: Generate changelog.json
-        # Footer "What's new" popup (issue #53) reads this at runtime — same
-        # generator as the Pages deploy workflow. Runs before the build so
-        # the Dockerfile's COPY changelog.json step picks up a fresh one.
+        # Footer "What's new" popup (issue #53) reads this at runtime. Runs
+        # before the build so the Dockerfile's COPY changelog.json step picks
+        # up a fresh one. See .github/scripts/generate-changelog.py for the
+        # generator itself, shared with build-github-page.yml (issue #165).
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh pr list --repo "${{ github.repository }}" --state merged --limit 200 \
-            --json number,title,mergedAt,url > /tmp/merged-prs.json
-
-          python3 - <<'PY'
-          import json, subprocess
-
-          with open('/tmp/merged-prs.json', encoding='utf-8') as f:
-              prs = json.load(f)
-
-          entries = []
-          for pr in prs:
-              files = subprocess.run(
-                  ['gh', 'pr', 'view', str(pr['number']), '--json', 'files', '-q', '.files[].path'],
-                  capture_output=True, text=True, check=True
-              ).stdout.splitlines()
-              if files and all(p.startswith('.github/') for p in files):
-                  continue
-              entries.append({
-                  'number': pr['number'],
-                  'title': pr['title'],
-                  'mergedAt': pr['mergedAt'],
-                  'url': pr['url'],
-              })
-
-          entries.sort(key=lambda e: e['mergedAt'], reverse=True)
-
-          with open('changelog.json', 'w', encoding='utf-8') as out:
-              json.dump(entries, out, indent=2, ensure_ascii=False)
-              out.write('\n')
-          print(f'changelog.json -> {len(entries)} entries')
-          PY
+        run: python3 .github/scripts/generate-changelog.py --repo "${{ github.repository }}"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
