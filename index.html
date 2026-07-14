@@ -346,6 +346,15 @@
                     <button id="cheapestSubIsoBtn" type="button" title="Every option — native, pushed, or pulled — for a shooting ISO you enter" class="flex-1 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 transition-colors">Per ISO</button>
                 </div>
 
+                <!-- Exports exactly what's currently on screen in the active
+                     sub-tab (same sort/filters applied) as CSV — issue #163.
+                     Populated by renderDevCostExportRows() in
+                     js/dev-cost-ui.js each time a sub-tab re-renders; the
+                     click handler itself just reads whatever's there. -->
+                <div class="flex justify-end">
+                    <button type="button" id="devCostExportCsvBtn" disabled title="Export the rows currently shown in this view as a CSV file" class="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:no-underline">⬇ Export CSV</button>
+                </div>
+
                 <!-- Shared across all four Dev Cost sub-tabs (issue #49 — this
                      used to only apply to Per ISO). Wired in the script below. -->
                 <div class="flex items-center gap-1.5 flex-wrap">
