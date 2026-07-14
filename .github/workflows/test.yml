@@ -1,14 +1,16 @@
 name: Dev Cost calc tests
 
 # Runs the node:test suite covering js/dev-cost-calc.js — the pure
-# calculation engine extracted from index.html (issue #61). Scoped to the
-# files that can actually affect it, so unrelated PRs (docs, workflows,
-# theme YAML) don't pay for a Node setup they don't need.
+# calculation engine extracted from index.html (issue #61).
+#
+# This job is a required status check on main, so it must trigger and
+# report a status on every PR — a paths: filter on `on:` would make GitHub
+# Actions skip queuing the run entirely for unrelated PRs (docs, workflow
+# YAML), which leaves the required check permanently pending and blocks
+# merging. Instead the job always runs, and skips the actual test steps
+# internally when no relevant files changed.
 on:
   pull_request:
-    paths:
-      - "js/**"
-      - "tests/**"
   push:
     branches: [main]
     paths:
@@ -19,14 +21,29 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  dev-cost-calc-tests:
+    name: dev-cost-calc-tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for relevant changes
+        id: filter
+        if: github.event_name == 'pull_request'
+        run: |
+          if git diff --name-only "origin/${{ github.base_ref }}...HEAD" | grep -qE '^(js/|tests/)'; then
+            echo "relevant=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "relevant=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - uses: actions/setup-node@v4
+        if: github.event_name != 'pull_request' || steps.filter.outputs.relevant == 'true'
         with:
           node-version: 20
 
       - name: Run tests
+        if: github.event_name != 'pull_request' || steps.filter.outputs.relevant == 'true'
         run: node --test tests/
