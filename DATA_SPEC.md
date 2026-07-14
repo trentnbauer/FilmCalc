@@ -112,6 +112,7 @@ labs:
     highResScan: true
     tiffScan: false
     noPushPull: false
+    mailInCost: 0
     processes:
     - C41
 ```
@@ -140,6 +141,7 @@ labs:
 | `highResScan` | `true` if this tier includes hi-res scans, else `false`. |
 | `tiffScan` | `true` if this tier includes TIFF (or other lossless) scans, else `false`. Independent of `highResScan` — a tier can be either, both, or neither. |
 | `noPushPull` | `true` **only** if this tier cannot push/pull at all (e.g. a same-day minilab). Otherwise `false`. |
+| `mailInCost` | **Optional, omit or use `0` for a walk-in lab.** The return postage a mail-in lab's own pricing page states the customer pays (or the round-trip cost, whichever the page states) — added into the per-roll dev cost the same way `pushPullCost` is. Never estimate a postage cost that isn't stated on the page; leave it at `0` rather than guess. |
 | `processes` | A list of the processes this tier handles: any of `C41`, `BW`, `E6`, `ECN2`. |
 
 ### Getting `services` right

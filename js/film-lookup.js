@@ -225,7 +225,7 @@ function updateLabComparison() {
                 activePushPullCost = (tier.pushPullType === 'per_stop') ? (tier.pushPullCost * stops) : tier.pushPullCost;
             }
 
-            const labCostPerRoll = tier.devCost + activePushPullCost + perRollFee;
+            const labCostPerRoll = tier.devCost + activePushPullCost + tier.mailInCost + perRollFee;
             const grandTotal = filmCost + (labCostPerRoll * rolls) + onceOffFee;
             const costPerRoll = rolls > 0 ? grandTotal / rolls : 0;
             const costPerPhoto = totalPhotos > 0 ? grandTotal / totalPhotos : 0;
@@ -243,8 +243,9 @@ function updateLabComparison() {
                 turnaroundTime: tier.turnaroundTime,
                 // Breakdown fields for the expandable row.
                 filmCostPerPhoto: totalPhotos > 0 ? filmCost / totalPhotos : 0,
-                devCostPerPhoto: exposures > 0 ? (tier.devCost + activePushPullCost) / exposures : 0,
+                devCostPerPhoto: exposures > 0 ? (tier.devCost + activePushPullCost + tier.mailInCost) / exposures : 0,
                 pushPullFeePerPhoto: exposures > 0 ? activePushPullCost / exposures : 0,
+                mailInFeePerPhoto: exposures > 0 ? tier.mailInCost / exposures : 0,
                 filmCostPerRoll,
                 exposures
             };
@@ -383,6 +384,7 @@ function updateLabComparison() {
                     <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Film (per photo)</span><span class="font-mono">${CUR()}${r.filmCostPerPhoto.toFixed(2)}</span></div>
                     <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Development (per photo) <span class="opacity-60">= dev/roll ÷ ${r.exposures} exp</span></span><span class="font-mono">${CUR()}${r.devCostPerPhoto.toFixed(2)}</span></div>
                     ${r.pushPullFeePerPhoto > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Push/pull fee (per photo)</span><span class="font-mono">${CUR()}${r.pushPullFeePerPhoto.toFixed(2)}</span></div>` : ''}
+                    ${r.mailInFeePerPhoto > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Mail-in shipping (per photo)</span><span class="font-mono">${CUR()}${r.mailInFeePerPhoto.toFixed(2)}</span></div>` : ''}
                     <div class="flex justify-between text-gray-500 dark:text-gray-400 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>Film cost (per roll)</span><span class="font-mono">${CUR()}${r.filmCostPerRoll.toFixed(2)}</span></div>
                     <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Development (per roll)</span><span class="font-mono">${CUR()}${r.devCostPerRoll.toFixed(2)}</span></div>
                     <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>Scan</span><span>${scanLabel(r)}</span></div>
@@ -468,7 +470,7 @@ function updateCheaperAlternative() {
                     const pushPullFee = stopsAbs > 0
                         ? ((tier.pushPullType === 'per_stop') ? tier.pushPullCost * stopsAbs : tier.pushPullCost)
                         : 0;
-                    const devPerPhoto = (tier.devCost + pushPullFee) / exposures;
+                    const devPerPhoto = (tier.devCost + pushPullFee + tier.mailInCost) / exposures;
                     if (best === null || devPerPhoto < best) best = devPerPhoto;
                 });
         });
@@ -491,7 +493,7 @@ function updateCheaperAlternative() {
         const pushPullFee = stopsAbs > 0
             ? ((tier.pushPullType === 'per_stop') ? tier.pushPullCost * stopsAbs : tier.pushPullCost)
             : 0;
-        return (tier.devCost + pushPullFee) / exposures;
+        return (tier.devCost + pushPullFee + tier.mailInCost) / exposures;
     }
 
     // Find the cheapest saved film (same box speed, same process, within

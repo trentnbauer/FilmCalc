@@ -321,6 +321,7 @@ function renderRowBreakdown(entry, isOpen) {
             <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Film (per photo)</span><span class="font-mono">${CUR()}${entry.filmCostPerPhoto.toFixed(2)}</span></div>
             <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Development (per photo) <span class="opacity-60">= dev/roll ÷ ${entry.exposures} exp</span></span><span class="font-mono">${CUR()}${(entry.devCostBase / entry.exposures).toFixed(2)}</span></div>
             ${entry.pushPullFee > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Push/pull fee (per photo)</span><span class="font-mono">${CUR()}${(entry.pushPullFee / entry.exposures).toFixed(2)}</span></div>` : ''}
+            ${entry.mailInFee > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Mail-in shipping (per photo)</span><span class="font-mono">${CUR()}${(entry.mailInFee / entry.exposures).toFixed(2)}</span></div>` : ''}
             <div class="flex justify-between text-gray-500 dark:text-gray-400 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>Film cost (per roll)</span><span class="font-mono">${CUR()}${entry.filmCostPerRoll.toFixed(2)}</span></div>
             <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Development (per roll)</span><span class="font-mono">${CUR()}${entry.devCostPerRoll.toFixed(2)}</span></div>
             <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>Scan</span><span>${scanLabel(entry)}</span></div>
@@ -615,7 +616,7 @@ function toggleDevCostPin(entry) {
             filmName: entry.filmName, boxSpeed: entry.boxSpeed, format: entry.format, labName: entry.labName,
             filmCostPerPhoto: entry.filmCostPerPhoto, devCostPerPhoto: entry.devCostPerPhoto, totalCostPerPhoto: entry.totalCostPerPhoto,
             highResScan: entry.highResScan, tiffScan: entry.tiffScan, turnaroundTime: entry.turnaroundTime,
-            devCostBase: entry.devCostBase, pushPullFee: entry.pushPullFee, exposures: entry.exposures,
+            devCostBase: entry.devCostBase, pushPullFee: entry.pushPullFee, mailInFee: entry.mailInFee, exposures: entry.exposures,
             filmCostPerRoll: entry.filmCostPerRoll, devCostPerRoll: entry.devCostPerRoll, totalCostPerRoll: entry.totalCostPerRoll,
             buyLink: entry.buyLink, storeName: entry.storeName,
             availability: entry.availability, state: entry.state, city: entry.city
@@ -918,6 +919,7 @@ function renderPinnedDevCostBlock() {
                     <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Film (per photo)</span><span class="font-mono">${CUR()}${p.filmCostPerPhoto.toFixed(2)}</span></div>
                     <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Development (per photo) <span class="opacity-60">= dev/roll ÷ ${p.exposures} exp</span></span><span class="font-mono">${CUR()}${(p.devCostBase / p.exposures).toFixed(2)}</span></div>
                     ${p.pushPullFee > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Push/pull fee (per photo)</span><span class="font-mono">${CUR()}${(p.pushPullFee / p.exposures).toFixed(2)}</span></div>` : ''}
+                    ${p.mailInFee > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Mail-in shipping (per photo)</span><span class="font-mono">${CUR()}${(p.mailInFee / p.exposures).toFixed(2)}</span></div>` : ''}
                     <div class="flex justify-between text-gray-500 dark:text-gray-400 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>Film cost (per roll)</span><span class="font-mono">${CUR()}${p.filmCostPerRoll.toFixed(2)}</span></div>
                     <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Development (per roll)</span><span class="font-mono">${CUR()}${p.devCostPerRoll.toFixed(2)}</span></div>
                     <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>Scan</span><span>${scanLabel(p)}</span></div>

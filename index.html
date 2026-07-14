@@ -1317,7 +1317,8 @@
             if (tier.tiffScan) scanParts.push('TIFF');
             parts.push(scanParts.length ? scanParts.join(' + ') : 'Standard scan');
             if (Array.isArray(tier.processes) && tier.processes.length) parts.push(tier.processes.join('/'));
-            parts.push(`${CUR()}${(parseFloat(tier.devCost) || 0).toFixed(2)}/roll`);
+            const devPlusMailIn = (parseFloat(tier.devCost) || 0) + (parseFloat(tier.mailInCost) || 0);
+            parts.push(`${CUR()}${devPlusMailIn.toFixed(2)}/roll`);
             return parts.join(' · ');
         }
         function populateDefaultTierSelect(labName, selectedIndex) {
@@ -1638,6 +1639,7 @@
             tier = tier || {};
             const devCost = escapeHtml(tier.devCost ?? '');
             const pushPullCost = escapeHtml(tier.pushPullCost ?? '');
+            const mailInCost = escapeHtml(tier.mailInCost ?? '');
             const pushPullType = tier.pushPullType || 'per_stop';
             const turnaroundTime = tier.turnaroundTime || 'same_week';
             const highResScan = !!tier.highResScan;
@@ -1650,6 +1652,11 @@
                     <div>
                         <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Dev Cost ($)</label>
                         <input type="number" inputmode="decimal" min="0" step="0.01" class="tier-devCost w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" value="${devCost}">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Mail-In Shipping Cost ($)</label>
+                        <input type="number" inputmode="decimal" min="0" step="0.01" placeholder="0 for a walk-in lab" class="tier-mailInCost w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" value="${mailInCost}">
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Return postage this tier's own pricing page charges, for a mail-in lab. Leave at 0 for a walk-in lab.</p>
                     </div>
                     <div>
                         <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Process</label>
@@ -2363,6 +2370,7 @@
                     highResScan: block.querySelector('.tier-highResScan').checked,
                     tiffScan: block.querySelector('.tier-tiffScan').checked,
                     noPushPull: block.querySelector('.tier-noPushPull').checked,
+                    mailInCost: block.querySelector('.tier-mailInCost').value,
                     processes: processes.length > 0 ? processes : ['C41']
                 };
             });

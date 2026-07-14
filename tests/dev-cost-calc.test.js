@@ -105,6 +105,17 @@ test('normalizeLabServices falls back to the legacy flat schema', () => {
     assert.equal(tiers[0].turnaroundTime, 'same_week'); // default
     assert.equal(tiers[0].highResScan, false); // default
     assert.equal(tiers[0].tiffScan, false); // default
+    assert.equal(tiers[0].mailInCost, 0); // default -- walk-in labs are unaffected (issue #159)
+});
+
+// ---------- mailInCost (issue #159: fold a mail-in lab's return postage
+// into the per-roll dev cost, the same way pushPullCost already is) ----------
+
+test('normalizeLabServices: mailInCost defaults to 0 and parses through when set', () => {
+    const withDefault = normalizeLabServices({ services: [{ devCost: 15 }] });
+    assert.equal(withDefault[0].mailInCost, 0);
+    const withValue = normalizeLabServices({ services: [{ devCost: 15, mailInCost: '4.5' }] });
+    assert.equal(withValue[0].mailInCost, 4.5);
 });
 
 test('computeCostPerPhoto divides cost across rolls*exposures, null when zero photos', () => {
@@ -349,6 +360,40 @@ test('computeOneStopFilmLabMatrix: excludes noPushPull tiers and applies the fil
     };
     const results = computeOneStopFilmLabMatrix(ALL_FILMS, labsWithNoPushPull, {});
     assert.ok(!results.some(r => r.labName === 'Fixed Price Lab'), 'noPushPull tiers must be excluded');
+});
+
+// ---------- mailInCost folded into totals (issue #159) ----------
+// Mail Lab: same-week, standard scan, devCost 10, mailInCost 8 ->
+//   devCostPerPhoto = (10 + 8) / 36 = 0.5, total = (10/36) + 0.5 ≈ 0.778
+// A walk-in lab (Cheap Lab, no mailInCost) stays exactly as before.
+
+const MAIL_LAB = {
+    hidden: false,
+    services: [{ devCost: 10, pushPullCost: 0, pushPullType: 'flat', mailInCost: 8, turnaroundTime: 'same_week', highResScan: false, noPushPull: false, processes: ['C41'] }]
+};
+
+test('computeNativeFilmLabMatrix: mailInCost is added into dev cost, 0 by default leaves walk-in labs unaffected', () => {
+    const results = computeNativeFilmLabMatrix(ALL_FILMS, { 'Mail Lab': MAIL_LAB, 'Cheap Lab': ALL_LABS['Cheap Lab'] }, {});
+    const mailRow = results.find(r => r.labName === 'Mail Lab');
+    assert.ok(Math.abs(mailRow.devCostPerPhoto - 18 / 36) < 1e-9);
+    assert.ok(Math.abs(mailRow.mailInFee - 8) < 1e-9);
+    const cheapRow = results.find(r => r.labName === 'Cheap Lab');
+    assert.equal(cheapRow.mailInFee, 0);
+    assert.ok(Math.abs(cheapRow.devCostPerPhoto - 15 / 36) < 1e-9); // unchanged from the no-mailInCost fixture
+});
+
+test('computeIsoPriceOptions: mailInCost raises a mail-in lab\'s total cost per photo', () => {
+    const { native } = computeIsoPriceOptions(400, ALL_FILMS, { 'Mail Lab': MAIL_LAB }, {});
+    assert.equal(native.length, 1);
+    assert.ok(Math.abs(native[0].mailInFee - 8) < 1e-9);
+    assert.ok(Math.abs(native[0].totalCostPerPhoto - ((10 / 36) + (18 / 36))) < 1e-9);
+});
+
+test('computeOneStopFilmLabMatrix: mailInCost is added alongside the push/pull fee', () => {
+    const results = computeOneStopFilmLabMatrix(ALL_FILMS, { 'Mail Lab': MAIL_LAB }, {});
+    assert.equal(results.length, 1);
+    // devCost 10 + pushPullCost 0 + mailInCost 8 = 18, /36 = 0.5
+    assert.ok(Math.abs(results[0].devCostPerPhoto - 0.5) < 1e-9);
 });
 
 // ---------- reorder* pinning helpers ----------
