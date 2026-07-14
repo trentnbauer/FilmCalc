@@ -7,6 +7,10 @@ stale — but a PR that only touched .github/** is a CI/repo change, not
 something an end user would recognize as "new in the app", so those are
 filtered out.
 
+Fetches merged PRs and each PR's changed files in a single paginated GraphQL
+query (2-4 requests for up to 200 PRs) rather than one `gh pr view` call per
+PR, which used to mean ~200 sequential API round trips (issue #164).
+
 Shared by the Pages deploy and Docker build workflows so the generator only
 ever needs to be fixed in one place (issue #165). Requires the `gh` CLI to
 be authenticated (GH_TOKEN env var).
@@ -15,22 +19,62 @@ import argparse
 import json
 import subprocess
 
+PAGE_SIZE = 100
+
+QUERY = """
+query($owner: String!, $repo: String!, $pageSize: Int!, $cursor: String) {
+  repository(owner: $owner, name: $repo) {
+    pullRequests(states: MERGED, first: $pageSize, after: $cursor, orderBy: {field: CREATED_AT, direction: DESC}) {
+      pageInfo { hasNextPage endCursor }
+      nodes {
+        number
+        title
+        mergedAt
+        url
+        files(first: 100) {
+          pageInfo { hasNextPage }
+          nodes { path }
+        }
+      }
+    }
+  }
+}
+"""
+
 
 def fetch_merged_prs(repo, limit):
-    result = subprocess.run(
-        ['gh', 'pr', 'list', '--repo', repo, '--state', 'merged', '--limit', str(limit),
-         '--json', 'number,title,mergedAt,url'],
-        capture_output=True, text=True, check=True,
-    )
-    return json.loads(result.stdout)
+    owner, name = repo.split('/', 1)
+    prs = []
+    cursor = None
+    while len(prs) < limit:
+        args = [
+            'gh', 'api', 'graphql',
+            '-f', f'query={QUERY}',
+            '-F', f'owner={owner}',
+            '-F', f'repo={name}',
+            '-F', f'pageSize={min(PAGE_SIZE, limit - len(prs))}',
+        ]
+        if cursor:
+            args += ['-F', f'cursor={cursor}']
+        result = subprocess.run(args, capture_output=True, text=True, check=True)
+        connection = json.loads(result.stdout)['data']['repository']['pullRequests']
+        prs.extend(connection['nodes'])
+        if not connection['pageInfo']['hasNextPage']:
+            break
+        cursor = connection['pageInfo']['endCursor']
+    return prs[:limit]
 
 
-def pr_files(pr_number):
-    result = subprocess.run(
-        ['gh', 'pr', 'view', str(pr_number), '--json', 'files', '-q', '.files[].path'],
-        capture_output=True, text=True, check=True,
-    )
-    return result.stdout.splitlines()
+def is_github_only(pr):
+    files = pr['files']['nodes']
+    if not files:
+        return False
+    all_github = all(f['path'].startswith('.github/') for f in files)
+    if all_github and pr['files']['pageInfo']['hasNextPage']:
+        # First 100 files were all .github/**, but there are more we didn't
+        # fetch — can't be sure the rest are too, so don't filter it out.
+        return False
+    return all_github
 
 
 def main():
@@ -42,17 +86,16 @@ def main():
 
     prs = fetch_merged_prs(args.repo, args.limit)
 
-    entries = []
-    for pr in prs:
-        files = pr_files(pr['number'])
-        if files and all(p.startswith('.github/') for p in files):
-            continue
-        entries.append({
+    entries = [
+        {
             'number': pr['number'],
             'title': pr['title'],
             'mergedAt': pr['mergedAt'],
             'url': pr['url'],
-        })
+        }
+        for pr in prs
+        if not is_github_only(pr)
+    ]
 
     entries.sort(key=lambda e: e['mergedAt'], reverse=True)
 
