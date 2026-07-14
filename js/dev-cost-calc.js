@@ -459,6 +459,33 @@ function computeOneStopFilmLabMatrix(allFilms, allLabs, opts) {
     return results;
 }
 
+// For a given film stock NAME (ignoring format), finds every format that
+// name is saved in and, for each, the cheapest film+lab pairing at native
+// box speed — so "35mm Portra 400" and "120 Portra 400" can be compared
+// side by side even though 120's actual exposures-per-roll (and so its
+// cost per photo) depends on the camera back, not just the stock (issue
+// #162). Reuses computeNativeFilmLabMatrix's own "cheapest bundle, cheapest
+// matching lab" logic — same figure Per Film already shows for a single
+// format, just grouped by format instead of collapsed to one film+box-speed
+// key. Returns entries sorted cheapest-first; fewer than two entries means
+// there's nothing to compare (the stock is only saved in one format).
+function computeFormatComparisonForFilm(filmName, allFilms, allLabs, opts) {
+    opts = opts || {};
+    // No format param passed through — deliberately unfiltered so every
+    // format this name is saved in comes back, not just the one currently
+    // selected/filtered to.
+    const matrixOpts = { process: opts.process, camera120Exposures: opts.camera120Exposures };
+    const byFormat = new Map();
+    computeNativeFilmLabMatrix(allFilms, allLabs, matrixOpts)
+        .filter(e => e.filmName === filmName)
+        .forEach(e => {
+            const fmt = e.format || '35mm';
+            const cur = byFormat.get(fmt);
+            if (!cur || e.totalCostPerPhoto < cur.totalCostPerPhoto) byFormat.set(fmt, e);
+        });
+    return [...byFormat.values()].sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto);
+}
+
 // Given every lab+tier candidate for a single film (unfiltered by any
 // active turnaround/hi-res UI filter — the recommendation should surface
 // options outside the current filter, same as computeIsoPriceOptions'
@@ -536,6 +563,7 @@ if (typeof module !== 'undefined' && module.exports) {
         computeIsoPriceOptions,
         computeNativeFilmLabMatrix,
         computeOneStopFilmLabMatrix,
+        computeFormatComparisonForFilm,
         findHiResFastestUpgrade,
         reorderFavouriteLabsFirst,
         reorderFavouriteFilmsFirst,
