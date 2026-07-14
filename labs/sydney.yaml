@@ -3,100 +3,132 @@ country: Australia
 state: New South Wales
 city: Sydney
 labs:
-- name: Irohas Photo Sydney
-  hidden: false
-  address: Basement, 398/402 Sussex St, Haymarket NSW 2000, Australia
-  phone: +61 414 852 820
-  website: https://irohasphoto.com.au
-  services:
-  - devCost: 17
-    pushPullCost: 5
-    pushPullType: per_stop
-    turnaroundTime: next_day
-    highResScan: true
-    noPushPull: false
-    processes:
-    - C41
-  - devCost: 11
-    pushPullCost: 5
-    pushPullType: per_stop
-    turnaroundTime: next_day
-    highResScan: false
-    noPushPull: false
-    processes:
-    - C41
-  - devCost: 19
-    pushPullCost: 5
-    pushPullType: per_stop
-    turnaroundTime: same_week
-    highResScan: true
-    noPushPull: false
-    processes:
-    - BW
-  - devCost: 12
-    pushPullCost: 5
-    pushPullType: per_stop
-    turnaroundTime: same_week
-    highResScan: false
-    noPushPull: false
-    processes:
-    - BW
-  - devCost: 21
-    pushPullCost: 5
-    pushPullType: per_stop
-    turnaroundTime: longer
-    highResScan: true
-    noPushPull: false
-    processes:
-    - E6
-  - devCost: 15
-    pushPullCost: 5
-    pushPullType: per_stop
-    turnaroundTime: longer
-    highResScan: false
-    noPushPull: false
-    processes:
-    - E6
-  - devCost: 25
-    pushPullCost: 5
-    pushPullType: per_stop
-    turnaroundTime: same_week
-    highResScan: true
-    noPushPull: false
-    processes:
-    - ECN2
-  - devCost: 15
-    pushPullCost: 5
-    pushPullType: per_stop
-    turnaroundTime: same_week
-    highResScan: false
-    noPushPull: false
-    processes:
-    - ECN2
-- name: Do Film! Lab
-  hidden: false
-  address: 257 Crown Street, Darlinghurst NSW 2010, Australia
-  phone: +61 439 363 456
-  email: team@dofilmlab.com.au
-  website: https://dofilmlab.com.au
-  services:
-  - devCost: 19
-    pushPullCost: 0
-    pushPullType: flat
-    highResScan: false
-    noPushPull: false
-    processes:
-    - C41
-    - BW
-    - E6
-    - ECN2
-  - devCost: 51
-    pushPullCost: 0
-    pushPullType: flat
-    highResScan: true
-    noPushPull: false
-    processes:
-    - C41
-    - BW
-    - E6
-    - ECN2
+  - name: Irohas Photo Sydney
+    hidden: false
+    address: Basement, 398/402 Sussex St, Haymarket NSW 2000, Australia
+    phone: +61 414 852 820
+    website: https://irohasphoto.com.au
+    services:
+      - devCost: 17
+        pushPullCost: 5
+        pushPullType: per_stop
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 11
+        pushPullCost: 5
+        pushPullType: per_stop
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 19
+        pushPullCost: 5
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 12
+        pushPullCost: 5
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 21
+        pushPullCost: 5
+        pushPullType: per_stop
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 15
+        pushPullCost: 5
+        pushPullType: per_stop
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 25
+        pushPullCost: 5
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - ECN2
+      - devCost: 15
+        pushPullCost: 5
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - ECN2
+  - name: Do Film! Lab
+    hidden: false
+    address: 257 Crown Street, Darlinghurst NSW 2010, Australia
+    phone: +61 439 363 456
+    email: team@dofilmlab.com.au
+    website: https://dofilmlab.com.au
+    services:
+      - devCost: 19
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+          - E6
+          - ECN2
+      - devCost: 24
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+          - E6
+          - ECN2
+      - devCost: 51
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+          - E6
+          - ECN2
+      - devCost: 56
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+          - E6
+          - ECN2
