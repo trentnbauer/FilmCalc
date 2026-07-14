@@ -25,6 +25,7 @@ const {
     computeIsoPriceOptions,
     computeNativeFilmLabMatrix,
     computeOneStopFilmLabMatrix,
+    computeFormatComparisonForFilm,
     findHiResFastestUpgrade,
     reorderFavouriteLabsFirst,
     reorderFavouriteFilmsFirst,
@@ -360,6 +361,41 @@ test('computeOneStopFilmLabMatrix: excludes noPushPull tiers and applies the fil
     };
     const results = computeOneStopFilmLabMatrix(ALL_FILMS, labsWithNoPushPull, {});
     assert.ok(!results.some(r => r.labName === 'Fixed Price Lab'), 'noPushPull tiers must be excluded');
+});
+
+// ---------- computeFormatComparisonForFilm (issue #162: compare a stock's
+// cost per photo across every format it's saved in) ----------
+
+test('computeFormatComparisonForFilm: returns one cheapest entry per format, sorted cheapest-first', () => {
+    // Same name saved as both 35mm (10/36 ~ 0.278/photo film cost) and 120
+    // (6/12 = 0.5/photo film cost) -- 120 is pricier per photo here.
+    const film120 = { name: 'Test Film 400', boxSpeed: 400, process: 'C41', format: '120', maxPushPull: 1, bundles: [{ rolls: 1, exposures: 12, filmCost: 6 }] };
+    const films = { filmA: FILM_400, film120 };
+    const comparison = computeFormatComparisonForFilm('Test Film 400', films, ALL_LABS, {});
+    assert.equal(comparison.length, 2);
+    assert.deepEqual(comparison.map(e => e.format), ['35mm', '120']); // cheapest (35mm) first
+    assert.ok(comparison[0].totalCostPerPhoto < comparison[1].totalCostPerPhoto);
+});
+
+test('computeFormatComparisonForFilm: a stock saved in only one format returns a single entry', () => {
+    const comparison = computeFormatComparisonForFilm('Test Film 400', ALL_FILMS, ALL_LABS, {});
+    assert.equal(comparison.length, 1);
+    assert.equal(comparison[0].format, '35mm');
+});
+
+test('computeFormatComparisonForFilm: an unknown film name returns no entries', () => {
+    assert.deepEqual(computeFormatComparisonForFilm('Nonexistent Film', ALL_FILMS, ALL_LABS, {}), []);
+});
+
+test('computeFormatComparisonForFilm: camera120Exposures overrides the 120 entry\'s cost, not the 35mm one', () => {
+    const film120 = { name: 'Test Film 400', boxSpeed: 400, process: 'C41', format: '120', maxPushPull: 1, bundles: [{ rolls: 1, exposures: 12, filmCost: 6 }] };
+    const films = { filmA: FILM_400, film120 };
+    // 6x7 back (10 exp) instead of the stored 12 -> 6/10 = 0.6/photo film cost.
+    const comparison = computeFormatComparisonForFilm('Test Film 400', films, ALL_LABS, { camera120Exposures: 10 });
+    const entry120 = comparison.find(e => e.format === '120');
+    assert.ok(Math.abs(entry120.filmCostPerPhoto - 6 / 10) < 1e-9);
+    const entry35 = comparison.find(e => e.format === '35mm');
+    assert.ok(Math.abs(entry35.filmCostPerPhoto - 10 / 36) < 1e-9); // unchanged
 });
 
 // ---------- mailInCost folded into totals (issue #159) ----------

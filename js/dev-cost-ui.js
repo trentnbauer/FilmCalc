@@ -866,6 +866,36 @@ function updateCostPerLabTab() {
     wireMatrixRows(container, updateCostPerLabTab);
 }
 
+// Human-readable label for a format value (e.g. '120' -> '120'), same
+// lookup pattern used for the Process filter chip in
+// renderDevCostActiveFilters() above.
+function formatLabel(value) {
+    return (typeof FORMAT_OPTIONS !== 'undefined' && FORMAT_OPTIONS.find(o => o.value === value)?.label) || value;
+}
+
+// Renders the "compare across formats" block for the currently selected
+// film's cost-per-photo in every OTHER format that same stock name is also
+// saved in (issue #162) — e.g. "Portra 400" saved as both a 35mm and a 120
+// entry. Returns '' when the stock is only saved in one format, so there's
+// nothing to compare.
+function renderFormatComparisonBlock(comparison, currentFormat) {
+    if (!comparison || comparison.length < 2) return '';
+    const cheapestCostPerPhoto = comparison[0].totalCostPerPhoto;
+    const rows = comparison.map(e => {
+        const fmt = e.format || '35mm';
+        const isCurrent = fmt === currentFormat;
+        const isCheapest = e.totalCostPerPhoto === cheapestCostPerPhoto;
+        return `<div class="flex justify-between items-center gap-2 px-2 py-1.5 rounded ${isCurrent ? 'bg-indigo-100 dark:bg-indigo-900/30' : ''}">
+            <span class="text-sm ${isCurrent ? 'font-semibold text-indigo-700 dark:text-indigo-300' : 'text-gray-600 dark:text-gray-300'}">${escapeHtml(formatLabel(fmt))}${isCurrent ? ' <span class="text-xs opacity-70 font-normal">(current)</span>' : ''}${isCheapest ? ' 🏆' : ''}</span>
+            <span class="font-mono text-sm text-right ${isCurrent ? 'text-indigo-700 dark:text-indigo-300' : 'text-gray-600 dark:text-gray-300'}"><span class="font-semibold">${CUR()}${e.totalCostPerPhoto.toFixed(2)}</span>/photo <span class="text-xs opacity-60">@ ${escapeHtml(e.labName)}</span></span>
+        </div>`;
+    }).join('');
+    return `<div class="mb-4 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
+        <div class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1.5" title="Cheapest bundle + cheapest matching lab in each format, at native box speed">📐 Compare Across Formats</div>
+        <div class="space-y-0.5">${rows}</div>
+    </div>`;
+}
+
 // Per Film view: user picks one film stock, then every lab is ranked
 // cheapest-first for that film at box speed (film + dev). Mirrors the Per
 // Lab tab but keyed on the chosen film. Honours the film-type + service
@@ -1000,9 +1030,16 @@ function updateCostPerFilmTab() {
     const priceSortedRows = allCandidatesForFilm
         .filter(e => (!devCostFilterTurnaround || e.turnaroundTime === devCostFilterTurnaround) && (!devCostFilterHiRes || e.highResScan) && (!devCostFilterTiff || e.tiffScan))
         .sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto);
+    // Compared across every format the stock is saved in — deliberately not
+    // narrowed by the current Format filter (that's the whole point), so
+    // this is a separate call rather than reusing allCandidatesForFilm.
+    const formatComparisonBlock = renderFormatComparisonBlock(
+        computeFormatComparisonForFilm(film.name, allFilms, allLabs, { process: cheapestProcess, camera120Exposures: camera120OverrideExposures() }),
+        cheapestFormat
+    );
 
     if (priceSortedRows.length === 0) {
-        container.innerHTML = pinnedBlock + `<p class="text-sm text-gray-400 text-center">No lab matches ${escapeHtml(film.name)} with the current filters</p>`;
+        container.innerHTML = pinnedBlock + formatComparisonBlock + `<p class="text-sm text-gray-400 text-center">No lab matches ${escapeHtml(film.name)} with the current filters</p>`;
         wireMatrixRows(container, updateCostPerFilmTab);
         wirePinnedDevCostBlock(container);
         setDevCostExportRows([]);
@@ -1014,7 +1051,7 @@ function updateCostPerFilmTab() {
     const defaultLabName = getDefaultLabPref()?.lab || null;
     const rows = reorderDefaultLabFirst(priceSortedRows, defaultLabName);
     const entriesByPinKey = new Map(priceSortedRows.map(e => [matrixRowKey('film', e), e]));
-    container.innerHTML = pinnedBlock + expandAllControl() + rows.map(e => {
+    container.innerHTML = pinnedBlock + formatComparisonBlock + expandAllControl() + rows.map(e => {
         const rank = priceSortedRows.indexOf(e);
         const pinReason = (e.labName === defaultLabName && rank !== 0) ? 'default' : null;
         return renderMatrixRow(e, rank, 'film', pinReason, rank === 0 ? upgrade : undefined);
