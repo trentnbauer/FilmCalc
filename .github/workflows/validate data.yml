@@ -207,7 +207,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          claude_args: '--allowed-tools "Bash(gh pr comment:*),Bash(gh pr diff:*),WebFetch,Read,Grep,Glob"'
+          claude_args: '--allowed-tools "Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh api repos/*/pulls/*/comments:*),WebFetch,Read,Grep,Glob"'
           prompt: |
             This PR changed film and/or lab data files. Read "DATA_SPEC.md" in the repo root — it is
             the authoritative rules a film/lab entry must follow. Then review ONLY the added/changed
@@ -233,5 +233,32 @@ jobs:
             gh pr comment ${{ github.event.pull_request.number }} --body "..."
 
             If everything looks right, say so briefly. If something looks off, list it per entry with
-            the file and what's wrong. This is advisory only: do not edit any files, do not
+            the file and what's wrong. This is advisory only: do not edit any files yourself, do not
             approve/request changes, do not block or merge the PR.
+
+            **Issue #111 — amend the two purely mechanical issues, as one-click GitHub suggestions.**
+            Everything above is judgment calls a human should make. These two are not — DATA_SPEC.md
+            states them as absolute rules with no ambiguity, so propose the exact fix instead of just
+            describing it:
+
+            - `hidden: true` (or any truthy value) on a film or lab entry/bundle in the diff's added
+              lines — DATA_SPEC.md says this must always be `false`.
+            - A `buyLink` or `website` URL containing tracking junk (`utm_*`, `gclid`, `fbclid`, and
+              similar) — DATA_SPEC.md says to strip it.
+
+            For each match, post an inline PR review comment containing a GitHub suggested-change
+            block, so the contributor can accept it with one click instead of retyping:
+            ```
+            gh api repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/comments \
+              -f body=$'One-sentence reason, citing DATA_SPEC.md.\n\n```suggestion\n<the corrected line, exact original indentation>\n```' \
+              -f commit_id=<the PR head SHA — from `gh pr view ${{ github.event.pull_request.number }} --json headRefOid -q .headRefOid`> \
+              -f path=<file path relative to repo root> \
+              -F line=<line number in the NEW version of the file> \
+              -f side=RIGHT
+            ```
+            Suggestion blocks fail silently or apply wrong if the line number or indentation is off, so
+            only post one when you're confident you have the exact line (cross-check the file's current
+            content at the PR head, not just the diff hunk headers) — for anything you're not sure of,
+            just mention it in the summary comment instead of guessing at a suggestion. This never
+            needs `contents: write` or pushing to the PR's branch, so it works the same whether the PR
+            is from a fork or not — the contributor stays in control of whether to accept each fix.
