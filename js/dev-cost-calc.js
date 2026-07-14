@@ -69,6 +69,7 @@ function normalizeLabServices(lab) {
             pushPullType: s.pushPullType || 'per_stop',
             turnaroundTime: s.turnaroundTime || 'same_week',
             highResScan: !!s.highResScan,
+            tiffScan: !!s.tiffScan,
             noPushPull: !!s.noPushPull,
             processes: Array.isArray(s.processes) && s.processes.length > 0 ? s.processes : [s.process || 'C41']
         }));
@@ -79,6 +80,7 @@ function normalizeLabServices(lab) {
         pushPullType: lab.pushPullType || 'per_stop',
         turnaroundTime: lab.turnaroundTime || 'same_week',
         highResScan: !!lab.highResScan,
+        tiffScan: !!lab.tiffScan,
         noPushPull: !!lab.noPushPull,
         processes: Array.isArray(lab.processes) && lab.processes.length > 0 ? lab.processes : [lab.process || 'C41']
     }];
@@ -152,7 +154,7 @@ function pickIsoCandidate(candidates, sortMode) {
 // option.
 //
 // opts:
-//   turnaround, hiRes       — Next Day/Same Week/Hi-Res filter (issue #49)
+//   turnaround, hiRes, tiff — Next Day/Same Week/Hi-Res/TIFF filter (issue #49, #144)
 //   process, format         — global film-type filters
 //   sortMode                — 'price' | 'turnaround' | 'scan' (default 'price')
 //   pinnedLabNames           — Set of lab names to always surface per film,
@@ -163,7 +165,7 @@ function computeIsoPriceOptions(targetIso, allFilms, allLabs, opts) {
     const sortMode = opts.sortMode || 'price';
     const pinnedLabNames = opts.pinnedLabNames || new Set();
     const upgradeThresholdPercent = opts.upgradeThresholdPercent ?? 4;
-    const matchesFilters = tier => (!opts.turnaround || tier.turnaroundTime === opts.turnaround) && (!opts.hiRes || tier.highResScan);
+    const matchesFilters = tier => (!opts.turnaround || tier.turnaroundTime === opts.turnaround) && (!opts.hiRes || tier.highResScan) && (!opts.tiff || tier.tiffScan);
     const labNames = Object.keys(allLabs).filter(n => !allLabs[n].hidden);
 
     const native = [];
@@ -218,6 +220,7 @@ function computeIsoPriceOptions(targetIso, allFilms, allLabs, opts) {
                         devCostPerPhoto,
                         totalCostPerPhoto,
                         highResScan: tier.highResScan,
+                        tiffScan: tier.tiffScan,
                         turnaroundTime: tier.turnaroundTime,
                         // Extra fields for the expandable breakdown row.
                         devCostBase: tier.devCost,
@@ -287,7 +290,7 @@ function computeIsoPriceOptions(targetIso, allFilms, allLabs, opts) {
 // and "Cost Per Lab" (grouped/ranked by lab) tabs.
 function computeNativeFilmLabMatrix(allFilms, allLabs, opts) {
     opts = opts || {};
-    const matchesFilters = tier => (!opts.turnaround || tier.turnaroundTime === opts.turnaround) && (!opts.hiRes || tier.highResScan);
+    const matchesFilters = tier => (!opts.turnaround || tier.turnaroundTime === opts.turnaround) && (!opts.hiRes || tier.highResScan) && (!opts.tiff || tier.tiffScan);
     const labNames = Object.keys(allLabs).filter(n => !allLabs[n].hidden);
 
     const results = [];
@@ -317,6 +320,7 @@ function computeNativeFilmLabMatrix(allFilms, allLabs, opts) {
                     devCostPerPhoto,
                     totalCostPerPhoto: bestFilmCostPerPhoto + devCostPerPhoto,
                     highResScan: tier.highResScan,
+                    tiffScan: tier.tiffScan,
                     turnaroundTime: tier.turnaroundTime,
                     // Breakdown fields for the expandable row (native = no push/pull).
                     devCostBase: tier.devCost,
@@ -345,7 +349,7 @@ function computeNativeFilmLabMatrix(allFilms, allLabs, opts) {
 // the same here, since fees are keyed on stop magnitude only, not direction.
 function computeOneStopFilmLabMatrix(allFilms, allLabs, opts) {
     opts = opts || {};
-    const matchesFilters = tier => (!opts.turnaround || tier.turnaroundTime === opts.turnaround) && (!opts.hiRes || tier.highResScan);
+    const matchesFilters = tier => (!opts.turnaround || tier.turnaroundTime === opts.turnaround) && (!opts.hiRes || tier.highResScan) && (!opts.tiff || tier.tiffScan);
     const labNames = Object.keys(allLabs).filter(n => !allLabs[n].hidden);
 
     const results = [];

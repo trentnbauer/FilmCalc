@@ -81,9 +81,12 @@ let cheapestSort = localStorage.getItem('cheapestSort') || 'price';
 // than a set.
 let devCostFilterTurnaround = '';
 let devCostFilterHiRes = false;
+let devCostFilterTiff = false;
 function renderDevCostFilterBar() {
     document.querySelectorAll('.dev-cost-filter-pill').forEach(btn => {
-        const active = btn.dataset.filter === 'hires' ? devCostFilterHiRes : devCostFilterTurnaround === btn.dataset.filter;
+        const active = btn.dataset.filter === 'hires' ? devCostFilterHiRes
+            : btn.dataset.filter === 'tiff' ? devCostFilterTiff
+            : devCostFilterTurnaround === btn.dataset.filter;
         btn.classList.toggle('bg-indigo-600', active);
         btn.classList.toggle('text-white', active);
         btn.classList.toggle('bg-gray-100', !active);
@@ -95,6 +98,8 @@ function renderDevCostFilterBar() {
 document.querySelectorAll('.dev-cost-filter-pill').forEach(btn => btn.addEventListener('click', () => {
     if (btn.dataset.filter === 'hires') {
         devCostFilterHiRes = !devCostFilterHiRes;
+    } else if (btn.dataset.filter === 'tiff') {
+        devCostFilterTiff = !devCostFilterTiff;
     } else {
         devCostFilterTurnaround = devCostFilterTurnaround === btn.dataset.filter ? '' : btn.dataset.filter;
     }
@@ -122,11 +127,21 @@ function isoRowKey(entry) {
 // (badges, footer links, and the expanded cost breakdown) are shared
 // here instead of duplicated in both.
 
-// Hi-res/turnaround badges shown on every Dev Cost row.
+// Hi-res/TIFF/turnaround badges shown on every Dev Cost row.
 function renderRowBadges(entry) {
     const hiResBadge = entry.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">HI-RES</span>` : '';
+    const tiffBadge = entry.tiffScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 align-middle">TIFF</span>` : '';
     const turnaroundBadge = entry.turnaroundTime ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 align-middle">${escapeHtml(turnaroundLabels[entry.turnaroundTime] || entry.turnaroundTime)}</span>` : '';
-    return hiResBadge + turnaroundBadge;
+    return hiResBadge + tiffBadge + turnaroundBadge;
+}
+
+// "Scan" line shown in every Dev Cost row's expanded breakdown — a tier can
+// be hi-res, TIFF, both, or neither, independently.
+function scanLabel(entry) {
+    const parts = [];
+    if (entry.highResScan) parts.push('Hi-res');
+    if (entry.tiffScan) parts.push('TIFF');
+    return parts.length ? parts.join(' + ') : 'Standard';
 }
 
 // Expand/collapse chevron shown on every Dev Cost row.
@@ -163,7 +178,7 @@ function renderRowBreakdown(entry, isOpen) {
             ${entry.pushPullFee > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Push/pull fee (per photo)</span><span class="font-mono">${CUR()}${(entry.pushPullFee / entry.exposures).toFixed(2)}</span></div>` : ''}
             <div class="flex justify-between text-gray-500 dark:text-gray-400 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>Film cost (per roll)</span><span class="font-mono">${CUR()}${entry.filmCostPerRoll.toFixed(2)}</span></div>
             <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Development (per roll)</span><span class="font-mono">${CUR()}${entry.devCostPerRoll.toFixed(2)}</span></div>
-            <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>Scan</span><span>${entry.highResScan ? 'Hi-res' : 'Standard'}</span></div>
+            <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>Scan</span><span>${scanLabel(entry)}</span></div>
             <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>Turnaround</span><span>${escapeHtml(turnaroundLabels[entry.turnaroundTime] || entry.turnaroundTime || '—')}</span></div>
             <div class="flex justify-between font-semibold text-gray-700 dark:text-gray-300 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>Total per roll (${entry.exposures} exp)</span><span class="font-mono">${CUR()}${entry.totalCostPerRoll.toFixed(2)}</span></div>
             ${renderRowFooterLinks(entry)}
@@ -250,9 +265,9 @@ function updateIsoPriceCalculator() {
     // allNative/allPush/allPull (unfiltered) are kept only to tell
     // "no matches for this filter" apart from "no film at this ISO at
     // all" in the messaging below.
-    const hasActiveDevCostFilter = devCostFilterTurnaround || devCostFilterHiRes;
+    const hasActiveDevCostFilter = devCostFilterTurnaround || devCostFilterHiRes || devCostFilterTiff;
     const { native, push, pull } = hasActiveDevCostFilter
-        ? computeIsoPriceOptions(targetIso, allFilms, allLabs, { ...baseOpts, turnaround: devCostFilterTurnaround, hiRes: devCostFilterHiRes })
+        ? computeIsoPriceOptions(targetIso, allFilms, allLabs, { ...baseOpts, turnaround: devCostFilterTurnaround, hiRes: devCostFilterHiRes, tiff: devCostFilterTiff })
         : { native: allNative, push: allPush, pull: allPull };
     const sortedNative = sortIsoEntries(native, cheapestSort);
     const sortedPush = sortIsoEntries(push, cheapestSort);
@@ -441,7 +456,7 @@ function toggleDevCostPin(entry) {
             pinId: Date.now() + Math.random(),
             filmName: entry.filmName, boxSpeed: entry.boxSpeed, format: entry.format, labName: entry.labName,
             filmCostPerPhoto: entry.filmCostPerPhoto, devCostPerPhoto: entry.devCostPerPhoto, totalCostPerPhoto: entry.totalCostPerPhoto,
-            highResScan: entry.highResScan, turnaroundTime: entry.turnaroundTime,
+            highResScan: entry.highResScan, tiffScan: entry.tiffScan, turnaroundTime: entry.turnaroundTime,
             devCostBase: entry.devCostBase, pushPullFee: entry.pushPullFee, exposures: entry.exposures,
             filmCostPerRoll: entry.filmCostPerRoll, devCostPerRoll: entry.devCostPerRoll, totalCostPerRoll: entry.totalCostPerRoll,
             buyLink: entry.buyLink, storeName: entry.storeName,
@@ -603,15 +618,15 @@ function updateCostPerPhotoTab() {
         container.innerHTML = `<p class="text-sm text-gray-400 text-center">${EMPTY_LIBRARY_MESSAGE}</p>`;
         return;
     }
-    const devCostFilters = { ...baseOpts, turnaround: devCostFilterTurnaround, hiRes: devCostFilterHiRes };
-    const hasActiveDevCostFilter = devCostFilterTurnaround || devCostFilterHiRes;
+    const devCostFilters = { ...baseOpts, turnaround: devCostFilterTurnaround, hiRes: devCostFilterHiRes, tiff: devCostFilterTiff };
+    const hasActiveDevCostFilter = devCostFilterTurnaround || devCostFilterHiRes || devCostFilterTiff;
     // Filtered as a client-side subset of allNativeMatrix's own objects
     // (not a second computeNativeFilmLabMatrix() call) so the upgrade
     // recommendation below — computed from the unfiltered per-film
     // candidates — can identity-match "is this row already the cheapest?"
     // even while a turnaround/hi-res filter pill is narrowing what's shown.
     const nativeMatrix = hasActiveDevCostFilter
-        ? allNativeMatrix.filter(e => (!devCostFilterTurnaround || e.turnaroundTime === devCostFilterTurnaround) && (!devCostFilterHiRes || e.highResScan))
+        ? allNativeMatrix.filter(e => (!devCostFilterTurnaround || e.turnaroundTime === devCostFilterTurnaround) && (!devCostFilterHiRes || e.highResScan) && (!devCostFilterTiff || e.tiffScan))
         : allNativeMatrix;
     if (nativeMatrix.length === 0) {
         container.innerHTML = '<p class="text-sm text-gray-400 text-center">No options match the current filters</p>';
@@ -661,8 +676,8 @@ function updateCostPerLabTab() {
         container.innerHTML = `<p class="text-sm text-gray-400 text-center">${EMPTY_LIBRARY_MESSAGE}</p>`;
         return;
     }
-    const devCostFilters = { ...baseOpts, turnaround: devCostFilterTurnaround, hiRes: devCostFilterHiRes };
-    const hasActiveDevCostFilter = devCostFilterTurnaround || devCostFilterHiRes;
+    const devCostFilters = { ...baseOpts, turnaround: devCostFilterTurnaround, hiRes: devCostFilterHiRes, tiff: devCostFilterTiff };
+    const hasActiveDevCostFilter = devCostFilterTurnaround || devCostFilterHiRes || devCostFilterTiff;
     const nativeMatrix = hasActiveDevCostFilter ? cachedNativeFilmLabMatrix(allFilms, allLabs, devCostFilters) : allNativeMatrix;
     if (nativeMatrix.length === 0) {
         container.innerHTML = '<p class="text-sm text-gray-400 text-center">No options match the current filters</p>';
@@ -719,6 +734,7 @@ function renderPinnedDevCostBlock() {
         const isOpen = expandAllIso || expandedIsoRows.has(key);
         const chevron = `<span class="text-gray-400 dark:text-gray-500 transition-transform inline-block ${isOpen ? 'rotate-90' : ''}">▸</span>`;
         const hiResBadge = p.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">HI-RES</span>` : '';
+        const tiffBadge = p.tiffScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 align-middle">TIFF</span>` : '';
         const turnaroundBadge = p.turnaroundTime ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 align-middle">${escapeHtml(turnaroundLabels[p.turnaroundTime] || p.turnaroundTime)}</span>` : '';
         const buyUrl = sanitizeUrl(p.buyLink);
         const pinLocality = bundleLocalityLabel(p);
@@ -740,7 +756,7 @@ function renderPinnedDevCostBlock() {
                     ${p.pushPullFee > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Push/pull fee (per photo)</span><span class="font-mono">${CUR()}${(p.pushPullFee / p.exposures).toFixed(2)}</span></div>` : ''}
                     <div class="flex justify-between text-gray-500 dark:text-gray-400 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>Film cost (per roll)</span><span class="font-mono">${CUR()}${p.filmCostPerRoll.toFixed(2)}</span></div>
                     <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Development (per roll)</span><span class="font-mono">${CUR()}${p.devCostPerRoll.toFixed(2)}</span></div>
-                    <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>Scan</span><span>${p.highResScan ? 'Hi-res' : 'Standard'}</span></div>
+                    <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>Scan</span><span>${scanLabel(p)}</span></div>
                     <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>Turnaround</span><span>${escapeHtml(turnaroundLabels[p.turnaroundTime] || p.turnaroundTime || '—')}</span></div>
                     <div class="flex justify-between font-semibold text-gray-700 dark:text-gray-300 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>Total per roll (${p.exposures} exp)</span><span class="font-mono">${CUR()}${p.totalCostPerRoll.toFixed(2)}</span></div>
                     ${footer}
@@ -749,7 +765,7 @@ function renderPinnedDevCostBlock() {
         return `<div>
             <div class="matrix-row cursor-pointer px-3 py-2 rounded-lg text-sm bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800" data-row-key="${escapeHtml(key)}" title="Tap for cost breakdown">
                 <div class="flex justify-between items-start gap-2">
-                    <span class="text-indigo-800 dark:text-indigo-300"><button type="button" class="unpin-dev-cost-btn text-red-400 hover:text-red-600 text-xs font-bold mr-1" data-unpin-id="${p.pinId}" title="Unpin" aria-label="Unpin" onclick="event.stopPropagation()">✕</button>${escapeHtml(p.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(p.labName)}</span> <span class="text-xs opacity-70">(${p.boxSpeed} ISO)</span>${hiResBadge}${turnaroundBadge}</span>
+                    <span class="text-indigo-800 dark:text-indigo-300"><button type="button" class="unpin-dev-cost-btn text-red-400 hover:text-red-600 text-xs font-bold mr-1" data-unpin-id="${p.pinId}" title="Unpin" aria-label="Unpin" onclick="event.stopPropagation()">✕</button>${escapeHtml(p.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(p.labName)}</span> <span class="text-xs opacity-70">(${p.boxSpeed} ISO)</span>${hiResBadge}${tiffBadge}${turnaroundBadge}</span>
                     <span class="font-mono text-right leading-tight text-indigo-800 dark:text-indigo-300 whitespace-nowrap flex items-center gap-1.5">
                         <span>
                             <span class="font-semibold block">${CUR()}${p.totalCostPerPhoto.toFixed(2)}/photo</span>
@@ -813,7 +829,7 @@ function updateCostPerFilmTab() {
     const allCandidatesForFilm = cachedNativeFilmLabMatrix(allFilms, allLabs, { process: cheapestProcess, format: cheapestFormat })
         .filter(e => filmKey(e.filmName, e.boxSpeed, e.format) === selectedKey);
     const priceSortedRows = allCandidatesForFilm
-        .filter(e => (!devCostFilterTurnaround || e.turnaroundTime === devCostFilterTurnaround) && (!devCostFilterHiRes || e.highResScan))
+        .filter(e => (!devCostFilterTurnaround || e.turnaroundTime === devCostFilterTurnaround) && (!devCostFilterHiRes || e.highResScan) && (!devCostFilterTiff || e.tiffScan))
         .sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto);
 
     if (priceSortedRows.length === 0) {

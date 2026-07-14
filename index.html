@@ -353,6 +353,7 @@
                     <button type="button" data-filter="next_day" title="Show only options with next-day turnaround" class="dev-cost-filter-pill px-2.5 py-1 rounded-full text-xs font-semibold transition-colors bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">⚡ Next Day</button>
                     <button type="button" data-filter="same_week" title="Show only options with same-week turnaround" class="dev-cost-filter-pill px-2.5 py-1 rounded-full text-xs font-semibold transition-colors bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">Same Week</button>
                     <button type="button" data-filter="hires" title="Show only options with hi-res scans" class="dev-cost-filter-pill px-2.5 py-1 rounded-full text-xs font-semibold transition-colors bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">HI-RES</button>
+                    <button type="button" data-filter="tiff" title="Show only options with TIFF (or lossless) scans" class="dev-cost-filter-pill px-2.5 py-1 rounded-full text-xs font-semibold transition-colors bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">TIFF</button>
                 </div>
 
                 <div id="cheapestSubIsoContent" class="space-y-6 hidden">
@@ -777,6 +778,7 @@
                 <div class="flex gap-2 mb-4 justify-center">
                     <button id="filterNextDayBtn" type="button" title="Show only labs offering next-day turnaround" class="px-3 py-1.5 rounded-full text-xs font-semibold border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-amber-400 transition-colors">⚡ Next Day</button>
                     <button id="filterHiResBtn" type="button" title="Show only labs offering hi-res scans" class="px-3 py-1.5 rounded-full text-xs font-semibold border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-indigo-400 transition-colors">HI-RES</button>
+                    <button id="filterTiffBtn" type="button" title="Show only labs offering TIFF (or lossless) scans" class="px-3 py-1.5 rounded-full text-xs font-semibold border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-purple-400 transition-colors">TIFF</button>
                 </div>
 
                 <div id="labComparison" class="space-y-1.5 text-left"></div>
@@ -1197,7 +1199,10 @@
         function tierDescription(tier) {
             const parts = [];
             parts.push(turnaroundLabels[tier.turnaroundTime] || tier.turnaroundTime || '—');
-            parts.push(tier.highResScan ? '🔍 Hi-Res' : 'Standard scan');
+            const scanParts = [];
+            if (tier.highResScan) scanParts.push('🔍 Hi-Res');
+            if (tier.tiffScan) scanParts.push('TIFF');
+            parts.push(scanParts.length ? scanParts.join(' + ') : 'Standard scan');
             if (Array.isArray(tier.processes) && tier.processes.length) parts.push(tier.processes.join('/'));
             parts.push(`${CUR()}${(parseFloat(tier.devCost) || 0).toFixed(2)}/roll`);
             return parts.join(' · ');
@@ -1458,6 +1463,7 @@
         // ---------- Filters ----------
         let filterNextDay = false;
         let filterHiRes = false;
+        let filterTiff = false;
 
         function setFilterActive(btn, active, activeClasses) {
             btn.classList.toggle('border-transparent', active);
@@ -1470,6 +1476,7 @@
 
         const filterNextDayBtn = document.getElementById('filterNextDayBtn');
         const filterHiResBtn = document.getElementById('filterHiResBtn');
+        const filterTiffBtn = document.getElementById('filterTiffBtn');
 
         filterNextDayBtn.addEventListener('click', () => {
             filterNextDay = !filterNextDay;
@@ -1480,6 +1487,12 @@
         filterHiResBtn.addEventListener('click', () => {
             filterHiRes = !filterHiRes;
             setFilterActive(filterHiResBtn, filterHiRes, ['bg-indigo-100', 'dark:bg-indigo-900/40', 'text-indigo-800', 'dark:text-indigo-300']);
+            updateLabComparison();
+        });
+
+        filterTiffBtn.addEventListener('click', () => {
+            filterTiff = !filterTiff;
+            setFilterActive(filterTiffBtn, filterTiff, ['bg-purple-100', 'dark:bg-purple-900/40', 'text-purple-800', 'dark:text-purple-300']);
             updateLabComparison();
         });
 
@@ -1504,6 +1517,7 @@
             const pushPullType = tier.pushPullType || 'per_stop';
             const turnaroundTime = tier.turnaroundTime || 'same_week';
             const highResScan = !!tier.highResScan;
+            const tiffScan = !!tier.tiffScan;
             const noPushPull = !!tier.noPushPull;
             const processes = Array.isArray(tier.processes) && tier.processes.length > 0 ? tier.processes : [tier.process || 'C41'];
             return `
@@ -1550,6 +1564,10 @@
                     <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                         <input type="checkbox" class="tier-highResScan rounded border-gray-300 dark:border-gray-600 text-green-600 focus:ring-green-500" ${highResScan ? 'checked' : ''}>
                         High Res Scans
+                    </label>
+                    <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                        <input type="checkbox" class="tier-tiffScan rounded border-gray-300 dark:border-gray-600 text-green-600 focus:ring-green-500" ${tiffScan ? 'checked' : ''}>
+                        TIFF (or lossless)
                     </label>
                 </div>`;
         }
@@ -2127,6 +2145,7 @@
                     pushPullType: block.querySelector('.tier-pushPullType').value,
                     turnaroundTime: block.querySelector('.tier-turnaroundTime').value,
                     highResScan: block.querySelector('.tier-highResScan').checked,
+                    tiffScan: block.querySelector('.tier-tiffScan').checked,
                     noPushPull: block.querySelector('.tier-noPushPull').checked,
                     processes: processes.length > 0 ? processes : ['C41']
                 };

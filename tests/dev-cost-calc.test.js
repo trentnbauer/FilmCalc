@@ -80,6 +80,8 @@ test('normalizeLabServices falls back to the legacy flat schema', () => {
     assert.equal(tiers.length, 1);
     assert.equal(tiers[0].devCost, 20);
     assert.equal(tiers[0].turnaroundTime, 'same_week'); // default
+    assert.equal(tiers[0].highResScan, false); // default
+    assert.equal(tiers[0].tiffScan, false); // default
 });
 
 test('computeCostPerPhoto divides cost across rolls*exposures, null when zero photos', () => {
@@ -174,6 +176,47 @@ test('#49 regression: hiRes filter drops labs whose tier does not match', () => 
     assert.equal(native[0].labName, 'Fast Lab');
 });
 
+test('#144: tiff filter drops labs whose tier does not match', () => {
+    const labsWithTiff = {
+        ...ALL_LABS,
+        'TIFF Lab': {
+            hidden: false,
+            services: [{ devCost: 20, pushPullCost: 3, pushPullType: 'per_stop', turnaroundTime: 'same_week', highResScan: false, tiffScan: true, noPushPull: false, processes: ['C41'] }]
+        }
+    };
+    const { native } = computeIsoPriceOptions(400, ALL_FILMS, labsWithTiff, { tiff: true });
+    assert.equal(native.length, 1);
+    assert.equal(native[0].labName, 'TIFF Lab');
+});
+
+test('#144: hiRes and tiff filters are independent -- a tier can match one, both, or neither', () => {
+    const labs = {
+        'Hi-Res Only': {
+            hidden: false,
+            services: [{ devCost: 15, pushPullCost: 0, pushPullType: 'flat', turnaroundTime: 'same_week', highResScan: true, tiffScan: false, noPushPull: false, processes: ['C41'] }]
+        },
+        'TIFF Only': {
+            hidden: false,
+            services: [{ devCost: 16, pushPullCost: 0, pushPullType: 'flat', turnaroundTime: 'same_week', highResScan: false, tiffScan: true, noPushPull: false, processes: ['C41'] }]
+        },
+        'Both': {
+            hidden: false,
+            services: [{ devCost: 17, pushPullCost: 0, pushPullType: 'flat', turnaroundTime: 'same_week', highResScan: true, tiffScan: true, noPushPull: false, processes: ['C41'] }]
+        },
+        'Neither': {
+            hidden: false,
+            services: [{ devCost: 14, pushPullCost: 0, pushPullType: 'flat', turnaroundTime: 'same_week', highResScan: false, tiffScan: false, noPushPull: false, processes: ['C41'] }]
+        }
+    };
+    // computeNativeFilmLabMatrix (not computeIsoPriceOptions, which collapses
+    // to one winning lab per film) so every matching lab is visible at once.
+    const bothFilters = computeNativeFilmLabMatrix(ALL_FILMS, labs, { hiRes: true, tiff: true });
+    assert.deepEqual(bothFilters.map(e => e.labName), ['Both']);
+
+    const tiffOnlyFilter = computeNativeFilmLabMatrix(ALL_FILMS, labs, { tiff: true });
+    assert.deepEqual(tiffOnlyFilter.map(e => e.labName).sort(), ['Both', 'TIFF Only']);
+});
+
 test('#57 regression: a pinned lab that never wins on price still gets its own entry', () => {
     const { native } = computeIsoPriceOptions(400, ALL_FILMS, ALL_LABS, {
         pinnedLabNames: new Set(['Fast Lab'])
@@ -240,6 +283,20 @@ test('#49 regression: computeNativeFilmLabMatrix respects the turnaround/hiRes f
     const results = computeNativeFilmLabMatrix(ALL_FILMS, ALL_LABS, { turnaround: 'next_day' });
     assert.equal(results.length, 1);
     assert.equal(results[0].labName, 'Fast Lab');
+});
+
+test('#144: computeNativeFilmLabMatrix respects the tiff filter', () => {
+    const labsWithTiff = {
+        ...ALL_LABS,
+        'TIFF Lab': {
+            hidden: false,
+            services: [{ devCost: 20, pushPullCost: 3, pushPullType: 'per_stop', turnaroundTime: 'same_week', highResScan: false, tiffScan: true, noPushPull: false, processes: ['C41'] }]
+        }
+    };
+    const results = computeNativeFilmLabMatrix(ALL_FILMS, labsWithTiff, { tiff: true });
+    assert.equal(results.length, 1);
+    assert.equal(results[0].labName, 'TIFF Lab');
+    assert.equal(results[0].tiffScan, true);
 });
 
 test('computeOneStopFilmLabMatrix: excludes noPushPull tiers and applies the filter', () => {
