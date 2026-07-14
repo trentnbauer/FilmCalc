@@ -401,7 +401,7 @@ function updateIsoPriceCalculator() {
     // passed in explicitly.
     const pinnedLabNames = new Set([getDefaultLabPref()?.lab, ...favouriteLabs].filter(Boolean));
     const upgradeThresholdPercent = parseFloat(localStorage.getItem('upgradeThresholdPercent')) || 4;
-    const baseOpts = { process: cheapestProcess, format: cheapestFormat, sortMode: cheapestSort, pinnedLabNames, upgradeThresholdPercent };
+    const baseOpts = { process: cheapestProcess, format: cheapestFormat, sortMode: cheapestSort, pinnedLabNames, upgradeThresholdPercent, camera120Exposures: camera120OverrideExposures() };
 
     const { native: allNative, push: allPush, pull: allPull } = computeIsoPriceOptions(targetIso, allFilms, allLabs, baseOpts);
     // Next Day / Same Week / Hi-Res filters need to pick the cheapest
@@ -552,23 +552,28 @@ document.getElementById('isoCalcTargetSpeed').addEventListener('input', () => {
 // invalidateFilmLabMatrixCache() (called there) covers that one edge case
 // defensively rather than hashing their content on every call.
 function memoizeFilmLabMatrix(computeFn) {
-    let cache = null; // { filmsRaw, labsRaw, process, format, turnaround, hiRes, result }
+    let cache = null; // { filmsRaw, labsRaw, process, format, turnaround, hiRes, camera120Exposures, result }
     const memoized = (allFilms, allLabs, opts) => {
         opts = opts || {};
         const filmsRaw = localStorage.getItem('filmProfiles');
         const labsRaw = localStorage.getItem('labProfiles');
         const process = opts.process || '', format = opts.format || '', turnaround = opts.turnaround || '', hiRes = !!opts.hiRes;
+        // 120's Camera Type override (issue #168 follow-up) changes what
+        // the matrix itself contains for 120 films — same reason
+        // process/format/turnaround/hiRes are part of this key.
+        const camera120Exposures = opts.camera120Exposures || 0;
         // Compared field-by-field, not joined into one string — the raw
         // localStorage JSON can contain arbitrary characters (a film/lab
         // name, address, etc.), so concatenating it with a fixed separator
         // risks two different underlying values producing the same key.
         if (cache && cache.filmsRaw === filmsRaw && cache.labsRaw === labsRaw &&
             cache.process === process && cache.format === format &&
-            cache.turnaround === turnaround && cache.hiRes === hiRes) {
+            cache.turnaround === turnaround && cache.hiRes === hiRes &&
+            cache.camera120Exposures === camera120Exposures) {
             return cache.result;
         }
         const result = computeFn(allFilms, allLabs, opts);
-        cache = { filmsRaw, labsRaw, process, format, turnaround, hiRes, result };
+        cache = { filmsRaw, labsRaw, process, format, turnaround, hiRes, camera120Exposures, result };
         return result;
     };
     memoized.invalidate = () => { cache = null; };
@@ -765,7 +770,7 @@ function updateCostPerPhotoTab() {
     const container = document.getElementById('costPerPhotoResults');
     const allFilms = getAllFilms();
     const allLabs = getAllLabs();
-    const baseOpts = { process: cheapestProcess, format: cheapestFormat };
+    const baseOpts = { process: cheapestProcess, format: cheapestFormat, camera120Exposures: camera120OverrideExposures() };
     const allNativeMatrix = cachedNativeFilmLabMatrix(allFilms, allLabs, baseOpts);
     if (allNativeMatrix.length === 0) {
         container.innerHTML = `<p class="text-sm text-gray-400 text-center">${EMPTY_LIBRARY_MESSAGE}</p>`;
@@ -826,7 +831,7 @@ function updateCostPerLabTab() {
     const container = document.getElementById('costPerLabResults');
     const allFilms = getAllFilms();
     const allLabs = getAllLabs();
-    const baseOpts = { process: cheapestProcess, format: cheapestFormat };
+    const baseOpts = { process: cheapestProcess, format: cheapestFormat, camera120Exposures: camera120OverrideExposures() };
     const allNativeMatrix = cachedNativeFilmLabMatrix(allFilms, allLabs, baseOpts);
     if (allNativeMatrix.length === 0) {
         container.innerHTML = `<p class="text-sm text-gray-400 text-center">${EMPTY_LIBRARY_MESSAGE}</p>`;
@@ -988,7 +993,7 @@ function updateCostPerFilmTab() {
     // objects (not a second computeNativeFilmLabMatrix() call) so
     // findHiResFastestUpgrade()'s "is this already the cheapest?" identity
     // check actually works.
-    const allCandidatesForFilm = cachedNativeFilmLabMatrix(allFilms, allLabs, { process: cheapestProcess, format: cheapestFormat })
+    const allCandidatesForFilm = cachedNativeFilmLabMatrix(allFilms, allLabs, { process: cheapestProcess, format: cheapestFormat, camera120Exposures: camera120OverrideExposures() })
         .filter(e => filmKey(e.filmName, e.boxSpeed, e.format) === selectedKey);
     const priceSortedRows = allCandidatesForFilm
         .filter(e => (!devCostFilterTurnaround || e.turnaroundTime === devCostFilterTurnaround) && (!devCostFilterHiRes || e.highResScan) && (!devCostFilterTiff || e.tiffScan))

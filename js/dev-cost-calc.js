@@ -24,11 +24,21 @@ function filmKey(name, boxSpeed, format) {
 
 // Bridges the current { bundles: [...] } schema with the older flat
 // single-bundle schema so both keep working.
-function normalizeFilmBundles(film) {
+//
+// camera120Exposures (optional): overrides every bundle's exposures for
+// a 120-format film only — 120's actual frame count depends on the
+// camera back, not the film stock, so a shared/community film catalog
+// entry can't bake in one true value the way it can for 35mm (issue
+// #168). This is a display/calculation-time override only — it never
+// touches the film's own stored data, and every other format ignores it.
+// Callers that must reflect the catalog's raw stored value (Library's
+// own editing screens and exports) simply omit this argument.
+function normalizeFilmBundles(film, camera120Exposures) {
+    const override = (film.format === '120' && camera120Exposures) ? parseInt(camera120Exposures) || null : null;
     if (Array.isArray(film.bundles) && film.bundles.length > 0) {
         return film.bundles.map(b => ({
             rolls: parseInt(b.rolls) || 1,
-            exposures: parseInt(b.exposures) || 36,
+            exposures: override || parseInt(b.exposures) || 36,
             filmCost: parseFloat(b.filmCost) || 0,
             storeName: b.storeName || '',
             buyLink: b.buyLink || '',
@@ -39,7 +49,7 @@ function normalizeFilmBundles(film) {
     }
     return [{
         rolls: parseInt(film.rolls) || 1,
-        exposures: parseInt(film.exposures) || 36,
+        exposures: override || parseInt(film.exposures) || 36,
         filmCost: parseFloat(film.filmCost) || 0,
         storeName: film.storeName || '',
         buyLink: film.buyLink || '',
@@ -218,6 +228,8 @@ function pickIsoCandidate(candidates, sortMode) {
 //   pinnedLabNames           — Set of lab names to always surface per film,
 //                              even if beaten on price (home lab + favourites)
 //   upgradeThresholdPercent — max % premium for the "recommended upgrade" badge
+//   camera120Exposures       — overrides Exposures for 120-format films only
+//                              (issue #168 follow-up — see normalizeFilmBundles)
 function computeIsoPriceOptions(targetIso, allFilms, allLabs, opts) {
     opts = opts || {};
     const sortMode = opts.sortMode || 'price';
@@ -243,7 +255,7 @@ function computeIsoPriceOptions(targetIso, allFilms, allLabs, opts) {
         // Cheapest bundle for this film stock only — same "pick the best
         // pack size" approach used everywhere else in the app.
         let bestBundle = null, bestFilmCostPerPhoto = null;
-        normalizeFilmBundles(f).forEach(b => {
+        normalizeFilmBundles(f, opts.camera120Exposures).forEach(b => {
             const cpp = computeCostPerPhoto(b.filmCost, b.rolls, b.exposures);
             if (cpp !== null && cpp > 0 && (bestFilmCostPerPhoto === null || cpp < bestFilmCostPerPhoto)) {
                 bestFilmCostPerPhoto = cpp;
@@ -357,7 +369,7 @@ function computeNativeFilmLabMatrix(allFilms, allLabs, opts) {
         if (!boxSpeed) return;
 
         let bestBundle = null, bestFilmCostPerPhoto = null;
-        normalizeFilmBundles(f).forEach(b => {
+        normalizeFilmBundles(f, opts.camera120Exposures).forEach(b => {
             const cpp = computeCostPerPhoto(b.filmCost, b.rolls, b.exposures);
             if (cpp !== null && cpp > 0 && (bestFilmCostPerPhoto === null || cpp < bestFilmCostPerPhoto)) {
                 bestFilmCostPerPhoto = cpp;
@@ -416,7 +428,7 @@ function computeOneStopFilmLabMatrix(allFilms, allLabs, opts) {
         if (!boxSpeed) return;
 
         let bestBundle = null, bestFilmCostPerPhoto = null;
-        normalizeFilmBundles(f).forEach(b => {
+        normalizeFilmBundles(f, opts.camera120Exposures).forEach(b => {
             const cpp = computeCostPerPhoto(b.filmCost, b.rolls, b.exposures);
             if (cpp !== null && cpp > 0 && (bestFilmCostPerPhoto === null || cpp < bestFilmCostPerPhoto)) {
                 bestFilmCostPerPhoto = cpp;

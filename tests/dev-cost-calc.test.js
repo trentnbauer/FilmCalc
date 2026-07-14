@@ -77,6 +77,27 @@ test('normalizeFilmBundles falls back to the legacy flat schema', () => {
     assert.deepEqual(bundles, [{ rolls: 3, exposures: 24, filmCost: 9.5, storeName: '', buyLink: '', availability: 'national', state: '', city: '' }]);
 });
 
+// ---------- normalizeFilmBundles: 120 Camera Type override (issue #168
+// follow-up — the override is session/calculation-time only, never
+// written back onto the film, and only ever applies to 120-format films) ----------
+
+test('normalizeFilmBundles: camera120Exposures overrides every bundle of a 120 film', () => {
+    const film = { format: '120', bundles: [{ rolls: 1, exposures: 12, filmCost: 8 }, { rolls: 5, exposures: 12, filmCost: 35 }] };
+    const bundles = normalizeFilmBundles(film, 10); // e.g. a 6x7 back
+    assert.deepEqual(bundles.map(b => b.exposures), [10, 10]);
+});
+
+test('normalizeFilmBundles: camera120Exposures is ignored for non-120 formats', () => {
+    const film = { format: '35mm', bundles: [{ rolls: 1, exposures: 36, filmCost: 8 }] };
+    const bundles = normalizeFilmBundles(film, 10);
+    assert.equal(bundles[0].exposures, 36);
+});
+
+test('normalizeFilmBundles: no override falls back to the film\'s own stored exposures', () => {
+    const film = { format: '120', bundles: [{ rolls: 1, exposures: 12, filmCost: 8 }] };
+    assert.equal(normalizeFilmBundles(film)[0].exposures, 12);
+});
+
 test('normalizeLabServices falls back to the legacy flat schema', () => {
     const tiers = normalizeLabServices({ devCost: '20', pushPullCost: '5' });
     assert.equal(tiers.length, 1);
@@ -299,6 +320,23 @@ test('#144: computeNativeFilmLabMatrix respects the tiff filter', () => {
     assert.equal(results.length, 1);
     assert.equal(results[0].labName, 'TIFF Lab');
     assert.equal(results[0].tiffScan, true);
+});
+
+test('computeNativeFilmLabMatrix: camera120Exposures overrides a 120 film\'s cost-per-photo, leaves 35mm alone', () => {
+    const film120 = { name: 'Test 120 Film', boxSpeed: 400, process: 'C41', format: '120', maxPushPull: 1, bundles: [{ rolls: 1, exposures: 12, filmCost: 12 }] };
+    const films = { filmA: FILM_400, film120 };
+    const oneLab = { 'Cheap Lab': ALL_LABS['Cheap Lab'] };
+    // Native (no override): 12/12 = 1.00/photo film cost.
+    const native = computeNativeFilmLabMatrix(films, oneLab, {});
+    const nativeRow = native.find(r => r.filmName === 'Test 120 Film');
+    assert.ok(Math.abs(nativeRow.filmCostPerPhoto - 12 / 12) < 1e-9);
+    // Overridden to a 6x7 back (10 exp): 12/10 = 1.20/photo film cost.
+    const overridden = computeNativeFilmLabMatrix(films, oneLab, { camera120Exposures: 10 });
+    const overriddenRow = overridden.find(r => r.filmName === 'Test 120 Film');
+    assert.ok(Math.abs(overriddenRow.filmCostPerPhoto - 12 / 10) < 1e-9);
+    // The 35mm film in the same call is untouched by the 120 override.
+    const untouched35mm = overridden.find(r => r.filmName === FILM_400.name);
+    assert.ok(Math.abs(untouched35mm.filmCostPerPhoto - 10 / 36) < 1e-9);
 });
 
 test('computeOneStopFilmLabMatrix: excludes noPushPull tiers and applies the filter', () => {
