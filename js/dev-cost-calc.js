@@ -91,6 +91,64 @@ function computeCostPerPhoto(cost, rolls, exposures) {
     return totalPhotos > 0 ? (parseFloat(cost) || 0) / totalPhotos : null;
 }
 
+// Total cost of buying enough of one bundle (repeated) to cover a given
+// roll count — a partially-used pack still costs its full price, so this
+// rounds UP to the next whole pack, never fractional.
+function bundleCostForRolls(bundle, rolls) {
+    const packRolls = parseInt(bundle.rolls) || 1;
+    const packCost = parseFloat(bundle.filmCost) || 0;
+    return Math.ceil(rolls / packRolls) * packCost;
+}
+
+// For a film with more than one bundle size, the app already shows
+// whichever bundle is cheapest per photo — usually the bulk pack, since
+// it typically has the best per-roll rate. What that raw per-photo price
+// doesn't reveal is that the bulk pack only pays off once you actually
+// need that many rolls — someone shooting fewer is better off buying the
+// smaller pack repeatedly, even though its per-photo price looks worse
+// in isolation, because they're not paying up front for rolls they don't
+// need yet (issue #161). This finds that crossover: the roll count at
+// which repeatedly buying the smaller pack stops being the better deal.
+//
+// Only compares bundles that share the SAME exposures-per-roll as the
+// cheapest-per-photo bundle — pack sizes of the same product almost
+// always do, and without that a "roll count" isn't a fair unit to
+// compare on (a 24exp roll and a 36exp roll cost different amounts of
+// actual photography per roll, so cost-per-ROLL isn't comparable between
+// them the way cost-per-PHOTO already is elsewhere in this file).
+//
+// Returns null when there's nothing to compare (fewer than two matching
+// bundles, or the cheapest-per-photo bundle is already the smallest —
+// nothing to buy up front to warn about) or no crossover exists within a
+// sane roll count (MAX_ROLLS_TO_CHECK). Otherwise returns
+// { breakEvenRolls, bulkBundle, smallerBundle }: below breakEvenRolls,
+// smallerBundle (bought repeatedly) is the better deal; at or above it,
+// bulkBundle is.
+function computeBundleBreakEven(bundles) {
+    if (!Array.isArray(bundles) || bundles.length < 2) return null;
+    const valid = bundles
+        .map(b => ({ ...b, rolls: parseInt(b.rolls) || 1, filmCost: parseFloat(b.filmCost) || 0, exposures: parseInt(b.exposures) || 0 }))
+        .filter(b => b.rolls > 0 && b.filmCost > 0);
+    if (valid.length < 2) return null;
+
+    // Same as "cheapest per photo" — filmCost/rolls ranks identically to
+    // filmCost/(rolls*exposures) whenever exposures match, without
+    // needing exposures to compute.
+    const bulkBundle = valid.reduce((best, b) => (b.filmCost / b.rolls < best.filmCost / best.rolls ? b : best));
+    const smallerBundle = valid
+        .filter(b => b !== bulkBundle && b.rolls < bulkBundle.rolls && b.exposures === bulkBundle.exposures)
+        .sort((a, b) => b.rolls - a.rolls)[0]; // closest smaller pack size
+    if (!smallerBundle) return null;
+
+    const MAX_ROLLS_TO_CHECK = 500;
+    for (let rolls = bulkBundle.rolls; rolls <= MAX_ROLLS_TO_CHECK; rolls++) {
+        if (bundleCostForRolls(bulkBundle, rolls) <= bundleCostForRolls(smallerBundle, rolls)) {
+            return { breakEvenRolls: rolls, bulkBundle, smallerBundle };
+        }
+    }
+    return null;
+}
+
 // A lab service tier can support more than one process (e.g. a tier that
 // handles both C41 and E6 at the same price) — a film only pairs with tiers
 // whose processes include the film's own.
@@ -453,6 +511,8 @@ if (typeof module !== 'undefined' && module.exports) {
         normalizeFilmBundles,
         normalizeLabServices,
         computeCostPerPhoto,
+        bundleCostForRolls,
+        computeBundleBreakEven,
         tierMatchesFilmProcess,
         filmMatchesProcessAndFormat,
         sortIsoEntries,
