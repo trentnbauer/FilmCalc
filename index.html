@@ -356,6 +356,17 @@
                     <button type="button" data-filter="tiff" title="Show only options with TIFF (or lossless) scans" class="dev-cost-filter-pill px-2.5 py-1 rounded-full text-xs font-semibold transition-colors bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">TIFF</button>
                 </div>
 
+                <!-- Consolidated "what's actually narrowing these results"
+                     row — the Process select and the filter pills above
+                     each show their own active state individually, but
+                     nothing ties them together, so an empty results list
+                     gives no single place to see (and clear) every active
+                     filter at once. Populated by renderDevCostActiveFilters()
+                     in js/dev-cost-ui.js; hidden entirely when nothing but
+                     Format is active, since Format isn't really an
+                     optional filter — a camera is always one format. -->
+                <div id="devCostActiveFilters" class="hidden flex items-center gap-1.5 flex-wrap"></div>
+
                 <div id="cheapestSubIsoContent" class="space-y-6 hidden">
                     <div class="theme-section-bg bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800/30 p-4 text-left">
                         <label for="isoCalcTargetSpeed" class="theme-section-text block text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">Shooting ISO</label>
@@ -377,6 +388,10 @@
                         <label for="cheapestFilmSelect" class="theme-section-text block text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">Film stock</label>
                         <select id="cheapestFilmSelect" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm"><option value="">-- Pick a film --</option></select>
                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Every saved lab ranked cheapest-first for this film at box speed — film + dev cost. Honours the film-type and service filters above.</p>
+                        <div class="flex items-center gap-2 mt-2">
+                            <button id="cheapestFilmShareBtn" type="button" title="Copy a link that reopens this film's lab comparison" class="text-xs text-indigo-600 dark:text-indigo-400 font-medium hover:underline disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:no-underline" disabled>🔗 Share This Comparison</button>
+                            <span id="cheapestFilmShareStatus" class="text-xs text-green-600 dark:text-green-400"></span>
+                        </div>
                     </div>
                     <div id="cheapestFilmResults">
                         <p class="text-sm text-gray-400 text-center">Pick a film to compare labs</p>
@@ -523,7 +538,11 @@
                     <h3 class="font-semibold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest mb-2">Calculator Settings</h3>
                     <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3 mb-3">
                         <h4 class="font-semibold text-gray-700 dark:text-gray-300 text-sm">Currency</h4>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Symbol shown in front of every cost throughout the app. This just changes the label — it doesn't convert any numbers.</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Symbol shown in front of every cost throughout the app.</p>
+                        <div class="flex items-start gap-2 theme-warning-bg bg-orange-100 dark:bg-orange-900/30 border border-orange-300 dark:border-orange-700 rounded-lg px-3 py-2">
+                            <span class="theme-warning-text text-orange-500 dark:text-orange-400">⚠️</span>
+                            <p class="text-xs theme-warning-text text-orange-800 dark:text-orange-300"><span class="font-semibold">This only changes the label, not the numbers.</span> Every price you've entered or saved stays exactly as typed — switching to € here doesn't convert dollars to euros. Mixing prices you entered in one currency with labs/films saved in another will silently produce nonsense totals.</p>
+                        </div>
                         <select id="currencySelect" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
                             <option value="$">$ (default)</option>
                             <option value="€">€</option>
@@ -860,6 +879,12 @@
          calc engine above. Must load before the main script below — see the
          module's own header comment for why the load order is safe. -->
     <script src="js/dev-cost-ui.js"></script>
+    <!-- Search box for the film/lab picker <select>s (issue #167). Runs its
+         setup immediately on load (the target <select>s exist in the
+         initial HTML, just empty of <option>s until populated), so load
+         order relative to the main script below doesn't matter — it never
+         calls into it. -->
+    <script src="js/select-filter.js"></script>
     <script>
         // ---------- HTML/URL escaping ----------
         // Film names, lab names, store names, and buy links all come from
@@ -1352,7 +1377,9 @@
         // tab is active on change.
         function applyGlobalFilterChange() {
             // Dev Cost tab (if it's the active view) and Film Lookup both read
-            // filmPassesProcessFilter, so refresh both cheaply.
+            // filmPassesProcessFilter, so refresh both cheaply. Also
+            // re-renders the active-filter chip row (renderDevCostActiveFilters,
+            // js/dev-cost-ui.js) since it reads cheapestProcess too.
             if (typeof refreshActiveCheapestSubTab === 'function') refreshActiveCheapestSubTab();
             if (typeof updateLabComparison === 'function') updateLabComparison();
             if (typeof updateCheaperAlternative === 'function') updateCheaperAlternative();
@@ -1966,6 +1993,30 @@
             if (has('addWithAiUrl')) {
                 switchTab('library');
                 openAiModal({ url: params.get('addWithAiUrl'), kind: params.get('addWithAiKind') });
+                return;
+            }
+
+            // ?cheapestFilm=<filmKey> — the Per Film sub-tab's own Share
+            // button (issue #160). Jumps straight to Lab Costs > Per Film
+            // with that saved film already selected, instead of a manual
+            // Film Lookup calculation.
+            if (has('cheapestFilm')) {
+                if (has('format') && FORMAT_OPTIONS.some(o => o.value === params.get('format'))) {
+                    cheapestFormat = params.get('format');
+                    localStorage.setItem('globalFormat', cheapestFormat);
+                    const gf = document.getElementById('globalFormat');
+                    if (gf) gf.value = cheapestFormat;
+                }
+                if (has('process') && PROCESS_OPTIONS.some(o => o.value === params.get('process'))) {
+                    cheapestProcess = params.get('process');
+                    localStorage.setItem('globalProcess', cheapestProcess);
+                    const gp = document.getElementById('globalProcess');
+                    if (gp) gp.value = cheapestProcess;
+                }
+                switchTab('cheapest');
+                switchCheapestSubTab('film');
+                document.getElementById('cheapestFilmSelect').value = params.get('cheapestFilm');
+                updateCostPerFilmTab();
                 return;
             }
 
