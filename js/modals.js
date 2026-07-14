@@ -831,11 +831,15 @@ async function loadPresetList() {
         ...labs.map(l => ({ folder: 'labs', file: l.file, label: l.label || l.file, type: 'Lab', country: l.country, state: l.state, city: l.city }))
     ];
     // Prefer the label embedded inside each file over the manifest's, so
-    // renaming a preset only means editing its own YAML.
+    // renaming a preset only means editing its own YAML. The parsed doc is
+    // kept on the entry (fetchOk/parsed below) so picking this preset to
+    // import later (see importSelectedPresetsBtn below) can reuse it
+    // instead of re-fetching and re-parsing the same file a second time
+    // (issue #166).
     presetEntries = await Promise.all(rawEntries.map(async (e) => {
         const fetched = await fetchYamlPreset(e.folder, e.file);
         const embedded = fetched.ok ? labelFromParsed(fetched.parsed) : null;
-        return { ...e, label: embedded || e.label };
+        return { ...e, label: embedded || e.label, fetchOk: fetched.ok, parsed: fetched.ok ? fetched.parsed : null };
     }));
     if (presetEntries.length === 0) {
         importPresetList.innerHTML = '<p class="text-xs text-gray-400 text-center py-2">No presets found — upload a file instead.</p>';
@@ -1031,7 +1035,10 @@ importSelectedPresetsBtn.addEventListener('click', async () => {
     const chosen = checked.map(cb => presetEntries[parseInt(cb.dataset.index)]);
     importSelectedPresetsBtn.disabled = true;
     importSelectedPresetsBtn.textContent = 'Importing…';
-    const results = await Promise.all(chosen.map(e => fetchYamlPreset(e.folder, e.file)));
+    // Reuses the parsed doc loadPresetList() already fetched for each entry
+    // (to read its embedded label) instead of fetching every chosen file a
+    // second time here (issue #166).
+    const results = chosen.map(e => ({ ok: e.fetchOk, parsed: e.parsed }));
     finishImport(results);
     importSelectedPresetsBtn.textContent = 'Import Selected';
 });
