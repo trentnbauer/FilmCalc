@@ -1399,6 +1399,13 @@
             cheapestFormat = globalFormatSel.value;
             localStorage.setItem('globalFormat', cheapestFormat);
             applyGlobalFilterChange();
+            // Show/hide the 120 Camera Type picker on whatever bundle rows
+            // are already on screen (updateBundleCameraTypeFields, defined
+            // below with the rest of the bundle-block code) — safe to call
+            // here despite being defined later in the file, since this only
+            // runs later from the 'change' event, by which point the whole
+            // script has finished loading.
+            if (typeof updateBundleCameraTypeFields === 'function') updateBundleCameraTypeFields();
         });
 
         // Library's own Process filter (issue #116) — narrows "Load a saved
@@ -1636,6 +1643,41 @@
         // single-bundle schema — now lives in js/dev-cost-calc.js (loaded
         // above, shared global scope).
 
+        // 120 roll film's frame count depends on the camera back, not the
+        // film stock itself — the same roll gives a 6x6 back 12 exposures
+        // and a 6x7 back 10 (issue #168: this app used to just assume 12
+        // for every 120 entry, which is wrong for anything that isn't a
+        // 6x6 back). These are the counts manufacturers commonly quote;
+        // some cameras land a frame either side of these depending on
+        // spacing tolerances, so "Custom" stays available for anyone who's
+        // actually counted their own camera's output.
+        const CAMERA_120_EXPOSURES = [
+            { value: '6x4.5', label: '6×4.5 (645) — 16 exp', exposures: 16 },
+            { value: '6x6', label: '6×6 — 12 exp', exposures: 12 },
+            { value: '6x7', label: '6×7 — 10 exp', exposures: 10 },
+            { value: '6x8', label: '6×8 — 9 exp', exposures: 9 },
+            { value: '6x9', label: '6×9 — 8 exp', exposures: 8 },
+            { value: '6x12', label: '6×12 — 6 exp', exposures: 6 },
+            { value: '6x17', label: '6×17 — 4 exp', exposures: 4 }
+        ];
+        // Reverse lookup so loading a saved bundle (or switching Format to
+        // 120 with an exposures value already typed in) preselects the
+        // matching camera type instead of defaulting blank. A count that
+        // doesn't match any known back — or no count at all — falls back
+        // to '' (no format entered yet) or 'custom' (something's there but
+        // it's not one of the standard counts).
+        function findCameraTypeForExposures(exposures) {
+            const n = parseInt(exposures);
+            if (!n) return '';
+            const match = CAMERA_120_EXPOSURES.find(c => c.exposures === n);
+            return match ? match.value : 'custom';
+        }
+        function cameraTypeOptionsHTML(selected) {
+            return `<option value="">-- Camera type --</option>` +
+                CAMERA_120_EXPOSURES.map(c => `<option value="${c.value}" ${selected === c.value ? 'selected' : ''}>${escapeHtml(c.label)}</option>`).join('') +
+                `<option value="custom" ${selected === 'custom' ? 'selected' : ''}>Custom (I've counted my own)</option>`;
+        }
+
         function bundleBlockHTML(bundle) {
             bundle = bundle || {};
             const rolls = escapeHtml(bundle.rolls ?? '');
@@ -1648,6 +1690,14 @@
             const city = escapeHtml(bundle.city || '');
             const localityHidden = availability === 'national' ? 'hidden' : '';
             const cityHidden = availability === 'city' ? '' : 'hidden';
+            // Format is a per-film (not per-bundle) field, driven by the
+            // global Format selector — "Load a saved film" is already
+            // filtered to films matching it, so cheapestFormat always
+            // matches whatever film this bundle belongs to.
+            const is120 = cheapestFormat === '120';
+            const cameraType = is120 ? findCameraTypeForExposures(bundle.exposures) : '';
+            const exposuresLocked = is120 && cameraType && cameraType !== 'custom';
+            const exposuresLockedClasses = exposuresLocked ? 'bg-gray-100 dark:bg-gray-700/50 cursor-not-allowed' : '';
             return `
                 <div class="bundle-block bg-white dark:bg-gray-800/60 border border-blue-200 dark:border-blue-800 rounded-lg p-3 space-y-2 relative">
                     <button type="button" class="removeBundleBtn absolute top-2 right-2 text-red-400 hover:text-red-600 text-xs font-bold" aria-label="Remove Bundle">✕</button>
@@ -1658,7 +1708,8 @@
                         </div>
                         <div>
                             <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Exposures per Roll</label>
-                            <input type="number" inputmode="numeric" min="1" class="bundle-exposures w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" value="${exposures}">
+                            <select class="bundle-cameraType ${is120 ? '' : 'hidden'} w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm mb-1" title="120 film's frame count depends on the camera back, not the film stock — pick your format, or Custom if you've counted your own.">${cameraTypeOptionsHTML(cameraType)}</select>
+                            <input type="number" inputmode="numeric" min="1" class="bundle-exposures w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 ${exposuresLockedClasses}" value="${exposures}" ${exposuresLocked ? 'readonly' : ''}>
                         </div>
                     </div>
                     <div>
@@ -1704,6 +1755,23 @@
             container.insertAdjacentHTML('beforeend', bundleBlockHTML(bundle));
             const newBlock = container.lastElementChild;
             newBlock.querySelector('.removeBundleBtn').addEventListener('click', () => newBlock.remove());
+            const cameraTypeSelect = newBlock.querySelector('.bundle-cameraType');
+            const exposuresInput = newBlock.querySelector('.bundle-exposures');
+            cameraTypeSelect.addEventListener('change', () => {
+                const chosen = CAMERA_120_EXPOSURES.find(c => c.value === cameraTypeSelect.value);
+                if (chosen) {
+                    exposuresInput.value = chosen.exposures;
+                    exposuresInput.readOnly = true;
+                    exposuresInput.classList.add('bg-gray-100', 'dark:bg-gray-700/50', 'cursor-not-allowed');
+                } else {
+                    exposuresInput.readOnly = false;
+                    exposuresInput.classList.remove('bg-gray-100', 'dark:bg-gray-700/50', 'cursor-not-allowed');
+                    // Picking "Custom" (rather than clearing back to the
+                    // placeholder) means they're about to type a number —
+                    // put the cursor there for them.
+                    if (cameraTypeSelect.value === 'custom') exposuresInput.focus();
+                }
+            });
             const availabilitySelect = newBlock.querySelector('.bundle-availability');
             const localityFields = newBlock.querySelector('.bundle-locality-fields');
             const cityField = newBlock.querySelector('.bundle-city-field');
@@ -1729,6 +1797,34 @@
         function resetBundles(bundles) {
             document.getElementById('filmBundlesContainer').innerHTML = '';
             (bundles && bundles.length ? bundles : [{}]).forEach(addBundleBlock);
+        }
+
+        // Re-syncs every already-rendered bundle row's Camera Type picker
+        // against the current global Format — called when Format changes
+        // (rather than rebuilding the rows from scratch, which would wipe
+        // out whatever the person's already typed into Rolls/Cost/Store on
+        // this edit). Switching away from 120 always frees Exposures back
+        // up for manual entry; switching to 120 re-derives the picker's
+        // selection from whatever's already in that field.
+        function updateBundleCameraTypeFields() {
+            const is120 = cheapestFormat === '120';
+            document.querySelectorAll('#filmBundlesContainer .bundle-block').forEach(block => {
+                const select = block.querySelector('.bundle-cameraType');
+                const input = block.querySelector('.bundle-exposures');
+                select.classList.toggle('hidden', !is120);
+                if (!is120) {
+                    input.readOnly = false;
+                    input.classList.remove('bg-gray-100', 'dark:bg-gray-700/50', 'cursor-not-allowed');
+                    return;
+                }
+                const matched = findCameraTypeForExposures(input.value);
+                select.value = matched || '';
+                const locked = !!matched && matched !== 'custom';
+                input.readOnly = locked;
+                input.classList.toggle('bg-gray-100', locked);
+                input.classList.toggle('dark:bg-gray-700/50', locked);
+                input.classList.toggle('cursor-not-allowed', locked);
+            });
         }
 
         document.getElementById('addBundleBtn').addEventListener('click', () => addBundleBlock({}));

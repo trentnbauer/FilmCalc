@@ -78,7 +78,7 @@ films:
 | `hidden` | Always `false`. |
 | `bundles` | **One entry per pack size the shop sells.** A single roll, a 3-pack and a 5-pack of the same stock are three `bundles` entries under one film — not three films. |
 | `rolls` | Number of rolls in this pack. |
-| `exposures` | Frames per roll. `36` or `24` for 35mm. Use `12` for 120 (assumes 6x6). |
+| `exposures` | Frames per roll. `36` or `24` for 35mm. For 120, this depends on the *camera*, not the film stock — the same roll gives a 6x6 back 12 exposures and a 6x7 back 10. Read the actual count off the shop page if it's stated. If it genuinely isn't stated, use `12` as a 6x6 fallback and say so in your notes at the end — don't silently assume it. |
 | `filmCost` | Price of the **whole pack**, including postage if the page states it. Plain number. Regular price. |
 | `storeName` | Short shop name, e.g. `Walkens`, `B&H`, `Analogue Wonderland`. |
 | `buyLink` | The product page URL. Strip tracking junk (`utm_*`, `gclid`, etc.) if you can. Use `''` if there genuinely isn't one. |

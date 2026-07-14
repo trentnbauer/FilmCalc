@@ -188,7 +188,7 @@ Output a top-level key "films:" containing a list. Each film:
   hidden: false
   bundles:   # ONE ENTRY PER PACK SIZE THE SHOP SELLS (single roll, 3-pack, 5-pack...)
   - rolls: <rolls in this pack>
-    exposures: <frames per roll: 36 or 24 for 35mm; 12 for 120>
+    exposures: <frames per roll: 36 or 24 for 35mm. For 120 this depends on the CAMERA, not the film — read the actual count off the page if stated; only fall back to 12 (6x6) if it genuinely isn't, and flag that guess>
     filmCost: <price of the WHOLE pack, plain number>
     storeName: <short shop name>
     buyLink: <product URL, tracking params stripped>
