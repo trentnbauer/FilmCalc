@@ -73,3 +73,30 @@ labs:
     noPushPull: false
     processes:
     - ECN2
+- name: Do Film! Lab
+  hidden: false
+  address: 257 Crown Street, Darlinghurst NSW 2010, Australia
+  phone: +61 439 363 456
+  email: team@dofilmlab.com.au
+  website: https://dofilmlab.com.au
+  services:
+  - devCost: 19
+    pushPullCost: 0
+    pushPullType: flat
+    highResScan: false
+    noPushPull: false
+    processes:
+    - C41
+    - BW
+    - E6
+    - ECN2
+  - devCost: 51
+    pushPullCost: 0
+    pushPullType: flat
+    highResScan: true
+    noPushPull: false
+    processes:
+    - C41
+    - BW
+    - E6
+    - ECN2
