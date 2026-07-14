@@ -28,7 +28,7 @@ jobs:
       contents: write
       pull-requests: write
       issues: write
-      security-events: read
+      security-events: write
       id-token: write
       actions: read
 
@@ -47,6 +47,18 @@ jobs:
             --color "5319e7" \
             --description "Claude already handled this issue (PR opened, or skipped as too ambiguous). Remove to retry." \
             --force
+
+      - name: Prepare Tier 1 security-alert data
+        # The Claude GitHub App's own installation token has no
+        # security_events access at all -- requesting it via
+        # additional_permissions hard-fails the App's token exchange rather
+        # than just being denied per-call. This step does all the
+        # security-events-scoped API work up front with GITHUB_TOKEN (which
+        # does have it, from this job's `permissions:` above) and hands
+        # Claude a plain manifest + SARIF files to read instead.
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash .github/scripts/prepare-security-alerts.sh
 
       - name: Run Claude Code
         id: claude
@@ -93,46 +105,48 @@ jobs:
 
             **Tier 1 — Code-scanning alerts (Security tab)**
 
-            List this repo's open code scanning alerts, most severe first:
+            Your own token has no access to the code-scanning API (a separate step already checked, so
+            don't bother retrying `gh api .../code-scanning/...` yourself — it will just 403). Instead,
+            read `${{ runner.temp }}/security-alerts/manifest.json`, a pre-built array (most severe
+            first) with one entry per open, actionable alert that doesn't already have a PR:
             ```
-            gh api repos/${{ github.repository }}/code-scanning/alerts --paginate \
-              -q '.[] | select(.state=="open")'
+            {
+              "number": <alert number>,
+              "rule_id": "<rule id>",
+              "severity": "critical" | "high" | "medium" | "low",
+              "branch": "<branch name, already pushed if autofix_status is \"committed\">",
+              "autofix_status": "committed" | "commit_failed" | "unavailable",
+              "autofix_description": "<Copilot's own explanation of its fix, if committed>",
+              "sarif_file": "<path to that alert's SARIF, or empty string if none was found>"
+            }
             ```
-            An alert with no `security_severity_level` (i.e. `.rule.severity` of `error`/`warning`/
-            `note` instead) is treated as low severity if `error`, and skipped entirely if `warning` or
-            `note` — those are lint-style findings, not worth a standalone PR.
+            If the manifest is missing, empty, or is `[]`, there's nothing to do in this tier — move on
+            to Tier 2.
 
-            Before starting work on an alert, check whether a PR already exists for it
-            (`gh pr list --state open --search "<rule-id> in:title"` or similar) and skip if so.
-
-            For each remaining alert, most severe first:
-            1. Create a branch named `security-<rule-id>-<alert-number>-YYYY-MM-DD` (today's date) off
-               main, and push it so it exists on the remote.
-            2. Try GitHub Copilot Autofix first:
-               `gh api repos/${{ github.repository }}/code-scanning/alerts/<alert-number>/autofix` to
-               check for an existing suggestion (POST the same path first if none exists yet, then poll
-               GET a few times if its `status` isn't `success` yet). If it reaches `status: success`,
-               commit it to your branch:
-               `gh api -X POST repos/${{ github.repository }}/code-scanning/alerts/<alert-number>/autofix/commits -f target_ref="refs/heads/<branch>"`,
-               then `git pull` that branch locally.
-            3. Whether or not Autofix produced something, pull the SARIF for the most recent analysis
-               (`gh api -H "Accept: application/sarif+json" repos/${{ github.repository }}/code-scanning/analyses/<id>`)
-               and trace the codeFlows to the actual tainted source feeding the sink. Read the patched
-               file(s) end-to-end and judge Copilot's patch (if any) against that root cause:
-                 - If it genuinely closes the hole, is minimal, and doesn't change unrelated behavior:
-                   keep it as-is.
-                 - If it's incomplete, wrong, or overreaching: replace it with your own fix on the same
-                   branch (additional commit). Say in the PR description that you adjusted or replaced
-                   Copilot's suggestion and why.
-                 - If it looks like a false positive (already-sanitized data the tool can't trace
-                   through a custom helper): don't open a PR — delete the branch and move on, no PR, no
-                   comment needed for a code-scanning alert.
-                 - If Autofix never produced a usable suggestion after a couple of retries: implement
-                   the fix yourself from the SARIF trace, same as if there were no Autofix.
-            4. Open a PR: title stating the alert (rule id + file/line + severity), body with the root
+            For each entry, most severe first:
+            1. If `sarif_file` is non-empty, read it and trace the codeFlows to the actual tainted
+               source feeding the sink — that's your root-cause reference for judging any fix, Copilot's
+               or your own.
+            2. Branch `<branch>` already exists on the remote either way (created by the prep step) —
+               `git fetch origin <branch> && git checkout <branch>`.
+               - If `autofix_status` is `"committed"`: the branch already has Copilot's proposed fix as
+                 a commit. Read the changed file(s) end-to-end and judge that patch against the SARIF
+                 root cause:
+                   - Genuinely closes the hole, minimal, no unrelated behavior change → keep it as-is.
+                   - Incomplete, wrong, or overreaching → replace it with your own fix (additional
+                     commit on the same branch). Say in the PR description that you adjusted or replaced
+                     Copilot's suggestion and why.
+                   - Looks like a false positive (already-sanitized data the tool can't trace through a
+                     custom helper) → don't open a PR. `git push origin --delete <branch>` and move on,
+                     no PR, no comment needed.
+               - If `autofix_status` is `"commit_failed"` or `"unavailable"`: the branch exists but is
+                 empty (still just main). Implement the fix yourself from the SARIF trace (or, if there
+                 was no `sarif_file` either, from the alert's rule id and file location — read the
+                 relevant code path end-to-end), then commit and push it to that same branch.
+            3. Open a PR: title stating the alert (rule id + file/line + severity), body with the root
                cause, the fix, whether it came from Copilot or you (and why, if you changed it), and how
                you verified it.
-            5. Apply the auto-merge confidence bar above. If it holds, merge it yourself
+            4. Apply the auto-merge confidence bar above. If it holds, merge it yourself
                (`gh pr merge --squash --auto --delete-branch`); if not, leave it open.
 
             **Tier 2 — Film/lab data + wrong-calculation issues (always PR + auto-merge)**
