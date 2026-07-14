@@ -36,6 +36,7 @@ function pinLabResult(r) {
         devCostPerRoll: r.devCostPerRoll,
         costPerRoll: r.costPerRoll,
         highResScan: r.highResScan,
+        tiffScan: r.tiffScan,
         turnaroundTime: r.turnaroundTime,
         stops: r.stops
     });
@@ -58,6 +59,7 @@ function renderPinnedResult(currentCheapest) {
 
     container.innerHTML = pins.map(pinned => {
         const hiResBadge = pinned.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">HI-RES</span>` : '';
+        const tiffBadge = pinned.tiffScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 align-middle">TIFF</span>` : '';
         const turnaroundBadge = pinned.turnaroundTime ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 align-middle">${escapeHtml(turnaroundLabels[pinned.turnaroundTime] || pinned.turnaroundTime)}</span>` : '';
 
         let diffHtml = '<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Change Film Setup or labs to compare against a new calculation</p>';
@@ -75,7 +77,7 @@ function renderPinnedResult(currentCheapest) {
         return `<div class="px-3 py-3 rounded-lg text-sm bg-indigo-100 dark:bg-indigo-900/30 border border-indigo-300 dark:border-indigo-700 relative mb-3 text-left">
             <button type="button" data-unpin-id="${pinned.pinId}" class="unpinResultBtn absolute top-2 right-2 text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-200 text-xs font-bold" aria-label="Unpin">✕</button>
             <div class="text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">📌 Pinned Comparison</div>
-            <div class="font-semibold text-indigo-800 dark:text-indigo-300">${escapeHtml(pinned.name)}${hiResBadge}${turnaroundBadge}</div>
+            <div class="font-semibold text-indigo-800 dark:text-indigo-300">${escapeHtml(pinned.name)}${hiResBadge}${tiffBadge}${turnaroundBadge}</div>
             <div class="font-mono text-indigo-800 dark:text-indigo-300 mt-1">
                 <span class="font-semibold">${CUR()}${pinned.costPerPhoto.toFixed(2)}/photo</span>
                 <span class="text-xs opacity-80"> · ${CUR()}${pinned.devCostPerRoll.toFixed(2)}/dev · ${CUR()}${pinned.costPerRoll.toFixed(2)}/total</span>
@@ -237,6 +239,7 @@ function updateLabComparison() {
                 costPerRoll,
                 costPerPhoto,
                 highResScan: tier.highResScan,
+                tiffScan: tier.tiffScan,
                 turnaroundTime: tier.turnaroundTime,
                 // Breakdown fields for the expandable row.
                 filmCostPerPhoto: totalPhotos > 0 ? filmCost / totalPhotos : 0,
@@ -310,9 +313,10 @@ function updateLabComparison() {
 
     function renderBadges(r) {
         const hiResBadge = r.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">HI-RES</span>` : '';
+        const tiffBadge = r.tiffScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 align-middle">TIFF</span>` : '';
         const turnaroundBadge = ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 align-middle">${escapeHtml(turnaroundLabels[r.turnaroundTime] || r.turnaroundTime)}</span>`;
         const stopsLabel = r.stops > 0 ? ` <span class="text-xs text-gray-400">(${r.stops} stop push/pull)</span>` : '';
-        return hiResBadge + turnaroundBadge + stopsLabel;
+        return hiResBadge + tiffBadge + turnaroundBadge + stopsLabel;
     }
 
     renderPinnedResult(rawCheapestTotal);
@@ -358,6 +362,7 @@ function updateLabComparison() {
     let otherResults = allResults.filter(r => !usedIds.has(r.id));
     if (filterNextDay) otherResults = otherResults.filter(r => r.turnaroundTime === 'next_day');
     if (filterHiRes) otherResults = otherResults.filter(r => r.highResScan);
+    if (filterTiff) otherResults = otherResults.filter(r => r.tiffScan);
 
     if (otherResults.length === 0) {
         container.innerHTML = '<p class="text-sm text-gray-400 text-center">No other labs match the selected filters</p>';
@@ -380,7 +385,7 @@ function updateLabComparison() {
                     ${r.pushPullFeePerPhoto > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Push/pull fee (per photo)</span><span class="font-mono">${CUR()}${r.pushPullFeePerPhoto.toFixed(2)}</span></div>` : ''}
                     <div class="flex justify-between text-gray-500 dark:text-gray-400 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>Film cost (per roll)</span><span class="font-mono">${CUR()}${r.filmCostPerRoll.toFixed(2)}</span></div>
                     <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Development (per roll)</span><span class="font-mono">${CUR()}${r.devCostPerRoll.toFixed(2)}</span></div>
-                    <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>Scan</span><span>${r.highResScan ? 'Hi-res' : 'Standard'}</span></div>
+                    <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>Scan</span><span>${scanLabel(r)}</span></div>
                     <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>Turnaround</span><span>${escapeHtml(turnaroundLabels[r.turnaroundTime] || r.turnaroundTime || '—')}</span></div>
                     <div class="flex justify-between font-semibold text-gray-700 dark:text-gray-300 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>Total per roll (${r.exposures} exp)</span><span class="font-mono">${CUR()}${r.costPerRoll.toFixed(2)}</span></div>
                     ${directionsLink ? `<div class="pt-1.5 flex justify-end">${directionsLink}</div>` : ''}

@@ -211,11 +211,12 @@ Output a top-level key "labs:" containing a list. Each lab:
     pushPullType: <per_stop | flat>
     turnaroundTime: <next_day | same_week | longer>
     highResScan: <true|false>
+    tiffScan: <true|false — TIFF or other lossless scan, independent of highResScan>
     noPushPull: <true only if this tier cannot push/pull at all, else false>
     processes:
     - <any of: ${processes}>
 
-A lab charging different prices for C41 vs B&W vs E6, or for next-day vs same-week, or standard vs hi-res scans, needs a SEPARATE services entry for EVERY distinct price it charges. Read the pricing carefully.`;
+A lab charging different prices for C41 vs B&W vs E6, or for next-day vs same-week, or standard vs hi-res vs TIFF scans, needs a SEPARATE services entry for EVERY distinct price it charges. Read the pricing carefully.`;
 
     const spec = kind === 'film' ? filmSpec : labSpec;
     const task = isUrl
@@ -339,9 +340,12 @@ function renderAiPreview(kind, list) {
                 <div class="mt-1 space-y-0.5">${bundles}</div>
             </div>`;
         }
-        const tiers = (e.services || []).map(s =>
-            `<div class="flex justify-between text-xs text-gray-500 dark:text-gray-400"><span>${escapeHtml(turnaroundLabels[s.turnaroundTime] || s.turnaroundTime || '—')} · ${s.highResScan ? 'Hi-Res' : 'Standard'} · ${escapeHtml((s.processes || []).join('/'))}</span><span class="font-mono">${CUR()}${(parseFloat(s.devCost) || 0).toFixed(2)}/roll</span></div>`
-        ).join('');
+        const tiers = (e.services || []).map(s => {
+            const scanParts = [];
+            if (s.highResScan) scanParts.push('Hi-Res');
+            if (s.tiffScan) scanParts.push('TIFF');
+            return `<div class="flex justify-between text-xs text-gray-500 dark:text-gray-400"><span>${escapeHtml(turnaroundLabels[s.turnaroundTime] || s.turnaroundTime || '—')} · ${scanParts.length ? escapeHtml(scanParts.join(' + ')) : 'Standard'} · ${escapeHtml((s.processes || []).join('/'))}</span><span class="font-mono">${CUR()}${(parseFloat(s.devCost) || 0).toFixed(2)}/roll</span></div>`;
+        }).join('');
         return `<div class="border border-gray-200 dark:border-gray-600 rounded-lg p-2">
             <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">${escapeHtml(e.name)}</p>
             <p class="text-xs text-gray-400 dark:text-gray-500">${escapeHtml(e.address || 'No address')}</p>
@@ -540,6 +544,7 @@ document.getElementById('aiAddBtn').addEventListener('click', () => {
                     pushPullType: s.pushPullType === 'flat' ? 'flat' : 'per_stop',
                     turnaroundTime: s.turnaroundTime || 'same_week',
                     highResScan: !!s.highResScan,
+                    tiffScan: !!s.tiffScan,
                     noPushPull: !!s.noPushPull,
                     processes: Array.isArray(s.processes) && s.processes.length ? s.processes : ['C41']
                 }))

@@ -110,6 +110,7 @@ labs:
     pushPullType: per_stop
     turnaroundTime: next_day
     highResScan: true
+    tiffScan: false
     noPushPull: false
     processes:
     - C41
@@ -137,6 +138,7 @@ labs:
 | `pushPullType` | `per_stop` (charged per stop) or `flat` (one fee regardless of how many stops). |
 | `turnaroundTime` | Exactly one of: `next_day`, `same_week`, `longer`. |
 | `highResScan` | `true` if this tier includes hi-res scans, else `false`. |
+| `tiffScan` | `true` if this tier includes TIFF (or other lossless) scans, else `false`. Independent of `highResScan` — a tier can be either, both, or neither. |
 | `noPushPull` | `true` **only** if this tier cannot push/pull at all (e.g. a same-day minilab). Otherwise `false`. |
 | `processes` | A list of the processes this tier handles: any of `C41`, `BW`, `E6`, `ECN2`. |
 
