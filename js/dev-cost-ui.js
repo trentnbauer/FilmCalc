@@ -16,6 +16,77 @@
 
 const EMPTY_LIBRARY_MESSAGE = 'Save at least one film and one lab profile to compare';
 
+// ---------- CSV export (issue #163) ----------
+// Holds whatever rows the currently active Dev Cost sub-tab last
+// rendered (same sort/filters already applied), so the shared "Export
+// CSV" button (index.html, above the sub-nav) always exports exactly
+// what's on screen without re-deriving anything itself. Each of the
+// four sub-tab update() functions below calls setDevCostExportRows() at
+// the end — with [] on their own "nothing to show yet" early-return
+// paths, so the button disables itself rather than exporting stale or
+// empty data.
+let currentDevCostExportRows = [];
+function setDevCostExportRows(rows) {
+    currentDevCostExportRows = rows;
+    const btn = document.getElementById('devCostExportCsvBtn');
+    if (btn) btn.disabled = rows.length === 0;
+}
+function csvEscape(value) {
+    const s = String(value ?? '');
+    return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+function rowsToCsv(rows) {
+    if (!rows.length) return '';
+    const headers = Object.keys(rows[0]);
+    const lines = [headers.join(',')];
+    rows.forEach(row => lines.push(headers.map(h => csvEscape(row[h])).join(',')));
+    return lines.join('\r\n');
+}
+document.getElementById('devCostExportCsvBtn').addEventListener('click', () => {
+    if (!currentDevCostExportRows.length) return;
+    const blob = new Blob([rowsToCsv(currentDevCostExportRows)], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `filmcalc-${activeCheapestSubTab}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+});
+// Shared row shape for the three native-matrix views (Per Photo/Lab/Film) —
+// see computeNativeFilmLabMatrix() in js/dev-cost-calc.js for the fields
+// read here.
+function matrixEntryToExportRow(entry) {
+    return {
+        Film: entry.filmName,
+        'Box Speed (ISO)': entry.boxSpeed,
+        Lab: entry.labName,
+        'Hi-Res': entry.highResScan ? 'Yes' : 'No',
+        TIFF: entry.tiffScan ? 'Yes' : 'No',
+        Turnaround: turnaroundLabels[entry.turnaroundTime] || entry.turnaroundTime || '',
+        'Film Cost / Photo': entry.filmCostPerPhoto.toFixed(2),
+        'Dev Cost / Photo': entry.devCostPerPhoto.toFixed(2),
+        'Total Cost / Photo': entry.totalCostPerPhoto.toFixed(2),
+        'Total Cost / Roll': entry.totalCostPerRoll.toFixed(2)
+    };
+}
+// Per ISO's own row shape — same core fields, plus which bucket (native/
+// pushed/pulled) and by how many stops, which the matrix views don't have.
+function isoEntryToExportRow(entry, bucketLabel) {
+    return {
+        Film: entry.filmName,
+        Lab: entry.labName,
+        Bucket: bucketLabel,
+        Stops: entry.stops,
+        'Over Push/Pull Limit': entry.overLimit ? 'Yes' : 'No',
+        'Hi-Res': entry.highResScan ? 'Yes' : 'No',
+        TIFF: entry.tiffScan ? 'Yes' : 'No',
+        Turnaround: turnaroundLabels[entry.turnaroundTime] || entry.turnaroundTime || '',
+        'Film Cost / Photo': entry.filmCostPerPhoto.toFixed(2),
+        'Dev Cost / Photo': entry.devCostPerPhoto.toFixed(2),
+        'Total Cost / Photo': entry.totalCostPerPhoto.toFixed(2),
+        'Total Cost / Roll': entry.totalCostPerRoll.toFixed(2)
+    };
+}
+
 // Renders the same "cheapest hi-res + fastest" recommendation Film Lookup
 // shows as its own card, but as a single-line note attached under a row —
 // the { pick, premium, baselineCostPerPhoto } shape computed by
@@ -308,6 +379,7 @@ function updateIsoPriceCalculator() {
     const targetIso = parseInt(document.getElementById('isoCalcTargetSpeed').value) || 0;
     if (!targetIso) {
         container.innerHTML = '<p class="text-sm text-gray-400 text-center">Enter a shooting ISO to compare</p>';
+        setDevCostExportRows([]);
         return;
     }
 
@@ -317,6 +389,7 @@ function updateIsoPriceCalculator() {
     const hasLabs = Object.values(allLabs).some(l => !l.hidden);
     if (!hasFilms || !hasLabs) {
         container.innerHTML = `<p class="text-sm text-gray-400 text-center">${EMPTY_LIBRARY_MESSAGE}</p>`;
+        setDevCostExportRows([]);
         return;
     }
 
@@ -402,6 +475,12 @@ function updateIsoPriceCalculator() {
             <div class="space-y-1.5">${pullHtml}</div>
         </div>
     </div>`;
+
+    setDevCostExportRows([
+        ...sortedNative.map(e => isoEntryToExportRow(e, 'Native')),
+        ...sortedPush.map(e => isoEntryToExportRow(e, 'Pushed')),
+        ...sortedPull.map(e => isoEntryToExportRow(e, 'Pulled'))
+    ]);
 
     // Wire sort pills.
     container.querySelectorAll('.cheapest-sort-pill').forEach(btn => btn.addEventListener('click', () => {
@@ -690,6 +769,7 @@ function updateCostPerPhotoTab() {
     const allNativeMatrix = cachedNativeFilmLabMatrix(allFilms, allLabs, baseOpts);
     if (allNativeMatrix.length === 0) {
         container.innerHTML = `<p class="text-sm text-gray-400 text-center">${EMPTY_LIBRARY_MESSAGE}</p>`;
+        setDevCostExportRows([]);
         return;
     }
     const devCostFilters = { ...baseOpts, turnaround: devCostFilterTurnaround, hiRes: devCostFilterHiRes, tiff: devCostFilterTiff };
@@ -704,6 +784,7 @@ function updateCostPerPhotoTab() {
         : allNativeMatrix;
     if (nativeMatrix.length === 0) {
         container.innerHTML = '<p class="text-sm text-gray-400 text-center">No options match the current filters</p>';
+        setDevCostExportRows([]);
         return;
     }
     const byFilmNative = new Map();
@@ -733,6 +814,7 @@ function updateCostPerPhotoTab() {
         const bestOneStop = oneStopMatrix.filter(o => o.filmName === e.filmName).sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto)[0];
         return rowHtml + renderPushPullSubLine(bestOneStop, bestOneStop ? bestOneStop.labName : '');
     }).join('');
+    setDevCostExportRows(rows.map(matrixEntryToExportRow));
     wireExpandAll(container, updateCostPerPhotoTab);
     wireMatrixRows(container, updateCostPerPhotoTab);
 }
@@ -748,6 +830,7 @@ function updateCostPerLabTab() {
     const allNativeMatrix = cachedNativeFilmLabMatrix(allFilms, allLabs, baseOpts);
     if (allNativeMatrix.length === 0) {
         container.innerHTML = `<p class="text-sm text-gray-400 text-center">${EMPTY_LIBRARY_MESSAGE}</p>`;
+        setDevCostExportRows([]);
         return;
     }
     const devCostFilters = { ...baseOpts, turnaround: devCostFilterTurnaround, hiRes: devCostFilterHiRes, tiff: devCostFilterTiff };
@@ -755,6 +838,7 @@ function updateCostPerLabTab() {
     const nativeMatrix = hasActiveDevCostFilter ? cachedNativeFilmLabMatrix(allFilms, allLabs, devCostFilters) : allNativeMatrix;
     if (nativeMatrix.length === 0) {
         container.innerHTML = '<p class="text-sm text-gray-400 text-center">No options match the current filters</p>';
+        setDevCostExportRows([]);
         return;
     }
     const byLabNative = new Map();
@@ -771,6 +855,7 @@ function updateCostPerLabTab() {
         const bestOneStop = oneStopMatrix.filter(o => o.labName === e.labName).sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto)[0];
         return rowHtml + renderPushPullSubLine(bestOneStop, bestOneStop ? bestOneStop.filmName : '');
     }).join('');
+    setDevCostExportRows(rows.map(matrixEntryToExportRow));
     wireExpandAll(container, updateCostPerLabTab);
     wireMatrixRows(container, updateCostPerLabTab);
 }
@@ -881,6 +966,7 @@ function updateCostPerFilmTab() {
         container.innerHTML = pinnedBlock + '<p class="text-sm text-gray-400 text-center">Pick a film to compare labs</p>';
         wireMatrixRows(container, updateCostPerFilmTab);
         wirePinnedDevCostBlock(container);
+        setDevCostExportRows([]);
         return;
     }
 
@@ -891,6 +977,7 @@ function updateCostPerFilmTab() {
         container.innerHTML = pinnedBlock + '<p class="text-sm text-gray-400 text-center">Pick a film to compare labs</p>';
         wireMatrixRows(container, updateCostPerFilmTab);
         wirePinnedDevCostBlock(container);
+        setDevCostExportRows([]);
         return;
     }
 
@@ -911,6 +998,7 @@ function updateCostPerFilmTab() {
         container.innerHTML = pinnedBlock + `<p class="text-sm text-gray-400 text-center">No lab matches ${escapeHtml(film.name)} with the current filters</p>`;
         wireMatrixRows(container, updateCostPerFilmTab);
         wirePinnedDevCostBlock(container);
+        setDevCostExportRows([]);
         return;
     }
 
@@ -924,6 +1012,7 @@ function updateCostPerFilmTab() {
         const pinReason = (e.labName === defaultLabName && rank !== 0) ? 'default' : null;
         return renderMatrixRow(e, rank, 'film', pinReason, rank === 0 ? upgrade : undefined);
     }).join('');
+    setDevCostExportRows(rows.map(matrixEntryToExportRow));
     wireExpandAll(container, updateCostPerFilmTab);
     wireMatrixRows(container, updateCostPerFilmTab);
     wirePinnedDevCostBlock(container);
