@@ -207,6 +207,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Both daily-claude-run.yml and film-lab-intake.yml open PRs authored by
+          # claude[bot] -- exactly the PRs this check most needs to review. Without
+          # this, the action's own bot-actor guard refuses to run on them at all.
+          allowed_bots: claude
           claude_args: '--allowed-tools "Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh api repos/*/pulls/*/comments:*),WebFetch,Read,Grep,Glob"'
           prompt: |
             This PR changed film and/or lab data files. Read "DATA_SPEC.md" in the repo root — it is
