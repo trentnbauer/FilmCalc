@@ -14,6 +14,8 @@
 //
 // Extracted from index.html as part of #61 (single-file app split).
 
+const EMPTY_LIBRARY_MESSAGE = 'Save at least one film and one lab profile to compare';
+
 // Renders the same "cheapest hi-res + fastest" recommendation Film Lookup
 // shows as its own card, but as a single-line note attached under a row —
 // the { pick, premium, baselineCostPerPhoto } shape computed by
@@ -225,7 +227,7 @@ function updateIsoPriceCalculator() {
     const hasFilms = Object.values(allFilms).some(f => !f.hidden && (parseInt(f.boxSpeed) || 0) > 0);
     const hasLabs = Object.values(allLabs).some(l => !l.hidden);
     if (!hasFilms || !hasLabs) {
-        container.innerHTML = `<p class="text-sm text-gray-400 text-center">Save at least one film and one lab profile to compare</p>`;
+        container.innerHTML = `<p class="text-sm text-gray-400 text-center">${EMPTY_LIBRARY_MESSAGE}</p>`;
         return;
     }
 
@@ -350,7 +352,13 @@ function updateIsoPriceCalculator() {
 }
 
 
-document.getElementById('isoCalcTargetSpeed').addEventListener('input', updateIsoPriceCalculator);
+// Debounced: each keystroke would otherwise re-parse localStorage and
+// recompute the full film×lab×tier cross-product from scratch (#95).
+let isoCalcTargetSpeedDebounce;
+document.getElementById('isoCalcTargetSpeed').addEventListener('input', () => {
+    clearTimeout(isoCalcTargetSpeedDebounce);
+    isoCalcTargetSpeedDebounce = setTimeout(updateIsoPriceCalculator, 150);
+});
 
 // ---------- Cost Per Photo / Cost Per Lab (native, no push/pull) ----------
 // computeNativeFilmLabMatrix() and computeOneStopFilmLabMatrix() now
@@ -592,7 +600,7 @@ function updateCostPerPhotoTab() {
     const baseOpts = { process: cheapestProcess, format: cheapestFormat };
     const allNativeMatrix = cachedNativeFilmLabMatrix(allFilms, allLabs, baseOpts);
     if (allNativeMatrix.length === 0) {
-        container.innerHTML = '<p class="text-sm text-gray-400 text-center">Save at least one film and one lab profile to compare</p>';
+        container.innerHTML = `<p class="text-sm text-gray-400 text-center">${EMPTY_LIBRARY_MESSAGE}</p>`;
         return;
     }
     const devCostFilters = { ...baseOpts, turnaround: devCostFilterTurnaround, hiRes: devCostFilterHiRes };
@@ -650,7 +658,7 @@ function updateCostPerLabTab() {
     const baseOpts = { process: cheapestProcess, format: cheapestFormat };
     const allNativeMatrix = cachedNativeFilmLabMatrix(allFilms, allLabs, baseOpts);
     if (allNativeMatrix.length === 0) {
-        container.innerHTML = '<p class="text-sm text-gray-400 text-center">Save at least one film and one lab profile to compare</p>';
+        container.innerHTML = `<p class="text-sm text-gray-400 text-center">${EMPTY_LIBRARY_MESSAGE}</p>`;
         return;
     }
     const devCostFilters = { ...baseOpts, turnaround: devCostFilterTurnaround, hiRes: devCostFilterHiRes };
