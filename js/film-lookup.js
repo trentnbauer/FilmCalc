@@ -506,7 +506,11 @@ function updateCheaperAlternative() {
         const maxPushPull = parseFloat(f.maxPushPull) || 1;
         if (stopsAbs > maxPushPull) return;
 
-        normalizeFilmBundles(f).forEach(b => {
+        // Honours the global 120 Camera Type override (issue #168
+        // follow-up) so a "cheaper alternative" 120 film is compared
+        // using the same real frame count as the current camera, not
+        // whatever the catalog happens to have stored.
+        normalizeFilmBundles(f, camera120OverrideExposures()).forEach(b => {
             const filmCpp = computeCostPerPhoto(b.filmCost, b.rolls, b.exposures);
             if (filmCpp === null || filmCpp <= 0 || !b.exposures) return;
             const devCpp = cheapestDevPerPhoto(b.exposures);

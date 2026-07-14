@@ -210,6 +210,20 @@
                 <select id="globalFormat" data-options="formats" title="Physical film size — 35mm, 120, etc. Applies across Film Lookup, Lab Costs, and the Library's film list." class="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm"></select>
             </div>
 
+            <!-- 120's frame count depends on the CAMERA, not the film stock
+                 — the same roll gives a 6x6 back 12 exposures and a 6x7
+                 back 10 (issue #168). That's a fact about whoever's doing
+                 THIS calculation, not about the film, so it lives here
+                 (Film Lookup + Lab Costs) rather than baked into the
+                 shared/community film catalog in Library — see
+                 CAMERA_120_EXPOSURES below. Shown only when Format is 120,
+                 and hidden entirely on Library/Expired/Settings (toggled in
+                 switchTab/the Format change handler). -->
+            <div id="globalCamera120Row" class="hidden flex items-center gap-2">
+                <label for="globalCamera120" class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide shrink-0" title="120's frame count depends on your camera back, not the film stock. Sets the Exposures used in Film Lookup and every Lab Costs calculation for 120 films.">120 Camera</label>
+                <select id="globalCamera120" title="120's frame count depends on your camera back, not the film stock. Sets the Exposures used in Film Lookup and every Lab Costs calculation for 120 films." class="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm"></select>
+            </div>
+
             <!-- Dev Cost process filter. Hidden on other tabs (toggled in switchTab). -->
             <div id="globalFilters" class="hidden">
                 <div>
@@ -1076,6 +1090,66 @@
             return true;
         }
 
+        // ---------- 120 Camera Type (issue #168 follow-up) ----------
+        // 120 roll film's frame count depends on the camera back, not the
+        // film stock — the same roll gives a 6x6 back 12 exposures and a
+        // 6x7 back 10. That's a fact about whoever's doing THIS
+        // calculation, not about the film itself, so — unlike Format/
+        // Process — this is never saved onto a film profile or exported;
+        // it's a session preference (like the theme toggle) that overrides
+        // the Exposures used in Film Lookup and every Lab Costs
+        // calculation for 120 films, while leaving the catalog's own
+        // stored exposures value untouched. These are the counts
+        // manufacturers commonly quote; some cameras land a frame either
+        // side depending on spacing tolerances, so "Custom" is offered on
+        // Film Lookup's own manual field (see applyCamera120ToManualExposures)
+        // as an escape hatch, but contributes no override to Lab Costs
+        // since there's no single number to apply broadly for "custom".
+        const CAMERA_120_EXPOSURES = [
+            { value: '6x4.5', label: '6×4.5 (645) — 16 exp', exposures: 16 },
+            { value: '6x6', label: '6×6 — 12 exp', exposures: 12 },
+            { value: '6x7', label: '6×7 — 10 exp', exposures: 10 },
+            { value: '6x8', label: '6×8 — 9 exp', exposures: 9 },
+            { value: '6x9', label: '6×9 — 8 exp', exposures: 8 },
+            { value: '6x12', label: '6×12 — 6 exp', exposures: 6 },
+            { value: '6x17', label: '6×17 — 4 exp', exposures: 4 }
+        ];
+        let globalCamera120Type = localStorage.getItem('globalCamera120Type') || '';
+        // The concrete exposures-per-roll override for the currently
+        // selected camera type, or null when nothing's selected (use each
+        // film's own saved value) or "Custom" is selected (no single
+        // number applies broadly, so calculations fall back to catalog
+        // data — only Film Lookup's own manual field has a real "custom"
+        // affordance, via direct typing).
+        function camera120OverrideExposures() {
+            const cam = CAMERA_120_EXPOSURES.find(c => c.value === globalCamera120Type);
+            return cam ? cam.exposures : null;
+        }
+
+        const globalCamera120Sel = document.getElementById('globalCamera120');
+        globalCamera120Sel.innerHTML = `<option value="">-- Use each film's saved value --</option>` +
+            CAMERA_120_EXPOSURES.map(c => `<option value="${c.value}">${escapeHtml(c.label)}</option>`).join('') +
+            `<option value="custom">Custom (set it on Film Lookup's Exposures field)</option>`;
+        globalCamera120Sel.value = globalCamera120Type;
+
+        // Shown only when Format is 120, and only on Film Lookup/Lab Costs —
+        // never Library (a shared film catalog can't belong to one
+        // person's camera) or Expired/Settings (no effect there).
+        function updateCamera120RowVisibility(tab) {
+            const row = document.getElementById('globalCamera120Row');
+            if (!row) return;
+            const activeTab = tab || (document.getElementById('tabFilmBtn').getAttribute('aria-selected') === 'true' ? 'film'
+                : document.getElementById('tabCheapestBtn').getAttribute('aria-selected') === 'true' ? 'cheapest' : null);
+            row.classList.toggle('hidden', cheapestFormat !== '120' || (activeTab !== 'film' && activeTab !== 'cheapest'));
+        }
+
+        globalCamera120Sel.addEventListener('change', () => {
+            globalCamera120Type = globalCamera120Sel.value;
+            localStorage.setItem('globalCamera120Type', globalCamera120Type);
+            applyCamera120ToManualExposures();
+            applyGlobalFilterChange();
+        });
+
         // tierMatchesFilmProcess() now lives in js/dev-cost-calc.js (loaded
         // above, shared global scope): a lab service tier can support more
         // than one process (e.g. a tier that handles both C41 and E6 at the
@@ -1356,6 +1430,7 @@
             // Global Process filter only applies to Dev Cost. Film Lookup has
             // its own per-entry Process in the Film block.
             document.getElementById('globalFilters').classList.toggle('hidden', tab !== 'cheapest');
+            updateCamera120RowVisibility(tab);
             if (tab === 'cheapest') refreshActiveCheapestSubTab();
         }
 
@@ -1413,13 +1488,14 @@
             cheapestFormat = globalFormatSel.value;
             localStorage.setItem('globalFormat', cheapestFormat);
             applyGlobalFilterChange();
-            // Show/hide the 120 Camera Type picker on whatever bundle rows
-            // are already on screen (updateBundleCameraTypeFields, defined
-            // below with the rest of the bundle-block code) — safe to call
-            // here despite being defined later in the file, since this only
-            // runs later from the 'change' event, by which point the whole
-            // script has finished loading.
-            if (typeof updateBundleCameraTypeFields === 'function') updateBundleCameraTypeFields();
+            // Show/hide the 120 Camera Type row (defined below with the
+            // rest of the camera-120 code) and re-sync Film Lookup's own
+            // Exposures field to it — safe to call here despite being
+            // defined later in the file, since this only runs later from
+            // the 'change' event, by which point the whole script has
+            // finished loading.
+            if (typeof updateCamera120RowVisibility === 'function') updateCamera120RowVisibility();
+            if (typeof applyCamera120ToManualExposures === 'function') applyCamera120ToManualExposures();
         });
 
         // Library's own Process filter (issue #116) — narrows "Load a saved
@@ -1656,41 +1732,16 @@
         // { name, boxSpeed, bundles: [...] } schema with the older flat
         // single-bundle schema — now lives in js/dev-cost-calc.js (loaded
         // above, shared global scope).
-
-        // 120 roll film's frame count depends on the camera back, not the
-        // film stock itself — the same roll gives a 6x6 back 12 exposures
-        // and a 6x7 back 10 (issue #168: this app used to just assume 12
-        // for every 120 entry, which is wrong for anything that isn't a
-        // 6x6 back). These are the counts manufacturers commonly quote;
-        // some cameras land a frame either side of these depending on
-        // spacing tolerances, so "Custom" stays available for anyone who's
-        // actually counted their own camera's output.
-        const CAMERA_120_EXPOSURES = [
-            { value: '6x4.5', label: '6×4.5 (645) — 16 exp', exposures: 16 },
-            { value: '6x6', label: '6×6 — 12 exp', exposures: 12 },
-            { value: '6x7', label: '6×7 — 10 exp', exposures: 10 },
-            { value: '6x8', label: '6×8 — 9 exp', exposures: 9 },
-            { value: '6x9', label: '6×9 — 8 exp', exposures: 8 },
-            { value: '6x12', label: '6×12 — 6 exp', exposures: 6 },
-            { value: '6x17', label: '6×17 — 4 exp', exposures: 4 }
-        ];
-        // Reverse lookup so loading a saved bundle (or switching Format to
-        // 120 with an exposures value already typed in) preselects the
-        // matching camera type instead of defaulting blank. A count that
-        // doesn't match any known back — or no count at all — falls back
-        // to '' (no format entered yet) or 'custom' (something's there but
-        // it's not one of the standard counts).
-        function findCameraTypeForExposures(exposures) {
-            const n = parseInt(exposures);
-            if (!n) return '';
-            const match = CAMERA_120_EXPOSURES.find(c => c.exposures === n);
-            return match ? match.value : 'custom';
-        }
-        function cameraTypeOptionsHTML(selected) {
-            return `<option value="">-- Camera type --</option>` +
-                CAMERA_120_EXPOSURES.map(c => `<option value="${c.value}" ${selected === c.value ? 'selected' : ''}>${escapeHtml(c.label)}</option>`).join('') +
-                `<option value="custom" ${selected === 'custom' ? 'selected' : ''}>Custom (I've counted my own)</option>`;
-        }
+        //
+        // Exposures per Roll is plain catalog data here — a film stock's
+        // 120 bundle doesn't belong to one camera, so it can't bake in a
+        // single frame count (issue #168 follow-up: an earlier version of
+        // this put a Camera Type picker here, but 120 gets used across
+        // 6x4.5/6x6/6x7/etc. backs, and the catalog is shared/community
+        // data, not any one person's camera). The camera-specific picker
+        // now lives where it actually belongs — Film Lookup and Lab Costs,
+        // which know whose calculation this is — see CAMERA_120_EXPOSURES
+        // and globalCamera120Type below.
 
         function bundleBlockHTML(bundle) {
             bundle = bundle || {};
@@ -1704,14 +1755,6 @@
             const city = escapeHtml(bundle.city || '');
             const localityHidden = availability === 'national' ? 'hidden' : '';
             const cityHidden = availability === 'city' ? '' : 'hidden';
-            // Format is a per-film (not per-bundle) field, driven by the
-            // global Format selector — "Load a saved film" is already
-            // filtered to films matching it, so cheapestFormat always
-            // matches whatever film this bundle belongs to.
-            const is120 = cheapestFormat === '120';
-            const cameraType = is120 ? findCameraTypeForExposures(bundle.exposures) : '';
-            const exposuresLocked = is120 && cameraType && cameraType !== 'custom';
-            const exposuresLockedClasses = exposuresLocked ? 'bg-gray-100 dark:bg-gray-700/50 cursor-not-allowed' : '';
             return `
                 <div class="bundle-block bg-white dark:bg-gray-800/60 border border-blue-200 dark:border-blue-800 rounded-lg p-3 space-y-2 relative">
                     <button type="button" class="removeBundleBtn absolute top-2 right-2 text-red-400 hover:text-red-600 text-xs font-bold" aria-label="Remove Bundle">✕</button>
@@ -1722,8 +1765,7 @@
                         </div>
                         <div>
                             <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Exposures per Roll</label>
-                            <select class="bundle-cameraType ${is120 ? '' : 'hidden'} w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm mb-1" title="120 film's frame count depends on the camera back, not the film stock — pick your format, or Custom if you've counted your own.">${cameraTypeOptionsHTML(cameraType)}</select>
-                            <input type="number" inputmode="numeric" min="1" class="bundle-exposures w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 ${exposuresLockedClasses}" value="${exposures}" ${exposuresLocked ? 'readonly' : ''}>
+                            <input type="number" inputmode="numeric" min="1" class="bundle-exposures w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" value="${exposures}">
                         </div>
                     </div>
                     <div>
@@ -1770,28 +1812,6 @@
             const newBlock = container.lastElementChild;
             newBlock.querySelector('.removeBundleBtn').addEventListener('click', () => {
                 newBlock.remove();
-                renderBundleBreakEvenNote();
-            });
-            const cameraTypeSelect = newBlock.querySelector('.bundle-cameraType');
-            const exposuresInput = newBlock.querySelector('.bundle-exposures');
-            cameraTypeSelect.addEventListener('change', () => {
-                const chosen = CAMERA_120_EXPOSURES.find(c => c.value === cameraTypeSelect.value);
-                if (chosen) {
-                    exposuresInput.value = chosen.exposures;
-                    exposuresInput.readOnly = true;
-                    exposuresInput.classList.add('bg-gray-100', 'dark:bg-gray-700/50', 'cursor-not-allowed');
-                } else {
-                    exposuresInput.readOnly = false;
-                    exposuresInput.classList.remove('bg-gray-100', 'dark:bg-gray-700/50', 'cursor-not-allowed');
-                    // Picking "Custom" (rather than clearing back to the
-                    // placeholder) means they're about to type a number —
-                    // put the cursor there for them.
-                    if (cameraTypeSelect.value === 'custom') exposuresInput.focus();
-                }
-                // The camera-type picker sets exposuresInput.value directly
-                // (a JS property assignment), which doesn't fire an 'input'
-                // event on its own — the delegated listener that normally
-                // catches manual edits (see below) wouldn't otherwise notice.
                 renderBundleBreakEvenNote();
             });
             const availabilitySelect = newBlock.querySelector('.bundle-availability');
@@ -1845,34 +1865,6 @@
         document.getElementById('filmBundlesContainer').addEventListener('input', (e) => {
             if (e.target.matches('.bundle-rolls, .bundle-filmCost, .bundle-exposures')) renderBundleBreakEvenNote();
         });
-
-        // Re-syncs every already-rendered bundle row's Camera Type picker
-        // against the current global Format — called when Format changes
-        // (rather than rebuilding the rows from scratch, which would wipe
-        // out whatever the person's already typed into Rolls/Cost/Store on
-        // this edit). Switching away from 120 always frees Exposures back
-        // up for manual entry; switching to 120 re-derives the picker's
-        // selection from whatever's already in that field.
-        function updateBundleCameraTypeFields() {
-            const is120 = cheapestFormat === '120';
-            document.querySelectorAll('#filmBundlesContainer .bundle-block').forEach(block => {
-                const select = block.querySelector('.bundle-cameraType');
-                const input = block.querySelector('.bundle-exposures');
-                select.classList.toggle('hidden', !is120);
-                if (!is120) {
-                    input.readOnly = false;
-                    input.classList.remove('bg-gray-100', 'dark:bg-gray-700/50', 'cursor-not-allowed');
-                    return;
-                }
-                const matched = findCameraTypeForExposures(input.value);
-                select.value = matched || '';
-                const locked = !!matched && matched !== 'custom';
-                input.readOnly = locked;
-                input.classList.toggle('bg-gray-100', locked);
-                input.classList.toggle('dark:bg-gray-700/50', locked);
-                input.classList.toggle('cursor-not-allowed', locked);
-            });
-        }
 
         document.getElementById('addBundleBtn').addEventListener('click', () => {
             addBundleBlock({});
@@ -2036,6 +2028,33 @@
         boxSpeedInput.addEventListener('input', () => {
             if (!devSpeedOverridden) devSpeedInput.value = boxSpeedInput.value;
         });
+
+        // Sets/locks Film Lookup's own Exposures field to the globally
+        // selected 120 Camera Type (issue #168 follow-up — see
+        // globalCamera120Sel above). Format !== 120, or no concrete camera
+        // type chosen ("" or "custom"), always leaves the field free for
+        // manual typing — "custom" is exactly that escape hatch.
+        function applyCamera120ToManualExposures() {
+            const input = document.getElementById('exposures');
+            if (!input) return;
+            const exp = cheapestFormat === '120' ? camera120OverrideExposures() : null;
+            if (exp) {
+                input.value = exp;
+                input.readOnly = true;
+                input.classList.add('bg-gray-100', 'dark:bg-gray-700/50', 'cursor-not-allowed');
+            } else {
+                input.readOnly = false;
+                input.classList.remove('bg-gray-100', 'dark:bg-gray-700/50', 'cursor-not-allowed');
+            }
+            // A locked value was just set programmatically (no 'input'
+            // event fires for that); an unlock may also leave a stale
+            // number behind. Either way the roll comparison needs to
+            // reflect it.
+            updateLabComparison();
+            updateCheaperAlternative();
+        }
+        applyCamera120ToManualExposures();
+        updateCamera120RowVisibility('film'); // default active tab on load
 
         // ---------- Profile dropdowns ----------
         function updateDropdown(id, data, storageKey, labelFn, filterFn) {
