@@ -103,6 +103,21 @@ function computeCostPerPhoto(cost, rolls, exposures) {
     return totalPhotos > 0 ? (parseFloat(cost) || 0) / totalPhotos : null;
 }
 
+// A saved lab/tier's mailInCost is a flat return-postage fee, not
+// necessarily paid on every visit — a lab you normally drop off at / pick
+// up from in person only sometimes needs a mail-in return, so baking it
+// unconditionally into every cost comparison overstated the typical cost
+// (issue #179). Callers opt in per calculation via opts.includeMailIn
+// (off unless explicitly set — see the Dev Cost tab's mail-in toggle),
+// and opts.mailInRollCount splits that one flat fee across however many
+// rolls are going back in the same package, instead of charging it in
+// full to each roll's own cost.
+function effectiveMailInFee(tier, opts) {
+    if (!opts || !opts.includeMailIn) return 0;
+    const rollCount = Math.max(1, parseInt(opts.mailInRollCount) || 1);
+    return (parseFloat(tier.mailInCost) || 0) / rollCount;
+}
+
 // Total cost of buying enough of one bundle (repeated) to cover a given
 // roll count — a partially-used pack still costs its full price, so this
 // rounds UP to the next whole pack, never fractional.
@@ -280,7 +295,8 @@ function computeIsoPriceOptions(targetIso, allFilms, allLabs, opts) {
                     const pushPullFee = stopsAbs > 0
                         ? ((tier.pushPullType === 'per_stop') ? tier.pushPullCost * stopsAbs : tier.pushPullCost)
                         : 0;
-                    const devCostPerPhoto = (tier.devCost + pushPullFee + tier.mailInCost) / bestBundle.exposures;
+                    const mailInFee = effectiveMailInFee(tier, opts);
+                    const devCostPerPhoto = (tier.devCost + pushPullFee + mailInFee) / bestBundle.exposures;
                     const totalCostPerPhoto = bestFilmCostPerPhoto + devCostPerPhoto;
                     const candidate = {
                         filmName: f.name,
@@ -297,10 +313,10 @@ function computeIsoPriceOptions(targetIso, allFilms, allLabs, opts) {
                         // Extra fields for the expandable breakdown row.
                         devCostBase: tier.devCost,
                         pushPullFee,
-                        mailInFee: tier.mailInCost,
+                        mailInFee,
                         exposures: bestBundle.exposures,
                         filmCostPerRoll: bestFilmCostPerPhoto * bestBundle.exposures,
-                        devCostPerRoll: tier.devCost + pushPullFee + tier.mailInCost,
+                        devCostPerRoll: tier.devCost + pushPullFee + mailInFee,
                         totalCostPerRoll: totalCostPerPhoto * bestBundle.exposures,
                         buyLink: bestBundle.buyLink,
                         storeName: bestBundle.storeName,
@@ -383,7 +399,8 @@ function computeNativeFilmLabMatrix(allFilms, allLabs, opts) {
 
         labNames.forEach(labName => {
             normalizeLabServices(allLabs[labName]).filter(tier => tierMatchesFilmProcess(tier, f) && matchesFilters(tier)).forEach(tier => {
-                const devCostPerPhoto = (tier.devCost + tier.mailInCost) / bestBundle.exposures;
+                const mailInFee = effectiveMailInFee(tier, opts);
+                const devCostPerPhoto = (tier.devCost + mailInFee) / bestBundle.exposures;
                 results.push({
                     filmName: f.name,
                     boxSpeed,
@@ -398,10 +415,10 @@ function computeNativeFilmLabMatrix(allFilms, allLabs, opts) {
                     // Breakdown fields for the expandable row (native = no push/pull).
                     devCostBase: tier.devCost,
                     pushPullFee: 0,
-                    mailInFee: tier.mailInCost,
+                    mailInFee,
                     exposures: bestBundle.exposures,
                     filmCostPerRoll: bestFilmCostPerPhoto * bestBundle.exposures,
-                    devCostPerRoll: tier.devCost + tier.mailInCost,
+                    devCostPerRoll: tier.devCost + mailInFee,
                     totalCostPerRoll: (bestFilmCostPerPhoto + devCostPerPhoto) * bestBundle.exposures,
                     buyLink: bestBundle.buyLink,
                     storeName: bestBundle.storeName,
@@ -445,7 +462,7 @@ function computeOneStopFilmLabMatrix(allFilms, allLabs, opts) {
             normalizeLabServices(allLabs[labName])
                 .filter(tier => !tier.noPushPull && tierMatchesFilmProcess(tier, f) && matchesFilters(tier))
                 .forEach(tier => {
-                    const devCostPerPhoto = (tier.devCost + tier.pushPullCost + tier.mailInCost) / bestBundle.exposures;
+                    const devCostPerPhoto = (tier.devCost + tier.pushPullCost + effectiveMailInFee(tier, opts)) / bestBundle.exposures;
                     results.push({
                         filmName: f.name,
                         labName,
@@ -554,6 +571,7 @@ if (typeof module !== 'undefined' && module.exports) {
         normalizeFilmBundles,
         normalizeLabServices,
         computeCostPerPhoto,
+        effectiveMailInFee,
         bundleCostForRolls,
         computeBundleBreakEven,
         tierMatchesFilmProcess,
