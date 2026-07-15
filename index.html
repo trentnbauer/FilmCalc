@@ -1,6 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Google's site-verification/ad-serving tag. Google's crawler needs to
+         find this as static markup, not JS-injected, so (unlike the adSlot
+         guard further down) it can't be gated behind a runtime check.
+         Instead the ADSENSE-HEAD-SNIPPET:START/:END marker lines just below
+         are each a self-contained HTML comment; build-github-page.yml deletes
+         both marker lines entirely (not just the text "START"/"END"), which
+         un-comments the script tag between them — and only does so once
+         ADSENSE_CLIENT_ID is set. So on Docker/self-hosted, and on Pages
+         before the secret is configured, the tag stays inert inside its own
+         comment and the browser never requests anything from Google. -->
+    <!-- ADSENSE-HEAD-SNIPPET:START -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=%%ADSENSE_CLIENT_ID%%" crossorigin="anonymous"></script>
+    <!-- ADSENSE-HEAD-SNIPPET:END -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="icon" type="image/svg+xml" href="/icon.svg">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -119,6 +132,36 @@
 <body class="themed-page bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans min-h-screen flex items-start justify-center p-4 pt-4 md:pt-8 transition-colors duration-200">
 
     <div class="w-full max-w-2xl space-y-3">
+
+    <!-- AdSense slot — GitHub Pages only. The build-github-page.yml workflow
+         sed-replaces %%ADSENSE_CLIENT_ID%%/%%ADSENSE_SLOT_ID%% below from repo
+         secrets (see that workflow for setup); the Docker/self-hosted build
+         never runs that step, so these tokens stay literal there and the guard
+         script bails out before requesting anything from Google — no ad script,
+         no ad slot, for self-hosted users. -->
+    <div id="adSlot" class="hidden justify-center">
+        <ins class="adsbygoogle"
+             style="display:block; width:100%"
+             data-ad-client="%%ADSENSE_CLIENT_ID%%"
+             data-ad-slot="%%ADSENSE_SLOT_ID%%"
+             data-ad-format="horizontal"
+             data-full-width-responsive="true"></ins>
+    </div>
+    <script>
+        (function () {
+            var client = "%%ADSENSE_CLIENT_ID%%";
+            var slot = "%%ADSENSE_SLOT_ID%%";
+            if (!client || !slot || client.indexOf('%%') === 0 || slot.indexOf('%%') === 0) return;
+
+            document.getElementById('adSlot').classList.replace('hidden', 'flex');
+            var loader = document.createElement('script');
+            loader.async = true;
+            loader.crossOrigin = 'anonymous';
+            loader.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + encodeURIComponent(client);
+            document.head.appendChild(loader);
+            (window.adsbygoogle = window.adsbygoogle || []).push({});
+        })();
+    </script>
 
     <div id="devBanner" class="hidden flex items-center justify-between gap-3 bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-200 text-sm font-medium py-2 px-4 rounded-lg">
         <span>⚠️ This web-app is under active development</span>
