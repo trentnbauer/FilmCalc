@@ -4,7 +4,7 @@
 
 A lightweight, responsive, mobile-friendly web app for analog photographers to work out the true cost per photo of shooting film — and to figure out which of their labs is actually cheapest for a given roll, once push/pull fees are factored in.
 
-**Live app: https://filmcalc.trentbauer.com**
+**Live app: https://filmcalc.app**
 
 ## Learn more
 
