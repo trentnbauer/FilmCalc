@@ -1,6 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Google Tag Manager — GitHub Pages only, same Pages-only pattern as the
+         AdSense ad slot further down: build-github-page.yml sed-replaces
+         %%GTM_CONTAINER_ID%% from a repo secret; the Docker/self-hosted build
+         never runs that step, so this token stays literal here and the guard
+         below bails before requesting anything from Google. Self-hosted
+         installs get zero tracking, same as they get zero ads. No <noscript>
+         fallback iframe (Google's standard install also adds one right after
+         <body>) - that one can't be gated by this same JS check since it
+         only runs when JS is disabled, so on self-hosted it would fire a
+         real request with the unresolved placeholder. This app doesn't
+         function without JS anyway, so that fallback has no real audience. -->
+    <script>
+        (function () {
+            var gtmId = "%%GTM_CONTAINER_ID%%";
+            if (!gtmId || gtmId.indexOf('%%') === 0) return;
+
+            (function (w, d, s, l, i) {
+                w[l] = w[l] || [];
+                w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+                var f = d.getElementsByTagName(s)[0],
+                    j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+                j.async = true;
+                j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+                f.parentNode.insertBefore(j, f);
+            })(window, document, 'script', 'dataLayer', gtmId);
+        })();
+    </script>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="icon" type="image/svg+xml" href="/icon.svg">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
