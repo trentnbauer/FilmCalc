@@ -1,6 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Google Analytics — GitHub Pages only, same Pages-only pattern as the
+         AdSense ad slot further down: build-github-page.yml sed-replaces
+         %%GA_MEASUREMENT_ID%% from a repo secret; the Docker/self-hosted
+         build never runs that step, so this token stays literal here and the
+         guard below bails before requesting anything from Google. Self-hosted
+         installs get zero tracking, same as they get zero ads. -->
+    <script>
+        (function () {
+            var gaId = "%%GA_MEASUREMENT_ID%%";
+            if (!gaId || gaId.indexOf('%%') === 0) return;
+
+            var loader = document.createElement('script');
+            loader.async = true;
+            loader.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(gaId);
+            document.head.appendChild(loader);
+
+            window.dataLayer = window.dataLayer || [];
+            function gtag() { dataLayer.push(arguments); }
+            gtag('js', new Date());
+            gtag('config', gaId);
+        })();
+    </script>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="icon" type="image/svg+xml" href="/icon.svg">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">

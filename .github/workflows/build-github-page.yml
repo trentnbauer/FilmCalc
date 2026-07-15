@@ -31,25 +31,28 @@ jobs:
         uses: actions/checkout@v4
       - name: Stamp build version into index.html
         run: sed -i "s/%%FILMCALC_VERSION%%/$(git rev-parse --short HEAD)/" index.html
-      - name: Stamp AdSense IDs into index.html and ads.txt
-        # Pages-only monetization (see index.html's adSlot comment). ADSENSE_CLIENT_ID/
-        # ADSENSE_SLOT_ID are repo secrets (Settings → Secrets and variables → Actions)
-        # from the AdSense dashboard — not sensitive, just kept out of the committed
-        # source so the Docker/self-hosted build (which never runs this step) can't
-        # pick them up. Unset secrets substitute to an empty string, which the
-        # index.html guard script also treats as "no ad" — safe default until both
-        # secrets are added. -g is a no-op today (each token appears once per line)
-        # but keeps this correct if the token ever shows up twice on one line.
-        # ads.txt isn't copied into the Docker image at all (see Dockerfile), so it
-        # doesn't need the same "stays literal" guard index.html relies on. ads.txt
-        # then has its ca- prefix stripped: ADSENSE_CLIENT_ID is the ca-pub-...
-        # form the adsbygoogle script/data-ad-client need, but Google's ads.txt spec
-        # wants the bare pub-... form (see Google's own ads.txt setup instructions) -
-        # using the same secret verbatim there produces a line the AdSense crawler
+      - name: Stamp Pages-only secrets into index.html and ads.txt
+        # Pages-only monetization/analytics (see index.html's adSlot and GA
+        # comments). ADSENSE_CLIENT_ID/ADSENSE_SLOT_ID/GA_MEASUREMENT_ID are
+        # repo secrets (Settings → Secrets and variables → Actions) — not
+        # sensitive, just kept out of the committed source so the Docker/
+        # self-hosted build (which never runs this step) can't pick them up.
+        # Unset secrets substitute to an empty string, which each index.html
+        # guard script also treats as "disabled" — safe default until a
+        # secret is added. -g is a no-op today (each token appears once per
+        # line) but keeps this correct if a token ever shows up twice on one
+        # line. ads.txt isn't copied into the Docker image at all (see
+        # Dockerfile), so it doesn't need the same "stays literal" guard
+        # index.html relies on. ads.txt then has its ca- prefix stripped:
+        # ADSENSE_CLIENT_ID is the ca-pub-... form the adsbygoogle script/
+        # data-ad-client need, but Google's ads.txt spec wants the bare
+        # pub-... form (see Google's own ads.txt setup instructions) - using
+        # the same secret verbatim there produces a line the AdSense crawler
         # won't match, which silently breaks site verification.
         run: |
           sed -i "s/%%ADSENSE_CLIENT_ID%%/${{ secrets.ADSENSE_CLIENT_ID }}/g" index.html
           sed -i "s/%%ADSENSE_SLOT_ID%%/${{ secrets.ADSENSE_SLOT_ID }}/g" index.html
+          sed -i "s/%%GA_MEASUREMENT_ID%%/${{ secrets.GA_MEASUREMENT_ID }}/g" index.html
           sed -i "s/%%ADSENSE_CLIENT_ID%%/${{ secrets.ADSENSE_CLIENT_ID }}/g" ads.txt
           sed -i 's/, ca-pub-/, pub-/' ads.txt
       - name: Build Tailwind CSS
