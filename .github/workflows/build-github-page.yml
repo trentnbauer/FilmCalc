@@ -48,11 +48,21 @@ jobs:
         # data-ad-client need, but Google's ads.txt spec wants the bare
         # pub-... form (see Google's own ads.txt setup instructions) - using
         # the same secret verbatim there produces a line the AdSense crawler
-        # won't match, which silently breaks site verification.
+        # won't match, which silently breaks site verification. The GTM
+        # (noscript) fallback near <body> is a plain HTML comment with no JS
+        # guard possible (it only runs when JS is disabled), so instead of a
+        # step `if:` (that's the secrets-in-if bug that broke deploys before
+        # - see git history) this uses a shell-level check: only uncomment
+        # that line once GTM_CONTAINER_ID is non-empty, leaving it inert
+        # (and thus request-free) on self-hosted and on Pages before the
+        # secret is configured.
         run: |
           sed -i "s/%%ADSENSE_CLIENT_ID%%/${{ secrets.ADSENSE_CLIENT_ID }}/g" index.html
           sed -i "s/%%ADSENSE_SLOT_ID%%/${{ secrets.ADSENSE_SLOT_ID }}/g" index.html
           sed -i "s/%%GTM_CONTAINER_ID%%/${{ secrets.GTM_CONTAINER_ID }}/g" index.html
+          if [ -n "${{ secrets.GTM_CONTAINER_ID }}" ]; then
+            sed -i 's/<!-- GTM_NOSCRIPT_FALLBACK \(.*\) -->/\1/' index.html
+          fi
           sed -i "s/%%ADSENSE_CLIENT_ID%%/${{ secrets.ADSENSE_CLIENT_ID }}/g" ads.txt
           sed -i 's/, ca-pub-/, pub-/' ads.txt
       - name: Build Tailwind CSS
