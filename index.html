@@ -409,6 +409,25 @@
                     <button type="button" data-filter="tiff" title="Show only options with TIFF (or lossless) scans" class="dev-cost-filter-pill px-2.5 py-1 rounded-full text-xs font-semibold transition-colors bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">TIFF</button>
                 </div>
 
+                <!-- Mail-in shipping toggle (issue #179) — off by default,
+                     since a saved lab's mailInCost used to be added into
+                     every cost comparison unconditionally, overstating the
+                     true cost for a lab you normally drop off at / pick up
+                     from in person. Roll count only shows once the toggle
+                     is on; it splits one flat shipping fee across however
+                     many rolls are going back in the same package. Wired in
+                     js/dev-cost-ui.js, same file as the filter pills above. -->
+                <div class="flex items-center gap-2 flex-wrap">
+                    <label for="devCostIncludeMailInToggle" class="inline-flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300 cursor-pointer">
+                        <input type="checkbox" id="devCostIncludeMailInToggle" class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500">
+                        📦 Include mail-in shipping
+                    </label>
+                    <div id="devCostMailInRollCountWrap" class="hidden items-center gap-1.5">
+                        <label for="devCostMailInRollCount" class="text-xs text-gray-500 dark:text-gray-400">Rolls mailed together</label>
+                        <input type="number" inputmode="numeric" min="1" step="1" id="devCostMailInRollCount" value="1" class="w-16 border p-1 rounded text-xs dark:bg-gray-700 dark:border-gray-600">
+                    </div>
+                </div>
+
                 <!-- Consolidated "what's actually narrowing these results"
                      row — the Process select and the filter pills above
                      each show their own active state individually, but
