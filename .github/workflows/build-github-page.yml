@@ -31,7 +31,7 @@ jobs:
         uses: actions/checkout@v4
       - name: Stamp build version into index.html
         run: sed -i "s/%%FILMCALC_VERSION%%/$(git rev-parse --short HEAD)/" index.html
-      - name: Stamp AdSense IDs into index.html
+      - name: Stamp AdSense IDs into index.html and ads.txt
         # Pages-only monetization (see index.html's adSlot comment). ADSENSE_CLIENT_ID/
         # ADSENSE_SLOT_ID are repo secrets (Settings → Secrets and variables → Actions)
         # from the AdSense dashboard — not sensitive, just kept out of the committed
@@ -40,16 +40,12 @@ jobs:
         # index.html guard script also treats as "no ad" — safe default until both
         # secrets are added. -g is a no-op today (each token appears once per line)
         # but keeps this correct if the token ever shows up twice on one line.
+        # ads.txt isn't copied into the Docker image at all (see Dockerfile), so it
+        # doesn't need the same "stays literal" guard index.html relies on.
         run: |
           sed -i "s/%%ADSENSE_CLIENT_ID%%/${{ secrets.ADSENSE_CLIENT_ID }}/g" index.html
           sed -i "s/%%ADSENSE_SLOT_ID%%/${{ secrets.ADSENSE_SLOT_ID }}/g" index.html
-      - name: Enable AdSense head snippet
-        # Only once ADSENSE_CLIENT_ID is actually set (see index.html's
-        # ADSENSE-HEAD-SNIPPET comment) — strips the START/END marker lines so
-        # the <script> tag inside them becomes live markup instead of a comment.
-        # Skipped entirely while the secret is unset, so the tag stays inert.
-        if: ${{ secrets.ADSENSE_CLIENT_ID != '' }}
-        run: sed -i '/^\s*<!-- ADSENSE-HEAD-SNIPPET:START -->\s*$/d; /^\s*<!-- ADSENSE-HEAD-SNIPPET:END -->\s*$/d' index.html
+          sed -i "s/%%ADSENSE_CLIENT_ID%%/${{ secrets.ADSENSE_CLIENT_ID }}/g" ads.txt
       - name: Build Tailwind CSS
         # Regenerated into the working tree so the next step stages it, same
         # pattern as the preset manifests/changelog.json below; not committed
@@ -94,11 +90,13 @@ jobs:
         # js/ is index.html's own calculation engine (issue #61), loaded via
         # <script src> — also needs to be live, not just present in the repo.
         # css/ is the prebuilt Tailwind CSS (issue #74), just regenerated
-        # above. Docker/self-hosting files (Dockerfile, compose, README)
-        # still don't belong here.
+        # above. ads.txt (AdSense site verification, issue #181 follow-up)
+        # is Pages-only the same way, just via the Dockerfile never COPYing
+        # it rather than a runtime guard. Docker/self-hosting files
+        # (Dockerfile, compose, README) still don't belong here.
         run: |
           mkdir -p _site
-          cp index.html favicon.ico icon.ico icon.svg apple-touch-icon.png options.yaml changelog.json _site/
+          cp index.html favicon.ico icon.ico icon.svg apple-touch-icon.png options.yaml changelog.json ads.txt _site/
           cp -r films labs themes js css _site/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

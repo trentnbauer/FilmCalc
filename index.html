@@ -1,19 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Google's site-verification/ad-serving tag. Google's crawler needs to
-         find this as static markup, not JS-injected, so (unlike the adSlot
-         guard further down) it can't be gated behind a runtime check.
-         Instead the ADSENSE-HEAD-SNIPPET:START/:END marker lines just below
-         are each a self-contained HTML comment; build-github-page.yml deletes
-         both marker lines entirely (not just the text "START"/"END"), which
-         un-comments the script tag between them — and only does so once
-         ADSENSE_CLIENT_ID is set. So on Docker/self-hosted, and on Pages
-         before the secret is configured, the tag stays inert inside its own
-         comment and the browser never requests anything from Google. -->
-    <!-- ADSENSE-HEAD-SNIPPET:START -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=%%ADSENSE_CLIENT_ID%%" crossorigin="anonymous"></script>
-    <!-- ADSENSE-HEAD-SNIPPET:END -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="icon" type="image/svg+xml" href="/icon.svg">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
