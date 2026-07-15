@@ -1,30 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Google Tag Manager — GitHub Pages only, same Pages-only pattern as the
-         AdSense ad slot further down: build-github-page.yml sed-replaces
-         %%GTM_CONTAINER_ID%% from a repo secret; the Docker/self-hosted build
-         never runs that step, so this token stays literal here and the guard
-         below bails before requesting anything from Google. Self-hosted
-         installs get zero tracking, same as they get zero ads. See the
-         GTM(noscript) comment right after <body> for the fallback iframe -
-         it can't reuse this same JS guard, so it's gated a different way. -->
-    <script>
-        (function () {
-            var gtmId = "%%GTM_CONTAINER_ID%%";
-            if (!gtmId || gtmId.indexOf('%%') === 0) return;
-
-            (function (w, d, s, l, i) {
-                w[l] = w[l] || [];
-                w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
-                var f = d.getElementsByTagName(s)[0],
-                    j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
-                j.async = true;
-                j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
-                f.parentNode.insertBefore(j, f);
-            })(window, document, 'script', 'dataLayer', gtmId);
-        })();
-    </script>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="icon" type="image/svg+xml" href="/icon.svg">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -141,17 +117,6 @@
     </style>
 </head>
 <body class="themed-page bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans min-h-screen flex items-start justify-center p-4 pt-4 md:pt-8 transition-colors duration-200">
-    <!-- GTM (noscript) fallback — see the GTM comment in <head>. Unlike that
-         one, this can't check for the %%GTM_CONTAINER_ID%% placeholder
-         before firing (it only runs when JS is disabled, so there's no JS
-         guard to run), so it stays an inert HTML comment by default. Only
-         build-github-page.yml's "Stamp Pages-only secrets" step can turn it
-         into a live <noscript> tag, and only when the GTM_CONTAINER_ID
-         secret is actually set (checked in the shell, not a step `if:` -
-         see that workflow for why). The Docker/self-hosted build never runs
-         that step, so this stays inert there — zero requests, same as the
-         guarded <script> version. -->
-    <!-- GTM_NOSCRIPT_FALLBACK <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=%%GTM_CONTAINER_ID%%" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript> -->
 
     <div class="w-full max-w-2xl space-y-3">
 
