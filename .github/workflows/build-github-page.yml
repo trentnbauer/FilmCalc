@@ -41,11 +41,17 @@ jobs:
         # secrets are added. -g is a no-op today (each token appears once per line)
         # but keeps this correct if the token ever shows up twice on one line.
         # ads.txt isn't copied into the Docker image at all (see Dockerfile), so it
-        # doesn't need the same "stays literal" guard index.html relies on.
+        # doesn't need the same "stays literal" guard index.html relies on. ads.txt
+        # then has its ca- prefix stripped: ADSENSE_CLIENT_ID is the ca-pub-...
+        # form the adsbygoogle script/data-ad-client need, but Google's ads.txt spec
+        # wants the bare pub-... form (see Google's own ads.txt setup instructions) -
+        # using the same secret verbatim there produces a line the AdSense crawler
+        # won't match, which silently breaks site verification.
         run: |
           sed -i "s/%%ADSENSE_CLIENT_ID%%/${{ secrets.ADSENSE_CLIENT_ID }}/g" index.html
           sed -i "s/%%ADSENSE_SLOT_ID%%/${{ secrets.ADSENSE_SLOT_ID }}/g" index.html
           sed -i "s/%%ADSENSE_CLIENT_ID%%/${{ secrets.ADSENSE_CLIENT_ID }}/g" ads.txt
+          sed -i 's/, ca-pub-/, pub-/' ads.txt
       - name: Build Tailwind CSS
         # Regenerated into the working tree so the next step stages it, same
         # pattern as the preset manifests/changelog.json below; not committed
