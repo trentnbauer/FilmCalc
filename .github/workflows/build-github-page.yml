@@ -32,8 +32,8 @@ jobs:
       - name: Stamp build version into index.html
         run: sed -i "s/%%FILMCALC_VERSION%%/$(git rev-parse --short HEAD)/" index.html
       - name: Stamp Pages-only secrets into index.html and ads.txt
-        # Pages-only monetization/analytics (see index.html's adSlot and GA
-        # comments). ADSENSE_CLIENT_ID/ADSENSE_SLOT_ID/GA_MEASUREMENT_ID are
+        # Pages-only monetization/analytics (see index.html's adSlot and GTM
+        # comments). ADSENSE_CLIENT_ID/ADSENSE_SLOT_ID/GTM_CONTAINER_ID are
         # repo secrets (Settings → Secrets and variables → Actions) — not
         # sensitive, just kept out of the committed source so the Docker/
         # self-hosted build (which never runs this step) can't pick them up.
@@ -52,7 +52,7 @@ jobs:
         run: |
           sed -i "s/%%ADSENSE_CLIENT_ID%%/${{ secrets.ADSENSE_CLIENT_ID }}/g" index.html
           sed -i "s/%%ADSENSE_SLOT_ID%%/${{ secrets.ADSENSE_SLOT_ID }}/g" index.html
-          sed -i "s/%%GA_MEASUREMENT_ID%%/${{ secrets.GA_MEASUREMENT_ID }}/g" index.html
+          sed -i "s/%%GTM_CONTAINER_ID%%/${{ secrets.GTM_CONTAINER_ID }}/g" index.html
           sed -i "s/%%ADSENSE_CLIENT_ID%%/${{ secrets.ADSENSE_CLIENT_ID }}/g" ads.txt
           sed -i 's/, ca-pub-/, pub-/' ads.txt
       - name: Build Tailwind CSS
