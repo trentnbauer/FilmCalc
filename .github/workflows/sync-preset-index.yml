@@ -20,6 +20,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   sync:
@@ -53,7 +54,12 @@ jobs:
                   f.write("\n")
           PY
 
-      - name: Commit if the manifests changed
+      - name: Open a PR if the manifests changed
+        # main requires a PR (repo ruleset) — a direct push here would just get
+        # rejected, so commit to a branch and let the PR auto-merge once the
+        # required checks pass instead.
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           if git diff --quiet -- films/index.json labs/index.json; then
             echo "Manifests already up to date."
@@ -61,6 +67,13 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          branch="sync-preset-index-${{ github.run_id }}"
+          git checkout -b "$branch"
           git add films/index.json labs/index.json
-          git commit -m "Sync films/index.json and labs/index.json from preset data [skip ci]"
-          git push
+          git commit -m "Sync films/index.json and labs/index.json from preset data"
+          git push -u origin "$branch"
+          gh pr create \
+            --title "Sync films/index.json and labs/index.json from preset data" \
+            --body "Automated: regenerated from the \`label\`/\`country\`/\`state\`/\`city\` fields in \`films/*.yaml\` and \`labs/*.yaml\` after a push to main." \
+            --base main --head "$branch"
+          gh pr merge "$branch" --auto --squash
