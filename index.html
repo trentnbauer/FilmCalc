@@ -432,10 +432,14 @@
                      return postage, never the outbound leg, since that's
                      the customer's own courier's price, not the lab's.
                      Left blank (=$0) for drop-off; also split across the
-                     same roll count. Wired in js/dev-cost-ui.js, same file
-                     as the filter pills above. -->
+                     same roll count. A tier with no stated mailBackCost at
+                     all (as opposed to a confirmed $0) is hidden entirely
+                     while this toggle is on (issue #200) — the calc layer's
+                     matchesFilters treats null as "unknown, assume it can't
+                     be mailed", not "free". Wired in js/dev-cost-ui.js, same
+                     file as the filter pills above. -->
                 <div class="flex items-center gap-2 flex-wrap">
-                    <label for="devCostIncludeMailBackToggle" class="inline-flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300 cursor-pointer">
+                    <label for="devCostIncludeMailBackToggle" title="Labs with no stated mail-back fee are hidden while this is on — unknown isn't the same as free (issue #200)." class="inline-flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300 cursor-pointer">
                         <input type="checkbox" id="devCostIncludeMailBackToggle" class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500">
                         📦 Include mail-back shipping
                     </label>
