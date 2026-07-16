@@ -213,7 +213,7 @@ Output a top-level key "labs:" containing a list. Each lab:
     highResScan: <true|false>
     tiffScan: <true|false — TIFF or other lossless scan, independent of highResScan>
     noPushPull: <true only if this tier cannot push/pull at all, else false>
-    mailInCost: <return postage this tier's own pricing page states for a mail-in lab, 0 for a walk-in lab. Never guess this — leave at 0 if the page doesn't state it.>
+    mailBackCost: <return postage this tier's own pricing page states for a mail-in lab, 0 for a walk-in lab. Never guess this — leave at 0 if the page doesn't state it.>
     processes:
     - <any of: ${processes}>
 
@@ -319,7 +319,7 @@ function validateAiEntries(kind, doc) {
             (e.services || []).forEach((s, j) => {
                 Object.entries(s).forEach(([k, v]) => { if (hasUnknown(v)) errs.push(`${at} service ${j + 1}: "${k}" came back as UNKNOWN.`); });
                 if (!Number.isFinite(parseFloat(s.devCost))) errs.push(`${at} service ${j + 1}: devCost must be a number`);
-                if (s.mailInCost !== undefined && !Number.isFinite(parseFloat(s.mailInCost))) errs.push(`${at} service ${j + 1}: mailInCost must be a number`);
+                if (s.mailBackCost !== undefined && !Number.isFinite(parseFloat(s.mailBackCost))) errs.push(`${at} service ${j + 1}: mailBackCost must be a number`);
                 (s.processes || []).forEach(p => { if (!validProcesses.includes(p)) errs.push(`${at} service ${j + 1}: process "${p}" is invalid`); });
             });
         }
@@ -346,8 +346,8 @@ function renderAiPreview(kind, list) {
             const scanParts = [];
             if (s.highResScan) scanParts.push('Hi-Res');
             if (s.tiffScan) scanParts.push('TIFF');
-            const devPlusMailIn = (parseFloat(s.devCost) || 0) + (parseFloat(s.mailInCost) || 0);
-            return `<div class="flex justify-between text-xs text-gray-500 dark:text-gray-400"><span>${escapeHtml(turnaroundLabels[s.turnaroundTime] || s.turnaroundTime || '—')} · ${scanParts.length ? escapeHtml(scanParts.join(' + ')) : 'Standard'} · ${escapeHtml((s.processes || []).join('/'))}</span><span class="font-mono">${CUR()}${devPlusMailIn.toFixed(2)}/roll</span></div>`;
+            const devPlusMailBack = (parseFloat(s.devCost) || 0) + (parseFloat(s.mailBackCost) || 0);
+            return `<div class="flex justify-between text-xs text-gray-500 dark:text-gray-400"><span>${escapeHtml(turnaroundLabels[s.turnaroundTime] || s.turnaroundTime || '—')} · ${scanParts.length ? escapeHtml(scanParts.join(' + ')) : 'Standard'} · ${escapeHtml((s.processes || []).join('/'))}</span><span class="font-mono">${CUR()}${devPlusMailBack.toFixed(2)}/roll</span></div>`;
         }).join('');
         return `<div class="border border-gray-200 dark:border-gray-600 rounded-lg p-2">
             <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">${escapeHtml(e.name)}</p>
@@ -549,7 +549,7 @@ document.getElementById('aiAddBtn').addEventListener('click', () => {
                     highResScan: !!s.highResScan,
                     tiffScan: !!s.tiffScan,
                     noPushPull: !!s.noPushPull,
-                    mailInCost: parseFloat(s.mailInCost) || 0,
+                    mailBackCost: parseFloat(s.mailBackCost) || 0,
                     processes: Array.isArray(s.processes) && s.processes.length ? s.processes : ['C41']
                 }))
             };

@@ -181,8 +181,8 @@ let cheapestSort = localStorage.getItem('cheapestSort') || 'price';
 let devCostFilterTurnaround = '';
 let devCostFilterHiRes = false;
 let devCostFilterTiff = false;
-// Mail-in shipping toggle (issue #179) — off by default: a saved lab's
-// mailInCost used to be baked unconditionally into every cost comparison,
+// Mail-back shipping toggle (issue #179) — off by default: a saved lab's
+// mailBackCost used to be baked unconditionally into every cost comparison,
 // which overstated the true cost for a lab you normally drop off at /
 // pick up from in person and only occasionally need to mail a return to.
 // Opt in per browsing session (not persisted, matches the filter pills
@@ -191,13 +191,20 @@ let devCostFilterTiff = false;
 // each roll on its own. Unlike the filter pills, this isn't a row filter
 // — it changes the cost itself — so it's threaded into baseOpts (see each
 // sub-tab's update function below), not devCostFilters.
-let devCostIncludeMailIn = false;
-let devCostMailInRollCount = 1;
+let devCostIncludeMailBack = false;
+let devCostMailBackRollCount = 1;
+// Manually-entered cost of mailing the film TO the lab (issue #190) — a
+// saved lab profile only ever states return postage, never this outbound
+// leg (that's priced by whatever courier the customer picks, not the
+// lab), so it can't come from tier.mailBackCost. Blank/0 means drop-off.
+// Split across the same roll count as the return fee, on the assumption
+// rolls mailed together go both ways together.
+let devCostMailToLabFee = 0;
 // Spread into every opts object passed to the calc-layer compute
-// functions below, so the mail-in toggle/roll count affect every Dev
+// functions below, so the mail-back toggle/roll count affect every Dev
 // Cost sub-tab the same way process/format/camera120Exposures already do.
-function mailInOpts() {
-    return { includeMailIn: devCostIncludeMailIn, mailInRollCount: devCostMailInRollCount };
+function mailBackOpts() {
+    return { includeMailBack: devCostIncludeMailBack, mailBackRollCount: devCostMailBackRollCount, mailToLabFee: devCostMailToLabFee };
 }
 function renderDevCostFilterBar() {
     document.querySelectorAll('.dev-cost-filter-pill').forEach(btn => {
@@ -224,31 +231,38 @@ document.querySelectorAll('.dev-cost-filter-pill').forEach(btn => btn.addEventLi
     refreshActiveCheapestSubTab();
 }));
 
-// Mail-in shipping toggle + roll count (issue #179) — the roll count
+// Mail-back shipping toggle + roll count (issue #179) — the roll count
 // input only makes sense once the toggle is on, so it stays hidden until
 // then. Both live in the same filter-bar area as the pills above, wired
 // separately since the roll count needs its own 'input' listener.
-const devCostMailInToggle = document.getElementById('devCostIncludeMailInToggle');
-const devCostMailInRollCountWrap = document.getElementById('devCostMailInRollCountWrap');
-const devCostMailInRollCountInput = document.getElementById('devCostMailInRollCount');
-// Swaps hidden/flex rather than toggling 'hidden' alone — devCostMailInRollCountWrap
+const devCostMailBackToggle = document.getElementById('devCostIncludeMailBackToggle');
+const devCostMailBackRollCountWrap = document.getElementById('devCostMailBackRollCountWrap');
+const devCostMailBackRollCountInput = document.getElementById('devCostMailBackRollCount');
+const devCostMailToLabFeeInput = document.getElementById('devCostMailToLabFee');
+// Swaps hidden/flex rather than toggling 'hidden' alone — devCostMailBackRollCountWrap
 // needs actual flex layout (items-center/gap-1.5) once shown, same pattern as
 // index.html's #adSlot.
-function setMailInRollCountWrapVisible(visible) {
-    if (!devCostMailInRollCountWrap) return;
-    devCostMailInRollCountWrap.classList.toggle('hidden', !visible);
-    devCostMailInRollCountWrap.classList.toggle('flex', visible);
+function setMailBackRollCountWrapVisible(visible) {
+    if (!devCostMailBackRollCountWrap) return;
+    devCostMailBackRollCountWrap.classList.toggle('hidden', !visible);
+    devCostMailBackRollCountWrap.classList.toggle('flex', visible);
 }
-if (devCostMailInToggle) {
-    devCostMailInToggle.addEventListener('change', () => {
-        devCostIncludeMailIn = devCostMailInToggle.checked;
-        setMailInRollCountWrapVisible(devCostIncludeMailIn);
+if (devCostMailBackToggle) {
+    devCostMailBackToggle.addEventListener('change', () => {
+        devCostIncludeMailBack = devCostMailBackToggle.checked;
+        setMailBackRollCountWrapVisible(devCostIncludeMailBack);
         refreshActiveCheapestSubTab();
     });
 }
-if (devCostMailInRollCountInput) {
-    devCostMailInRollCountInput.addEventListener('input', () => {
-        devCostMailInRollCount = Math.max(1, parseInt(devCostMailInRollCountInput.value) || 1);
+if (devCostMailBackRollCountInput) {
+    devCostMailBackRollCountInput.addEventListener('input', () => {
+        devCostMailBackRollCount = Math.max(1, parseInt(devCostMailBackRollCountInput.value) || 1);
+        refreshActiveCheapestSubTab();
+    });
+}
+if (devCostMailToLabFeeInput) {
+    devCostMailToLabFeeInput.addEventListener('input', () => {
+        devCostMailToLabFee = parseFloat(devCostMailToLabFeeInput.value) || 0;
         refreshActiveCheapestSubTab();
     });
 }
@@ -287,13 +301,16 @@ function renderDevCostActiveFilters() {
     }
     if (devCostFilterHiRes) chips.push({ label: 'HI-RES', clear: () => { devCostFilterHiRes = false; renderDevCostFilterBar(); refreshActiveCheapestSubTab(); } });
     if (devCostFilterTiff) chips.push({ label: 'TIFF', clear: () => { devCostFilterTiff = false; renderDevCostFilterBar(); refreshActiveCheapestSubTab(); } });
-    if (devCostIncludeMailIn) {
+    if (devCostIncludeMailBack) {
+        const mailToLabSuffix = devCostMailToLabFee > 0 ? ` + ${CUR()}${devCostMailToLabFee.toFixed(2)} to lab` : '';
         chips.push({
-            label: `📦 Mail-in ×${devCostMailInRollCount}`,
+            label: `📦 Mail-back ×${devCostMailBackRollCount}${mailToLabSuffix}`,
             clear: () => {
-                devCostIncludeMailIn = false;
-                if (devCostMailInToggle) devCostMailInToggle.checked = false;
-                setMailInRollCountWrapVisible(false);
+                devCostIncludeMailBack = false;
+                devCostMailToLabFee = 0;
+                if (devCostMailBackToggle) devCostMailBackToggle.checked = false;
+                if (devCostMailToLabFeeInput) devCostMailToLabFeeInput.value = '';
+                setMailBackRollCountWrapVisible(false);
                 refreshActiveCheapestSubTab();
             }
         });
@@ -379,7 +396,7 @@ function renderRowBreakdown(entry, isOpen) {
             <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Film (per photo)</span><span class="font-mono">${CUR()}${entry.filmCostPerPhoto.toFixed(2)}</span></div>
             <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Development (per photo) <span class="opacity-60">= dev/roll ÷ ${entry.exposures} exp</span></span><span class="font-mono">${CUR()}${(entry.devCostBase / entry.exposures).toFixed(2)}</span></div>
             ${entry.pushPullFee > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Push/pull fee (per photo)</span><span class="font-mono">${CUR()}${(entry.pushPullFee / entry.exposures).toFixed(2)}</span></div>` : ''}
-            ${entry.mailInFee > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Mail-in shipping (per photo)</span><span class="font-mono">${CUR()}${(entry.mailInFee / entry.exposures).toFixed(2)}</span></div>` : ''}
+            ${entry.mailBackFee > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Mail shipping (per photo)</span><span class="font-mono">${CUR()}${(entry.mailBackFee / entry.exposures).toFixed(2)}</span></div>` : ''}
             <div class="flex justify-between text-gray-500 dark:text-gray-400 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>Film cost (per roll)</span><span class="font-mono">${CUR()}${entry.filmCostPerRoll.toFixed(2)}</span></div>
             <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Development (per roll)</span><span class="font-mono">${CUR()}${entry.devCostPerRoll.toFixed(2)}</span></div>
             <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>Scan</span><span>${scanLabel(entry)}</span></div>
@@ -460,7 +477,7 @@ function updateIsoPriceCalculator() {
     // passed in explicitly.
     const pinnedLabNames = new Set([getDefaultLabPref()?.lab, ...favouriteLabs].filter(Boolean));
     const upgradeThresholdPercent = parseFloat(localStorage.getItem('upgradeThresholdPercent')) || 4;
-    const baseOpts = { process: cheapestProcess, format: cheapestFormat, sortMode: cheapestSort, pinnedLabNames, upgradeThresholdPercent, camera120Exposures: camera120OverrideExposures(), ...mailInOpts() };
+    const baseOpts = { process: cheapestProcess, format: cheapestFormat, sortMode: cheapestSort, pinnedLabNames, upgradeThresholdPercent, camera120Exposures: camera120OverrideExposures(), ...mailBackOpts() };
 
     const { native: allNative, push: allPush, pull: allPull } = computeIsoPriceOptions(targetIso, allFilms, allLabs, baseOpts);
     // Next Day / Same Week / Hi-Res filters need to pick the cheapest
@@ -611,7 +628,7 @@ document.getElementById('isoCalcTargetSpeed').addEventListener('input', () => {
 // invalidateFilmLabMatrixCache() (called there) covers that one edge case
 // defensively rather than hashing their content on every call.
 function memoizeFilmLabMatrix(computeFn) {
-    let cache = null; // { filmsRaw, labsRaw, process, format, turnaround, hiRes, camera120Exposures, includeMailIn, mailInRollCount, result }
+    let cache = null; // { filmsRaw, labsRaw, process, format, turnaround, hiRes, camera120Exposures, includeMailBack, mailBackRollCount, result }
     const memoized = (allFilms, allLabs, opts) => {
         opts = opts || {};
         const filmsRaw = localStorage.getItem('filmProfiles');
@@ -621,11 +638,11 @@ function memoizeFilmLabMatrix(computeFn) {
         // the matrix itself contains for 120 films — same reason
         // process/format/turnaround/hiRes are part of this key.
         const camera120Exposures = opts.camera120Exposures || 0;
-        // Mail-in toggle + roll count (issue #179) change every mailInFee/
+        // Mail-back toggle + roll count (issue #179) change every mailBackFee/
         // devCostPerPhoto in the result the same way process/format do, so
         // they're part of the key too — otherwise toggling the checkbox
         // would keep returning a cached result computed before the toggle.
-        const includeMailIn = !!opts.includeMailIn, mailInRollCount = opts.mailInRollCount || 1;
+        const includeMailBack = !!opts.includeMailBack, mailBackRollCount = opts.mailBackRollCount || 1;
         // Compared field-by-field, not joined into one string — the raw
         // localStorage JSON can contain arbitrary characters (a film/lab
         // name, address, etc.), so concatenating it with a fixed separator
@@ -634,11 +651,11 @@ function memoizeFilmLabMatrix(computeFn) {
             cache.process === process && cache.format === format &&
             cache.turnaround === turnaround && cache.hiRes === hiRes &&
             cache.camera120Exposures === camera120Exposures &&
-            cache.includeMailIn === includeMailIn && cache.mailInRollCount === mailInRollCount) {
+            cache.includeMailBack === includeMailBack && cache.mailBackRollCount === mailBackRollCount) {
             return cache.result;
         }
         const result = computeFn(allFilms, allLabs, opts);
-        cache = { filmsRaw, labsRaw, process, format, turnaround, hiRes, camera120Exposures, includeMailIn, mailInRollCount, result };
+        cache = { filmsRaw, labsRaw, process, format, turnaround, hiRes, camera120Exposures, includeMailBack, mailBackRollCount, result };
         return result;
     };
     memoized.invalidate = () => { cache = null; };
@@ -680,7 +697,7 @@ function toggleDevCostPin(entry) {
             filmName: entry.filmName, boxSpeed: entry.boxSpeed, format: entry.format, labName: entry.labName,
             filmCostPerPhoto: entry.filmCostPerPhoto, devCostPerPhoto: entry.devCostPerPhoto, totalCostPerPhoto: entry.totalCostPerPhoto,
             highResScan: entry.highResScan, tiffScan: entry.tiffScan, turnaroundTime: entry.turnaroundTime,
-            devCostBase: entry.devCostBase, pushPullFee: entry.pushPullFee, mailInFee: entry.mailInFee, exposures: entry.exposures,
+            devCostBase: entry.devCostBase, pushPullFee: entry.pushPullFee, mailBackFee: entry.mailBackFee, exposures: entry.exposures,
             filmCostPerRoll: entry.filmCostPerRoll, devCostPerRoll: entry.devCostPerRoll, totalCostPerRoll: entry.totalCostPerRoll,
             buyLink: entry.buyLink, storeName: entry.storeName,
             availability: entry.availability, state: entry.state, city: entry.city
@@ -835,7 +852,7 @@ function updateCostPerPhotoTab() {
     const container = document.getElementById('costPerPhotoResults');
     const allFilms = getAllFilms();
     const allLabs = getAllLabs();
-    const baseOpts = { process: cheapestProcess, format: cheapestFormat, camera120Exposures: camera120OverrideExposures(), ...mailInOpts() };
+    const baseOpts = { process: cheapestProcess, format: cheapestFormat, camera120Exposures: camera120OverrideExposures(), ...mailBackOpts() };
     const allNativeMatrix = cachedNativeFilmLabMatrix(allFilms, allLabs, baseOpts);
     if (allNativeMatrix.length === 0) {
         container.innerHTML = `<p class="text-sm text-gray-400 text-center">${EMPTY_LIBRARY_MESSAGE}</p>`;
@@ -896,7 +913,7 @@ function updateCostPerLabTab() {
     const container = document.getElementById('costPerLabResults');
     const allFilms = getAllFilms();
     const allLabs = getAllLabs();
-    const baseOpts = { process: cheapestProcess, format: cheapestFormat, camera120Exposures: camera120OverrideExposures(), ...mailInOpts() };
+    const baseOpts = { process: cheapestProcess, format: cheapestFormat, camera120Exposures: camera120OverrideExposures(), ...mailBackOpts() };
     const allNativeMatrix = cachedNativeFilmLabMatrix(allFilms, allLabs, baseOpts);
     if (allNativeMatrix.length === 0) {
         container.innerHTML = `<p class="text-sm text-gray-400 text-center">${EMPTY_LIBRARY_MESSAGE}</p>`;
@@ -1013,7 +1030,7 @@ function renderPinnedDevCostBlock() {
                     <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Film (per photo)</span><span class="font-mono">${CUR()}${p.filmCostPerPhoto.toFixed(2)}</span></div>
                     <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Development (per photo) <span class="opacity-60">= dev/roll ÷ ${p.exposures} exp</span></span><span class="font-mono">${CUR()}${(p.devCostBase / p.exposures).toFixed(2)}</span></div>
                     ${p.pushPullFee > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Push/pull fee (per photo)</span><span class="font-mono">${CUR()}${(p.pushPullFee / p.exposures).toFixed(2)}</span></div>` : ''}
-                    ${p.mailInFee > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Mail-in shipping (per photo)</span><span class="font-mono">${CUR()}${(p.mailInFee / p.exposures).toFixed(2)}</span></div>` : ''}
+                    ${p.mailBackFee > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Mail shipping (per photo)</span><span class="font-mono">${CUR()}${(p.mailBackFee / p.exposures).toFixed(2)}</span></div>` : ''}
                     <div class="flex justify-between text-gray-500 dark:text-gray-400 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>Film cost (per roll)</span><span class="font-mono">${CUR()}${p.filmCostPerRoll.toFixed(2)}</span></div>
                     <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Development (per roll)</span><span class="font-mono">${CUR()}${p.devCostPerRoll.toFixed(2)}</span></div>
                     <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>Scan</span><span>${scanLabel(p)}</span></div>
@@ -1089,7 +1106,7 @@ function updateCostPerFilmTab() {
     // objects (not a second computeNativeFilmLabMatrix() call) so
     // findHiResFastestUpgrade()'s "is this already the cheapest?" identity
     // check actually works.
-    const allCandidatesForFilm = cachedNativeFilmLabMatrix(allFilms, allLabs, { process: cheapestProcess, format: cheapestFormat, camera120Exposures: camera120OverrideExposures(), ...mailInOpts() })
+    const allCandidatesForFilm = cachedNativeFilmLabMatrix(allFilms, allLabs, { process: cheapestProcess, format: cheapestFormat, camera120Exposures: camera120OverrideExposures(), ...mailBackOpts() })
         .filter(e => filmKey(e.filmName, e.boxSpeed, e.format) === selectedKey);
     const priceSortedRows = allCandidatesForFilm
         .filter(e => (!devCostFilterTurnaround || e.turnaroundTime === devCostFilterTurnaround) && (!devCostFilterHiRes || e.highResScan) && (!devCostFilterTiff || e.tiffScan))
@@ -1098,7 +1115,7 @@ function updateCostPerFilmTab() {
     // narrowed by the current Format filter (that's the whole point), so
     // this is a separate call rather than reusing allCandidatesForFilm.
     const formatComparisonBlock = renderFormatComparisonBlock(
-        computeFormatComparisonForFilm(film.name, allFilms, allLabs, { process: cheapestProcess, camera120Exposures: camera120OverrideExposures(), ...mailInOpts() }),
+        computeFormatComparisonForFilm(film.name, allFilms, allLabs, { process: cheapestProcess, camera120Exposures: camera120OverrideExposures(), ...mailBackOpts() }),
         cheapestFormat
     );
 
