@@ -5,6 +5,7 @@ city: Melbourne
 labs:
   - name: Hillvale Photo Melbourne
     hidden: false
+    website: https://hillvale.com.au
     services:
       - devCost: 19
         pushPullCost: 3
@@ -13,6 +14,7 @@ labs:
         highResScan: false
         tiffScan: false
         noPushPull: false
+        mailBackCost: 13
         processes:
           - C41
       - devCost: 30
@@ -22,6 +24,7 @@ labs:
         highResScan: true
         tiffScan: false
         noPushPull: false
+        mailBackCost: 13
         processes:
           - C41
       - devCost: 40
@@ -31,6 +34,7 @@ labs:
         highResScan: true
         tiffScan: true
         noPushPull: false
+        mailBackCost: 13
         processes:
           - C41
       - devCost: 28.5
@@ -40,6 +44,7 @@ labs:
         highResScan: false
         tiffScan: false
         noPushPull: false
+        mailBackCost: 13
         processes:
           - C41
       - devCost: 38.5
@@ -49,6 +54,7 @@ labs:
         highResScan: false
         tiffScan: true
         noPushPull: false
+        mailBackCost: 13
         processes:
           - C41
       - devCost: 45
@@ -58,6 +64,7 @@ labs:
         highResScan: true
         tiffScan: false
         noPushPull: false
+        mailBackCost: 13
         processes:
           - C41
       - devCost: 55
@@ -67,6 +74,7 @@ labs:
         highResScan: true
         tiffScan: true
         noPushPull: false
+        mailBackCost: 13
         processes:
           - C41
       - devCost: 22
@@ -76,6 +84,7 @@ labs:
         highResScan: false
         tiffScan: false
         noPushPull: false
+        mailBackCost: 13
         processes:
           - BW
       - devCost: 32
@@ -85,6 +94,7 @@ labs:
         highResScan: false
         tiffScan: true
         noPushPull: false
+        mailBackCost: 13
         processes:
           - BW
       - devCost: 30
@@ -94,6 +104,7 @@ labs:
         highResScan: true
         tiffScan: false
         noPushPull: false
+        mailBackCost: 13
         processes:
           - BW
       - devCost: 40
@@ -103,6 +114,7 @@ labs:
         highResScan: true
         tiffScan: true
         noPushPull: false
+        mailBackCost: 13
         processes:
           - BW
       - devCost: 25
@@ -112,6 +124,7 @@ labs:
         highResScan: false
         tiffScan: false
         noPushPull: false
+        mailBackCost: 13
         processes:
           - E6
       - devCost: 35
@@ -121,6 +134,7 @@ labs:
         highResScan: true
         tiffScan: false
         noPushPull: false
+        mailBackCost: 13
         processes:
           - E6
       - devCost: 45
@@ -130,10 +144,12 @@ labs:
         highResScan: true
         tiffScan: true
         noPushPull: false
+        mailBackCost: 13
         processes:
           - C41
   - name: Walkens Melbourne
     hidden: false
+    website: https://walkens.com.au
     services:
       - devCost: 16
         pushPullCost: 0
@@ -317,6 +333,7 @@ labs:
           - E6
   - name: Irohas Melbourne
     hidden: false
+    website: https://irohasphoto.com.au
     services:
       - devCost: 17
         pushPullCost: 5
