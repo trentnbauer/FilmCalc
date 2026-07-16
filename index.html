@@ -409,22 +409,31 @@
                     <button type="button" data-filter="tiff" title="Show only options with TIFF (or lossless) scans" class="dev-cost-filter-pill px-2.5 py-1 rounded-full text-xs font-semibold transition-colors bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">TIFF</button>
                 </div>
 
-                <!-- Mail-in shipping toggle (issue #179) — off by default,
-                     since a saved lab's mailInCost used to be added into
+                <!-- Mail-back shipping toggle (issue #179) — off by default,
+                     since a saved lab's mailBackCost used to be added into
                      every cost comparison unconditionally, overstating the
                      true cost for a lab you normally drop off at / pick up
                      from in person. Roll count only shows once the toggle
                      is on; it splits one flat shipping fee across however
-                     many rolls are going back in the same package. Wired in
-                     js/dev-cost-ui.js, same file as the filter pills above. -->
+                     many rolls are going back in the same package. The
+                     "mail to lab" fee is a separate, manually-entered cost
+                     (issue #190) for sending the film TO the lab in the
+                     first place — a saved lab profile only ever states
+                     return postage, never the outbound leg, since that's
+                     the customer's own courier's price, not the lab's.
+                     Left blank (=$0) for drop-off; also split across the
+                     same roll count. Wired in js/dev-cost-ui.js, same file
+                     as the filter pills above. -->
                 <div class="flex items-center gap-2 flex-wrap">
-                    <label for="devCostIncludeMailInToggle" class="inline-flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300 cursor-pointer">
-                        <input type="checkbox" id="devCostIncludeMailInToggle" class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500">
-                        📦 Include mail-in shipping
+                    <label for="devCostIncludeMailBackToggle" class="inline-flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300 cursor-pointer">
+                        <input type="checkbox" id="devCostIncludeMailBackToggle" class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500">
+                        📦 Include mail-back shipping
                     </label>
-                    <div id="devCostMailInRollCountWrap" class="hidden items-center gap-1.5">
-                        <label for="devCostMailInRollCount" class="text-xs text-gray-500 dark:text-gray-400">Rolls mailed together</label>
-                        <input type="number" inputmode="numeric" min="1" step="1" id="devCostMailInRollCount" value="1" class="w-16 border p-1 rounded text-xs dark:bg-gray-700 dark:border-gray-600">
+                    <div id="devCostMailBackRollCountWrap" class="hidden items-center gap-1.5 flex-wrap">
+                        <label for="devCostMailBackRollCount" class="text-xs text-gray-500 dark:text-gray-400">Rolls mailed together</label>
+                        <input type="number" inputmode="numeric" min="1" step="1" id="devCostMailBackRollCount" value="1" class="w-16 border p-1 rounded text-xs dark:bg-gray-700 dark:border-gray-600">
+                        <label for="devCostMailToLabFee" class="text-xs text-gray-500 dark:text-gray-400">Mail-to-lab fee ($)</label>
+                        <input type="number" inputmode="decimal" min="0" step="0.01" id="devCostMailToLabFee" placeholder="drop off" class="w-20 border p-1 rounded text-xs dark:bg-gray-700 dark:border-gray-600">
                     </div>
                 </div>
 
@@ -1367,8 +1376,8 @@
             if (tier.tiffScan) scanParts.push('TIFF');
             parts.push(scanParts.length ? scanParts.join(' + ') : 'Standard scan');
             if (Array.isArray(tier.processes) && tier.processes.length) parts.push(tier.processes.join('/'));
-            const devPlusMailIn = (parseFloat(tier.devCost) || 0) + (parseFloat(tier.mailInCost) || 0);
-            parts.push(`${CUR()}${devPlusMailIn.toFixed(2)}/roll`);
+            const devPlusMailBack = (parseFloat(tier.devCost) || 0) + (parseFloat(tier.mailBackCost) || 0);
+            parts.push(`${CUR()}${devPlusMailBack.toFixed(2)}/roll`);
             return parts.join(' · ');
         }
         function populateDefaultTierSelect(labName, selectedIndex) {
@@ -1689,7 +1698,7 @@
             tier = tier || {};
             const devCost = escapeHtml(tier.devCost ?? '');
             const pushPullCost = escapeHtml(tier.pushPullCost ?? '');
-            const mailInCost = escapeHtml(tier.mailInCost ?? '');
+            const mailBackCost = escapeHtml(tier.mailBackCost ?? '');
             const pushPullType = tier.pushPullType || 'per_stop';
             const turnaroundTime = tier.turnaroundTime || 'same_week';
             const highResScan = !!tier.highResScan;
@@ -1704,8 +1713,8 @@
                         <input type="number" inputmode="decimal" min="0" step="0.01" class="tier-devCost w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" value="${devCost}">
                     </div>
                     <div>
-                        <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Mail-In Shipping Cost ($)</label>
-                        <input type="number" inputmode="decimal" min="0" step="0.01" placeholder="0 for a walk-in lab" class="tier-mailInCost w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" value="${mailInCost}">
+                        <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Mail-Back Shipping Cost ($)</label>
+                        <input type="number" inputmode="decimal" min="0" step="0.01" placeholder="0 for a walk-in lab" class="tier-mailBackCost w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600" value="${mailBackCost}">
                         <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Return postage this tier's own pricing page charges, for a mail-in lab. Leave at 0 for a walk-in lab.</p>
                     </div>
                     <div>
@@ -2420,7 +2429,7 @@
                     highResScan: block.querySelector('.tier-highResScan').checked,
                     tiffScan: block.querySelector('.tier-tiffScan').checked,
                     noPushPull: block.querySelector('.tier-noPushPull').checked,
-                    mailInCost: block.querySelector('.tier-mailInCost').value,
+                    mailBackCost: block.querySelector('.tier-mailBackCost').value,
                     processes: processes.length > 0 ? processes : ['C41']
                 };
             });

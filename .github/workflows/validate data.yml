@@ -109,8 +109,8 @@ jobs:
                           err(path, f"{sw}: missing required field 'devCost'")
                       if isinstance(s.get("devCost"), str):
                           err(path, f"{sw}: devCost must be a number, not text (write 17, not '$17')")
-                      if isinstance(s.get("mailInCost"), str):
-                          err(path, f"{sw}: mailInCost must be a number, not text (write 5, not '$5')")
+                      if isinstance(s.get("mailBackCost"), str):
+                          err(path, f"{sw}: mailBackCost must be a number, not text (write 5, not '$5')")
                       t = s.get("turnaroundTime")
                       if t and t not in VALID_TURNAROUND:
                           err(path, f"{sw}: turnaroundTime '{t}' must be one of {sorted(VALID_TURNAROUND)}")
