@@ -29,7 +29,7 @@ Paste your shop link, send, **check the prices Claude gives you**, then upload t
 to [`films/`](https://github.com/trentnbauer/FilmCalc/upload/main/films) or
 [`labs/`](https://github.com/trentnbauer/FilmCalc/upload/main/labs).
 
-👉 **[Full step-by-step guide (CONTRIBUTING.md)](CONTRIBUTING.md)** — also covers doing it by hand,
+👉 **[Full step-by-step guide (CONTRIBUTING.md)](contributing.md)** — also covers doing it by hand,
 using the app's own export, or another AI.
 
 Prefer not to? **[Open an issue](https://github.com/trentnbauer/FilmCalc/issues/new/choose)** with
