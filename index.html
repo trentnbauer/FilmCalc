@@ -1133,9 +1133,10 @@
 
         // Global film filters (Process + Format), shared by Film Lookup and Dev
         // Cost tabs, persisted across sessions. Process = development chemistry;
-        // Format = physical film size. Format has no "All" — a camera is always
-        // one format — so it defaults to the first format.
-        let cheapestProcess = localStorage.getItem('globalProcess') || 'ALL';
+        // Format = physical film size. Both default to 35mm/C41 — the most
+        // commonly shot combination (issue #193) — but a user's own choice,
+        // once saved to localStorage, always wins over this default.
+        let cheapestProcess = localStorage.getItem('globalProcess') || 'C41';
         let cheapestFormat = localStorage.getItem('globalFormat') || '35mm';
         // Library's own Process filter (issue #116) — deliberately separate
         // from cheapestProcess above: that one has an "ALL" option (a Dev
