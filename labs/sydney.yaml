@@ -153,6 +153,7 @@ labs:
         highResScan: false
         tiffScan: false
         noPushPull: true
+        mailBackCost: 13
         processes:
           - C41
       - devCost: 14
@@ -161,6 +162,7 @@ labs:
         highResScan: false
         tiffScan: false
         noPushPull: true
+        mailBackCost: 13
         processes:
           - BW
           - E6
@@ -170,6 +172,7 @@ labs:
         highResScan: false
         tiffScan: false
         noPushPull: true
+        mailBackCost: 13
         processes:
           - C41
       - devCost: 23
@@ -178,6 +181,7 @@ labs:
         highResScan: false
         tiffScan: false
         noPushPull: true
+        mailBackCost: 13
         processes:
           - BW
           - E6
@@ -187,6 +191,7 @@ labs:
         highResScan: false
         tiffScan: true
         noPushPull: true
+        mailBackCost: 13
         processes:
           - C41
       - devCost: 28
@@ -195,6 +200,7 @@ labs:
         highResScan: false
         tiffScan: true
         noPushPull: true
+        mailBackCost: 13
         processes:
           - BW
           - E6
@@ -204,6 +210,7 @@ labs:
         highResScan: true
         tiffScan: false
         noPushPull: true
+        mailBackCost: 13
         processes:
           - C41
       - devCost: 43
@@ -212,6 +219,7 @@ labs:
         highResScan: true
         tiffScan: false
         noPushPull: true
+        mailBackCost: 13
         processes:
           - BW
           - E6
@@ -221,6 +229,7 @@ labs:
         highResScan: true
         tiffScan: true
         noPushPull: true
+        mailBackCost: 13
         processes:
           - C41
       - devCost: 48
@@ -229,6 +238,7 @@ labs:
         highResScan: true
         tiffScan: true
         noPushPull: true
+        mailBackCost: 13
         processes:
           - BW
           - E6
