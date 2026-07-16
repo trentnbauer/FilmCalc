@@ -353,11 +353,13 @@
 
             <!-- Expired film reference calculator (own tab) -->
             <div id="expiredTabContent" role="tabpanel" aria-labelledby="tabExpiredBtn" class="space-y-4 hidden">
-                <p class="text-xs text-gray-500 dark:text-gray-400">Estimate how much slower to rate expired film. Older film loses sensitivity over time — roughly one stop per decade, faster if stored warm.</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Estimate how much slower to rate expired film. Older film loses sensitivity over time — roughly one stop per decade, faster if stored warm, faster still for high-speed and E6 stocks.</p>
                 <div class="text-xs text-gray-400 dark:text-gray-500 -mt-2 space-y-0.5">
                     <p><span class="font-semibold">Cold stored</span> — in a fridge or freezer.</p>
                     <p><span class="font-semibold">Climate controlled</span> — a shop or inside a house.</p>
                     <p><span class="font-semibold">Uncontrolled</span> — a roof cavity, garage, shed, or outdoors.</p>
+                    <p><span class="font-semibold">Film type</span> — B&W ages most gracefully, C-41 is the middle ground, E6 fades fastest.</p>
+                    <p>ISO 400+ stocks also get an extra 1/2 stop of compensation per full stop above 400, since faster emulsions fog quicker.</p>
                 </div>
                 <div class="theme-section-bg bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-100 dark:border-yellow-800/30 p-4 space-y-3">
                     <div>
@@ -376,6 +378,14 @@
                         <div>
                             <label for="filmExpiryDate" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Expiry (Month/Year)</label>
                             <input type="month" id="filmExpiryDate" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
+                        </div>
+                        <div>
+                            <label for="expiredFilmType" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Film Type</label>
+                            <select id="expiredFilmType" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
+                                <option value="c41">Color negative (C-41)</option>
+                                <option value="bw">Black & white</option>
+                                <option value="e6">Slide / reversal (E6)</option>
+                            </select>
                         </div>
                     </div>
                     <div id="expiredRecommendation" class="text-xs"></div>
@@ -1222,15 +1232,27 @@
         // more slowly than film left at room temperature or of unknown history.
         // These years-per-stop figures are commonly-cited approximations, not a
         // guarantee — bracketing exposures is still the safe move.
-        const EXPIRED_YEARS_PER_STOP = { cold: 15, controlled: 10, uncontrolled: 5 };
+        // Per-stock-type figures (issue #188): C-41 is the commonly-cited
+        // baseline; B&W's silver-halide emulsion ages the most gracefully
+        // (highest years-per-stop); E6 has the tightest exposure latitude and
+        // its dye couplers shift fastest, so it ages the least gracefully.
+        const EXPIRED_YEARS_PER_STOP = {
+            c41: { cold: 15, controlled: 10, uncontrolled: 5 },
+            bw: { cold: 20, controlled: 13, uncontrolled: 7 },
+            e6: { cold: 10, controlled: 7, uncontrolled: 3 },
+        };
+        const EXPIRED_FILM_TYPE_LABELS = { c41: 'C-41', bw: 'B&W', e6: 'E6' };
 
         const filmStorageCondition = document.getElementById('filmStorageCondition');
         const filmExpiryDate = document.getElementById('filmExpiryDate');
         const expiredBoxSpeedInput = document.getElementById('expiredBoxSpeed');
+        const expiredFilmType = document.getElementById('expiredFilmType');
 
         // Standalone expired-film reference: given a box speed, expiry date and
         // storage, estimate how many stops of sensitivity the film has lost and
-        // the shooting speed (EI) to rate it at.
+        // the shooting speed (EI) to rate it at. Faster stocks fog/thin out
+        // quicker than they age chemically, so ISO 400+ film gets an extra 1/2
+        // stop of compensation per full stop above 400 (issue #188).
         function computeExpiredInfo() {
             const boxSpeed = parseInt(expiredBoxSpeedInput.value) || 0;
             const expiryVal = filmExpiryDate.value;
@@ -1243,11 +1265,15 @@
             const yearsExpired = nowDecimal - expDecimal;
             if (yearsExpired <= 0) return null;
 
-            const yearsPerStop = EXPIRED_YEARS_PER_STOP[filmStorageCondition.value] || EXPIRED_YEARS_PER_STOP.uncontrolled;
-            const stopsLoss = Math.round((yearsExpired / yearsPerStop) * 2) / 2;
+            const filmType = expiredFilmType.value || 'c41';
+            const yearsPerStop = (EXPIRED_YEARS_PER_STOP[filmType] || EXPIRED_YEARS_PER_STOP.c41)[filmStorageCondition.value] || EXPIRED_YEARS_PER_STOP.c41.uncontrolled;
+            const ageStopsLoss = (yearsExpired / yearsPerStop);
+            const highSpeedStops = boxSpeed > 400 ? Math.floor(Math.log2(boxSpeed / 400)) * 0.5 : 0;
+            const stopsLoss = Math.round((ageStopsLoss + highSpeedStops) * 2) / 2;
             const recommendedEI = Math.max(1, Math.round(boxSpeed / Math.pow(2, stopsLoss)));
             const storageLabel = { cold: 'cold-stored', controlled: 'climate-controlled storage', uncontrolled: 'uncontrolled storage' }[filmStorageCondition.value];
-            return { boxSpeed, yearsExpired, stopsLoss, recommendedEI, storageLabel };
+            const filmTypeLabel = EXPIRED_FILM_TYPE_LABELS[filmType] || EXPIRED_FILM_TYPE_LABELS.c41;
+            return { boxSpeed, yearsExpired, stopsLoss, recommendedEI, storageLabel, filmTypeLabel, highSpeedStops };
         }
 
         function updateExpiredRecommendation() {
@@ -1269,7 +1295,7 @@
             }
 
             el.innerHTML = `<p class="text-amber-700 dark:text-amber-400 font-medium">📷 Recommended shooting speed: ~EI ${info.recommendedEI}</p>
-                <p class="text-gray-500 dark:text-gray-400 mt-0.5">Rate ${info.stopsLoss} stop${info.stopsLoss === 1 ? '' : 's'} slower — ${info.yearsExpired.toFixed(1)} yrs past expiry, ${info.storageLabel}</p>
+                <p class="text-gray-500 dark:text-gray-400 mt-0.5">Rate ${info.stopsLoss} stop${info.stopsLoss === 1 ? '' : 's'} slower — ${info.yearsExpired.toFixed(1)} yrs past expiry, ${info.storageLabel}, ${info.filmTypeLabel}${info.highSpeedStops > 0 ? ` (+${info.highSpeedStops} for box speed over ISO 400)` : ''}</p>
                 <p class="text-gray-400 dark:text-gray-500 mt-1">Rule-of-thumb estimate only — bracket exposures if possible.</p>
                 <p class="text-gray-400 dark:text-gray-500 mt-1">This is a camera/meter setting, not a lab instruction — develop normally at box speed unless you're also intentionally pushing/pulling for other reasons.</p>`;
         }
@@ -1277,6 +1303,7 @@
         filmStorageCondition.addEventListener('change', updateExpiredRecommendation);
         filmExpiryDate.addEventListener('change', updateExpiredRecommendation);
         expiredBoxSpeedInput.addEventListener('input', updateExpiredRecommendation);
+        expiredFilmType.addEventListener('change', updateExpiredRecommendation);
 
         // ---------- Lab directions link ----------
         // Builds a maps search URL from whatever's typed in the address field —
