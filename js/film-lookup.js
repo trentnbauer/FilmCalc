@@ -148,12 +148,14 @@ function renderLoadedFilmSummary() {
     const exposures = document.getElementById('exposures').value;
     if (!boxSpeed && !filmCostRaw && !postageRaw) { el.innerHTML = ''; return; }
     const total = (parseFloat(filmCostRaw) || 0) + (parseFloat(postageRaw) || 0);
+    const rollsNum = parseInt(rolls) || 0;
     const bits = [];
     if (boxSpeed) bits.push(`${escapeHtml(boxSpeed)} ISO`);
     if (filmCostRaw || postageRaw) {
         const totalLabel = postageRaw ? `${CUR()}${total.toFixed(2)} total incl. postage` : `${CUR()}${total.toFixed(2)} total`;
         bits.push(totalLabel);
     }
+    if (total > 0 && rollsNum > 0) bits.push(`${CUR()}${(total / rollsNum).toFixed(2)}/roll`);
     if (rolls && exposures) bits.push(`${escapeHtml(rolls)} × ${escapeHtml(exposures)}exp`);
     el.innerHTML = `<span class="font-mono">${bits.join(' · ')}</span>`;
 }
