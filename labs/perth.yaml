@@ -17,6 +17,7 @@ labs:
         highResScan: true
         tiffScan: false
         noPushPull: true
+        mailBackCost: 15
         processes:
           - C41
       - devCost: 11
@@ -26,6 +27,7 @@ labs:
         highResScan: false
         tiffScan: false
         noPushPull: true
+        mailBackCost: 15
         processes:
           - C41
       - devCost: 19
@@ -35,6 +37,7 @@ labs:
         highResScan: true
         tiffScan: false
         noPushPull: false
+        mailBackCost: 15
         processes:
           - BW
       - devCost: 12
@@ -44,6 +47,7 @@ labs:
         highResScan: false
         tiffScan: false
         noPushPull: false
+        mailBackCost: 15
         processes:
           - BW
       - devCost: 21
@@ -53,6 +57,7 @@ labs:
         highResScan: true
         tiffScan: false
         noPushPull: false
+        mailBackCost: 15
         processes:
           - E6
       - devCost: 15
@@ -62,6 +67,7 @@ labs:
         highResScan: false
         tiffScan: false
         noPushPull: false
+        mailBackCost: 15
         processes:
           - E6
       - devCost: 25
@@ -71,6 +77,7 @@ labs:
         highResScan: true
         tiffScan: false
         noPushPull: true
+        mailBackCost: 15
         processes:
           - ECN2
       - devCost: 15
@@ -80,6 +87,7 @@ labs:
         highResScan: false
         tiffScan: false
         noPushPull: true
+        mailBackCost: 15
         processes:
           - ECN2
   - name: Focus Pocus
