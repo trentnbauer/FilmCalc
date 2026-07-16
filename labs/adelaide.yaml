@@ -103,6 +103,7 @@ labs:
         highResScan: false
         tiffScan: false
         noPushPull: true
+        mailBackCost: 15
         processes:
           - C41
       - devCost: 15.00
@@ -111,6 +112,7 @@ labs:
         highResScan: false
         tiffScan: false
         noPushPull: true
+        mailBackCost: 15
         processes:
           - C41
       - devCost: 14.95
@@ -119,6 +121,7 @@ labs:
         highResScan: false
         tiffScan: false
         noPushPull: true
+        mailBackCost: 15
         processes:
           - C41
       - devCost: 17.95
@@ -127,6 +130,7 @@ labs:
         highResScan: false
         tiffScan: false
         noPushPull: true
+        mailBackCost: 15
         processes:
           - C41
       - devCost: 20.00
@@ -135,6 +139,7 @@ labs:
         highResScan: false
         tiffScan: false
         noPushPull: true
+        mailBackCost: 15
         processes:
           - C41
       - devCost: 23.00
@@ -143,5 +148,6 @@ labs:
         highResScan: false
         tiffScan: false
         noPushPull: true
+        mailBackCost: 15
         processes:
           - C41
