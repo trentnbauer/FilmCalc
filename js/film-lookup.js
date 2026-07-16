@@ -576,9 +576,12 @@ function updateCheaperAlternative() {
             : '';
         // If the alternative wins mainly because it has more exposures
         // (dev is a flat per-roll fee spread over more frames), spell that
-        // out — otherwise "$0.61 film beats $0.42 film" looks wrong.
+        // out with the actual numbers (issue #191) — otherwise "$0.61 film
+        // beats $0.42 film" looks wrong, and a vague footnote about "more
+        // frames" doesn't make the reason obvious at a glance.
+        const altDevCostPerRoll = bestAlt.devCpp * bestAlt.exposures;
         const exposureNote = (bestAlt.exposures && exposures && bestAlt.exposures !== exposures && bestAlt.devCpp < currentDevCpp - 0.001)
-            ? `<p class="text-xs text-blue-700/70 dark:text-blue-400/70 mt-0.5">Its dev is cheaper per photo because it's ${bestAlt.exposures} exp vs your ${exposures} — the flat per-roll dev fee is spread over more frames.</p>`
+            ? `<p class="text-xs font-medium text-blue-800 dark:text-blue-300 mt-1 pt-1 border-t border-blue-200/60 dark:border-blue-800/40">📐 Why it's cheaper: roughly the same ${CUR()}${altDevCostPerRoll.toFixed(2)} flat dev fee, but split across ${bestAlt.exposures} exposures (${CUR()}${bestAlt.devCpp.toFixed(2)}/photo) instead of your ${exposures} (${CUR()}${currentDevCpp.toFixed(2)}/photo) — more frames per roll, same flat fee.</p>`
             : '';
         altBlock = `<div class="mt-2 rounded-md bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/40 px-3 py-1.5">
             <p class="text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wide">💡 Cheaper film in library <span class="normal-case opacity-70">(total film + dev)</span></p>
