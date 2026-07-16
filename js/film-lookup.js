@@ -398,7 +398,10 @@ function updateLabComparison() {
                 <div class="flex justify-between items-start gap-2">
                     <span class="text-gray-700 dark:text-gray-300">${escapeHtml(r.name)}${renderBadges(r)}${renderPinBtn(r.id)}</span>
                     <span class="font-mono text-right leading-tight text-gray-600 dark:text-gray-400 whitespace-nowrap flex items-center gap-1.5">
-                        <span class="font-semibold">${CUR()}${r.costPerPhoto.toFixed(2)}/photo</span>
+                        <span>
+                            <span class="font-semibold">${CUR()}${r.costPerPhoto.toFixed(2)}/photo</span>
+                            <span class="block text-xs opacity-70">${CUR()}${r.devCostPerRoll.toFixed(2)}/dev · ${CUR()}${r.costPerRoll.toFixed(2)}/roll</span>
+                        </span>
                         ${chevron}
                     </span>
                 </div>
