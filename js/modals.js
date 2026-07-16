@@ -213,7 +213,7 @@ Output a top-level key "labs:" containing a list. Each lab:
     highResScan: <true|false>
     tiffScan: <true|false — TIFF or other lossless scan, independent of highResScan>
     noPushPull: <true only if this tier cannot push/pull at all, else false>
-    mailBackCost: <return postage this tier's own pricing page states for a mail-in lab, 0 for a walk-in lab. Never guess this — leave at 0 if the page doesn't state it.>
+    mailBackCost: <return postage this tier's own pricing page states for a mail-in lab. OMIT this line entirely for a walk-in-only lab, or if the page doesn't state a mail-back fee — do not guess, and do not write 0 unless the page explicitly says mail-back is free.>
     processes:
     - <any of: ${processes}>
 
@@ -549,7 +549,7 @@ document.getElementById('aiAddBtn').addEventListener('click', () => {
                     highResScan: !!s.highResScan,
                     tiffScan: !!s.tiffScan,
                     noPushPull: !!s.noPushPull,
-                    mailBackCost: parseFloat(s.mailBackCost) || 0,
+                    mailBackCost: parseMailBackCost(s.mailBackCost),
                     processes: Array.isArray(s.processes) && s.processes.length ? s.processes : ['C41']
                 }))
             };

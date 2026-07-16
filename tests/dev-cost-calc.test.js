@@ -107,17 +107,24 @@ test('normalizeLabServices falls back to the legacy flat schema', () => {
     assert.equal(tiers[0].turnaroundTime, 'same_week'); // default
     assert.equal(tiers[0].highResScan, false); // default
     assert.equal(tiers[0].tiffScan, false); // default
-    assert.equal(tiers[0].mailBackCost, 0); // default -- walk-in labs are unaffected (issue #159)
+    assert.equal(tiers[0].mailBackCost, null); // unset -- unknown whether mail-back is offered (issue #200)
 });
 
 // ---------- mailBackCost (issue #159: fold a mail-in lab's return postage
 // into the per-roll dev cost, the same way pushPullCost already is) ----------
+// null means "unknown/can't mail back", distinct from an explicit 0 meaning
+// "confirmed free" (issue #200) -- everything used to default to 0, which
+// silently implied every lab offered free mail-back.
 
-test('normalizeLabServices: mailBackCost defaults to 0 and parses through when set', () => {
+test('normalizeLabServices: mailBackCost is null unless explicitly set, parses through numbers (incl. 0)', () => {
     const withDefault = normalizeLabServices({ services: [{ devCost: 15 }] });
-    assert.equal(withDefault[0].mailBackCost, 0);
+    assert.equal(withDefault[0].mailBackCost, null);
+    const blank = normalizeLabServices({ services: [{ devCost: 15, mailBackCost: '' }] });
+    assert.equal(blank[0].mailBackCost, null);
     const withValue = normalizeLabServices({ services: [{ devCost: 15, mailBackCost: '4.5' }] });
     assert.equal(withValue[0].mailBackCost, 4.5);
+    const explicitFree = normalizeLabServices({ services: [{ devCost: 15, mailBackCost: 0 }] });
+    assert.equal(explicitFree[0].mailBackCost, 0);
 });
 
 test('computeCostPerPhoto divides cost across rolls*exposures, null when zero photos', () => {
@@ -446,13 +453,34 @@ test('computeNativeFilmLabMatrix: mailBackCost is excluded by default (issue #17
     assert.ok(Math.abs(cheapRow.devCostPerPhoto - 15 / 36) < 1e-9); // unchanged from the no-mailBackCost fixture
 });
 
-test('computeNativeFilmLabMatrix: includeMailBack adds mailBackCost into dev cost, walk-in labs unaffected', () => {
-    const results = computeNativeFilmLabMatrix(ALL_FILMS, { 'Mail Lab': MAIL_LAB, 'Cheap Lab': ALL_LABS['Cheap Lab'] }, { includeMailBack: true });
+test('computeNativeFilmLabMatrix: includeMailBack adds mailBackCost into dev cost', () => {
+    const results = computeNativeFilmLabMatrix(ALL_FILMS, { 'Mail Lab': MAIL_LAB }, { includeMailBack: true });
     const mailRow = results.find(r => r.labName === 'Mail Lab');
     assert.ok(Math.abs(mailRow.devCostPerPhoto - 18 / 36) < 1e-9);
     assert.ok(Math.abs(mailRow.mailBackFee - 8) < 1e-9);
-    const cheapRow = results.find(r => r.labName === 'Cheap Lab');
-    assert.equal(cheapRow.mailBackFee, 0); // 0 mailBackCost / any roll count is still 0
+});
+
+// A lab with no mailBackCost stated at all (unknown, not confirmed free) --
+// distinct from FREE_MAIL_LAB below, which explicitly states 0.
+test('computeNativeFilmLabMatrix: includeMailBack excludes tiers with unset mailBackCost (issue #200)', () => {
+    const results = computeNativeFilmLabMatrix(ALL_FILMS, { 'Mail Lab': MAIL_LAB, 'Cheap Lab': ALL_LABS['Cheap Lab'] }, { includeMailBack: true });
+    assert.equal(results.length, 1);
+    assert.equal(results[0].labName, 'Mail Lab');
+    // Without the toggle, an unset mailBackCost doesn't exclude the tier --
+    // mail-back just isn't being priced in at all.
+    const withoutToggle = computeNativeFilmLabMatrix(ALL_FILMS, { 'Cheap Lab': ALL_LABS['Cheap Lab'] }, {});
+    assert.equal(withoutToggle.length, 1);
+});
+
+const FREE_MAIL_LAB = {
+    hidden: false,
+    services: [{ devCost: 12, pushPullCost: 0, pushPullType: 'flat', mailBackCost: 0, turnaroundTime: 'same_week', highResScan: false, noPushPull: false, processes: ['C41'] }]
+};
+
+test('computeNativeFilmLabMatrix: an explicit 0 mailBackCost is confirmed-free, not excluded', () => {
+    const results = computeNativeFilmLabMatrix(ALL_FILMS, { 'Free Mail Lab': FREE_MAIL_LAB }, { includeMailBack: true });
+    assert.equal(results.length, 1);
+    assert.equal(results[0].mailBackFee, 0);
 });
 
 test('computeNativeFilmLabMatrix: mailBackRollCount splits the flat fee across rolls mailed together', () => {

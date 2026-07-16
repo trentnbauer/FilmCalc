@@ -69,6 +69,17 @@ function bundleLocalityLabel(entry) {
     return place ? `${place} only` : '';
 }
 
+// null means "unknown whether this tier can be mailed back at all" — distinct
+// from an explicit 0, which means the lab states mail-back is free. Unset,
+// blank, or non-numeric all collapse to null so callers can tell "known
+// free" apart from "we don't know" (issue #200) instead of everything
+// silently defaulting to free mail-back.
+function parseMailBackCost(value) {
+    if (value === undefined || value === null || value === '') return null;
+    const n = parseFloat(value);
+    return Number.isFinite(n) ? n : null;
+}
+
 // Bridges the current { name, services: [...] } schema with the older flat
 // single-tier schema so both keep working.
 function normalizeLabServices(lab) {
@@ -81,7 +92,7 @@ function normalizeLabServices(lab) {
             highResScan: !!s.highResScan,
             tiffScan: !!s.tiffScan,
             noPushPull: !!s.noPushPull,
-            mailBackCost: parseFloat(s.mailBackCost) || 0,
+            mailBackCost: parseMailBackCost(s.mailBackCost),
             processes: Array.isArray(s.processes) && s.processes.length > 0 ? s.processes : [s.process || 'C41']
         }));
     }
@@ -93,7 +104,7 @@ function normalizeLabServices(lab) {
         highResScan: !!lab.highResScan,
         tiffScan: !!lab.tiffScan,
         noPushPull: !!lab.noPushPull,
-        mailBackCost: parseFloat(lab.mailBackCost) || 0,
+        mailBackCost: parseMailBackCost(lab.mailBackCost),
         processes: Array.isArray(lab.processes) && lab.processes.length > 0 ? lab.processes : [lab.process || 'C41']
     }];
 }
@@ -258,7 +269,7 @@ function computeIsoPriceOptions(targetIso, allFilms, allLabs, opts) {
     const sortMode = opts.sortMode || 'price';
     const pinnedLabNames = opts.pinnedLabNames || new Set();
     const upgradeThresholdPercent = opts.upgradeThresholdPercent ?? 4;
-    const matchesFilters = tier => (!opts.turnaround || tier.turnaroundTime === opts.turnaround) && (!opts.hiRes || tier.highResScan) && (!opts.tiff || tier.tiffScan);
+    const matchesFilters = tier => (!opts.turnaround || tier.turnaroundTime === opts.turnaround) && (!opts.hiRes || tier.highResScan) && (!opts.tiff || tier.tiffScan) && (!opts.includeMailBack || tier.mailBackCost !== null);
     const labNames = Object.keys(allLabs).filter(n => !allLabs[n].hidden);
 
     const native = [];
@@ -332,6 +343,7 @@ function computeIsoPriceOptions(targetIso, allFilms, allLabs, opts) {
                     };
                     if (matchesFilters(tier)) candidates.push(candidate);
                     if (tier.highResScan && tier.turnaroundTime === 'next_day' &&
+                        (!opts.includeMailBack || tier.mailBackCost !== null) &&
                         (!bestHrNd || totalCostPerPhoto < bestHrNd.totalCostPerPhoto)) {
                         bestHrNd = candidate;
                     }
@@ -385,7 +397,7 @@ function computeIsoPriceOptions(targetIso, allFilms, allLabs, opts) {
 // and "Cost Per Lab" (grouped/ranked by lab) tabs.
 function computeNativeFilmLabMatrix(allFilms, allLabs, opts) {
     opts = opts || {};
-    const matchesFilters = tier => (!opts.turnaround || tier.turnaroundTime === opts.turnaround) && (!opts.hiRes || tier.highResScan) && (!opts.tiff || tier.tiffScan);
+    const matchesFilters = tier => (!opts.turnaround || tier.turnaroundTime === opts.turnaround) && (!opts.hiRes || tier.highResScan) && (!opts.tiff || tier.tiffScan) && (!opts.includeMailBack || tier.mailBackCost !== null);
     const labNames = Object.keys(allLabs).filter(n => !allLabs[n].hidden);
 
     const results = [];
@@ -446,7 +458,7 @@ function computeNativeFilmLabMatrix(allFilms, allLabs, opts) {
 // the same here, since fees are keyed on stop magnitude only, not direction.
 function computeOneStopFilmLabMatrix(allFilms, allLabs, opts) {
     opts = opts || {};
-    const matchesFilters = tier => (!opts.turnaround || tier.turnaroundTime === opts.turnaround) && (!opts.hiRes || tier.highResScan) && (!opts.tiff || tier.tiffScan);
+    const matchesFilters = tier => (!opts.turnaround || tier.turnaroundTime === opts.turnaround) && (!opts.hiRes || tier.highResScan) && (!opts.tiff || tier.tiffScan) && (!opts.includeMailBack || tier.mailBackCost !== null);
     const labNames = Object.keys(allLabs).filter(n => !allLabs[n].hidden);
 
     const results = [];
