@@ -58,25 +58,25 @@ function renderPinnedResult(currentCheapest) {
     if (pins.length === 0) { container.innerHTML = ''; return; }
 
     container.innerHTML = pins.map(pinned => {
-        const hiResBadge = pinned.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">HI-RES</span>` : '';
+        const hiResBadge = pinned.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">${t('hiResBadgeLabel')}</span>` : '';
         const tiffBadge = pinned.tiffScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 align-middle">TIFF</span>` : '';
         const turnaroundBadge = pinned.turnaroundTime ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 align-middle">${escapeHtml(turnaroundLabels[pinned.turnaroundTime] || pinned.turnaroundTime)}</span>` : '';
 
-        let diffHtml = '<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Change Film Setup or labs to compare against a new calculation</p>';
+        let diffHtml = `<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">${t('changeFilmSetupToCompare')}</p>`;
         if (currentCheapest) {
             const diff = currentCheapest.costPerPhoto - pinned.costPerPhoto;
             if (Math.abs(diff) < 0.005) {
-                diffHtml = `<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Same as current cheapest (${CUR()}${currentCheapest.costPerPhoto.toFixed(2)}/photo)</p>`;
+                diffHtml = `<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">${t('sameAsCurrentCheapestAmount', { amount: `${CUR()}${currentCheapest.costPerPhoto.toFixed(2)}` })}</p>`;
             } else if (diff > 0) {
-                diffHtml = `<p class="text-xs text-green-600 dark:text-green-400 mt-1">Current cheapest is ${CUR()}${diff.toFixed(2)}/photo less (${escapeHtml(currentCheapest.name)} at ${CUR()}${currentCheapest.costPerPhoto.toFixed(2)}/photo)</p>`;
+                diffHtml = `<p class="text-xs text-green-600 dark:text-green-400 mt-1">${t('currentCheapestDelta', { amount: `${CUR()}${diff.toFixed(2)}/photo`, direction: t('deltaLess') })} ${t('currentCheapestDeltaSuffix', { name: escapeHtml(currentCheapest.name), amount: `${CUR()}${currentCheapest.costPerPhoto.toFixed(2)}` })}</p>`;
             } else {
-                diffHtml = `<p class="text-xs text-red-600 dark:text-red-400 mt-1">Current cheapest is ${CUR()}${Math.abs(diff).toFixed(2)}/photo more (${escapeHtml(currentCheapest.name)} at ${CUR()}${currentCheapest.costPerPhoto.toFixed(2)}/photo)</p>`;
+                diffHtml = `<p class="text-xs text-red-600 dark:text-red-400 mt-1">${t('currentCheapestDelta', { amount: `${CUR()}${Math.abs(diff).toFixed(2)}/photo`, direction: t('deltaMore') })} ${t('currentCheapestDeltaSuffix', { name: escapeHtml(currentCheapest.name), amount: `${CUR()}${currentCheapest.costPerPhoto.toFixed(2)}` })}</p>`;
             }
         }
 
         return `<div class="px-3 py-3 rounded-lg text-sm bg-indigo-100 dark:bg-indigo-900/30 border border-indigo-300 dark:border-indigo-700 relative mb-3 text-left">
-            <button type="button" data-unpin-id="${pinned.pinId}" class="unpinResultBtn absolute top-2 right-2 text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-200 text-xs font-bold" aria-label="Unpin">✕</button>
-            <div class="text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">📌 Pinned Comparison</div>
+            <button type="button" data-unpin-id="${pinned.pinId}" class="unpinResultBtn absolute top-2 right-2 text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-200 text-xs font-bold" aria-label="${t('unpinAriaLabel')}">✕</button>
+            <div class="text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">📌 ${t('pinnedComparisonLabel')}</div>
             <div class="font-semibold text-indigo-800 dark:text-indigo-300">${escapeHtml(pinned.name)}${hiResBadge}${tiffBadge}${turnaroundBadge}</div>
             <div class="font-mono text-indigo-800 dark:text-indigo-300 mt-1">
                 <span class="font-semibold">${CUR()}${pinned.costPerPhoto.toFixed(2)}/photo</span>
@@ -92,7 +92,7 @@ function renderPinnedResult(currentCheapest) {
 }
 
 function renderPinBtn(id) {
-    return `<button type="button" data-pin-id="${id}" class="ml-2 text-indigo-400 hover:text-indigo-600 text-xs align-middle" aria-label="Pin for comparison" title="Pin for comparison">📌</button>`;
+    return `<button type="button" data-pin-id="${id}" class="ml-2 text-indigo-400 hover:text-indigo-600 text-xs align-middle" aria-label="${t('pinForComparisonLabel')}" title="${t('pinForComparisonLabel')}">📌</button>`;
 }
 
 // Shows the camera setting (shooting ISO) and push/pull for this roll at
@@ -104,14 +104,14 @@ function renderCameraSetting(boxSpeed, devSpeed, stops) {
     if (!devSpeed) { el.innerHTML = ''; return; }
 
     const devNoteHtml = stops > 0
-        ? `<p class="text-sm text-blue-800 dark:text-blue-300 mt-1">Development note: ${devSpeed > boxSpeed ? 'Push' : 'Pull'} ${stops} stop${stops === 1 ? '' : 's'}</p>`
+        ? `<p class="text-sm text-blue-800 dark:text-blue-300 mt-1">${t('pushPullNoteDynamic', { direction: devSpeed > boxSpeed ? t('pushWord') : t('pullWord'), n: stops, plural: stops === 1 ? '' : 's' })}</p>`
         : '';
 
     el.innerHTML = `<div class="flex items-start gap-2 bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700 rounded-lg px-3 py-2 text-left">
         <span class="text-blue-500 dark:text-blue-400">📷</span>
         <div>
-            <p class="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">Camera Setting</p>
-            <p class="text-sm text-blue-800 dark:text-blue-300">Set Camera or light meter to <span class="font-semibold">${devSpeed} ISO</span></p>
+            <p class="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">${t('cameraSettingLabel')}</p>
+            <p class="text-sm text-blue-800 dark:text-blue-300">${t('setMeterNote', { iso: `<span class="font-semibold">${devSpeed} ISO</span>` })}</p>
             ${devNoteHtml}
         </div>
     </div>`;
@@ -131,7 +131,7 @@ function renderPushPullWarning(stops) {
     }
     el.innerHTML = `<div class="flex items-start gap-2 theme-warning-bg bg-orange-100 dark:bg-orange-900/30 border border-orange-300 dark:border-orange-700 rounded-lg px-3 py-2">
         <span class="theme-warning-text text-orange-500 dark:text-orange-400">⚠️</span>
-        <p class="text-sm theme-warning-text text-orange-800 dark:text-orange-300 font-medium">This pushes/pulls ${stops} stop${stops === 1 ? '' : 's'} — check the film can handle it (most stocks are rated for about 1).</p>
+        <p class="text-sm theme-warning-text text-orange-800 dark:text-orange-300 font-medium">${t('pushPullWarningDetailed', { n: stops, plural: stops === 1 ? '' : 's' })}</p>
     </div>`;
 }
 
@@ -182,7 +182,7 @@ function updateLabComparison() {
         renderPushPullWarning(0);
         renderCameraSetting(boxSpeedForWarning, 0, warningStops);
         bestPicksContainer.innerHTML = '';
-        container.innerHTML = '<p class="text-sm text-gray-400 text-center">Fill in Target Speed, Film Cost, Rolls & Exposures to compare labs</p>';
+        container.innerHTML = `<p class="text-sm text-gray-400 text-center">${t('fillInFieldsToCompareLabs')}</p>`;
         renderPinnedResult(null);
         return;
     }
@@ -209,7 +209,7 @@ function updateLabComparison() {
 
     if (names.length === 0) {
         bestPicksContainer.innerHTML = '';
-        container.innerHTML = '<p class="text-sm text-gray-400 text-center">Save a lab profile to compare prices</p>';
+        container.innerHTML = `<p class="text-sm text-gray-400 text-center">${t('saveLabProfileToCompare')}</p>`;
         renderPinnedResult(null);
         return;
     }
@@ -256,7 +256,7 @@ function updateLabComparison() {
 
     if (allResults.length === 0) {
         bestPicksContainer.innerHTML = '';
-        container.innerHTML = '<p class="text-sm text-gray-400 text-center">No saved lab has a service tier set to this film\'s process — check Lab Setup, or save a lab profile</p>';
+        container.innerHTML = `<p class="text-sm text-gray-400 text-center">${t('noLabMatchesProcess')}</p>`;
         renderPinnedResult(null);
         return;
     }
@@ -282,15 +282,15 @@ function updateLabComparison() {
         const premium = (cheapestHiResFastest.costPerPhoto - rawCheapestTotal.costPerPhoto) / rawCheapestTotal.costPerPhoto;
         if (premium >= 0 && premium < UPGRADE_THRESHOLD) {
             hiResFastestRecommended = true;
-            hiResFastestNote = `Only ${(premium * 100).toFixed(1)}% more than the absolute cheapest (${CUR()}${rawCheapestTotal.costPerPhoto.toFixed(2)}/photo) — this one includes hi-res + next day.`;
+            hiResFastestNote = t('onlyPercentMoreThanCheapestDetail', { percent: (premium * 100).toFixed(1), amount: `${CUR()}${rawCheapestTotal.costPerPhoto.toFixed(2)}` });
         }
     }
 
     const bestPicks = [
-        { label: '🏆 Cheapest Total', pick: rawCheapestTotal },
-        { label: '⚡ Cheapest Fastest', pick: cheapestFastest },
-        { label: '🔍 Cheapest Hi-Res', pick: cheapestHiRes },
-        { label: '⚡🔍 Cheapest Hi-Res + Fastest', pick: cheapestHiResFastest, note: hiResFastestNote, recommended: hiResFastestRecommended }
+        { label: `🏆 ${t('cheapestTotalLabel')}`, pick: rawCheapestTotal },
+        { label: `⚡ ${t('cheapestFastestLabel')}`, pick: cheapestFastest },
+        { label: `🔍 ${t('cheapestHiResLabel')}`, pick: cheapestHiRes },
+        { label: `⚡🔍 ${t('cheapestHiResFastestLabel')}`, pick: cheapestHiResFastest, note: hiResFastestNote, recommended: hiResFastestRecommended }
     ];
 
     // If several categories resolve to the exact same lab tier (e.g. the
@@ -315,7 +315,7 @@ function updateLabComparison() {
     const usedIds = new Set(bestPicks.map(bp => bp.pick && bp.pick.id).filter(id => id !== undefined && id !== null));
 
     function renderBadges(r) {
-        const hiResBadge = r.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">HI-RES</span>` : '';
+        const hiResBadge = r.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">${t('hiResBadgeLabel')}</span>` : '';
         const tiffBadge = r.tiffScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 align-middle">TIFF</span>` : '';
         const turnaroundBadge = ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 align-middle">${escapeHtml(turnaroundLabels[r.turnaroundTime] || r.turnaroundTime)}</span>`;
         const stopsLabel = r.stops > 0 ? ` <span class="text-xs text-gray-400">(${r.stops} stop push/pull)</span>` : '';
@@ -340,7 +340,7 @@ function updateLabComparison() {
         if (!pick) {
             return `<div class="px-3 py-3 rounded-lg text-sm bg-white dark:bg-gray-800/50 border border-dashed border-gray-300 dark:border-gray-600">
                 <div class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">${label}</div>
-                <div class="text-gray-400 dark:text-gray-500 text-sm">No matching lab</div>
+                <div class="text-gray-400 dark:text-gray-500 text-sm">${t('noMatchingLab')}</div>
             </div>`;
         }
         const isCurrent = pick.name === currentLabName;
@@ -368,7 +368,7 @@ function updateLabComparison() {
     if (filterTiff) otherResults = otherResults.filter(r => r.tiffScan);
 
     if (otherResults.length === 0) {
-        container.innerHTML = '<p class="text-sm text-gray-400 text-center">No other labs match the selected filters</p>';
+        container.innerHTML = `<p class="text-sm text-gray-400 text-center">${t('noLabsMatchFilters')}</p>`;
         return;
     }
 
@@ -379,24 +379,24 @@ function updateLabComparison() {
         const chevron = `<span class="text-gray-400 dark:text-gray-500 transition-transform inline-block ${isOpen ? 'rotate-90' : ''}">▸</span>`;
         const dirUrl = labDirectionsUrl(r.name);
         const directionsLink = dirUrl
-            ? `<a href="${escapeHtml(dirUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-xs px-1.5 py-0.5 rounded bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:underline">📍 Directions ↗</a>`
+            ? `<a href="${escapeHtml(dirUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-xs px-1.5 py-0.5 rounded bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:underline">📍 ${t('directionsLabel')} ↗</a>`
             : '';
         const breakdown = isOpen
             ? `<div class="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700 text-xs space-y-1">
-                    <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Film (per photo)</span><span class="font-mono">${CUR()}${r.filmCostPerPhoto.toFixed(2)}</span></div>
-                    <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Development (per photo) <span class="opacity-60">= dev/roll ÷ ${r.exposures} exp</span></span><span class="font-mono">${CUR()}${r.devCostPerPhoto.toFixed(2)}</span></div>
-                    ${r.pushPullFeePerPhoto > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Push/pull fee (per photo)</span><span class="font-mono">${CUR()}${r.pushPullFeePerPhoto.toFixed(2)}</span></div>` : ''}
-                    ${r.mailBackFeePerPhoto > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Mail-back shipping (per photo)</span><span class="font-mono">${CUR()}${r.mailBackFeePerPhoto.toFixed(2)}</span></div>` : ''}
-                    <div class="flex justify-between text-gray-500 dark:text-gray-400 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>Film cost (per roll)</span><span class="font-mono">${CUR()}${r.filmCostPerRoll.toFixed(2)}</span></div>
-                    <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Development (per roll)</span><span class="font-mono">${CUR()}${r.devCostPerRoll.toFixed(2)}</span></div>
-                    <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>Scan</span><span>${scanLabel(r)}</span></div>
-                    <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>Turnaround</span><span>${escapeHtml(turnaroundLabels[r.turnaroundTime] || r.turnaroundTime || '—')}</span></div>
-                    <div class="flex justify-between font-semibold text-gray-700 dark:text-gray-300 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>Total per roll (${r.exposures} exp)</span><span class="font-mono">${CUR()}${r.costPerRoll.toFixed(2)}</span></div>
+                    <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>${t('filmPerPhotoLabel')}</span><span class="font-mono">${CUR()}${r.filmCostPerPhoto.toFixed(2)}</span></div>
+                    <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>${t('developmentPerPhotoLabel')} <span class="opacity-60">${t('devPerRollFormulaNote', { exposures: r.exposures })}</span></span><span class="font-mono">${CUR()}${r.devCostPerPhoto.toFixed(2)}</span></div>
+                    ${r.pushPullFeePerPhoto > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>${t('pushPullFeePerPhotoLabel')}</span><span class="font-mono">${CUR()}${r.pushPullFeePerPhoto.toFixed(2)}</span></div>` : ''}
+                    ${r.mailBackFeePerPhoto > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>${t('mailBackShippingPerPhotoLabel')}</span><span class="font-mono">${CUR()}${r.mailBackFeePerPhoto.toFixed(2)}</span></div>` : ''}
+                    <div class="flex justify-between text-gray-500 dark:text-gray-400 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>${t('filmCostPerRollLabel')}</span><span class="font-mono">${CUR()}${r.filmCostPerRoll.toFixed(2)}</span></div>
+                    <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>${t('developmentPerRollLabel')}</span><span class="font-mono">${CUR()}${r.devCostPerRoll.toFixed(2)}</span></div>
+                    <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>${t('scanLabelText')}</span><span>${scanLabel(r)}</span></div>
+                    <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>${t('turnaroundLabelText')}</span><span>${escapeHtml(turnaroundLabels[r.turnaroundTime] || r.turnaroundTime || '—')}</span></div>
+                    <div class="flex justify-between font-semibold text-gray-700 dark:text-gray-300 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>${t('totalPerRollLabel', { exposures: r.exposures })}</span><span class="font-mono">${CUR()}${r.costPerRoll.toFixed(2)}</span></div>
                     ${directionsLink ? `<div class="pt-1.5 flex justify-end">${directionsLink}</div>` : ''}
                 </div>`
             : '';
         return `<div>
-            <div class="lookup-lab-row cursor-pointer px-3 py-2 rounded-lg text-sm bg-white dark:bg-gray-800/50 ${isCurrent ? 'ring-2 ring-blue-400' : ''} ${r.highResScan ? 'border border-indigo-300 dark:border-indigo-700' : ''}" data-lookup-key="${key}" title="Tap for cost breakdown">
+            <div class="lookup-lab-row cursor-pointer px-3 py-2 rounded-lg text-sm bg-white dark:bg-gray-800/50 ${isCurrent ? 'ring-2 ring-blue-400' : ''} ${r.highResScan ? 'border border-indigo-300 dark:border-indigo-700' : ''}" data-lookup-key="${key}" title="${t('tapForCostBreakdownTitle')}">
                 <div class="flex justify-between items-start gap-2">
                     <span class="text-gray-700 dark:text-gray-300">${escapeHtml(r.name)}${renderBadges(r)}${renderPinBtn(r.id)}</span>
                     <span class="font-mono text-right leading-tight text-gray-600 dark:text-gray-400 whitespace-nowrap flex items-center gap-1.5">
@@ -552,18 +552,18 @@ function updateCheaperAlternative() {
     const c = cheaperExists
         ? { bg: 'bg-orange-100 dark:bg-orange-900/30', label: 'text-orange-700 dark:text-orange-400', big: 'text-orange-800 dark:text-orange-300', sub: 'text-orange-700/80 dark:text-orange-400/80', semanticBg: 'theme-warning-bg', semanticText: 'theme-warning-text' }
         : { bg: 'bg-green-100 dark:bg-green-900/30', label: 'text-green-700 dark:text-green-400', big: 'text-green-800 dark:text-green-300', sub: 'text-green-700/80 dark:text-green-400/80', semanticBg: 'theme-cheapest-bg', semanticText: 'theme-cheapest-text' };
-    const headingLabel = usingPreferred ? `Total cost per photo <span class="normal-case opacity-80">· ${escapeHtml(pref.lab)}</span>` : 'Total cost per photo';
+    const headingLabel = usingPreferred ? `${t('totalCostPerPhotoLabel')} <span class="normal-case opacity-80">· ${escapeHtml(pref.lab)}</span>` : t('totalCostPerPhotoLabel');
     // When using a preferred lab that isn't the cheapest, note the cheapest total underneath.
     const cheapestNote = (usingPreferred && cheapestTotal !== null && cheapestTotal < currentTotal - 0.001)
-        ? `<p class="text-xs ${c.semanticText} ${c.sub} mt-1 pt-1 border-t border-current/10">Cheapest lab: ${CUR()}${cheapestTotal.toFixed(2)}/photo total</p>`
+        ? `<p class="text-xs ${c.semanticText} ${c.sub} mt-1 pt-1 border-t border-current/10">${t('cheapestLabTotal', { amount: `${CUR()}${cheapestTotal.toFixed(2)}` })}</p>`
         : '';
     const costBlock = `<div class="mt-1 rounded-lg ${c.semanticBg} ${c.bg} px-4 py-3 text-center">
         <p class="text-xs font-semibold ${c.semanticText} ${c.label} uppercase tracking-wide">${headingLabel}</p>
         <p class="mt-0.5 flex items-baseline justify-center gap-1.5">
             <span class="font-mono text-3xl font-bold ${c.semanticText} ${c.big}">${CUR()}${currentTotal.toFixed(2)}</span>
-            <span class="font-mono text-sm ${c.semanticText} ${c.sub}">${CUR()}${currentFilmCostPerPhoto.toFixed(2)} film</span>
+            <span class="font-mono text-sm ${c.semanticText} ${c.sub}">${t('filmAmountLabel', { amount: `${CUR()}${currentFilmCostPerPhoto.toFixed(2)}` })}</span>
         </p>
-        <p class="text-xs ${c.semanticText} ${c.sub} mt-0.5">+ ${CUR()}${currentDevCpp.toFixed(2)} dev${stopsAbs > 0 ? ` · at ${devSpeed} ISO` : ''}</p>
+        <p class="text-xs ${c.semanticText} ${c.sub} mt-0.5">${t('plusDevCostLabel', { amount: `${CUR()}${currentDevCpp.toFixed(2)}` })}${stopsAbs > 0 ? t('atIsoNote', { iso: devSpeed }) : ''}</p>
         ${cheapestNote}
     </div>`;
 
@@ -573,7 +573,7 @@ function updateCheaperAlternative() {
     if (cheaperExists) {
         const saving = currentTotal - bestAlt.totalCpp;
         const buyUrl = sanitizeUrl(bestAlt.buyLink);
-        const buyLabel = bestAlt.storeName ? `Buy from ${escapeHtml(bestAlt.storeName)}` : 'Buy this film';
+        const buyLabel = bestAlt.storeName ? t('buyFromLabel', { storeName: escapeHtml(bestAlt.storeName) }) : t('buyThisFilmLabel');
         const altLocality = bundleLocalityLabel(bestAlt);
         const altLocalityBadge = altLocality ? ` <span class="text-amber-600 dark:text-amber-400">(${escapeHtml(altLocality)})</span>` : '';
         const buyLink = buyUrl
@@ -586,16 +586,16 @@ function updateCheaperAlternative() {
         // frames" doesn't make the reason obvious at a glance.
         const altDevCostPerRoll = bestAlt.devCpp * bestAlt.exposures;
         const exposureNote = (bestAlt.exposures && exposures && bestAlt.exposures !== exposures && bestAlt.devCpp < currentDevCpp - 0.001)
-            ? `<p class="text-xs font-medium text-blue-800 dark:text-blue-300 mt-1 pt-1 border-t border-blue-200/60 dark:border-blue-800/40">📐 Why it's cheaper: roughly the same ${CUR()}${altDevCostPerRoll.toFixed(2)} flat dev fee, but split across ${bestAlt.exposures} exposures (${CUR()}${bestAlt.devCpp.toFixed(2)}/photo) instead of your ${exposures} (${CUR()}${currentDevCpp.toFixed(2)}/photo) — more frames per roll, same flat fee.</p>`
+            ? `<p class="text-xs font-medium text-blue-800 dark:text-blue-300 mt-1 pt-1 border-t border-blue-200/60 dark:border-blue-800/40">📐 ${t('whyCheaperExposureNote', { flatFeeAmount: `${CUR()}${altDevCostPerRoll.toFixed(2)}`, altExposures: bestAlt.exposures, altPerPhoto: `${CUR()}${bestAlt.devCpp.toFixed(2)}`, exposures, currentPerPhoto: `${CUR()}${currentDevCpp.toFixed(2)}` })}</p>`
             : '';
         altBlock = `<div class="mt-2 rounded-md bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/40 px-3 py-1.5">
-            <p class="text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wide">💡 Cheaper film in library <span class="normal-case opacity-70">(total film + dev)</span></p>
-            <p class="text-xs text-blue-800 dark:text-blue-300 mt-0.5"><span class="font-semibold">${escapeHtml(bestAlt.name)}</span> — ${CUR()}${bestAlt.totalCpp.toFixed(2)}/photo total <span class="opacity-75">(${CUR()}${bestAlt.filmCpp.toFixed(2)} film + ${CUR()}${bestAlt.devCpp.toFixed(2)} dev · saves ${CUR()}${saving.toFixed(2)})</span>${buyLink}</p>
+            <p class="text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wide">💡 ${t('cheaperFilmInLibraryLabel')} <span class="normal-case opacity-70">${t('totalFilmPlusDevNote')}</span></p>
+            <p class="text-xs text-blue-800 dark:text-blue-300 mt-0.5"><span class="font-semibold">${escapeHtml(bestAlt.name)}</span> — ${t('photoTotalLabel', { amount: `${CUR()}${bestAlt.totalCpp.toFixed(2)}` })} <span class="opacity-75">${t('filmDevSavingsNote', { filmAmount: `${CUR()}${bestAlt.filmCpp.toFixed(2)}`, devAmount: `${CUR()}${bestAlt.devCpp.toFixed(2)}`, savingAmount: `${CUR()}${saving.toFixed(2)}` })}</span>${buyLink}</p>
             ${exposureNote}
         </div>`;
     } else if (bestAlt) {
         altBlock = `<div class="mt-2 px-1">
-            <p class="text-xs text-gray-500 dark:text-gray-400">🏆 Cheapest saved ${boxSpeed} ISO ${escapeHtml(process)} option at this speed.</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">🏆 ${t('cheapestSavedOptionNote', { iso: boxSpeed, process: escapeHtml(process) })}</p>
         </div>`;
     }
 

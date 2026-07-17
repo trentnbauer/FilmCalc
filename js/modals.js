@@ -74,7 +74,7 @@ function renderChangelogList(onlyNumbers) {
     const all = Array.isArray(changelogEntries) ? changelogEntries : [];
     const entries = onlyNumbers ? all.filter(e => onlyNumbers.includes(e.number)) : all;
     if (entries.length === 0) {
-        const msg = onlyNumbers ? 'No new changes.' : 'No changelog available.';
+        const msg = onlyNumbers ? t('noNewChanges') : t('noChangelogAvailable');
         container.innerHTML = `<p class="text-xs text-gray-400 text-center py-2">${msg}</p>`;
         return;
     }
@@ -119,7 +119,7 @@ const confirmModal = document.getElementById('confirmModal');
 let confirmResolve = null;
 function showConfirm(message, confirmLabel) {
     document.getElementById('confirmModalMessage').textContent = message;
-    document.getElementById('confirmModalConfirmBtn').textContent = confirmLabel || 'Confirm';
+    document.getElementById('confirmModalConfirmBtn').textContent = confirmLabel || t('confirmButton');
     confirmModal.classList.remove('hidden');
     return new Promise(resolve => { confirmResolve = resolve; });
 }
@@ -295,32 +295,32 @@ function validateAiEntries(kind, doc) {
     const errs = [];
     const key = kind === 'film' ? 'films' : 'labs';
     const list = doc && doc[key];
-    if (!Array.isArray(list) || list.length === 0) return { errs: [`No "${key}:" list found in the AI's reply.`], list: [] };
+    if (!Array.isArray(list) || list.length === 0) return { errs: [t('aiNoListFound', { key })], list: [] };
     const validProcesses = PROCESS_OPTIONS.map(o => o.value);
     const validFormats = FORMAT_OPTIONS.map(o => o.value);
     const hasUnknown = (v) => typeof v === 'string' && /UNKNOWN/i.test(v);
 
     list.forEach((e, i) => {
-        const at = `#${i + 1} (${e.name || 'unnamed'})`;
-        if (!e.name || hasUnknown(e.name)) errs.push(`${at}: missing name`);
-        Object.entries(e).forEach(([k, v]) => { if (hasUnknown(v)) errs.push(`${at}: "${k}" came back as UNKNOWN — the AI couldn't find it, so fill it in yourself.`); });
+        const at = `#${i + 1} (${e.name || t('aiUnnamedEntry')})`;
+        if (!e.name || hasUnknown(e.name)) errs.push(`${at}: ${t('aiMissingName')}`);
+        Object.entries(e).forEach(([k, v]) => { if (hasUnknown(v)) errs.push(`${at}: ${t('aiFieldUnknown', { field: k })}`); });
         if (kind === 'film') {
-            if (!Number.isFinite(parseInt(e.boxSpeed))) errs.push(`${at}: boxSpeed must be a number`);
-            if (e.process && !validProcesses.includes(e.process)) errs.push(`${at}: process "${e.process}" is not one of ${validProcesses.join(', ')}`);
-            if (e.format && !validFormats.includes(e.format)) errs.push(`${at}: format "${e.format}" is not one of ${validFormats.join(', ')}`);
-            if (!Array.isArray(e.bundles) || !e.bundles.length) errs.push(`${at}: needs at least one bundle`);
+            if (!Number.isFinite(parseInt(e.boxSpeed))) errs.push(`${at}: ${t('aiBoxSpeedMustBeNumber')}`);
+            if (e.process && !validProcesses.includes(e.process)) errs.push(`${at}: ${t('aiInvalidProcess', { value: e.process, valid: validProcesses.join(', ') })}`);
+            if (e.format && !validFormats.includes(e.format)) errs.push(`${at}: ${t('aiInvalidFormat', { value: e.format, valid: validFormats.join(', ') })}`);
+            if (!Array.isArray(e.bundles) || !e.bundles.length) errs.push(`${at}: ${t('aiNeedsBundle')}`);
             (e.bundles || []).forEach((b, j) => {
-                Object.entries(b).forEach(([k, v]) => { if (hasUnknown(v)) errs.push(`${at} bundle ${j + 1}: "${k}" came back as UNKNOWN.`); });
-                if (!Number.isFinite(parseFloat(b.filmCost))) errs.push(`${at} bundle ${j + 1}: filmCost must be a number`);
-                if (!parseInt(b.exposures)) errs.push(`${at} bundle ${j + 1}: exposures must be a number`);
+                Object.entries(b).forEach(([k, v]) => { if (hasUnknown(v)) errs.push(`${at} ${t('aiBundleLabel', { n: j + 1 })}: ${t('aiFieldUnknownPeriod', { field: k })}`); });
+                if (!Number.isFinite(parseFloat(b.filmCost))) errs.push(`${at} ${t('aiBundleLabel', { n: j + 1 })}: ${t('aiFilmCostMustBeNumber')}`);
+                if (!parseInt(b.exposures)) errs.push(`${at} ${t('aiBundleLabel', { n: j + 1 })}: ${t('aiExposuresMustBeNumber')}`);
             });
         } else {
-            if (!Array.isArray(e.services) || !e.services.length) errs.push(`${at}: needs at least one service tier`);
+            if (!Array.isArray(e.services) || !e.services.length) errs.push(`${at}: ${t('aiNeedsServiceTier')}`);
             (e.services || []).forEach((s, j) => {
-                Object.entries(s).forEach(([k, v]) => { if (hasUnknown(v)) errs.push(`${at} service ${j + 1}: "${k}" came back as UNKNOWN.`); });
-                if (!Number.isFinite(parseFloat(s.devCost))) errs.push(`${at} service ${j + 1}: devCost must be a number`);
-                if (s.mailBackCost !== undefined && !Number.isFinite(parseFloat(s.mailBackCost))) errs.push(`${at} service ${j + 1}: mailBackCost must be a number`);
-                (s.processes || []).forEach(p => { if (!validProcesses.includes(p)) errs.push(`${at} service ${j + 1}: process "${p}" is invalid`); });
+                Object.entries(s).forEach(([k, v]) => { if (hasUnknown(v)) errs.push(`${at} ${t('aiServiceLabel', { n: j + 1 })}: ${t('aiFieldUnknownPeriod', { field: k })}`); });
+                if (!Number.isFinite(parseFloat(s.devCost))) errs.push(`${at} ${t('aiServiceLabel', { n: j + 1 })}: ${t('aiDevCostMustBeNumber')}`);
+                if (s.mailBackCost !== undefined && !Number.isFinite(parseFloat(s.mailBackCost))) errs.push(`${at} ${t('aiServiceLabel', { n: j + 1 })}: ${t('aiMailBackCostMustBeNumber')}`);
+                (s.processes || []).forEach(p => { if (!validProcesses.includes(p)) errs.push(`${at} ${t('aiServiceLabel', { n: j + 1 })}: ${t('aiInvalidServiceProcess', { value: p })}`); });
             });
         }
     });
@@ -344,14 +344,14 @@ function renderAiPreview(kind, list) {
         }
         const tiers = (e.services || []).map(s => {
             const scanParts = [];
-            if (s.highResScan) scanParts.push('Hi-Res');
-            if (s.tiffScan) scanParts.push('TIFF');
+            if (s.highResScan) scanParts.push(t('hiResScanLabel'));
+            if (s.tiffScan) scanParts.push(t('tiffScanLabel'));
             const devPlusMailBack = (parseFloat(s.devCost) || 0) + (parseFloat(s.mailBackCost) || 0);
-            return `<div class="flex justify-between text-xs text-gray-500 dark:text-gray-400"><span>${escapeHtml(turnaroundLabels[s.turnaroundTime] || s.turnaroundTime || '—')} · ${scanParts.length ? escapeHtml(scanParts.join(' + ')) : 'Standard'} · ${escapeHtml((s.processes || []).join('/'))}</span><span class="font-mono">${CUR()}${devPlusMailBack.toFixed(2)}/roll</span></div>`;
+            return `<div class="flex justify-between text-xs text-gray-500 dark:text-gray-400"><span>${escapeHtml(turnaroundLabels[s.turnaroundTime] || s.turnaroundTime || '—')} · ${scanParts.length ? escapeHtml(scanParts.join(' + ')) : t('standardScanLabel')} · ${escapeHtml((s.processes || []).join('/'))}</span><span class="font-mono">${CUR()}${devPlusMailBack.toFixed(2)}/roll</span></div>`;
         }).join('');
         return `<div class="border border-gray-200 dark:border-gray-600 rounded-lg p-2">
             <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">${escapeHtml(e.name)}</p>
-            <p class="text-xs text-gray-400 dark:text-gray-500">${escapeHtml(e.address || 'No address')}</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500">${escapeHtml(e.address || '') || t('noAddressLabel')}</p>
             <div class="mt-1 space-y-0.5">${tiers}</div>
         </div>`;
     }).join('');
@@ -372,7 +372,7 @@ function aiApplyProvider() {
     document.getElementById('aiModel').value = cfg.defaultModel;
     document.getElementById('aiBaseUrlWrap').classList.toggle('hidden', provider !== 'compatible');
     // A local model needs no key.
-    document.getElementById('aiKey').placeholder = provider === 'compatible' ? '(often not needed for local models)' : 'sk-…';
+    document.getElementById('aiKey').placeholder = provider === 'compatible' ? t('aiKeyPlaceholderLocal') : 'sk-…';
     if (aiSelfHosted) {
         const saved = localStorage.getItem(aiKeyStorageKey(provider));
         document.getElementById('aiKey').value = saved || '';
@@ -384,7 +384,7 @@ function aiUpdateUrlWarning() {
     const provider = document.getElementById('aiProvider').value;
     const warn = document.getElementById('aiUrlWarning');
     if (aiMode === 'url' && !AI_PROVIDERS[provider].webSearch) {
-        warn.textContent = `⚠️ ${AI_PROVIDERS[provider].label} usually can't browse the web, so it may guess the prices instead of reading them. Pasting the page text is far more reliable.`;
+        warn.textContent = t('aiUrlWarningText', { label: AI_PROVIDERS[provider].label });
         warn.classList.remove('hidden');
     } else {
         warn.classList.add('hidden');
@@ -441,7 +441,7 @@ document.getElementById('aiModeUrlBtn').addEventListener('click', () => aiSetMod
 document.getElementById('aiDiscardBtn').addEventListener('click', () => {
     aiPendingEntries = null;
     document.getElementById('aiResultWrap').classList.add('hidden');
-    aiSetStatus('Discarded.');
+    aiSetStatus(t('aiDiscarded'));
 });
 
 document.getElementById('aiGenerateBtn').addEventListener('click', async () => {
@@ -453,9 +453,9 @@ document.getElementById('aiGenerateBtn').addEventListener('click', async () => {
         ? document.getElementById('aiPageText').value.trim()
         : document.getElementById('aiPageUrl').value.trim();
 
-    if (!model) { aiSetStatus('Enter a model name.', 'error'); return; }
-    if (provider !== 'compatible' && !key) { aiSetStatus('Enter your API key.', 'error'); return; }
-    if (!source) { aiSetStatus(aiMode === 'paste' ? 'Paste the page text first.' : 'Enter the page URL.', 'error'); return; }
+    if (!model) { aiSetStatus(t('aiEnterModelName'), 'error'); return; }
+    if (provider !== 'compatible' && !key) { aiSetStatus(t('aiEnterApiKey'), 'error'); return; }
+    if (!source) { aiSetStatus(aiMode === 'paste' ? t('aiPastePageTextFirst') : t('aiEnterPageUrl'), 'error'); return; }
 
     aiApiKey = key; // memory only
     if (aiSelfHosted && document.getElementById('aiRememberKey').checked) {
@@ -466,18 +466,18 @@ document.getElementById('aiGenerateBtn').addEventListener('click', async () => {
 
     const btn = document.getElementById('aiGenerateBtn');
     btn.disabled = true;
-    aiSetStatus('Asking the AI… this can take a few seconds.');
+    aiSetStatus(t('aiAskingStatus'));
     document.getElementById('aiResultWrap').classList.add('hidden');
     try {
         const useWebSearch = aiMode === 'url' && AI_PROVIDERS[provider].webSearch;
         const prompt = buildAiPrompt(kind, source, aiMode === 'url');
         const reply = await callAiProvider(provider, model, aiApiKey, prompt, useWebSearch);
-        if (/ERROR_CANNOT_ACCESS/.test(reply)) throw new Error("The AI couldn't open that page. Switch to \"Paste page\" and paste the text instead.");
+        if (/ERROR_CANNOT_ACCESS/.test(reply)) throw new Error(t('aiCannotAccessPage'));
         const yamlText = extractYaml(reply);
-        if (!yamlText) throw new Error('The AI did not return any YAML.');
+        if (!yamlText) throw new Error(t('aiNoYamlReturned'));
         let doc;
         try { doc = jsyaml.load(yamlText); }
-        catch (e) { throw new Error('The AI returned something that isn\'t valid YAML.'); }
+        catch (e) { throw new Error(t('aiInvalidYaml')); }
         const { errs, list } = validateAiEntries(kind, doc);
         document.getElementById('aiRawYaml').textContent = yamlText;
         if (errs.length) {
@@ -487,17 +487,17 @@ document.getElementById('aiGenerateBtn').addEventListener('click', async () => {
             document.getElementById('aiAddBtn').disabled = true;
             document.getElementById('aiAddBtn').classList.add('opacity-50', 'cursor-not-allowed');
             document.getElementById('aiResultWrap').classList.remove('hidden');
-            aiSetStatus('The AI\'s answer had problems — see below.', 'error');
+            aiSetStatus(t('aiAnswerHadProblems'), 'error');
         } else {
             aiPendingEntries = { kind, list };
             renderAiPreview(kind, list);
             document.getElementById('aiAddBtn').disabled = false;
             document.getElementById('aiAddBtn').classList.remove('opacity-50', 'cursor-not-allowed');
             document.getElementById('aiResultWrap').classList.remove('hidden');
-            aiSetStatus(`Got ${list.length} ${kind === 'film' ? 'film' : 'lab'}(s). Check the numbers below.`, 'ok');
+            aiSetStatus(t('aiGotEntries', { count: list.length, kind: kind === 'film' ? t('aiEntryKindFilm') : t('aiEntryKindLab') }), 'ok');
         }
     } catch (e) {
-        aiSetStatus(e.message || 'Something went wrong talking to the AI.', 'error');
+        aiSetStatus(e.message || t('aiGenericError'), 'error');
     } finally {
         btn.disabled = false;
     }
@@ -562,7 +562,7 @@ document.getElementById('aiAddBtn').addEventListener('click', () => {
     updateCheaperAlternative();
     const n = list.length;
     closeAiModal();
-    showToast(`Added ${n} ${kind === 'film' ? 'film stock' : 'lab'}(s) to your Library. Double-check the prices against the shop page.`);
+    showToast(t('aiAddedToLibrary', { count: n, kind: kind === 'film' ? t('aiEntryKindFilmStock') : t('aiEntryKindLab') }));
 });
 
 document.getElementById('addWithAiBtn').addEventListener('click', openAiModal);
@@ -640,7 +640,7 @@ function populateSetupLabSelect() {
     const pref = getDefaultLabPref();
     const allLabs = getAllLabs();
     const names = Object.keys(allLabs).filter(n => !allLabs[n].hidden);
-    labSel.innerHTML = '<option value="">None (always show cheapest)</option>' + names.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+    labSel.innerHTML = `<option value="">${t('noneAlwaysShowCheapest')}</option>` + names.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
     if (pref && pref.lab && names.includes(pref.lab)) {
         labSel.value = pref.lab;
         populateSetupTierSelect(pref.lab, pref.tierIndex);
@@ -675,7 +675,7 @@ function renderSetupFilmList() {
     const all = { ...defaultFilms, ...saved };
     const keys = Object.keys(all);
     if (keys.length === 0) {
-        listEl.innerHTML = '<p class="text-xs text-gray-400 text-center py-2">No films saved yet — import some first.</p>';
+        listEl.innerHTML = `<p class="text-xs text-gray-400 text-center py-2">${t('noFilmsSavedYet')}</p>`;
         return;
     }
     listEl.innerHTML = keys.map(key => {
@@ -685,8 +685,8 @@ function renderSetupFilmList() {
         return `<div class="flex items-center justify-between gap-2 px-2 py-1.5 rounded ${ignored ? 'opacity-50' : ''}">
             <span class="text-sm text-gray-700 dark:text-gray-300 truncate">${escapeHtml(f.name)} <span class="text-xs opacity-70">(${escapeHtml(f.boxSpeed || '?')} ISO · ${escapeHtml(f.format || '35mm')})</span></span>
             <span class="flex items-center gap-1 shrink-0">
-                <button type="button" class="setup-fav-btn text-base leading-none px-1 ${fav ? 'text-red-500' : 'text-gray-300 dark:text-gray-600'}" data-key="${escapeHtml(key)}" title="${fav ? 'Unfavourite' : 'Favourite'}" aria-label="${fav ? 'Unfavourite' : 'Favourite'}">${fav ? '♥' : '♡'}</button>
-                <button type="button" class="setup-ignore-btn text-base leading-none px-1 ${ignored ? 'text-red-600 font-bold' : 'text-gray-300 dark:text-gray-600'}" data-key="${escapeHtml(key)}" title="${ignored ? 'Un-ignore' : 'Ignore this film'}" aria-label="${ignored ? 'Un-ignore' : 'Ignore this film'}">✕</button>
+                <button type="button" class="setup-fav-btn text-base leading-none px-1 ${fav ? 'text-red-500' : 'text-gray-300 dark:text-gray-600'}" data-key="${escapeHtml(key)}" title="${fav ? t('unfavouriteLabel') : t('favouriteLabel')}" aria-label="${fav ? t('unfavouriteLabel') : t('favouriteLabel')}">${fav ? '♥' : '♡'}</button>
+                <button type="button" class="setup-ignore-btn text-base leading-none px-1 ${ignored ? 'text-red-600 font-bold' : 'text-gray-300 dark:text-gray-600'}" data-key="${escapeHtml(key)}" title="${ignored ? t('unIgnoreLabel') : t('ignoreFilmLabel')}" aria-label="${ignored ? t('unIgnoreLabel') : t('ignoreFilmLabel')}">✕</button>
             </span>
         </div>`;
     }).join('');
@@ -749,7 +749,7 @@ function presetCheckboxHtml(i) {
     return `<label class="flex items-center gap-2 text-sm px-2 py-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-700/40 cursor-pointer">
         <input type="checkbox" class="import-preset-checkbox rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500" data-index="${i}">
         <span class="flex-1 text-gray-700 dark:text-gray-300">${escapeHtml(e.label)}</span>
-        <span class="text-xs px-1.5 py-0.5 rounded font-semibold uppercase ${e.type === 'Film' ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' : 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300'}">${e.type}</span>
+        <span class="text-xs px-1.5 py-0.5 rounded font-semibold uppercase ${e.type === 'Film' ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' : 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300'}">${e.type === 'Film' ? t('filmTypeLabel') : t('labTypeLabel')}</span>
     </label>`;
 }
 
@@ -760,11 +760,11 @@ function presetCheckboxHtml(i) {
 function buildPresetTree() {
     const tree = {};
     presetEntries.forEach((e, i) => {
-        const country = e.country || 'Other';
+        const country = e.country || t('otherLabel');
         if (!tree[country]) tree[country] = { countryWide: [], states: {} };
         if (e.state) {
             const cities = tree[country].states[e.state] || (tree[country].states[e.state] = {});
-            const city = e.city || 'Other';
+            const city = e.city || t('otherLabel');
             (cities[city] || (cities[city] = [])).push(i);
         } else {
             tree[country].countryWide.push(i);
@@ -846,7 +846,7 @@ async function loadPresetList() {
         return { ...e, label: embedded || e.label, fetchOk: fetched.ok, parsed: fetched.ok ? fetched.parsed : null };
     }));
     if (presetEntries.length === 0) {
-        importPresetList.innerHTML = '<p class="text-xs text-gray-400 text-center py-2">No presets found — upload a file instead.</p>';
+        importPresetList.innerHTML = `<p class="text-xs text-gray-400 text-center py-2">${t('noPresetsFound')}</p>`;
         return;
     }
     importPresetList.innerHTML = renderPresetTree(buildPresetTree());
@@ -997,10 +997,10 @@ function finishImport(results) {
     if (settingsImported) upgradeThresholdInput.value = localStorage.getItem('upgradeThresholdPercent');
     updateLabComparison();
     if (errors > 0 && filmsImported === 0 && labsImported === 0 && !settingsImported) {
-        showToast('Could not read the selected file(s) — are they valid YAML?', true);
+        showToast(t('importReadError'), true);
         closeImportModal();
     } else {
-        showToast(`Imported ${filmsImported} film profile(s), ${labsImported} lab profile(s)${settingsImported ? ', and settings' : ''}.`);
+        showToast(t('importSuccessMessage', { films: filmsImported, labs: labsImported, settingsSuffix: settingsImported ? t('importSettingsSuffix') : '' }));
         closeImportModal();
         // Step 2: let them pick a home lab and favourite/ignore stocks.
         openSetupModal();
@@ -1029,7 +1029,7 @@ document.getElementById('importFile').addEventListener('change', (e) => {
 }));
 importDropzone.addEventListener('drop', (e) => {
     const files = Array.from(e.dataTransfer?.files || []).filter(f => /\.ya?ml$/i.test(f.name));
-    if (!files.length) { showToast('Please drop .yaml or .yml files.', true); return; }
+    if (!files.length) { showToast(t('dropYamlFilesOnly'), true); return; }
     Promise.all(files.map(readYamlFile)).then(finishImport);
 });
 
@@ -1038,13 +1038,13 @@ importSelectedPresetsBtn.addEventListener('click', async () => {
     if (!checked.length) return;
     const chosen = checked.map(cb => presetEntries[parseInt(cb.dataset.index)]);
     importSelectedPresetsBtn.disabled = true;
-    importSelectedPresetsBtn.textContent = 'Importing…';
+    importSelectedPresetsBtn.textContent = t('importingEllipsis');
     // Reuses the parsed doc loadPresetList() already fetched for each entry
     // (to read its embedded label) instead of fetching every chosen file a
     // second time here (issue #166).
     const results = chosen.map(e => ({ ok: e.fetchOk, parsed: e.parsed }));
     finishImport(results);
-    importSelectedPresetsBtn.textContent = 'Import Selected';
+    importSelectedPresetsBtn.textContent = t('importSelectedButton');
 });
 
 // ---------- First-launch import prompt ----------
