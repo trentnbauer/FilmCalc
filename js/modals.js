@@ -1047,6 +1047,76 @@ importSelectedPresetsBtn.addEventListener('click', async () => {
     importSelectedPresetsBtn.textContent = t('importSelectedButton');
 });
 
+// ---------- First-launch language picker ----------
+// Shown once, before the import prompt below, for the same "brand-new
+// visitor" audience (no saved film/lab profiles, hasn't been shown
+// before). The heading cycles through "Welcome to FilmCalc, select your
+// language" in a handful of languages purely as a friendly visual cue —
+// FilmCalc only ships English and Spanish (js/i18n.js), which is all the
+// dropdown offers. Picking one calls setLocale()/applyI18n() from
+// js/i18n.js (loaded before this file) and persists to the same
+// 'locale' localStorage key the Settings dropdown uses, so this is just
+// an earlier, friendlier entry point to the same choice.
+const WELCOME_GREETINGS = [
+    { lang: 'en', text: 'Welcome to FilmCalc, select your language' },
+    { lang: 'es', text: 'Bienvenido a FilmCalc, elige tu idioma' },
+    { lang: 'fr', text: 'Bienvenue sur FilmCalc, choisissez votre langue' },
+    { lang: 'de', text: 'Willkommen bei FilmCalc, wähle deine Sprache' },
+    { lang: 'it', text: 'Benvenuto su FilmCalc, scegli la tua lingua' },
+    { lang: 'pt', text: 'Bem-vindo ao FilmCalc, selecione seu idioma' },
+    { lang: 'ja', text: 'FilmCalcへようこそ、言語を選択してください' },
+    { lang: 'ko', text: 'FilmCalc에 오신 것을 환영합니다, 언어를 선택하세요' },
+    { lang: 'zh', text: '欢迎使用 FilmCalc，请选择您的语言' },
+    { lang: 'hi', text: 'FilmCalc में आपका स्वागत है, अपनी भाषा चुनें' },
+    { lang: 'ar', text: 'مرحبًا بك في FilmCalc، اختر لغتك' },
+    { lang: 'ru', text: 'Добро пожаловать в FilmCalc, выберите свой язык' },
+];
+const WELCOME_CONTINUE_LABELS = { en: 'Continue', es: 'Continuar' };
+
+(function initLanguageWelcomeModal() {
+    const alreadySeen = localStorage.getItem('hasSeenLanguagePrompt') === 'true';
+    const hasFilmProfiles = localStorage.getItem('filmProfiles') !== null;
+    const hasLabProfiles = localStorage.getItem('labProfiles') !== null;
+    if (alreadySeen || hasFilmProfiles || hasLabProfiles) return;
+
+    const modal = document.getElementById('languageWelcomeModal');
+    const heading = document.getElementById('languageWelcomeTitle');
+    const select = document.getElementById('languageWelcomeSelect');
+    const continueBtn = document.getElementById('languageWelcomeContinueBtn');
+    if (!modal || !heading || !select || !continueBtn) return;
+
+    select.value = currentLocale;
+    continueBtn.textContent = WELCOME_CONTINUE_LABELS[select.value] || WELCOME_CONTINUE_LABELS.en;
+    select.addEventListener('change', () => {
+        continueBtn.textContent = WELCOME_CONTINUE_LABELS[select.value] || WELCOME_CONTINUE_LABELS.en;
+    });
+
+    let greetIndex = 0;
+    const greetTimer = setInterval(() => {
+        heading.classList.add('opacity-0');
+        setTimeout(() => {
+            greetIndex = (greetIndex + 1) % WELCOME_GREETINGS.length;
+            const greeting = WELCOME_GREETINGS[greetIndex];
+            heading.textContent = greeting.text;
+            heading.dir = greeting.lang === 'ar' ? 'rtl' : 'ltr';
+            heading.classList.remove('opacity-0');
+        }, 300);
+    }, 1800);
+
+    modal.classList.remove('hidden');
+
+    continueBtn.addEventListener('click', () => {
+        clearInterval(greetTimer);
+        setLocale(select.value);
+        localStorage.setItem('locale', select.value);
+        localStorage.setItem('hasSeenLanguagePrompt', 'true');
+        const settingsLanguageSelect = document.getElementById('languageSelect');
+        if (settingsLanguageSelect) settingsLanguageSelect.value = select.value;
+        applyI18n();
+        modal.classList.add('hidden');
+    });
+})();
+
 // ---------- First-launch import prompt ----------
 // Shown once, only if the person has never saved a film or lab
 // profile and hasn't already dismissed it — offers a shortcut

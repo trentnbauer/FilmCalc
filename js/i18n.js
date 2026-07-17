@@ -31,6 +31,7 @@ const STRINGS = {
         notNowButton: 'Not now',
         cancelButton: 'Cancel',
         deleteButton: 'Delete',
+        continueButton: 'Continue',
         copyLinkStatus: '✓ Link copied',
 
         emptyLibraryMessage: 'Save at least one film and one lab profile to compare',
@@ -520,6 +521,7 @@ const STRINGS = {
         notNowButton: 'Ahora no',
         cancelButton: 'Cancelar',
         deleteButton: 'Eliminar',
+        continueButton: 'Continuar',
         copyLinkStatus: '✓ Enlace copiado',
 
         emptyLibraryMessage: 'Guarda al menos una película y un perfil de laboratorio para comparar',
