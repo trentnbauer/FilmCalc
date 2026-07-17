@@ -27,8 +27,8 @@ function attachSelectFilter(selectId, placeholder) {
 
     const input = document.createElement('input');
     input.type = 'search';
-    input.placeholder = placeholder || 'Search…';
-    input.setAttribute('aria-label', placeholder || 'Search list');
+    input.placeholder = placeholder || t('searchGenericPlaceholder');
+    input.setAttribute('aria-label', placeholder || t('searchGenericAriaLabel'));
     input.autocomplete = 'off';
     input.className = 'select-filter-input hidden w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm mb-1';
     select.parentNode.insertBefore(input, select);
@@ -64,9 +64,9 @@ function attachSelectFilter(selectId, placeholder) {
 }
 
 [
-    ['libraryFilmsDropdown', 'Search saved films…'],
-    ['savedLabsDropdown', 'Search saved labs…'],
-    ['cheapestFilmSelect', 'Search films…'],
-    ['defaultLabSelect', 'Search labs…'],
-    ['setupLabSelect', 'Search labs…']
+    ['libraryFilmsDropdown', t('searchSavedFilmsPlaceholder')],
+    ['savedLabsDropdown', t('searchSavedLabsPlaceholder')],
+    ['cheapestFilmSelect', t('searchFilmsPlaceholder')],
+    ['defaultLabSelect', t('searchLabsPlaceholder')],
+    ['setupLabSelect', t('searchLabsPlaceholder')]
 ].forEach(([id, placeholder]) => attachSelectFilter(id, placeholder));

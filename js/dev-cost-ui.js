@@ -14,8 +14,6 @@
 //
 // Extracted from index.html as part of #61 (single-file app split).
 
-const EMPTY_LIBRARY_MESSAGE = 'Save at least one film and one lab profile to compare';
-
 // ---------- CSV export (issue #163) ----------
 // Holds whatever rows the currently active Dev Cost sub-tab last
 // rendered (same sort/filters already applied), so the shared "Export
@@ -99,9 +97,9 @@ function renderUpgradeNote(upgrade) {
     // labs' dev + push/pull fees can land on the exact same total — that
     // "only 0.0% more" reads oddly; "costs the same" is the honest phrasing.
     const costPhrase = premium < 0.001
-        ? `costs the same (${CUR()}${pick.totalCostPerPhoto.toFixed(2)}/photo)`
-        : `is only ${(premium * 100).toFixed(1)}% more (${CUR()}${pick.totalCostPerPhoto.toFixed(2)} vs ${CUR()}${baselineCostPerPhoto.toFixed(2)}/photo)`;
-    return `<div class="text-xs theme-recommended-text text-amber-700 dark:text-amber-400 mt-0.5">💡 Cheapest Hi-Res + Fastest ${costPhrase} — ${escapeHtml(pick.labName)}, Hi-Res, Next Day</div>`;
+        ? t('upgradeNoteCostsSame', { amount: `${CUR()}${pick.totalCostPerPhoto.toFixed(2)}` })
+        : t('upgradeNoteCostsMore', { percent: (premium * 100).toFixed(1), amount: `${CUR()}${pick.totalCostPerPhoto.toFixed(2)}`, baseline: `${CUR()}${baselineCostPerPhoto.toFixed(2)}` });
+    return `<div class="text-xs theme-recommended-text text-amber-700 dark:text-amber-400 mt-0.5">${t('upgradeNoteText', { costPhrase, labName: escapeHtml(pick.labName) })}</div>`;
 }
 
 // ---------- Dev Cost tab's Per ISO / Per Photo / Per Film / Per Lab sub-nav ----------
@@ -151,7 +149,7 @@ document.getElementById('cheapestFilmShareBtn').addEventListener('click', async 
     const statusEl = document.getElementById('cheapestFilmShareStatus');
     try {
         await navigator.clipboard.writeText(url);
-        statusEl.textContent = '✓ Link copied';
+        statusEl.textContent = t('copyLinkStatus');
     } catch {
         statusEl.textContent = url;
     }
@@ -283,7 +281,7 @@ function renderDevCostActiveFilters() {
     if (typeof cheapestProcess !== 'undefined' && cheapestProcess && cheapestProcess !== 'ALL') {
         const label = (typeof PROCESS_OPTIONS !== 'undefined' && PROCESS_OPTIONS.find(o => o.value === cheapestProcess)?.label) || cheapestProcess;
         chips.push({
-            label: `Process: ${label}`,
+            label: t('processFilterChip', { label }),
             clear: () => {
                 cheapestProcess = 'ALL';
                 localStorage.setItem('globalProcess', cheapestProcess);
@@ -295,16 +293,16 @@ function renderDevCostActiveFilters() {
     }
     if (devCostFilterTurnaround) {
         chips.push({
-            label: devCostFilterTurnaround === 'next_day' ? '⚡ Next Day' : 'Same Week',
+            label: devCostFilterTurnaround === 'next_day' ? t('nextDayFilterChip') : t('sameWeekFilterChip'),
             clear: () => { devCostFilterTurnaround = ''; renderDevCostFilterBar(); refreshActiveCheapestSubTab(); }
         });
     }
-    if (devCostFilterHiRes) chips.push({ label: 'HI-RES', clear: () => { devCostFilterHiRes = false; renderDevCostFilterBar(); refreshActiveCheapestSubTab(); } });
-    if (devCostFilterTiff) chips.push({ label: 'TIFF', clear: () => { devCostFilterTiff = false; renderDevCostFilterBar(); refreshActiveCheapestSubTab(); } });
+    if (devCostFilterHiRes) chips.push({ label: t('hiResBadgeLabel'), clear: () => { devCostFilterHiRes = false; renderDevCostFilterBar(); refreshActiveCheapestSubTab(); } });
+    if (devCostFilterTiff) chips.push({ label: t('tiffBadgeLabel'), clear: () => { devCostFilterTiff = false; renderDevCostFilterBar(); refreshActiveCheapestSubTab(); } });
     if (devCostIncludeMailBack) {
-        const mailToLabSuffix = devCostMailToLabFee > 0 ? ` + ${CUR()}${devCostMailToLabFee.toFixed(2)} to lab` : '';
+        const mailToLabSuffix = devCostMailToLabFee > 0 ? t('mailToLabSuffix', { amount: `${CUR()}${devCostMailToLabFee.toFixed(2)}` }) : '';
         chips.push({
-            label: `📦 Mail-back ×${devCostMailBackRollCount}${mailToLabSuffix}`,
+            label: t('mailBackFilterChip', { count: devCostMailBackRollCount, suffix: mailToLabSuffix }),
             clear: () => {
                 devCostIncludeMailBack = false;
                 devCostMailToLabFee = 0;
@@ -322,8 +320,8 @@ function renderDevCostActiveFilters() {
         return;
     }
     el.classList.remove('hidden');
-    el.innerHTML = `<span class="text-xs text-gray-400 dark:text-gray-500 font-semibold uppercase tracking-wide">Active</span>` +
-        chips.map((c, i) => `<button type="button" data-chip-index="${i}" class="active-filter-chip inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-900/70 transition-colors" title="Clear this filter">${escapeHtml(c.label)} <span aria-hidden="true">✕</span></button>`).join('');
+    el.innerHTML = `<span class="text-xs text-gray-400 dark:text-gray-500 font-semibold uppercase tracking-wide">${t('activeFiltersLabel')}</span>` +
+        chips.map((c, i) => `<button type="button" data-chip-index="${i}" class="active-filter-chip inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-900/70 transition-colors" title="${t('clearFilterTitle')}">${escapeHtml(c.label)} <span aria-hidden="true">✕</span></button>`).join('');
     el.querySelectorAll('.active-filter-chip').forEach(btn => btn.addEventListener('click', () => chips[parseInt(btn.dataset.chipIndex)].clear()));
 }
 // sortIsoEntries(), pickIsoCandidate(), and computeIsoPriceOptions()
@@ -349,8 +347,8 @@ function isoRowKey(entry) {
 
 // Hi-res/TIFF/turnaround badges shown on every Dev Cost row.
 function renderRowBadges(entry) {
-    const hiResBadge = entry.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">HI-RES</span>` : '';
-    const tiffBadge = entry.tiffScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 align-middle">TIFF</span>` : '';
+    const hiResBadge = entry.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">${t('hiResBadgeLabel')}</span>` : '';
+    const tiffBadge = entry.tiffScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 align-middle">${t('tiffBadgeLabel')}</span>` : '';
     const turnaroundBadge = entry.turnaroundTime ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 align-middle">${escapeHtml(turnaroundLabels[entry.turnaroundTime] || entry.turnaroundTime)}</span>` : '';
     return hiResBadge + tiffBadge + turnaroundBadge;
 }
@@ -359,9 +357,9 @@ function renderRowBadges(entry) {
 // be hi-res, TIFF, both, or neither, independently.
 function scanLabel(entry) {
     const parts = [];
-    if (entry.highResScan) parts.push('Hi-res');
-    if (entry.tiffScan) parts.push('TIFF');
-    return parts.length ? parts.join(' + ') : 'Standard';
+    if (entry.highResScan) parts.push(t('dcHiResScanLabel'));
+    if (entry.tiffScan) parts.push(t('tiffBadgeLabel'));
+    return parts.length ? parts.join(' + ') : t('standardScanLabel');
 }
 
 // Expand/collapse chevron shown on every Dev Cost row.
@@ -375,13 +373,13 @@ function renderRowChevron(isOpen) {
 function renderRowFooterLinks(entry) {
     const buyUrl = sanitizeUrl(entry.buyLink);
     const locality = bundleLocalityLabel(entry);
-    const localityBadge = locality ? ` <span class="text-amber-600 dark:text-amber-400" title="This price is only valid in ${escapeHtml(locality.replace(/ only$/, ''))}">(${escapeHtml(locality)})</span>` : '';
+    const localityBadge = locality ? ` <span class="text-amber-600 dark:text-amber-400" title="${t('localityOnlyTitle', { locality: escapeHtml(locality.replace(/ only$/, '')) })}">(${escapeHtml(locality)})</span>` : '';
     const buyLink = buyUrl
-        ? `<a href="${escapeHtml(buyUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-xs px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:underline">🛒 ${entry.storeName ? 'Buy from ' + escapeHtml(entry.storeName) : 'Buy film'} ↗</a>${localityBadge}`
+        ? `<a href="${escapeHtml(buyUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-xs px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:underline">${entry.storeName ? t('dcBuyFromLabel', { storeName: escapeHtml(entry.storeName) }) : t('buyFilmLabel')}</a>${localityBadge}`
         : '';
     const dirUrl = labDirectionsUrl(entry.labName);
     const directionsLink = dirUrl
-        ? `<a href="${escapeHtml(dirUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-xs px-1.5 py-0.5 rounded bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:underline">📍 Directions ↗</a>`
+        ? `<a href="${escapeHtml(dirUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-xs px-1.5 py-0.5 rounded bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:underline">${t('directionsLinkLabel')}</a>`
         : '';
     return (buyLink || directionsLink)
         ? `<div class="pt-1.5 flex justify-between items-center gap-2"><span>${buyLink}</span><span>${directionsLink}</span></div>`
@@ -393,24 +391,24 @@ function renderRowFooterLinks(entry) {
 function renderRowBreakdown(entry, isOpen) {
     if (!isOpen) return '';
     return `<div class="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700 text-xs space-y-1">
-            <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Film (per photo)</span><span class="font-mono">${CUR()}${entry.filmCostPerPhoto.toFixed(2)}</span></div>
-            <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Development (per photo) <span class="opacity-60">= dev/roll ÷ ${entry.exposures} exp</span></span><span class="font-mono">${CUR()}${(entry.devCostBase / entry.exposures).toFixed(2)}</span></div>
-            ${entry.pushPullFee > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Push/pull fee (per photo)</span><span class="font-mono">${CUR()}${(entry.pushPullFee / entry.exposures).toFixed(2)}</span></div>` : ''}
-            ${entry.mailBackFee > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Mail shipping (per photo)</span><span class="font-mono">${CUR()}${(entry.mailBackFee / entry.exposures).toFixed(2)}</span></div>` : ''}
-            <div class="flex justify-between text-gray-500 dark:text-gray-400 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>Film cost (per roll)</span><span class="font-mono">${CUR()}${entry.filmCostPerRoll.toFixed(2)}</span></div>
-            <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Development (per roll)</span><span class="font-mono">${CUR()}${entry.devCostPerRoll.toFixed(2)}</span></div>
-            <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>Scan</span><span>${scanLabel(entry)}</span></div>
-            <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>Turnaround</span><span>${escapeHtml(turnaroundLabels[entry.turnaroundTime] || entry.turnaroundTime || '—')}</span></div>
-            <div class="flex justify-between font-semibold text-gray-700 dark:text-gray-300 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>Total per roll (${entry.exposures} exp)</span><span class="font-mono">${CUR()}${entry.totalCostPerRoll.toFixed(2)}</span></div>
+            <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>${t('filmPerPhotoLabel')}</span><span class="font-mono">${CUR()}${entry.filmCostPerPhoto.toFixed(2)}</span></div>
+            <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>${t('developmentPerPhotoLabel')} <span class="opacity-60">${t('devRollDivExpNote', { exposures: entry.exposures })}</span></span><span class="font-mono">${CUR()}${(entry.devCostBase / entry.exposures).toFixed(2)}</span></div>
+            ${entry.pushPullFee > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>${t('pushPullFeePerPhotoLabel')}</span><span class="font-mono">${CUR()}${(entry.pushPullFee / entry.exposures).toFixed(2)}</span></div>` : ''}
+            ${entry.mailBackFee > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>${t('mailShippingPerPhotoLabel')}</span><span class="font-mono">${CUR()}${(entry.mailBackFee / entry.exposures).toFixed(2)}</span></div>` : ''}
+            <div class="flex justify-between text-gray-500 dark:text-gray-400 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>${t('filmCostPerRollLabel')}</span><span class="font-mono">${CUR()}${entry.filmCostPerRoll.toFixed(2)}</span></div>
+            <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>${t('developmentPerRollLabel')}</span><span class="font-mono">${CUR()}${entry.devCostPerRoll.toFixed(2)}</span></div>
+            <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>${t('scanRowLabel')}</span><span>${scanLabel(entry)}</span></div>
+            <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>${t('turnaroundRowLabel')}</span><span>${escapeHtml(turnaroundLabels[entry.turnaroundTime] || entry.turnaroundTime || '—')}</span></div>
+            <div class="flex justify-between font-semibold text-gray-700 dark:text-gray-300 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>${t('totalPerRollLabel', { exposures: entry.exposures })}</span><span class="font-mono">${CUR()}${entry.totalCostPerRoll.toFixed(2)}</span></div>
             ${renderRowFooterLinks(entry)}
         </div>`;
 }
 
 function renderIsoRow(entry, rank, pinReason) {
     const badges = renderRowBadges(entry);
-    const direction = entry.stops > 0 ? 'Push' : 'Pull';
+    const direction = entry.stops > 0 ? t('pushDirectionLabel') : t('pullDirectionLabel');
     const stopsLabel = entry.stops !== 0
-        ? ` <span class="text-xs ${entry.overLimit ? 'theme-danger-text text-red-600 dark:text-red-400 font-semibold' : 'opacity-70'}">(${direction} ${Math.abs(entry.stops)} stop${Math.abs(entry.stops) === 1 ? '' : 's'}${entry.overLimit ? ` — over its ${entry.maxPushPull}-stop limit` : ''})</span>`
+        ? ` <span class="text-xs ${entry.overLimit ? 'theme-danger-text text-red-600 dark:text-red-400 font-semibold' : 'opacity-70'}">(${t('stopsSummary', { direction, n: Math.abs(entry.stops), plural: Math.abs(entry.stops) === 1 ? '' : 's' })}${entry.overLimit ? t('overLimitSuffix', { limit: entry.maxPushPull }) : ''})</span>`
         : '';
     const isCheapest = rank === 0;
     const semanticRowBg = entry.overLimit ? 'theme-danger-bg' : (isCheapest ? 'theme-cheapest-bg' : '');
@@ -418,11 +416,11 @@ function renderIsoRow(entry, rank, pinReason) {
     const rowBg = entry.overLimit ? 'bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700' : (isCheapest ? 'bg-green-100 dark:bg-green-900/30' : (pinReason ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'bg-white dark:bg-gray-800/50'));
     const textColor = entry.overLimit ? 'text-red-700 dark:text-red-400' : (isCheapest ? 'text-green-800 dark:text-green-400 font-semibold' : 'text-gray-700 dark:text-gray-300');
     const fav = isFavLab(entry.labName);
-    const star = `<button type="button" class="fav-star text-sm leading-none" data-fav-lab="${escapeHtml(entry.labName)}" title="${fav ? 'Unfavourite lab' : 'Favourite lab'}" aria-label="${fav ? 'Unfavourite lab' : 'Favourite lab'}" onclick="event.stopPropagation()"><span class="${fav ? 'theme-favourite-text text-amber-400' : 'text-gray-300 dark:text-gray-600'}">${fav ? '★' : '☆'}</span></button>`;
+    const star = `<button type="button" class="fav-star text-sm leading-none" data-fav-lab="${escapeHtml(entry.labName)}" title="${fav ? t('unfavouriteLabTitle') : t('favouriteLabTitle')}" aria-label="${fav ? t('unfavouriteLabTitle') : t('favouriteLabTitle')}" onclick="event.stopPropagation()"><span class="${fav ? 'theme-favourite-text text-amber-400' : 'text-gray-300 dark:text-gray-600'}">${fav ? '★' : '☆'}</span></button>`;
     const pinnedFavNote = pinReason === 'default'
-        ? `<div class="text-xs theme-default-lab-text text-indigo-600 dark:text-indigo-400 mt-0.5">🏠 Shown first — this is your default lab</div>`
+        ? `<div class="text-xs theme-default-lab-text text-indigo-600 dark:text-indigo-400 mt-0.5">${t('shownFirstDefaultLab')}</div>`
         : pinReason
-            ? `<div class="text-xs theme-favourite-text text-indigo-600 dark:text-indigo-400 mt-0.5">📌 Shown first — this is your favourite lab</div>`
+            ? `<div class="text-xs theme-favourite-text text-indigo-600 dark:text-indigo-400 mt-0.5">${t('shownFirstFavouriteLabPin')}</div>`
             : '';
     const upgradeNote = renderUpgradeNote(entry.upgrade);
 
@@ -432,7 +430,7 @@ function renderIsoRow(entry, rank, pinReason) {
     const breakdown = renderRowBreakdown(entry, isOpen);
 
     return `<div>
-        <div class="iso-row cursor-pointer px-3 py-2 rounded-lg text-sm ${semanticRowBg} ${rowBg}" data-iso-key="${escapeHtml(key)}" title="Tap for cost breakdown">
+        <div class="iso-row cursor-pointer px-3 py-2 rounded-lg text-sm ${semanticRowBg} ${rowBg}" data-iso-key="${escapeHtml(key)}" title="${t('tapForBreakdownTitle')}">
             <div class="flex justify-between items-start gap-2">
                 <span class="${semanticRowText} ${entry.overLimit ? 'font-semibold text-red-700 dark:text-red-400' : (isCheapest ? 'font-semibold text-green-800 dark:text-green-400' : 'text-gray-700 dark:text-gray-300')}">${star} ${isCheapest && !entry.overLimit ? '⭐ ' : ''}${escapeHtml(entry.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(entry.labName)}</span>${stopsLabel}${badges}</span>
                 <span class="font-mono text-right leading-tight ${semanticRowText} ${textColor} whitespace-nowrap flex items-center gap-1.5">
@@ -454,7 +452,7 @@ function updateIsoPriceCalculator() {
     const container = document.getElementById('isoCalcResults');
     const targetIso = parseInt(document.getElementById('isoCalcTargetSpeed').value) || 0;
     if (!targetIso) {
-        container.innerHTML = '<p class="text-sm text-gray-400 text-center">Enter a shooting ISO to compare</p>';
+        container.innerHTML = `<p class="text-sm text-gray-400 text-center">${t('enterIsoToCompareMessage')}</p>`;
         setDevCostExportRows([]);
         return;
     }
@@ -464,7 +462,7 @@ function updateIsoPriceCalculator() {
     const hasFilms = Object.values(allFilms).some(f => !f.hidden && (parseInt(f.boxSpeed) || 0) > 0);
     const hasLabs = Object.values(allLabs).some(l => !l.hidden);
     if (!hasFilms || !hasLabs) {
-        container.innerHTML = `<p class="text-sm text-gray-400 text-center">${EMPTY_LIBRARY_MESSAGE}</p>`;
+        container.innerHTML = `<p class="text-sm text-gray-400 text-center">${t('emptyLibraryMessage')}</p>`;
         setDevCostExportRows([]);
         return;
     }
@@ -515,39 +513,39 @@ function updateIsoPriceCalculator() {
         return renderIsoRow(e, rank, pinReason);
     }).join('');
 
-    const noMatchMsg = (allBucket, emptyMsg) => `<p class="text-xs text-gray-400 text-center py-2">${allBucket.length ? 'No options match the current filters' : emptyMsg}</p>`;
+    const noMatchMsg = (allBucket, emptyMsg) => `<p class="text-xs text-gray-400 text-center py-2">${allBucket.length ? t('noOptionsMatchFilters') : emptyMsg}</p>`;
     const nativeHtml = native.length
         ? renderBucket(sortedNative, native)
-        : noMatchMsg(allNative, 'No film natively rated at this ISO');
+        : noMatchMsg(allNative, t('noNativeFilmAtIsoMessage'));
     const pushHtml = push.length
         ? renderBucket(sortedPush, push)
-        : noMatchMsg(allPush, 'No film can be pushed to this ISO');
+        : noMatchMsg(allPush, t('noFilmCanBePushedMessage'));
     const pullHtml = pull.length
         ? renderBucket(sortedPull, pull)
-        : noMatchMsg(allPull, 'No film can be pulled to this ISO');
+        : noMatchMsg(allPull, t('noFilmCanBePulledMessage'));
 
     const sortPill = (mode, label, title) => `<button type="button" data-sort="${mode}" title="${title}" class="cheapest-sort-pill px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${cheapestSort === mode ? 'bg-indigo-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}">${label}</button>`;
     const controls = `<div class="flex items-center justify-between gap-2 flex-wrap mb-3">
         <div class="flex items-center gap-1.5 flex-wrap">
-            <span class="text-xs text-gray-400 dark:text-gray-500 font-semibold uppercase tracking-wide">Sort</span>
-            ${sortPill('price', 'Price', 'Cheapest first (the ⭐ marker always reflects this, regardless of sort)')}
-            ${sortPill('turnaround', 'Turnaround', 'Next Day first, then Same Week, then Longer')}
-            ${sortPill('scan', 'Scan', 'Hi-Res scans first, then by price')}
+            <span class="text-xs text-gray-400 dark:text-gray-500 font-semibold uppercase tracking-wide">${t('sortLabel')}</span>
+            ${sortPill('price', t('sortByPriceLabel'), t('sortByPriceTitle'))}
+            ${sortPill('turnaround', t('turnaroundRowLabel'), t('sortByTurnaroundTitle'))}
+            ${sortPill('scan', t('scanRowLabel'), t('sortByScanTitle'))}
         </div>
-        <button type="button" id="isoExpandAllBtn" class="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline">${expandAllIso ? 'Collapse all' : 'Expand all'}</button>
+        <button type="button" id="isoExpandAllBtn" class="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline">${expandAllIso ? t('collapseAllLabel') : t('expandAllLabel')}</button>
     </div>`;
 
     container.innerHTML = controls + `<div class="space-y-4">
         <div>
-            <h3 class="text-xs font-semibold text-green-700 dark:text-green-400 uppercase tracking-wide mb-2">Native (${targetIso} ISO)</h3>
+            <h3 class="text-xs font-semibold text-green-700 dark:text-green-400 uppercase tracking-wide mb-2">${t('nativeIsoHeading', { iso: targetIso })}</h3>
             <div class="space-y-1.5">${nativeHtml}</div>
         </div>
         <div>
-            <h3 class="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wide mb-2">Pushed to ${targetIso} ISO</h3>
+            <h3 class="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wide mb-2">${t('pushedToIsoHeading', { iso: targetIso })}</h3>
             <div class="space-y-1.5">${pushHtml}</div>
         </div>
         <div>
-            <h3 class="text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wide mb-2">Pulled to ${targetIso} ISO</h3>
+            <h3 class="text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wide mb-2">${t('pulledToIsoHeading', { iso: targetIso })}</h3>
             <div class="space-y-1.5">${pullHtml}</div>
         </div>
     </div>`;
@@ -735,10 +733,10 @@ function renderMatrixRow(entry, rank, keyPrefix, pinReason, upgrade) {
     const fav = isFavLab(entry.labName);
     const star = keyPrefix === 'film'
         ? ''
-        : `<button type="button" class="fav-star text-sm leading-none ${fav ? 'theme-favourite-text text-amber-400' : 'text-gray-300 dark:text-gray-600'}" data-fav-lab="${escapeHtml(entry.labName)}" title="${fav ? 'Unfavourite lab' : 'Favourite lab'}" aria-label="${fav ? 'Unfavourite lab' : 'Favourite lab'}" onclick="event.stopPropagation()">${fav ? '★' : '☆'}</button>`;
+        : `<button type="button" class="fav-star text-sm leading-none ${fav ? 'theme-favourite-text text-amber-400' : 'text-gray-300 dark:text-gray-600'}" data-fav-lab="${escapeHtml(entry.labName)}" title="${fav ? t('unfavouriteLabTitle') : t('favouriteLabTitle')}" aria-label="${fav ? t('unfavouriteLabTitle') : t('favouriteLabTitle')}" onclick="event.stopPropagation()">${fav ? '★' : '☆'}</button>`;
     const pinned = keyPrefix === 'film' ? isDevCostPinned(entry) : false;
     const pinBtn = keyPrefix === 'film'
-        ? `<button type="button" class="dev-cost-pin-btn text-sm leading-none ${pinned ? 'text-indigo-500' : 'text-gray-300 dark:text-gray-600'}" data-pin-row-key="${escapeHtml(matrixRowKey(keyPrefix, entry))}" title="${pinned ? 'Unpin' : 'Pin for comparison'}" aria-label="${pinned ? 'Unpin' : 'Pin for comparison'}" onclick="event.stopPropagation()">📌</button>`
+        ? `<button type="button" class="dev-cost-pin-btn text-sm leading-none ${pinned ? 'text-indigo-500' : 'text-gray-300 dark:text-gray-600'}" data-pin-row-key="${escapeHtml(matrixRowKey(keyPrefix, entry))}" title="${pinned ? t('unpinTitle') : t('pinForComparisonTitle')}" aria-label="${pinned ? t('unpinTitle') : t('pinForComparisonTitle')}" onclick="event.stopPropagation()">📌</button>`
         : '';
     // Per Photo is grouped one row per film, so it also gets a ♥ film
     // star — favouriting the lab shown wouldn't generalise across a
@@ -746,20 +744,20 @@ function renderMatrixRow(entry, rank, keyPrefix, pinReason, upgrade) {
     const filmFavKeyForRow = filmKey(entry.filmName, entry.boxSpeed, entry.format);
     const favFilm = isFavFilm(filmFavKeyForRow);
     const filmStar = keyPrefix === 'photo'
-        ? `<button type="button" class="fav-film-star text-sm leading-none ${favFilm ? 'theme-favourite-text text-red-400' : 'text-gray-300 dark:text-gray-600'}" data-fav-film="${escapeHtml(filmFavKeyForRow)}" title="${favFilm ? 'Unfavourite film' : 'Favourite film'}" aria-label="${favFilm ? 'Unfavourite film' : 'Favourite film'}" onclick="event.stopPropagation()">${favFilm ? '♥' : '♡'}</button>`
+        ? `<button type="button" class="fav-film-star text-sm leading-none ${favFilm ? 'theme-favourite-text text-red-400' : 'text-gray-300 dark:text-gray-600'}" data-fav-film="${escapeHtml(filmFavKeyForRow)}" title="${favFilm ? t('unfavouriteFilmTitle') : t('favouriteFilmTitle')}" aria-label="${favFilm ? t('unfavouriteFilmTitle') : t('favouriteFilmTitle')}" onclick="event.stopPropagation()">${favFilm ? '♥' : '♡'}</button>`
         : '';
     const pinnedFavNote = pinReason === 'default'
-        ? `<div class="text-xs theme-default-lab-text text-indigo-600 dark:text-indigo-400 mt-0.5">🏠 Shown first — this is your default lab</div>`
+        ? `<div class="text-xs theme-default-lab-text text-indigo-600 dark:text-indigo-400 mt-0.5">${t('shownFirstDefaultLab')}</div>`
         : pinReason === 'favFilm'
-            ? `<div class="text-xs theme-favourite-text text-indigo-600 dark:text-indigo-400 mt-0.5">📌 Shown first — this is a favourite film</div>`
+            ? `<div class="text-xs theme-favourite-text text-indigo-600 dark:text-indigo-400 mt-0.5">${t('shownFirstFavouriteFilm')}</div>`
             : pinReason
-                ? `<div class="text-xs theme-favourite-text text-indigo-600 dark:text-indigo-400 mt-0.5">★ Shown first — this is your favourite lab</div>`
+                ? `<div class="text-xs theme-favourite-text text-indigo-600 dark:text-indigo-400 mt-0.5">${t('shownFirstFavouriteLabStar')}</div>`
                 : '';
 
     const breakdown = renderRowBreakdown(entry, isOpen);
 
     return `<div>
-        <div class="matrix-row cursor-pointer px-3 py-2 rounded-lg text-sm ${semanticRowBg} ${rowBg}" data-row-key="${escapeHtml(key)}" title="Tap for cost breakdown">
+        <div class="matrix-row cursor-pointer px-3 py-2 rounded-lg text-sm ${semanticRowBg} ${rowBg}" data-row-key="${escapeHtml(key)}" title="${t('tapForBreakdownTitle')}">
             <div class="flex justify-between items-start gap-2">
                 <span class="${semanticRowText} ${textColor}">${star}${filmStar}${pinBtn} ${isCheapest ? '⭐ ' : ''}${escapeHtml(entry.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(entry.labName)}</span> <span class="text-xs opacity-70">(${entry.boxSpeed} ISO)</span>${badges}</span>
                 <span class="font-mono text-right leading-tight ${semanticRowText} ${textColor} whitespace-nowrap flex items-center gap-1.5">
@@ -807,7 +805,7 @@ function wireMatrixRows(container, rerender) {
 
 // An "Expand all / Collapse all" control row for the matrix views.
 function expandAllControl() {
-    return `<div class="flex justify-end mb-2"><button type="button" class="matrix-expand-all text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline">${expandAllIso ? 'Collapse all' : 'Expand all'}</button></div>`;
+    return `<div class="flex justify-end mb-2"><button type="button" class="matrix-expand-all text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline">${expandAllIso ? t('collapseAllLabel') : t('expandAllLabel')}</button></div>`;
 }
 function wireExpandAll(container, rerender) {
     const btn = container.querySelector('.matrix-expand-all');
@@ -819,7 +817,7 @@ function wireExpandAll(container, rerender) {
 }
 
 function renderNativeMatchRow(entry, rank) {
-    const hiResBadge = entry.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">HI-RES</span>` : '';
+    const hiResBadge = entry.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">${t('hiResBadgeLabel')}</span>` : '';
     const turnaroundBadge = entry.turnaroundTime ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 align-middle">${escapeHtml(turnaroundLabels[entry.turnaroundTime] || entry.turnaroundTime)}</span>` : '';
     const isCheapest = rank === 0;
     const semanticRowBg = isCheapest ? 'theme-cheapest-bg' : '';
@@ -839,7 +837,7 @@ function renderNativeMatchRow(entry, rank) {
 function renderPushPullSubLine(entry, contextLabel) {
     if (!entry) return '';
     return `<div class="flex justify-between items-center px-3 py-1.5 rounded-lg text-xs bg-gray-50 dark:bg-gray-800/30 ml-3">
-        <span class="text-gray-500 dark:text-gray-400">↕ Push/pull 1 stop <span class="opacity-70">@ ${escapeHtml(contextLabel)}</span></span>
+        <span class="text-gray-500 dark:text-gray-400">${t('pushPull1StopLabel')} <span class="opacity-70">@ ${escapeHtml(contextLabel)}</span></span>
         <span class="font-mono text-gray-500 dark:text-gray-400">${CUR()}${entry.totalCostPerPhoto.toFixed(2)}/photo</span>
     </div>`;
 }
@@ -855,7 +853,7 @@ function updateCostPerPhotoTab() {
     const baseOpts = { process: cheapestProcess, format: cheapestFormat, camera120Exposures: camera120OverrideExposures(), ...mailBackOpts() };
     const allNativeMatrix = cachedNativeFilmLabMatrix(allFilms, allLabs, baseOpts);
     if (allNativeMatrix.length === 0) {
-        container.innerHTML = `<p class="text-sm text-gray-400 text-center">${EMPTY_LIBRARY_MESSAGE}</p>`;
+        container.innerHTML = `<p class="text-sm text-gray-400 text-center">${t('emptyLibraryMessage')}</p>`;
         setDevCostExportRows([]);
         return;
     }
@@ -870,7 +868,7 @@ function updateCostPerPhotoTab() {
         ? allNativeMatrix.filter(e => (!devCostFilterTurnaround || e.turnaroundTime === devCostFilterTurnaround) && (!devCostFilterHiRes || e.highResScan) && (!devCostFilterTiff || e.tiffScan))
         : allNativeMatrix;
     if (nativeMatrix.length === 0) {
-        container.innerHTML = '<p class="text-sm text-gray-400 text-center">No options match the current filters</p>';
+        container.innerHTML = `<p class="text-sm text-gray-400 text-center">${t('noOptionsMatchFilters')}</p>`;
         setDevCostExportRows([]);
         return;
     }
@@ -916,7 +914,7 @@ function updateCostPerLabTab() {
     const baseOpts = { process: cheapestProcess, format: cheapestFormat, camera120Exposures: camera120OverrideExposures(), ...mailBackOpts() };
     const allNativeMatrix = cachedNativeFilmLabMatrix(allFilms, allLabs, baseOpts);
     if (allNativeMatrix.length === 0) {
-        container.innerHTML = `<p class="text-sm text-gray-400 text-center">${EMPTY_LIBRARY_MESSAGE}</p>`;
+        container.innerHTML = `<p class="text-sm text-gray-400 text-center">${t('emptyLibraryMessage')}</p>`;
         setDevCostExportRows([]);
         return;
     }
@@ -924,7 +922,7 @@ function updateCostPerLabTab() {
     const hasActiveDevCostFilter = devCostFilterTurnaround || devCostFilterHiRes || devCostFilterTiff;
     const nativeMatrix = hasActiveDevCostFilter ? cachedNativeFilmLabMatrix(allFilms, allLabs, devCostFilters) : allNativeMatrix;
     if (nativeMatrix.length === 0) {
-        container.innerHTML = '<p class="text-sm text-gray-400 text-center">No options match the current filters</p>';
+        container.innerHTML = `<p class="text-sm text-gray-400 text-center">${t('noOptionsMatchFilters')}</p>`;
         setDevCostExportRows([]);
         return;
     }
@@ -967,12 +965,12 @@ function renderFormatComparisonBlock(comparison, currentFormat) {
         const isCurrent = fmt === currentFormat;
         const isCheapest = e.totalCostPerPhoto === cheapestCostPerPhoto;
         return `<div class="flex justify-between items-center gap-2 px-2 py-1.5 rounded ${isCurrent ? 'bg-indigo-100 dark:bg-indigo-900/30' : ''}">
-            <span class="text-sm ${isCurrent ? 'font-semibold text-indigo-700 dark:text-indigo-300' : 'text-gray-600 dark:text-gray-300'}">${escapeHtml(formatLabel(fmt))}${isCurrent ? ' <span class="text-xs opacity-70 font-normal">(current)</span>' : ''}${isCheapest ? ' 🏆' : ''}</span>
+            <span class="text-sm ${isCurrent ? 'font-semibold text-indigo-700 dark:text-indigo-300' : 'text-gray-600 dark:text-gray-300'}">${escapeHtml(formatLabel(fmt))}${isCurrent ? ` <span class="text-xs opacity-70 font-normal">${t('currentSuffixLabel')}</span>` : ''}${isCheapest ? ' 🏆' : ''}</span>
             <span class="font-mono text-sm text-right ${isCurrent ? 'text-indigo-700 dark:text-indigo-300' : 'text-gray-600 dark:text-gray-300'}"><span class="font-semibold">${CUR()}${e.totalCostPerPhoto.toFixed(2)}</span>/photo <span class="text-xs opacity-60">@ ${escapeHtml(e.labName)}</span></span>
         </div>`;
     }).join('');
     return `<div class="mb-4 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
-        <div class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1.5" title="Cheapest bundle + cheapest matching lab in each format, at native box speed">📐 Compare Across Formats</div>
+        <div class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1.5" title="${t('compareAcrossFormatsTitle')}">${t('compareAcrossFormatsHeading')}</div>
         <div class="space-y-0.5">${rows}</div>
     </div>`;
 }
@@ -990,7 +988,7 @@ function populateCheapestFilmDropdown() {
     const films = Object.values(allFilms)
         .filter(f => !f.hidden && filmPassesProcessFilter(f) && (parseInt(f.boxSpeed) || 0) > 0)
         .sort((a, b) => a.name.localeCompare(b.name) || (parseInt(a.boxSpeed) || 0) - (parseInt(b.boxSpeed) || 0));
-    select.innerHTML = '<option value="">-- Pick a film --</option>' + films.map(f => {
+    select.innerHTML = `<option value="">${t('pickFilmOption')}</option>` + films.map(f => {
         const key = filmKey(f.name, f.boxSpeed, f.format);
         return `<option value="${escapeHtml(key)}">${escapeHtml(f.name)} (${f.boxSpeed} ISO)</option>`;
     }).join('');
@@ -1009,40 +1007,40 @@ function renderPinnedDevCostBlock() {
         const key = `pinned|${p.pinId}`;
         const isOpen = expandAllIso || expandedIsoRows.has(key);
         const chevron = `<span class="text-gray-400 dark:text-gray-500 transition-transform inline-block ${isOpen ? 'rotate-90' : ''}">▸</span>`;
-        const hiResBadge = p.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">HI-RES</span>` : '';
-        const tiffBadge = p.tiffScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 align-middle">TIFF</span>` : '';
+        const hiResBadge = p.highResScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 align-middle">${t('hiResBadgeLabel')}</span>` : '';
+        const tiffBadge = p.tiffScan ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 align-middle">${t('tiffBadgeLabel')}</span>` : '';
         const turnaroundBadge = p.turnaroundTime ? ` <span class="inline-block text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 align-middle">${escapeHtml(turnaroundLabels[p.turnaroundTime] || p.turnaroundTime)}</span>` : '';
         const buyUrl = sanitizeUrl(p.buyLink);
         const pinLocality = bundleLocalityLabel(p);
-        const pinLocalityBadge = pinLocality ? ` <span class="text-amber-600 dark:text-amber-400" title="This price is only valid in ${escapeHtml(pinLocality.replace(/ only$/, ''))}">(${escapeHtml(pinLocality)})</span>` : '';
+        const pinLocalityBadge = pinLocality ? ` <span class="text-amber-600 dark:text-amber-400" title="${t('localityOnlyTitle', { locality: escapeHtml(pinLocality.replace(/ only$/, '')) })}">(${escapeHtml(pinLocality)})</span>` : '';
         const buyLink = buyUrl
-            ? `<a href="${escapeHtml(buyUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-xs px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:underline">🛒 ${p.storeName ? 'Buy from ' + escapeHtml(p.storeName) : 'Buy film'} ↗</a>${pinLocalityBadge}`
+            ? `<a href="${escapeHtml(buyUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-xs px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:underline">${p.storeName ? t('dcBuyFromLabel', { storeName: escapeHtml(p.storeName) }) : t('buyFilmLabel')}</a>${pinLocalityBadge}`
             : '';
         const dirUrl = labDirectionsUrl(p.labName);
         const directionsLink = dirUrl
-            ? `<a href="${escapeHtml(dirUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-xs px-1.5 py-0.5 rounded bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:underline">📍 Directions ↗</a>`
+            ? `<a href="${escapeHtml(dirUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-xs px-1.5 py-0.5 rounded bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:underline">${t('directionsLinkLabel')}</a>`
             : '';
         const footer = (buyLink || directionsLink)
             ? `<div class="pt-1.5 flex justify-between items-center gap-2"><span>${buyLink}</span><span>${directionsLink}</span></div>`
             : '';
         const breakdown = isOpen
             ? `<div class="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700 text-xs space-y-1">
-                    <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Film (per photo)</span><span class="font-mono">${CUR()}${p.filmCostPerPhoto.toFixed(2)}</span></div>
-                    <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Development (per photo) <span class="opacity-60">= dev/roll ÷ ${p.exposures} exp</span></span><span class="font-mono">${CUR()}${(p.devCostBase / p.exposures).toFixed(2)}</span></div>
-                    ${p.pushPullFee > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Push/pull fee (per photo)</span><span class="font-mono">${CUR()}${(p.pushPullFee / p.exposures).toFixed(2)}</span></div>` : ''}
-                    ${p.mailBackFee > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Mail shipping (per photo)</span><span class="font-mono">${CUR()}${(p.mailBackFee / p.exposures).toFixed(2)}</span></div>` : ''}
-                    <div class="flex justify-between text-gray-500 dark:text-gray-400 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>Film cost (per roll)</span><span class="font-mono">${CUR()}${p.filmCostPerRoll.toFixed(2)}</span></div>
-                    <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>Development (per roll)</span><span class="font-mono">${CUR()}${p.devCostPerRoll.toFixed(2)}</span></div>
-                    <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>Scan</span><span>${scanLabel(p)}</span></div>
-                    <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>Turnaround</span><span>${escapeHtml(turnaroundLabels[p.turnaroundTime] || p.turnaroundTime || '—')}</span></div>
-                    <div class="flex justify-between font-semibold text-gray-700 dark:text-gray-300 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>Total per roll (${p.exposures} exp)</span><span class="font-mono">${CUR()}${p.totalCostPerRoll.toFixed(2)}</span></div>
+                    <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>${t('filmPerPhotoLabel')}</span><span class="font-mono">${CUR()}${p.filmCostPerPhoto.toFixed(2)}</span></div>
+                    <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>${t('developmentPerPhotoLabel')} <span class="opacity-60">${t('devRollDivExpNote', { exposures: p.exposures })}</span></span><span class="font-mono">${CUR()}${(p.devCostBase / p.exposures).toFixed(2)}</span></div>
+                    ${p.pushPullFee > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>${t('pushPullFeePerPhotoLabel')}</span><span class="font-mono">${CUR()}${(p.pushPullFee / p.exposures).toFixed(2)}</span></div>` : ''}
+                    ${p.mailBackFee > 0 ? `<div class="flex justify-between text-gray-500 dark:text-gray-400"><span>${t('mailShippingPerPhotoLabel')}</span><span class="font-mono">${CUR()}${(p.mailBackFee / p.exposures).toFixed(2)}</span></div>` : ''}
+                    <div class="flex justify-between text-gray-500 dark:text-gray-400 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>${t('filmCostPerRollLabel')}</span><span class="font-mono">${CUR()}${p.filmCostPerRoll.toFixed(2)}</span></div>
+                    <div class="flex justify-between text-gray-500 dark:text-gray-400"><span>${t('developmentPerRollLabel')}</span><span class="font-mono">${CUR()}${p.devCostPerRoll.toFixed(2)}</span></div>
+                    <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>${t('scanRowLabel')}</span><span>${scanLabel(p)}</span></div>
+                    <div class="flex justify-between text-gray-400 dark:text-gray-500"><span>${t('turnaroundRowLabel')}</span><span>${escapeHtml(turnaroundLabels[p.turnaroundTime] || p.turnaroundTime || '—')}</span></div>
+                    <div class="flex justify-between font-semibold text-gray-700 dark:text-gray-300 pt-1 border-t border-gray-100 dark:border-gray-700/50"><span>${t('totalPerRollLabel', { exposures: p.exposures })}</span><span class="font-mono">${CUR()}${p.totalCostPerRoll.toFixed(2)}</span></div>
                     ${footer}
                 </div>`
             : '';
         return `<div>
-            <div class="matrix-row cursor-pointer px-3 py-2 rounded-lg text-sm bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800" data-row-key="${escapeHtml(key)}" title="Tap for cost breakdown">
+            <div class="matrix-row cursor-pointer px-3 py-2 rounded-lg text-sm bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800" data-row-key="${escapeHtml(key)}" title="${t('tapForBreakdownTitle')}">
                 <div class="flex justify-between items-start gap-2">
-                    <span class="text-indigo-800 dark:text-indigo-300"><button type="button" class="unpin-dev-cost-btn text-red-400 hover:text-red-600 text-xs font-bold mr-1" data-unpin-id="${p.pinId}" title="Unpin" aria-label="Unpin" onclick="event.stopPropagation()">✕</button>${escapeHtml(p.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(p.labName)}</span> <span class="text-xs opacity-70">(${p.boxSpeed} ISO)</span>${hiResBadge}${tiffBadge}${turnaroundBadge}</span>
+                    <span class="text-indigo-800 dark:text-indigo-300"><button type="button" class="unpin-dev-cost-btn text-red-400 hover:text-red-600 text-xs font-bold mr-1" data-unpin-id="${p.pinId}" title="${t('unpinTitle')}" aria-label="${t('unpinTitle')}" onclick="event.stopPropagation()">✕</button>${escapeHtml(p.filmName)} <span class="opacity-70 font-normal">@ ${escapeHtml(p.labName)}</span> <span class="text-xs opacity-70">(${p.boxSpeed} ISO)</span>${hiResBadge}${tiffBadge}${turnaroundBadge}</span>
                     <span class="font-mono text-right leading-tight text-indigo-800 dark:text-indigo-300 whitespace-nowrap flex items-center gap-1.5">
                         <span>
                             <span class="font-semibold block">${CUR()}${p.totalCostPerPhoto.toFixed(2)}/photo</span>
@@ -1057,7 +1055,7 @@ function renderPinnedDevCostBlock() {
     }).join('');
     return `<div class="mb-4">
         <div class="flex items-center gap-2 mb-2">
-            <span class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">📌 Pinned for Comparison</span>
+            <span class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">${t('pinnedForComparisonHeading')}</span>
             <div class="flex-1 border-t border-indigo-200 dark:border-indigo-800"></div>
         </div>
         <div class="space-y-1.5">${rows}</div>
@@ -1081,7 +1079,7 @@ function updateCostPerFilmTab() {
     const pinnedBlock = renderPinnedDevCostBlock();
 
     if (!selectedKey) {
-        container.innerHTML = pinnedBlock + '<p class="text-sm text-gray-400 text-center">Pick a film to compare labs</p>';
+        container.innerHTML = pinnedBlock + `<p class="text-sm text-gray-400 text-center">${t('pickFilmToCompareMessage')}</p>`;
         wireMatrixRows(container, updateCostPerFilmTab);
         wirePinnedDevCostBlock(container);
         setDevCostExportRows([]);
@@ -1092,7 +1090,7 @@ function updateCostPerFilmTab() {
     const allLabs = getAllLabs();
     const film = allFilms[selectedKey];
     if (!film) {
-        container.innerHTML = pinnedBlock + '<p class="text-sm text-gray-400 text-center">Pick a film to compare labs</p>';
+        container.innerHTML = pinnedBlock + `<p class="text-sm text-gray-400 text-center">${t('pickFilmToCompareMessage')}</p>`;
         wireMatrixRows(container, updateCostPerFilmTab);
         wirePinnedDevCostBlock(container);
         setDevCostExportRows([]);
@@ -1120,7 +1118,7 @@ function updateCostPerFilmTab() {
     );
 
     if (priceSortedRows.length === 0) {
-        container.innerHTML = pinnedBlock + formatComparisonBlock + `<p class="text-sm text-gray-400 text-center">No lab matches ${escapeHtml(film.name)} with the current filters</p>`;
+        container.innerHTML = pinnedBlock + formatComparisonBlock + `<p class="text-sm text-gray-400 text-center">${t('noLabMatchesFilm', { filmName: escapeHtml(film.name) })}</p>`;
         wireMatrixRows(container, updateCostPerFilmTab);
         wirePinnedDevCostBlock(container);
         setDevCostExportRows([]);
