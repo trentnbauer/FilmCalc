@@ -850,6 +850,24 @@
         </div>
 
 
+        <!-- First-run language picker: shown once, before the import banner,
+             for brand-new visitors only (same "no saved profiles yet" gate as
+             initFirstLaunchImportBanner in js/modals.js). The heading cycles
+             through a "welcome, pick your language" greeting in several
+             languages purely for visual flair — FilmCalc itself only ships
+             English and Spanish, offered in the dropdown below. See
+             initLanguageWelcomeModal() in js/modals.js. -->
+        <div id="languageWelcomeModal" class="hidden fixed inset-0 bg-black/50 z-[80] flex items-center justify-center p-4">
+            <div role="dialog" aria-modal="true" aria-labelledby="languageWelcomeTitle" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 max-w-sm w-full relative text-center">
+                <h2 id="languageWelcomeTitle" class="text-lg font-bold mb-5 text-gray-900 dark:text-white transition-opacity duration-300 min-h-[3.5rem] flex items-center justify-center">Welcome to FilmCalc, select your language</h2>
+                <select id="languageWelcomeSelect" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm mb-4">
+                    <option value="en">English</option>
+                    <option value="es">Español</option>
+                </select>
+                <button id="languageWelcomeContinueBtn" type="button" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-medium">Continue</button>
+            </div>
+        </div>
+
         <div id="setupModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
             <div role="dialog" aria-modal="true" aria-labelledby="setupModalTitle" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 max-w-lg w-full relative max-h-[85vh] overflow-y-auto">
                 <button id="setupModalCloseBtn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-xl leading-none" aria-label="Close" data-i18n-aria-label="closeLabel">✕</button>
