@@ -850,21 +850,36 @@
         </div>
 
 
-        <!-- First-run language picker: shown once, before the import banner,
-             for brand-new visitors only (same "no saved profiles yet" gate as
-             initFirstLaunchImportBanner in js/modals.js). The heading cycles
-             through a "welcome, pick your language" greeting in several
-             languages purely for visual flair — FilmCalc itself only ships
-             English and Spanish, offered in the dropdown below. See
-             initLanguageWelcomeModal() in js/modals.js. -->
+        <!-- First-run onboarding popup: shown once, for brand-new visitors
+             only (no saved film/lab profiles yet, hasn't been shown before —
+             same gate initFirstLaunchImportBanner used to own alone; that
+             banner now stays hidden for this same audience so the two never
+             double up, see js/modals.js). Two steps in one modal: language
+             pick, then the same "import built-in presets" offer the banner
+             used to make on its own. The Step 1 heading cycles through a
+             "welcome, pick your language" greeting in several languages
+             purely for visual flair — FilmCalc itself only ships English and
+             Spanish, offered in the dropdown. See initLanguageWelcomeModal()
+             in js/modals.js. -->
         <div id="languageWelcomeModal" class="hidden fixed inset-0 bg-black/50 z-[80] flex items-center justify-center p-4">
             <div role="dialog" aria-modal="true" aria-labelledby="languageWelcomeTitle" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 max-w-sm w-full relative text-center">
-                <h2 id="languageWelcomeTitle" class="text-lg font-bold mb-5 text-gray-900 dark:text-white transition-opacity duration-300 min-h-[3.5rem] flex items-center justify-center">Welcome to FilmCalc, select your language</h2>
-                <select id="languageWelcomeSelect" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm mb-4">
-                    <option value="en">English</option>
-                    <option value="es">Español</option>
-                </select>
-                <button id="languageWelcomeContinueBtn" type="button" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-medium">Continue</button>
+                <div id="languageWelcomeStep1">
+                    <h2 id="languageWelcomeTitle" class="text-lg font-bold mb-5 text-gray-900 dark:text-white transition-opacity duration-300 min-h-[3.5rem] flex items-center justify-center">Welcome to FilmCalc, select your language</h2>
+                    <select id="languageWelcomeSelect" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm mb-4">
+                        <option value="en">English</option>
+                        <option value="es">Español</option>
+                    </select>
+                    <button id="languageWelcomeContinueBtn" type="button" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-medium">Continue</button>
+                </div>
+                <div id="languageWelcomeStep2" class="hidden">
+                    <span class="text-3xl leading-none">💡</span>
+                    <h3 class="text-base font-semibold mt-2 mb-1 text-gray-900 dark:text-white" data-i18n="firstLaunchHeading">New here?</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-4" data-i18n="firstLaunchImportHelp">Import this project's built-in film &amp; lab presets to get started faster — no need to enter everything by hand.</p>
+                    <div class="flex flex-col gap-2">
+                        <button id="languageWelcomeImportBtn" type="button" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-medium" data-i18n="importPresetsButton">📥 Import Presets…</button>
+                        <button id="languageWelcomeSkipImportBtn" type="button" class="w-full text-sm text-gray-500 dark:text-gray-400 hover:underline py-1" data-i18n="notNowButton">Not now</button>
+                    </div>
+                </div>
             </div>
         </div>
 
