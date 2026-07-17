@@ -1047,16 +1047,19 @@ importSelectedPresetsBtn.addEventListener('click', async () => {
     importSelectedPresetsBtn.textContent = t('importSelectedButton');
 });
 
-// ---------- First-launch language picker ----------
-// Shown once, before the import prompt below, for the same "brand-new
-// visitor" audience (no saved film/lab profiles, hasn't been shown
-// before). The heading cycles through "Welcome to FilmCalc, select your
-// language" in a handful of languages purely as a friendly visual cue —
-// FilmCalc only ships English and Spanish (js/i18n.js), which is all the
-// dropdown offers. Picking one calls setLocale()/applyI18n() from
-// js/i18n.js (loaded before this file) and persists to the same
-// 'locale' localStorage key the Settings dropdown uses, so this is just
-// an earlier, friendlier entry point to the same choice.
+// ---------- First-launch onboarding popup (language, then import) ----------
+// Shown once, for brand-new visitors only (no saved film/lab profiles,
+// hasn't been shown before). Step 1's heading cycles through "Welcome to
+// FilmCalc, select your language" in a handful of languages purely as a
+// friendly visual cue — FilmCalc only ships English and Spanish
+// (js/i18n.js), which is all the dropdown offers. Continuing calls
+// setLocale()/applyI18n() from js/i18n.js (loaded before this file) and
+// persists to the same 'locale' localStorage key the Settings dropdown
+// uses, then swaps to Step 2: the same "import built-in presets" offer
+// initFirstLaunchImportBanner used to make on its own — folded in here so
+// onboarding is one popup instead of a popup followed by a banner. That
+// banner function below now only fires for the case this popup can't (its
+// markup missing), so the two never double up on the same visitor.
 const WELCOME_GREETINGS = [
     { lang: 'en', text: 'Welcome to FilmCalc, select your language' },
     { lang: 'es', text: 'Bienvenido a FilmCalc, elige tu idioma' },
@@ -1073,6 +1076,8 @@ const WELCOME_GREETINGS = [
 ];
 const WELCOME_CONTINUE_LABELS = { en: 'Continue', es: 'Continuar' };
 
+let firstLaunchPopupHandledImportPrompt = false;
+
 (function initLanguageWelcomeModal() {
     const alreadySeen = localStorage.getItem('hasSeenLanguagePrompt') === 'true';
     const hasFilmProfiles = localStorage.getItem('filmProfiles') !== null;
@@ -1080,10 +1085,16 @@ const WELCOME_CONTINUE_LABELS = { en: 'Continue', es: 'Continuar' };
     if (alreadySeen || hasFilmProfiles || hasLabProfiles) return;
 
     const modal = document.getElementById('languageWelcomeModal');
+    const step1 = document.getElementById('languageWelcomeStep1');
+    const step2 = document.getElementById('languageWelcomeStep2');
     const heading = document.getElementById('languageWelcomeTitle');
     const select = document.getElementById('languageWelcomeSelect');
     const continueBtn = document.getElementById('languageWelcomeContinueBtn');
-    if (!modal || !heading || !select || !continueBtn) return;
+    const importBtn = document.getElementById('languageWelcomeImportBtn');
+    const skipImportBtn = document.getElementById('languageWelcomeSkipImportBtn');
+    if (!modal || !step1 || !step2 || !heading || !select || !continueBtn || !importBtn || !skipImportBtn) return;
+
+    firstLaunchPopupHandledImportPrompt = true;
 
     select.value = currentLocale;
     continueBtn.textContent = WELCOME_CONTINUE_LABELS[select.value] || WELCOME_CONTINUE_LABELS.en;
@@ -1105,6 +1116,11 @@ const WELCOME_CONTINUE_LABELS = { en: 'Continue', es: 'Continuar' };
 
     modal.classList.remove('hidden');
 
+    function dismissImportStep() {
+        localStorage.setItem('hasSeenImportPrompt', 'true');
+        modal.classList.add('hidden');
+    }
+
     continueBtn.addEventListener('click', () => {
         clearInterval(greetTimer);
         setLocale(select.value);
@@ -1113,18 +1129,28 @@ const WELCOME_CONTINUE_LABELS = { en: 'Continue', es: 'Continuar' };
         const settingsLanguageSelect = document.getElementById('languageSelect');
         if (settingsLanguageSelect) settingsLanguageSelect.value = select.value;
         applyI18n();
-        modal.classList.add('hidden');
+        // Step 2 reuses the same data-i18n-tagged strings the standalone
+        // import banner uses, so applyI18n() above already translated it.
+        step1.classList.add('hidden');
+        step2.classList.remove('hidden');
     });
+
+    importBtn.addEventListener('click', () => {
+        dismissImportStep();
+        openImportModal();
+    });
+    skipImportBtn.addEventListener('click', dismissImportStep);
 })();
 
-// ---------- First-launch import prompt ----------
-// Shown once, only if the person has never saved a film or lab
-// profile and hasn't already dismissed it — offers a shortcut
-// straight into the Import modal's preset picker instead of leaving
-// new visitors to find Settings → Import on their own. Dismissing
-// either way (import or "Not now") marks it seen for good, even if
-// they later delete all their data.
+// ---------- First-launch import prompt (fallback banner) ----------
+// Shown only if the language-welcome popup above couldn't run (its markup
+// missing) — normally the popup's Step 2 handles this offer instead, so
+// this banner and the popup never both prompt the same visitor. Same
+// gate: never saved a film or lab profile, hasn't already dismissed it.
+// Dismissing either way (import or "Not now") marks it seen for good,
+// even if they later delete all their data.
 (function initFirstLaunchImportBanner() {
+    if (firstLaunchPopupHandledImportPrompt) return;
     const alreadySeen = localStorage.getItem('hasSeenImportPrompt') === 'true';
     const hasFilmProfiles = localStorage.getItem('filmProfiles') !== null;
     const hasLabProfiles = localStorage.getItem('labProfiles') !== null;
