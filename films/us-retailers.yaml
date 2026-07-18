@@ -18,7 +18,7 @@ films:
         filmCost: 27.95
         storeName: Walmart
         buyLink: https://www.walmart.com/ip/Kodak-Gold-200-ISO-35mm-24-Exposures-3-Pack-Film-72-Exposures-Total/103734733
-  - name: Ilford Ilfocolor Plus
+  - name: Ilford InfoColor Vintage Tone
     boxSpeed: 400
     maxPushPull: 1
     process: C41
@@ -58,7 +58,7 @@ films:
         exposures: 36
         filmCost: 15.75
         storeName: Walmart
-        buyLink: ''
+        buyLink: https://www.walmart.com/c/kp/35mm-film
   - name: Fomapan Classic 100
     boxSpeed: 100
     maxPushPull: 2
@@ -71,18 +71,6 @@ films:
         filmCost: 26.98
         storeName: Walmart
         buyLink: https://www.walmart.com/ip/Foma-Fomapan-100-Classic-35mm-Black-and-White-Negative-Film-36-Exposures/1933919554
-  - name: Revolog Volvox
-    boxSpeed: 200
-    maxPushPull: 1
-    process: C41
-    format: 35mm
-    hidden: false
-    bundles:
-      - rolls: 1
-        exposures: 36
-        filmCost: 40.28
-        storeName: Walmart
-        buyLink: https://www.walmart.com/ip/Revolog-Volvox-35mm-ISO-200-Color-Film-36-Exposure/2838300363
   - name: Kodak Ultramax
     boxSpeed: 400
     maxPushPull: 1
@@ -94,12 +82,12 @@ films:
         exposures: 24
         filmCost: 13.99
         storeName: Walmart
-        buyLink: ''
+        buyLink: https://www.walmart.com/c/kp/35mm-film
       - rolls: 2
         exposures: 24
         filmCost: 23.49
         storeName: Walmart
-        buyLink: ''
+        buyLink: https://www.walmart.com/c/kp/35mm-film
       - rolls: 3
         exposures: 24
         filmCost: 31.99
@@ -109,17 +97,17 @@ films:
         exposures: 36
         filmCost: 32.99
         storeName: Walmart
-        buyLink: ''
+        buyLink: https://www.walmart.com/c/kp/35mm-film
       - rolls: 5
         exposures: 36
         filmCost: 54.99
         storeName: Walmart
-        buyLink: ''
+        buyLink: https://www.walmart.com/c/kp/35mm-film
       - rolls: 10
         exposures: 36
         filmCost: 112.59
         storeName: Walmart
-        buyLink: ''
+        buyLink: https://www.walmart.com/c/kp/35mm-film
   - name: Kodak Ektar 100
     boxSpeed: 100
     maxPushPull: 0
@@ -131,12 +119,12 @@ films:
         exposures: 36
         filmCost: 36.85
         storeName: Walmart
-        buyLink: ''
+        buyLink: https://www.walmart.com/c/kp/35mm-film
       - rolls: 3
         exposures: 36
         filmCost: 51.89
         storeName: Walmart
-        buyLink: ''
+        buyLink: https://www.walmart.com/c/kp/35mm-film
   - name: Kodak Kodacolor 100
     boxSpeed: 100
     maxPushPull: 1
@@ -148,7 +136,7 @@ films:
         exposures: 36
         filmCost: 24.49
         storeName: Walmart
-        buyLink: ''
+        buyLink: https://www.walmart.com/c/kp/35mm-film
   - name: Kodak Kodacolor 200
     boxSpeed: 200
     maxPushPull: 1
@@ -160,7 +148,7 @@ films:
         exposures: 36
         filmCost: 96.99
         storeName: Walmart
-        buyLink: ''
+        buyLink: https://www.walmart.com/c/kp/35mm-film
   - name: Ilford HP5+
     boxSpeed: 400
     maxPushPull: 2
@@ -172,12 +160,12 @@ films:
         exposures: 24
         filmCost: 49.99
         storeName: Walmart
-        buyLink: ''
+        buyLink: https://www.walmart.com/c/kp/35mm-film
       - rolls: 3
         exposures: 36
         filmCost: 34.99
         storeName: Walmart
-        buyLink: ''
+        buyLink: https://www.walmart.com/c/kp/35mm-film
   - name: Kodak Tri-X 400
     boxSpeed: 400
     maxPushPull: 2
@@ -189,12 +177,12 @@ films:
         exposures: 36
         filmCost: 55.99
         storeName: Walmart
-        buyLink: ''
+        buyLink: https://www.walmart.com/c/kp/35mm-film
       - rolls: 3
         exposures: 24
         filmCost: 34.00
         storeName: Walmart
-        buyLink: ''
+        buyLink: https://www.walmart.com/c/kp/35mm-film
   - name: Kodak Colorplus
     boxSpeed: 200
     maxPushPull: 1
@@ -206,7 +194,7 @@ films:
         exposures: 36
         filmCost: 31.95
         storeName: Walmart
-        buyLink: ''
+        buyLink: https://www.walmart.com/c/kp/35mm-film
   - name: Cinestill 800T
     boxSpeed: 800
     maxPushPull: 1
@@ -218,7 +206,7 @@ films:
         exposures: 36
         filmCost: 26.59
         storeName: Walmart
-        buyLink: ''
+        buyLink: https://www.walmart.com/c/kp/35mm-film
   - name: Kodak Portra 400
     boxSpeed: 400
     maxPushPull: 2
@@ -230,4 +218,4 @@ films:
         exposures: 36
         filmCost: 94.85
         storeName: Walmart
-        buyLink: ''
+        buyLink: https://www.walmart.com/c/kp/35mm-film
