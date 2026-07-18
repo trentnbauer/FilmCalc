@@ -1,0 +1,210 @@
+label: Australian-Retailers
+country: Australia
+films:
+  - name: Kodak Gold
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 10
+        exposures: 36
+        filmCost: 180
+        storeName: Woolworths
+        buyLink: >-
+          https://www.woolworths.com.au/shop/productdetails/1120752907/kodak-gold-200-colour-film-35mm-36-exposures-pack-of-10-
+      - rolls: 1
+        exposures: 36
+        filmCost: 24.95
+        storeName: JB HiFi
+        buyLink: ''
+  - name: Kodak ColorPlus
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 10
+        exposures: 36
+        filmCost: 150
+        storeName: eBay
+        buyLink: https://www.ebay.com.au/itm/122005535954
+  - name: Kodak Ultramax
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 10
+        exposures: 36
+        filmCost: 205
+        storeName: eBay
+        buyLink: >-
+          https://www.ebay.com.au/itm/122400245303?chn=ps&_ul=AU&norover=1&mkevt=1&mkrid=705-139619-5960-0&mkcid=2&mkscid=101&itemid=122400245303&targetid=2365752142950&device=c&mktype=pla&googleloc=9071167&poi=&campaignid=21776459266&mkgroupid=171915223801&rlsatarget=pla-2365752142950&abcId=10047394&merchantid=116303911&gad_source=1&gad_campaignid=21776459266&gbraid=0AAAAAD97CxRo38qfYrY94jnNZyErot9kP&gclid=CjwKCAjwx7LSBhB3EiwAjcodxDQdLq2YLKtJEXNdXYqrVdFTQOQd5WRYnTISffT2TFLIV4_D-DVcUxoCAyEQAvD_BwE
+      - rolls: 3
+        exposures: 24
+        filmCost: 59
+        storeName: JB HiFi
+        buyLink: ''
+      - rolls: 1
+        exposures: 36
+        filmCost: 27.95
+        storeName: JB HiFi
+        buyLink: ''
+  - name: 1 Shot
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 24
+        filmCost: 25.95
+        storeName: JB HiFi
+        buyLink: ''
+  - name: Ilford HP5+
+    boxSpeed: 400
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 18
+        storeName: JB HiFi
+        buyLink: ''
+  - name: Ilford InfoColor Vintage Tone
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 29.95
+        storeName: JB HiFi
+        buyLink: ''
+  - name: FujiFilm Color
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 24
+        storeName: JB HiFi
+        buyLink: ''
+      - rolls: 3
+        exposures: 36
+        filmCost: 54.99
+        storeName: Kogan
+        buyLink: >-
+          https://www.kogan.com/au/buy/fujifilm-400-colour-35mm-film-single-roll-3-pack/?utm_source=google&utm_medium=product_listing_ads&gad_source=1&gad_campaignid=21825800878&gbraid=0AAAAADv51P2LTKTx2ZGQ44Dp_aRZs5Bd4&gclid=CjwKCAjwmdLSBhANEiwAkREMN1K1OmspZ7OZ02T642K3IO-FbUsnWDva4eiJTCRR3Sj4gLCmmxh4FhoCNzgQAvD_BwE
+  - name: FujiFilm Color
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 22
+        storeName: JB HiFi
+        buyLink: ''
+      - rolls: 1
+        exposures: 36
+        filmCost: 41.1
+        storeName: Woolworths
+        buyLink: ''
+      - rolls: 3
+        exposures: 36
+        filmCost: 49.99
+        storeName: Kogan
+        buyLink: >-
+          https://www.kogan.com/au/buy/fujifilm-200-colour-35mm-film-single-roll-3-pack/?utm_source=google&utm_medium=product_listing_ads&gad_source=1&gad_campaignid=21821967512&gbraid=0AAAAADv51P02rGuo3zGVEyqfWQ4c2st35&gclid=CjwKCAjwmdLSBhANEiwAkREMN2SoVzJjectimqPafwKT6qRocrkxgthLBLxk9PsspNyVoGaQTpJc2hoC4WUQAvD_BwE
+      - rolls: 1
+        exposures: 36
+        filmCost: 19.95
+        storeName: Teds Cameras
+        buyLink: >-
+          https://www.teds.com.au/products/fujifilm-200-colour-film-35mm-36exp-single-roll?variant=42716791111723&gad_source=1&gad_campaignid=23551899318&gbraid=0AAAAAD31v9nXV3NOcuXJn5LIYK0GrKSYA&gclid=CjwKCAjwmdLSBhANEiwAkREMN51-UNAcVoV0K8QoAR5k3W7rp_xbjTq-QDazEnHY7B66hHn8GV8JXxoCeJwQAvD_BwE
+      - rolls: 1
+        exposures: 36
+        filmCost: 19
+        storeName: Target
+        buyLink: >-
+          https://www.target.com.au/p/fujifilm-2-speed-film/72183687?utm_source=google&utm_medium=cpc&utm_campaign=PMax+%7C+Toys+%7C+Entertainment+%26+Electronics+%7C+2025&ds_eid=4269141946&ds_e=GOOGLE&gclsrc=aw.ds&gad_source=1&gad_campaignid=19856014009&gclid=CjwKCAjwmdLSBhANEiwAkREMNwreRmqDvobXLj9YTGhZAcxDmnhjFX-lpxLJVHa4i6A0ccldg3I2ahoC96IQAvD_BwE
+      - rolls: 1
+        exposures: 36
+        filmCost: 0
+        storeName: ''
+        buyLink: ''
+  - name: Kodak UltraMax
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 24
+        filmCost: 21.95
+        storeName: Teds Cameras
+        buyLink: https://www.teds.com.au/products/kodak-ultramax-135-36-400-35mm-film
+  - name: Ilford Ilfocolor
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 24
+        filmCost: 19.95
+        storeName: Teds Cameras
+        buyLink: https://www.teds.com.au/products/ilford-ilfocolor-135-colour-film-400-iso-24-exp
+  - name: Phoenix II
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 24.95
+        storeName: Teds Cameras
+        buyLink: https://www.teds.com.au/products/phoenix-ii-135-36exp-200-iso-35mm-film
+  - name: Kodak Colorplus
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 10
+        exposures: 36
+        filmCost: 150
+        storeName: eBay
+        buyLink: https://www.ebay.com.au/itm/122005535954
+  - name: Harman Phoenix II
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 24.95
+        storeName: Teds Cameras
+        buyLink: https://www.teds.com.au/products/phoenix-ii-135-36exp-200-iso-35mm-film

@@ -43,134 +43,83 @@ jobs:
           def err(f, msg):
               errors.append(f"{f}: {msg}")
 
-          # films/labs YAML comes in two shapes while the migration to a nested,
-          # one-entry-per-file layout is in progress (see DATA_SPEC.md): a legacy
-          # file with a top-level 'films:'/'labs:' list of many entries and
-          # file-level country/state/city fields, or a newer file that IS a
-          # single film/lab (no wrapper, no file-level country/state/city — its
-          # folder path is the source of truth instead). Both shapes are
-          # validated with the same per-entry rules below.
-
-          def check_film(path, where, film):
-              for key in ("name", "boxSpeed", "process", "bundles"):
-                  if key not in film:
-                      err(path, f"{where}: missing required field '{key}'")
-              if film.get("process") and film["process"] not in VALID_PROCESSES:
-                  err(path, f"{where}: process '{film['process']}' must be one of {sorted(VALID_PROCESSES)}")
-              fmt = film.get("format", "35mm")
-              if fmt not in VALID_FORMATS:
-                  err(path, f"{where}: format '{fmt}' must be one of {sorted(VALID_FORMATS)}")
-              if not isinstance(film.get("boxSpeed"), int):
-                  err(path, f"{where}: boxSpeed must be a plain number (no quotes)")
-              for j, b in enumerate(film.get("bundles") or []):
-                  bw = f"{where}, bundle #{j+1}"
-                  for key in ("rolls", "exposures", "filmCost"):
-                      if key not in b:
-                          err(path, f"{bw}: missing required field '{key}'")
-                  if isinstance(b.get("filmCost"), str):
-                      err(path, f"{bw}: filmCost must be a number, not text (write 24.95, not '$24.95')")
-                  if b.get("rolls") == 0 or b.get("exposures") == 0:
-                      err(path, f"{bw}: rolls and exposures must be greater than 0")
-                  avail = b.get("availability", "national")
-                  if avail not in VALID_AVAILABILITY:
-                      err(path, f"{bw}: availability '{avail}' must be one of {sorted(VALID_AVAILABILITY)}")
-                  if avail in ("state", "city") and not b.get("state"):
-                      err(path, f"{bw}: availability '{avail}' needs a 'state'")
-                  if avail == "city" and not b.get("city"):
-                      err(path, f"{bw}: availability 'city' needs a 'city'")
-
-          def check_lab(path, where, lab):
-              if "name" not in lab:
-                  err(path, f"{where}: missing required field 'name'")
-              if not lab.get("services"):
-                  err(path, f"{where}: needs at least one entry under 'services:'")
-              for j, s in enumerate(lab.get("services") or []):
-                  sw = f"{where}, service #{j+1}"
-                  if "devCost" not in s:
-                      err(path, f"{sw}: missing required field 'devCost'")
-                  if isinstance(s.get("devCost"), str):
-                      err(path, f"{sw}: devCost must be a number, not text (write 17, not '$17')")
-                  if isinstance(s.get("mailBackCost"), str):
-                      err(path, f"{sw}: mailBackCost must be a number, not text (write 5, not '$5')")
-                  t = s.get("turnaroundTime")
-                  if t and t not in VALID_TURNAROUND:
-                      err(path, f"{sw}: turnaroundTime '{t}' must be one of {sorted(VALID_TURNAROUND)}")
-                  pt = s.get("pushPullType")
-                  if pt and pt not in VALID_PUSHPULL_TYPE:
-                      err(path, f"{sw}: pushPullType '{pt}' must be 'per_stop' or 'flat'")
-                  for p in (s.get("processes") or []):
-                      if p not in VALID_PROCESSES:
-                          err(path, f"{sw}: process '{p}' must be one of {sorted(VALID_PROCESSES)}")
-
-          # Mirrors js/dev-cost-calc.js's filmKey(): `${name}|${boxSpeed||0}|${format||'35mm'}`.
-          # Keep these in sync — it's the key mergeFilmProfiles() in js/modals.js uses to
-          # combine one film's bundles across however many files supply them at import time.
-          def film_key(film):
-              return f"{film.get('name')}|{film.get('boxSpeed') or 0}|{film.get('format') or '35mm'}"
-
-          film_docs = []  # (path, film_dict) for every film across every file, either shape
-
           # ---- films ----
-          for path in sorted(glob.glob("films/**/*.yaml", recursive=True) + glob.glob("films/**/*.yml", recursive=True)):
+          for path in sorted(glob.glob("films/*.yaml") + glob.glob("films/*.yml")):
               try:
                   doc = yaml.safe_load(open(path))
               except yaml.YAMLError as e:
                   err(path, f"not valid YAML — check your indentation (spaces, never tabs).\n    {e}")
                   continue
-              if not isinstance(doc, dict):
-                  err(path, "expected a YAML mapping")
+              if not isinstance(doc, dict) or "films" not in doc:
+                  err(path, "expected a top-level 'films:' list")
                   continue
-              if "films" in doc:
-                  if not doc.get("country"):
-                      err(path, "missing top-level 'country' — films/index.json is generated from this")
-                  for i, film in enumerate(doc["films"] or []):
-                      where = f"film #{i+1} ({film.get('name', 'unnamed')})"
-                      check_film(path, where, film)
-                      film_docs.append((path, film))
-              elif "name" in doc and "bundles" in doc:
-                  check_film(path, f"film ({doc.get('name', 'unnamed')})", doc)
-                  film_docs.append((path, doc))
-              else:
-                  err(path, "expected either a top-level 'films:' list or a single film (name: + bundles:)")
-
-          # Cross-file metadata consistency: mergeFilmBundles() (js/modals.js) safely unions
-          # bundles for the same film from any number of files, but the film's OTHER metadata
-          # (maxPushPull/process/format/hidden) is NOT merged — whichever file is imported last
-          # wholesale-overwrites it. If one film is split across multiple files (e.g. one per
-          # store), they must all agree on this metadata, or the app's displayed values become
-          # dependent on import order.
-          by_key = {}
-          for path, film in film_docs:
-              if not film.get("name"):
-                  continue
-              meta = (film.get("maxPushPull"), film.get("process"), film.get("format"), film.get("hidden"))
-              by_key.setdefault(film_key(film), []).append((path, meta))
-          for key, entries in by_key.items():
-              if len({meta for _, meta in entries}) > 1:
-                  detail = "; ".join(f"{p}: {m}" for p, m in entries)
-                  err("(cross-file)", f"'{key}': maxPushPull/process/format/hidden differ across files that share this film — every file for the same film needs identical metadata, since import order decides which one wins ({detail})")
+              if not doc.get("country"):
+                  err(path, "missing top-level 'country' — films/index.json is generated from this")
+              for i, film in enumerate(doc["films"] or []):
+                  where = f"film #{i+1} ({film.get('name', 'unnamed')})"
+                  for key in ("name", "boxSpeed", "process", "bundles"):
+                      if key not in film:
+                          err(path, f"{where}: missing required field '{key}'")
+                  if film.get("process") and film["process"] not in VALID_PROCESSES:
+                      err(path, f"{where}: process '{film['process']}' must be one of {sorted(VALID_PROCESSES)}")
+                  fmt = film.get("format", "35mm")
+                  if fmt not in VALID_FORMATS:
+                      err(path, f"{where}: format '{fmt}' must be one of {sorted(VALID_FORMATS)}")
+                  if not isinstance(film.get("boxSpeed"), int):
+                      err(path, f"{where}: boxSpeed must be a plain number (no quotes)")
+                  for j, b in enumerate(film.get("bundles") or []):
+                      bw = f"{where}, bundle #{j+1}"
+                      for key in ("rolls", "exposures", "filmCost"):
+                          if key not in b:
+                              err(path, f"{bw}: missing required field '{key}'")
+                      if isinstance(b.get("filmCost"), str):
+                          err(path, f"{bw}: filmCost must be a number, not text (write 24.95, not '$24.95')")
+                      if b.get("rolls") == 0 or b.get("exposures") == 0:
+                          err(path, f"{bw}: rolls and exposures must be greater than 0")
+                      avail = b.get("availability", "national")
+                      if avail not in VALID_AVAILABILITY:
+                          err(path, f"{bw}: availability '{avail}' must be one of {sorted(VALID_AVAILABILITY)}")
+                      if avail in ("state", "city") and not b.get("state"):
+                          err(path, f"{bw}: availability '{avail}' needs a 'state'")
+                      if avail == "city" and not b.get("city"):
+                          err(path, f"{bw}: availability 'city' needs a 'city'")
 
           # ---- labs ----
-          for path in sorted(glob.glob("labs/**/*.yaml", recursive=True) + glob.glob("labs/**/*.yml", recursive=True)):
+          for path in sorted(glob.glob("labs/*.yaml") + glob.glob("labs/*.yml")):
               try:
                   doc = yaml.safe_load(open(path))
               except yaml.YAMLError as e:
                   err(path, f"not valid YAML — check your indentation (spaces, never tabs).\n    {e}")
                   continue
-              if not isinstance(doc, dict):
-                  err(path, "expected a YAML mapping")
+              if not isinstance(doc, dict) or "labs" not in doc:
+                  err(path, "expected a top-level 'labs:' list")
                   continue
-              if "labs" in doc:
-                  for key in ("country", "state", "city"):
-                      if not doc.get(key):
-                          err(path, f"missing top-level '{key}' — labs/index.json is generated from this")
-                  for i, lab in enumerate(doc["labs"] or []):
-                      where = f"lab #{i+1} ({lab.get('name', 'unnamed')})"
-                      check_lab(path, where, lab)
-              elif "name" in doc and "services" in doc:
-                  check_lab(path, f"lab ({doc.get('name', 'unnamed')})", doc)
-              else:
-                  err(path, "expected either a top-level 'labs:' list or a single lab (name: + services:)")
+              for key in ("country", "state", "city"):
+                  if not doc.get(key):
+                      err(path, f"missing top-level '{key}' — labs/index.json is generated from this")
+              for i, lab in enumerate(doc["labs"] or []):
+                  where = f"lab #{i+1} ({lab.get('name', 'unnamed')})"
+                  if "name" not in lab:
+                      err(path, f"{where}: missing required field 'name'")
+                  if not lab.get("services"):
+                      err(path, f"{where}: needs at least one entry under 'services:'")
+                  for j, s in enumerate(lab.get("services") or []):
+                      sw = f"{where}, service #{j+1}"
+                      if "devCost" not in s:
+                          err(path, f"{sw}: missing required field 'devCost'")
+                      if isinstance(s.get("devCost"), str):
+                          err(path, f"{sw}: devCost must be a number, not text (write 17, not '$17')")
+                      if isinstance(s.get("mailBackCost"), str):
+                          err(path, f"{sw}: mailBackCost must be a number, not text (write 5, not '$5')")
+                      t = s.get("turnaroundTime")
+                      if t and t not in VALID_TURNAROUND:
+                          err(path, f"{sw}: turnaroundTime '{t}' must be one of {sorted(VALID_TURNAROUND)}")
+                      pt = s.get("pushPullType")
+                      if pt and pt not in VALID_PUSHPULL_TYPE:
+                          err(path, f"{sw}: pushPullType '{pt}' must be 'per_stop' or 'flat'")
+                      for p in (s.get("processes") or []):
+                          if p not in VALID_PROCESSES:
+                              err(path, f"{sw}: process '{p}' must be one of {sorted(VALID_PROCESSES)}")
 
           # ---- themes ----
           # Mirrors js/themes.js's own loadThemeList()/applyThemeVars() — a
@@ -277,11 +226,8 @@ jobs:
               not usually out of stock, not an expired-stock-only listing.
             - Films: `name` correctly excludes the ISO, except where the number is genuinely part of
               the product name (e.g. Portra 400 vs Portra 160/800).
-            - Films/labs should live at a location matching their country/state/city — either the
-              correct flat file (legacy files still using a top-level 'films:'/'labs:' list and
-              file-level country/state/city fields) or the correct nested folder path (newer
-              one-entry-per-file files, where the folder itself — e.g. films/australia/victoria/
-              melbourne/ — carries that meaning instead). Flag anything at the wrong file or path.
+            - Films are grouped in the right file for their country; labs in the right file for their
+              city. Flag anything that looks like it's in the wrong file.
             - Labs: `services` has one entry per distinct price the lab actually charges, not one
               lab-wide entry covering several prices.
             - Labs: `address` reads like a real, geocodable street address.

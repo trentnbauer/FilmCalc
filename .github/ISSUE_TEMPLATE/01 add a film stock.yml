@@ -28,7 +28,7 @@ body:
     id: country
     attributes:
       label: Country
-      description: Films are grouped by country — this decides which folder the entry belongs in.
+      description: Films are grouped by country — this decides which file the entry belongs in.
       placeholder: "e.g. Australia"
     validations:
       required: true
