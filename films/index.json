@@ -5,6 +5,11 @@
     "country": "Australia"
   },
   {
+    "file": "us-retailers.yaml",
+    "label": "American-Retailers",
+    "country": "America"
+  },
+  {
     "file": "melbourne-retailers.yaml",
     "label": "Melbourne Retailers",
     "country": "Australia",
