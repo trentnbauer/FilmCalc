@@ -6,8 +6,8 @@
   },
   {
     "file": "us-retailers.yaml",
-    "label": "American-Retailers",
-    "country": "America"
+    "label": "US-Retailers",
+    "country": "United States"
   },
   {
     "file": "melbourne-retailers.yaml",
