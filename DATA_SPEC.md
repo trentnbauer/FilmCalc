@@ -27,44 +27,50 @@ doesn't conform.
 
 ## Film entries
 
-Goes in a file under `films/`, grouped **by country** — unless every bundle for this film has a
-non-`national` `availability` (see below), in which case it's grouped **by city instead** (e.g.
-`melbourne-retailers.yaml`), same as labs. A film that has both national bundles (from a nationwide
-chain) and city-scoped bundles (from a local online shop) for the *same* name/boxSpeed/format is
-perfectly normal — it appears as two separate entries, one in the country file with just its national
-bundles, one in the city file with just its city-scoped bundles. The app merges them back together at
-import time by name+boxSpeed+format.
+**One film goes in one file** — this stock, sold by this one store/locality. The file itself IS the
+film (no wrapping `films:` list, no file-level `label`/`country`/`state`/`city`) — the file's *path*
+carries the region instead (see "Folder path" below). If this same stock is sold by several stores,
+each store gets its own file; the app merges them back together at import time by
+name+boxSpeed+format, so splitting one film across several files this way is expected, not a
+duplicate.
 
 ```yaml
-label: Melbourne Retailers
-country: Australia
-state: Victoria
-city: Melbourne
-films:
-- name: Kodak Portra 400
-  boxSpeed: 400
-  maxPushPull: 2
-  process: C41
-  format: 35mm
-  hidden: false
-  bundles:
-  - rolls: 1
-    exposures: 36
-    filmCost: 28.50
-    storeName: Walkens
-    buyLink: https://walkens.com.au/products/example
-    availability: city
-    state: Victoria
-    city: Melbourne
+name: Kodak Portra 400
+boxSpeed: 400
+maxPushPull: 2
+process: C41
+format: 35mm
+hidden: false
+bundles:
+- rolls: 1
+  exposures: 36
+  filmCost: 28.50
+  storeName: Walkens
+  buyLink: https://walkens.com.au/products/example
+  availability: city
+  state: Victoria
+  city: Melbourne
 ```
 
-### File-level fields (top of the file, not per-film)
+### Folder path
 
-| Field | Rules |
-|---|---|
-| `label` | Shown in the app's Import screen. |
-| `country` | **Required.** The country this file's films are grouped by — always present, even for a city-scoped file (a city file's presets are still within one country). A GitHub Actions workflow (`sync-preset-index.yml`) reads this — plus `state`/`city` below — straight out of the file to (re)generate `films/index.json` automatically. Never hand-edit that JSON file; it's a generated artifact. |
-| `state` / `city` | Present **only** if every bundle in this file is city/state-scoped (see `availability` below) — that's what makes this a city file (`melbourne-retailers.yaml`) instead of a country file (`australian-retailers.yaml`). Omit both for a country-wide file. |
+Path is `films/<country-slug>/<slug>.yaml` if every bundle in this file has `availability: national`
+(see below), or `films/<country-slug>/<state-slug>/<city-slug>/<slug>.yaml` if every bundle is
+`state`/`city`-scoped. A film that has both national bundles (from a nationwide chain) and
+city-scoped bundles (from a local online shop) for the *same* name/boxSpeed/format is perfectly
+normal — it's two separate files, one at the country level with just the national bundles, one
+nested under the relevant state/city with just the city-scoped ones.
+
+- **Slug**: lowercase, spaces and punctuation become single hyphens, no leading/trailing hyphens
+  — `New South Wales` → `new-south-wales`, `Kodak Portra 400` → `kodak-portra-400`.
+- **Filename**: `<film-slug>-<boxSpeed>-<store-slug>.yaml`, e.g. `kodak-portra-400-400-walkens.yaml`
+  — `boxSpeed` is included even though it's also in the file, because the same name can legitimately
+  cover more than one speed from the same store (e.g. "FujiFilm Color" 200 and 400), and without it
+  those two files would collide.
+- If a bundle's own `availability`/`state`/`city` doesn't match the folder you're about to put it
+  in (e.g. you're about to write to `films/australia/` but the bundle says `availability: city`),
+  that's a sign the bundle needs `national` instead, or the file needs to move — don't let them
+  disagree.
 
 ### Per-film fields
 
@@ -90,38 +96,35 @@ films:
 
 ## Lab entries
 
-Goes in a file under `labs/`, grouped **by city**.
+**One lab goes in one file** — no wrapping `labs:` list, no file-level `label`/`country`/`state`/
+`city`. A lab's entire `services:` list must live in this one file — the app has no way to merge
+service tiers split across files (unlike a film's bundles), so never split one lab's tiers up.
 
 ```yaml
-label: Melbourne Labs
-country: Australia
-state: Victoria
-city: Melbourne
-labs:
-- name: Example Photo Lab
-  hidden: false
-  address: 1 Example Street, Melbourne VIC 3000, Australia
-  phone: (03) 1234 5678
-  email: hello@example.com
-  website: https://example.com
-  services:
-  - devCost: 17
-    pushPullCost: 5
-    pushPullType: per_stop
-    turnaroundTime: next_day
-    highResScan: true
-    tiffScan: false
-    noPushPull: false
-    processes:
-    - C41
+name: Example Photo Lab
+hidden: false
+address: 1 Example Street, Melbourne VIC 3000, Australia
+phone: (03) 1234 5678
+email: hello@example.com
+website: https://example.com
+services:
+- devCost: 17
+  pushPullCost: 5
+  pushPullType: per_stop
+  turnaroundTime: next_day
+  highResScan: true
+  tiffScan: false
+  noPushPull: false
+  processes:
+  - C41
 ```
 
-### File-level fields (top of the file, not per-lab)
+### Folder path
 
-| Field | Rules |
-|---|---|
-| `label` | Shown in the app's Import screen. |
-| `country` / `state` / `city` | **All three required.** A lab is always tied to one physical place, unlike a film (which can be national). As with films, a workflow (`sync-preset-index.yml`) regenerates `labs/index.json` from these — never hand-edit that file. |
+Always `labs/<country-slug>/<state-slug>/<city-slug>/<slug>.yaml` — a lab is always tied to one
+physical place, unlike a film (which can be national). Same slug rules as films (see above).
+Filename is just `<lab-slug>.yaml` — no boxSpeed-style disambiguator needed, since two labs with
+the same name at the same address would be a genuine duplicate, not a legitimate collision.
 
 ### Per-lab fields
 
@@ -163,29 +166,13 @@ C41 or ECN-2"), list both under that one entry's `processes`.
 After the YAML, add a short note with exactly these three things:
 
 1. **Any fields you marked `UNKNOWN`**, and what you'd need to fill them.
-2. **The country** (for a film) or **city** (for a lab) the shop/lab is in.
-3. **A suggested filename and label**, following these conventions:
-
-   | | Filename | Label |
-   |---|---|---|
-   | **Films, national** | `us-retailers.yaml`, `uk-retailers.yaml` | `US Retailers`, `UK Retailers` |
-   | **Films, city-scoped** (any bundle with `availability: state` or `city`) | `melbourne-retailers.yaml`, `sydney-retailers.yaml` | `Melbourne Retailers`, `Sydney Retailers` |
-   | **Labs** (always by city) | `london.yaml`, `new-york.yaml` | `London Labs`, `New York Labs` |
-
-   Then check the existing files and tell the user which case applies:
-   - **The file already exists** → they should open it and paste your entry at the bottom of the list.
-   - **It doesn't exist** → they need to create it, and the file must start with `label:`, `country:`,
-     and — for a city-scoped film file or any lab file — `state:`/`city:` too. Don't touch
-     `films/index.json` or `labs/index.json`; a GitHub Actions workflow regenerates those
-     automatically from these fields after the PR merges.
-
-     ```yaml
-     label: US Retailers
-     country: United States
-     films:
-     - name: Kodak Portra 400
-       ...
-     ```
+2. **The country/state/city** the shop/lab is in (or just country, for a national film).
+3. **The exact file path to create**, built from the folder-path rule above — e.g.
+   `films/australia/victoria/melbourne/kodak-portra-400-400-walkens.yaml` or
+   `labs/united-kingdom/england/london/example-photo-lab.yaml`. This is always a brand-new file —
+   one film/store or one lab always gets its own file, there's no "append to an existing list"
+   case anymore. Don't touch `films/index.json` or `labs/index.json`; a GitHub Actions workflow
+   regenerates those automatically after the PR merges.
 
 Finally, remind them in one sentence to **check every price against the real page before submitting**,
 because you may have made a mistake.

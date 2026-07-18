@@ -37,8 +37,9 @@ Replace `[PASTE THE LINK HERE]` at the bottom of the prompt with the shop or lab
 Claude gives you back:
 
 - ✅ the **YAML entry**, correctly formatted
-- ✅ the **filename** to use (e.g. `us-retailers.yaml`)
-- ✅ whether that file **already exists**, or you need to create it
+- ✅ the **exact file path** to create, e.g.
+  `films/australia/victoria/melbourne/kodak-portra-400-400-walkens.yaml` — always a brand-new file,
+  since every film+store (or every lab) gets its own
 
 ### 3️⃣ Check the prices ⚠️
 
@@ -52,15 +53,16 @@ If you see `UNKNOWN`, fill it in yourself.
 
 ### 4️⃣ Upload it to GitHub
 
-Claude told you which file to use. Pick your case:
-
-| Claude said… | Do this |
-|---|---|
-| **"Create a new file"** *(most people)* | Go to **[films/](https://github.com/trentnbauer/FilmCalc/upload/main/films)** or **[labs/](https://github.com/trentnbauer/FilmCalc/upload/main/labs)** → **Create new file** → name it what Claude said → paste everything in |
-| **"That file already exists"** | Open the file → click the **pencil ✏️** → paste your entry at the **bottom of the list** |
+Go to **[films/](https://github.com/trentnbauer/FilmCalc/new/main/films)** or
+**[labs/](https://github.com/trentnbauer/FilmCalc/new/main/labs)** → **Create new file** → paste the
+**full path** Claude gave you (including the `australia/victoria/melbourne/…` part) into the filename
+box — GitHub creates the folders for you as you type each `/` — → paste your YAML in below it.
 
 GitHub may say *"You need to fork this repository to propose changes"* — click the button. One click,
 totally normal.
+
+(If you're already using the FilmCalc app itself, there's an even faster way — see **"Let the
+FilmCalc app write it"** below, which skips this step entirely.)
 
 ### 5️⃣ Send it
 
@@ -106,34 +108,24 @@ Then carry on from **[step 3](#3️⃣-check-the-prices-️)**.
 </details>
 
 <details>
-<summary><b>🎞️ Let the FilmCalc app write it (if you already use the app)</b></summary>
+<summary><b>🎞️ Let the FilmCalc app write it (if you already use the app) — fastest option</b></summary>
 
 <br>
 
-The app can generate the YAML for you — no AI needed.
+The app can generate the YAML **and** open the GitHub page for you, pre-filled — no AI, no manual
+file creation.
 
 1. In FilmCalc, go to the **Library** tab and add your film stock (or lab) exactly as you want it.
-2. Go to **Settings → Export Data** → **Export Films Only** (or **Export Labs Only**).
-3. Give it a preset name. A `.yaml` file downloads.
-4. Open it in any text editor and copy **only your entry** — not the whole file, which contains every
-   film you have saved:
+2. Click **🔗 Push to GitHub** next to it.
+3. Fill in the country/state/city (and store name, for a film) when asked — this is how FilmCalc
+   works out the file path.
+4. It opens GitHub with the filename and YAML content already typed in. If you don't already have
+   write access, GitHub forks the repo for you automatically.
+5. Click **Propose new file**, then carry on from **[step 5](#5️⃣-send-it)**.
 
-```yaml
-- name: Kodak Gold
-  boxSpeed: 200
-  maxPushPull: 1
-  process: C41
-  format: 35mm
-  hidden: false
-  bundles:
-  - rolls: 1
-    exposures: 36
-    filmCost: 24.95
-    storeName: JB HiFi
-    buyLink: https://example.com/kodak-gold-200
-```
-
-Then carry on from **[step 4](#4️⃣-upload-it-to-github)**.
+If the popup gets blocked, or the entry is too large for GitHub's URL, FilmCalc copies the YAML to
+your clipboard instead and tells you the exact path to paste it at — carry on from
+**[step 4](#4️⃣-upload-it-to-github)**.
 
 </details>
 
@@ -186,22 +178,24 @@ device. It just won't ship with the project.
 </details>
 
 <details>
-<summary><b>Why are films grouped by country, but labs by city?</b></summary>
+<summary><b>Why are films nested by country, but labs by country/state/city?</b></summary>
 
 <br>
 
 **Films** bought from a nationwide chain (Woolworths, JB Hi-Fi — walk in anywhere, no postage) are
-broadly national — one `us-retailers.yaml` covers the whole US. But a film's price from an
-online-only or single-location shop is only really valid near that shop, since buyers elsewhere pay
-postage on top — that's what a bundle's `availability` field is for (see DATA_SPEC.md). Any bundle
-that isn't `national` goes in a city file instead, e.g. `melbourne-retailers.yaml`, right alongside
-that same film's national bundles from other files.
+broadly national — one file directly under `films/united-states/` covers the whole US. But a film's
+price from an online-only or single-location shop is only really valid near that shop, since buyers
+elsewhere pay postage on top — that's what a bundle's `availability` field is for (see
+DATA_SPEC.md). Any bundle that isn't `national` goes in a file nested under that state/city instead,
+e.g. `films/australia/victoria/melbourne/…`, right alongside that same film's other listings from
+other stores.
 
 **Labs** are physical places you post film to or walk into, so they only matter locally. A Melbourne
-shooter has no use for a London lab's pricing — hence `melbourne.yaml`, `london.yaml`, and so on.
+shooter has no use for a London lab's pricing — hence `labs/australia/victoria/melbourne/…`,
+`labs/united-kingdom/england/london/…`, and so on.
 
-Users choose which files to import in the app, so keeping them separate means nobody wades through
-prices in a currency (or postage zone) they don't use.
+Users choose which presets to import in the app, grouped by this same country/state/city tree, so
+nobody wades through prices in a currency (or postage zone) they don't use.
 
 </details>
 
