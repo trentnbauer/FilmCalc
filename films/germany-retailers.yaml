@@ -1,0 +1,28 @@
+label: Germany Retailers
+country: Germany
+films:
+  - name: Kodak Ultramax
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 24
+        filmCost: 11.45
+        storeName: dm-drogerie markt
+        buyLink: https://www.dm.de/p/d/1267925/kodak-farbfilm-ultra-max-400-24
+  - name: AgfaPhoto APX 400
+    boxSpeed: 400
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 7.95
+        storeName: dm-drogerie markt
+        buyLink: >-
+          https://www.dm.de/p/d/3127983/agfaphoto-schwarzweissfilm-apx-400-36
