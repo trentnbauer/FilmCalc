@@ -1,0 +1,387 @@
+label: Melbourne Labs
+country: Australia
+state: Victoria
+city: Melbourne
+labs:
+  - name: Hillvale Photo Melbourne
+    hidden: false
+    website: https://hillvale.com.au
+    services:
+      - devCost: 19
+        pushPullCost: 3
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 13
+        processes:
+          - C41
+      - devCost: 30
+        pushPullCost: 3
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 13
+        processes:
+          - C41
+      - devCost: 40
+        pushPullCost: 3
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        mailBackCost: 13
+        processes:
+          - C41
+      - devCost: 28.5
+        pushPullCost: 3
+        pushPullType: per_stop
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 13
+        processes:
+          - C41
+      - devCost: 38.5
+        pushPullCost: 3
+        pushPullType: per_stop
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        mailBackCost: 13
+        processes:
+          - C41
+      - devCost: 45
+        pushPullCost: 3
+        pushPullType: per_stop
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 13
+        processes:
+          - C41
+      - devCost: 55
+        pushPullCost: 3
+        pushPullType: per_stop
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        mailBackCost: 13
+        processes:
+          - C41
+      - devCost: 22
+        pushPullCost: 3
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 13
+        processes:
+          - BW
+      - devCost: 32
+        pushPullCost: 3
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        mailBackCost: 13
+        processes:
+          - BW
+      - devCost: 30
+        pushPullCost: 3
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 13
+        processes:
+          - BW
+      - devCost: 40
+        pushPullCost: 3
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        mailBackCost: 13
+        processes:
+          - BW
+      - devCost: 25
+        pushPullCost: 3
+        pushPullType: per_stop
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 13
+        processes:
+          - E6
+      - devCost: 35
+        pushPullCost: 3
+        pushPullType: per_stop
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 13
+        processes:
+          - E6
+      - devCost: 45
+        pushPullCost: 3
+        pushPullType: per_stop
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        mailBackCost: 13
+        processes:
+          - C41
+  - name: Walkens Melbourne
+    hidden: false
+    website: https://walkens.com.au
+    services:
+      - devCost: 16
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        mailBackCost: 11
+        processes:
+          - C41
+      - devCost: 22
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: true
+        noPushPull: true
+        mailBackCost: 11
+        processes:
+          - C41
+      - devCost: 23
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: true
+        mailBackCost: 11
+        processes:
+          - C41
+      - devCost: 29
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: true
+        mailBackCost: 11
+        processes:
+          - C41
+      - devCost: 26
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        mailBackCost: 11
+        processes:
+          - C41
+      - devCost: 32
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: true
+        noPushPull: true
+        mailBackCost: 11
+        processes:
+          - C41
+      - devCost: 33
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: false
+        noPushPull: true
+        mailBackCost: 11
+        processes:
+          - C41
+      - devCost: 39
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: true
+        noPushPull: true
+        mailBackCost: 11
+        processes:
+          - C41
+      - devCost: 23
+        pushPullCost: 3
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 11
+        processes:
+          - BW
+      - devCost: 29
+        pushPullCost: 3
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        mailBackCost: 11
+        processes:
+          - BW
+      - devCost: 30
+        pushPullCost: 3
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 11
+        processes:
+          - BW
+      - devCost: 36
+        pushPullCost: 3
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        mailBackCost: 11
+        processes:
+          - BW
+      - devCost: 33
+        pushPullCost: 3
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 11
+        processes:
+          - BW
+      - devCost: 39
+        pushPullCost: 3
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        mailBackCost: 11
+        processes:
+          - BW
+      - devCost: 40
+        pushPullCost: 3
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 11
+        processes:
+          - BW
+      - devCost: 46
+        pushPullCost: 3
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        mailBackCost: 11
+        processes:
+          - BW
+      - devCost: 23
+        pushPullCost: 10
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 11
+        processes:
+          - E6
+      - devCost: 29
+        pushPullCost: 10
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        mailBackCost: 11
+        processes:
+          - E6
+      - devCost: 30
+        pushPullCost: 10
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 11
+        processes:
+          - E6
+      - devCost: 36
+        pushPullCost: 10
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        mailBackCost: 11
+        processes:
+          - E6
+  - name: Irohas Melbourne
+    hidden: false
+    website: https://irohasphoto.com.au
+    services:
+      - devCost: 17
+        pushPullCost: 5
+        pushPullType: per_stop
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 15
+        processes:
+          - C41
+      - devCost: 19
+        pushPullCost: 5
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 15
+        processes:
+          - BW
+      - devCost: 21
+        pushPullCost: 5
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 15
+        processes:
+          - E6

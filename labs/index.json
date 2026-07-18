@@ -1,107 +1,44 @@
 [
   {
-    "file": "australia/australian-capital-territory/canberra/photoaccess.yaml",
-    "label": "PhotoAccess",
+    "file": "adelaide.yaml",
+    "label": "Adelaide Labs",
+    "country": "Australia",
+    "state": "South Australia",
+    "city": "Adelaide"
+  },
+  {
+    "file": "brisbane.yaml",
+    "label": "Brisbane Labs",
+    "country": "Australia",
+    "state": "Queensland",
+    "city": "Brisbane"
+  },
+  {
+    "file": "canberra.yaml",
+    "label": "Canberra Labs",
     "country": "Australia",
     "state": "Australian Capital Territory",
     "city": "Canberra"
   },
   {
-    "file": "australia/new-south-wales/sydney/do-film-lab.yaml",
-    "label": "Do Film! Lab",
-    "country": "Australia",
-    "state": "New South Wales",
-    "city": "Sydney"
-  },
-  {
-    "file": "australia/new-south-wales/sydney/irohas-photo-sydney.yaml",
-    "label": "Irohas Photo Sydney",
-    "country": "Australia",
-    "state": "New South Wales",
-    "city": "Sydney"
-  },
-  {
-    "file": "australia/new-south-wales/sydney/photoland.yaml",
-    "label": "Photoland",
-    "country": "Australia",
-    "state": "New South Wales",
-    "city": "Sydney"
-  },
-  {
-    "file": "australia/new-south-wales/sydney/rewind-photo-lab.yaml",
-    "label": "Rewind Photo Lab",
-    "country": "Australia",
-    "state": "New South Wales",
-    "city": "Sydney"
-  },
-  {
-    "file": "australia/queensland/brisbane/fotofast.yaml",
-    "label": "Fotofast",
-    "country": "Australia",
-    "state": "Queensland",
-    "city": "Brisbane"
-  },
-  {
-    "file": "australia/queensland/brisbane/your-local-film-lab.yaml",
-    "label": "Your Local Film Lab",
-    "country": "Australia",
-    "state": "Queensland",
-    "city": "Brisbane"
-  },
-  {
-    "file": "australia/south-australia/adelaide/adelaide-photo-factory.yaml",
-    "label": "Adelaide Photo Factory",
-    "country": "Australia",
-    "state": "South Australia",
-    "city": "Adelaide"
-  },
-  {
-    "file": "australia/south-australia/adelaide/photoco-camera-house.yaml",
-    "label": "PhotoCo Camera House",
-    "country": "Australia",
-    "state": "South Australia",
-    "city": "Adelaide"
-  },
-  {
-    "file": "australia/victoria/melbourne/hillvale-photo-melbourne.yaml",
-    "label": "Hillvale Photo Melbourne",
+    "file": "melbourne.yaml",
+    "label": "Melbourne Labs",
     "country": "Australia",
     "state": "Victoria",
     "city": "Melbourne"
   },
   {
-    "file": "australia/victoria/melbourne/irohas-melbourne.yaml",
-    "label": "Irohas Melbourne",
-    "country": "Australia",
-    "state": "Victoria",
-    "city": "Melbourne"
-  },
-  {
-    "file": "australia/victoria/melbourne/walkens-melbourne.yaml",
-    "label": "Walkens Melbourne",
-    "country": "Australia",
-    "state": "Victoria",
-    "city": "Melbourne"
-  },
-  {
-    "file": "australia/western-australia/perth/focus-pocus.yaml",
-    "label": "Focus Pocus",
+    "file": "perth.yaml",
+    "label": "Perth Labs",
     "country": "Australia",
     "state": "Western Australia",
     "city": "Perth"
   },
   {
-    "file": "australia/western-australia/perth/irohas-perth.yaml",
-    "label": "Irohas Perth",
+    "file": "sydney.yaml",
+    "label": "Sydney Labs",
     "country": "Australia",
-    "state": "Western Australia",
-    "city": "Perth"
-  },
-  {
-    "file": "australia/western-australia/perth/silver-halide-studios.yaml",
-    "label": "Silver Halide Studios",
-    "country": "Australia",
-    "state": "Western Australia",
-    "city": "Perth"
+    "state": "New South Wales",
+    "city": "Sydney"
   }
 ]

@@ -1,0 +1,206 @@
+label: Perth Labs
+country: Australia
+state: Western Australia
+city: Perth
+labs:
+  - name: Irohas Perth
+    hidden: false
+    address: Shop 202-203, 72 St Georges Terrace, Perth CBD WA 6000, Australia
+    phone: +61 480 287 079
+    email: perth@irohasphoto.com
+    website: https://irohasphoto.com.au
+    services:
+      - devCost: 17
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: false
+        noPushPull: true
+        mailBackCost: 15
+        processes:
+          - C41
+      - devCost: 11
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        mailBackCost: 15
+        processes:
+          - C41
+      - devCost: 19
+        pushPullCost: 5
+        pushPullType: per_stop
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 15
+        processes:
+          - BW
+      - devCost: 12
+        pushPullCost: 5
+        pushPullType: per_stop
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 15
+        processes:
+          - BW
+      - devCost: 21
+        pushPullCost: 5
+        pushPullType: per_stop
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 15
+        processes:
+          - E6
+      - devCost: 15
+        pushPullCost: 5
+        pushPullType: per_stop
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 15
+        processes:
+          - E6
+      - devCost: 25
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: false
+        noPushPull: true
+        mailBackCost: 15
+        processes:
+          - ECN2
+      - devCost: 15
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        mailBackCost: 15
+        processes:
+          - ECN2
+  - name: Focus Pocus
+    hidden: false
+    address: 13/7 Leake Street, Fremantle WA 6160, Australia
+    email: hello@focuspocus.com.au
+    website: https://focuspocus.com.au
+    services:
+      - devCost: 22
+        pushPullCost: 5
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 26
+        pushPullCost: 5
+        pushPullType: flat
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 25
+        pushPullCost: 5
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 28
+        pushPullCost: 5
+        pushPullType: flat
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 30
+        pushPullCost: 5
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 35
+        pushPullCost: 5
+        pushPullType: flat
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - E6
+  - name: Silver Halide Studios
+    hidden: false
+    address: 5/37 Railway Parade, Mount Lawley WA 6050, Australia
+    email: support@silverhalidestudios.com.au
+    website: https://www.silverhalidestudios.com.au
+    services:
+      - devCost: 22
+        pushPullCost: 3
+        pushPullType: per_stop
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 15
+        processes:
+          - C41
+      - devCost: 32
+        pushPullCost: 3
+        pushPullType: per_stop
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        mailBackCost: 15
+        processes:
+          - C41
+      - devCost: 32
+        pushPullCost: 3
+        pushPullType: per_stop
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 15
+        processes:
+          - E6
+      - devCost: 42
+        pushPullCost: 3
+        pushPullType: per_stop
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        mailBackCost: 15
+        processes:
+          - E6
+      - devCost: 26
+        pushPullCost: 3
+        pushPullType: per_stop
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 15
+        processes:
+          - BW
+      - devCost: 36
+        pushPullCost: 3
+        pushPullType: per_stop
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        mailBackCost: 15
+        processes:
+          - BW

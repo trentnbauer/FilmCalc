@@ -1,0 +1,153 @@
+label: Adelaide Labs
+country: Australia
+state: South Australia
+city: Adelaide
+labs:
+  - name: Adelaide Photo Factory
+    hidden: false
+    address: 66 Gawler Place, Adelaide SA 5000, Australia
+    phone: 08 8221 6500
+    email: apf.lab1@gmail.com
+    website: https://adelaidephotofactory.com.au
+    services:
+      - devCost: 11
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 18
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 22
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: true
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 29
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 15
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - BW
+      - devCost: 22
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - BW
+      - devCost: 26
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: true
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - BW
+      - devCost: 25
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - BW
+      - devCost: 25
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: true
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - BW
+      - devCost: 35
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - BW
+  - name: PhotoCo Camera House
+    hidden: false
+    address: Stall WR5/44-60 Gouger St, Adelaide SA 5000, Australia
+    phone: (08) 8231 5632
+    email: photoco@ozemail.com.au
+    website: https://photococamera.com
+    services:
+      - devCost: 7.00
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        mailBackCost: 15
+        processes:
+          - C41
+      - devCost: 15.00
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        mailBackCost: 15
+        processes:
+          - C41
+      - devCost: 14.95
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        mailBackCost: 15
+        processes:
+          - C41
+      - devCost: 17.95
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        mailBackCost: 15
+        processes:
+          - C41
+      - devCost: 20.00
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        mailBackCost: 15
+        processes:
+          - C41
+      - devCost: 23.00
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        mailBackCost: 15
+        processes:
+          - C41
