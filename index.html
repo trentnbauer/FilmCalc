@@ -150,13 +150,6 @@
         })();
     </script>
 
-    <div id="devBanner" class="hidden flex items-center justify-between gap-3 bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-200 text-sm font-medium py-2 px-4 rounded-lg">
-        <span data-i18n="devBannerText">⚠️ This web-app is under active development</span>
-        <button id="devBannerDismissBtn" type="button" class="shrink-0 p-1 rounded hover:bg-amber-200 dark:hover:bg-amber-800/50 transition-colors" aria-label="Dismiss" data-i18n-aria-label="dismissLabel">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-        </button>
-    </div>
-
     <div class="themed-card bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 md:p-8 w-full relative transition-colors duration-200">
 
         <header class="flex items-start justify-between gap-4 mb-6">
@@ -1298,18 +1291,6 @@
         // same price) — a film only pairs with tiers whose processes
         // include the film's own.
 
-        // ---------- Dev banner (dismissible) ----------
-        // Hidden by default in the markup so dismissed users never see a flash;
-        // shown here only if it hasn't been dismissed before.
-        const devBanner = document.getElementById('devBanner');
-        if (localStorage.getItem('devBannerDismissed') !== '1') {
-            devBanner.classList.remove('hidden');
-        }
-        document.getElementById('devBannerDismissBtn').addEventListener('click', () => {
-            devBanner.classList.add('hidden');
-            localStorage.setItem('devBannerDismissed', '1');
-        });
-
         // ---------- Expired film shooting-speed recommendation ----------
         // Rule-of-thumb estimate only: well-stored (cold) film loses sensitivity
         // more slowly than film left at room temperature or of unknown history.
@@ -1532,7 +1513,7 @@
         const APP_STORAGE_KEYS = [
             'filmProfiles', 'labProfiles', 'upgradeThresholdPercent',
             'globalProcess', 'globalFormat', 'activeTheme', 'theme',
-            'devBannerDismissed', 'currencySymbol', 'defaultLabPref',
+            'currencySymbol', 'defaultLabPref',
             'pinnedLabResults', 'pinnedDevCostResults', 'cheapestSort', 'favouriteLabs', 'favouriteFilms',
             'hasSeenImportPrompt'
         ];
