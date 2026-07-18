@@ -778,14 +778,6 @@ function buildPresetTree() {
 // state/city) sit directly under their country, alongside the state list.
 // Everything starts collapsed except a lone country (nothing to hide) or
 // whatever applyGeoDefaultsToPresetTree() opens once the geo lookup lands.
-// Each level's summary/header also carries a "select all" checkbox (issue
-// #231) so a whole country/state/city can be imported in one tick instead
-// of ticking every individual film — the per-preset checkboxes underneath
-// are still there for picking just one or two out of a group.
-function groupCheckboxHtml(label) {
-    return `<input type="checkbox" class="preset-group-checkbox rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500" aria-label="${escapeHtml(label)}">`;
-}
-
 function renderPresetTree(tree) {
     const countries = Object.keys(tree).sort();
     const singleCountry = countries.length === 1;
@@ -796,63 +788,25 @@ function renderPresetTree(tree) {
             const cities = states[state];
             const cityNames = Object.keys(cities).sort();
             const citiesHtml = cityNames.map(city => `
-                <div class="preset-city-group pl-3 py-1" data-city="${escapeHtml(city)}">
-                    <p class="flex items-center gap-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide px-2">
-                        ${groupCheckboxHtml(city)}
-                        <span>${escapeHtml(city)}</span>
-                    </p>
+                <div class="pl-3 py-1">
+                    <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide px-2">${escapeHtml(city)}</p>
                     ${cities[city].map(presetCheckboxHtml).join('')}
                 </div>`).join('');
             return `
                 <details class="preset-state-group pl-3" data-state="${escapeHtml(state)}">
-                    <summary class="flex items-center gap-2 cursor-pointer select-none text-xs font-semibold text-gray-500 dark:text-gray-400 py-1.5">
-                        ${groupCheckboxHtml(state)}
-                        <span>${escapeHtml(state)}</span>
-                    </summary>
+                    <summary class="cursor-pointer select-none text-xs font-semibold text-gray-500 dark:text-gray-400 py-1.5">${escapeHtml(state)}</summary>
                     ${citiesHtml}
                 </details>`;
         }).join('');
         return `
             <details class="preset-country-group" data-country="${escapeHtml(country)}" ${singleCountry ? 'open' : ''}>
-                <summary class="flex items-center gap-2 cursor-pointer select-none text-sm font-semibold text-gray-700 dark:text-gray-300 py-1.5">
-                    ${groupCheckboxHtml(country)}
-                    <span>${escapeHtml(country)}</span>
-                </summary>
+                <summary class="cursor-pointer select-none text-sm font-semibold text-gray-700 dark:text-gray-300 py-1.5">${escapeHtml(country)}</summary>
                 <div class="pl-2">
                     ${countryWide.map(presetCheckboxHtml).join('')}
                     ${statesHtml}
                 </div>
             </details>`;
     }).join('');
-}
-
-// Reflects each group checkbox's checked/indeterminate state from the
-// preset checkboxes nested under it — call after any preset or group
-// checkbox changes.
-function syncGroupCheckboxes() {
-    importPresetList.querySelectorAll('.preset-group-checkbox').forEach(gcb => {
-        const scope = gcb.closest('.preset-country-group, .preset-state-group, .preset-city-group');
-        if (!scope) return;
-        const boxes = [...scope.querySelectorAll('.import-preset-checkbox')];
-        const checkedCount = boxes.filter(b => b.checked).length;
-        gcb.checked = boxes.length > 0 && checkedCount === boxes.length;
-        gcb.indeterminate = checkedCount > 0 && checkedCount < boxes.length;
-    });
-}
-
-function attachGroupCheckboxHandlers() {
-    importPresetList.querySelectorAll('.preset-group-checkbox').forEach(gcb => {
-        // Stop the click from bubbling to <summary>, which would otherwise
-        // also toggle the details element open/closed on every tick.
-        gcb.addEventListener('click', (e) => e.stopPropagation());
-        gcb.addEventListener('change', () => {
-            const scope = gcb.closest('.preset-country-group, .preset-state-group, .preset-city-group');
-            scope.querySelectorAll('.import-preset-checkbox').forEach(cb => { cb.checked = gcb.checked; });
-            syncGroupCheckboxes();
-            const anyChecked = [...importPresetList.querySelectorAll('.import-preset-checkbox')].some(c => c.checked);
-            importSelectedPresetsBtn.disabled = !anyChecked;
-        });
-    });
 }
 
 // Best-effort: expand the visitor's own country/state so the relevant
@@ -898,12 +852,10 @@ async function loadPresetList() {
     importPresetList.innerHTML = renderPresetTree(buildPresetTree());
     importPresetList.querySelectorAll('.import-preset-checkbox').forEach(cb => {
         cb.addEventListener('change', () => {
-            syncGroupCheckboxes();
             const anyChecked = [...importPresetList.querySelectorAll('.import-preset-checkbox')].some(c => c.checked);
             importSelectedPresetsBtn.disabled = !anyChecked;
         });
     });
-    attachGroupCheckboxHandlers();
     applyGeoDefaultsToPresetTree();
 }
 
