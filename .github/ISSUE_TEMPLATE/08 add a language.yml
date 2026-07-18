@@ -1,0 +1,61 @@
+name: "🌐 Add a language"
+description: Request a new UI language/locale be added to FilmCalc
+title: "[Language] "
+labels: ["i18n", "enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        FilmCalc's UI strings all route through a `t()`/`applyI18n()` system (`js/i18n.js`) —
+        adding a locale means translating every key in `STRINGS.en` into a new `STRINGS.<code>`
+        object, keeping every `{placeholder}` token intact, then wiring the language into the
+        Settings dropdown and the first-run welcome popup.
+
+        This template is for *requesting* a language, not submitting translations yourself —
+        if you're fluent and want to contribute the translation directly, say so below and
+        open a PR referencing this issue instead.
+
+  - type: input
+    id: language
+    attributes:
+      label: Language
+      placeholder: "e.g. German"
+    validations:
+      required: true
+
+  - type: input
+    id: code
+    attributes:
+      label: Language code
+      description: The ISO 639-1 code this locale should use (becomes the `STRINGS.<code>` key and dropdown value).
+      placeholder: "e.g. de"
+    validations:
+      required: true
+
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Why this language?
+      description: Market size, an active film-photography community, existing manufacturer/lab presence, etc.
+      placeholder: "e.g. Large domestic film market with several manufacturers and active lab chains."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: review
+    attributes:
+      label: Can you review a translation for accuracy?
+      description: Machine/AI-assisted translations can miss photography-specific terminology (push/pull, box speed, mail-back, etc.) — a native or fluent speaker willing to spot-check the result is a big help.
+      options:
+        - "Yes, I'm fluent and can review"
+        - "No, but I still think it's worth adding"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirmations
+      options:
+        - label: I searched existing issues and this language hasn't already been requested
+          required: true
