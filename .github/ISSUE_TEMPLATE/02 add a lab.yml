@@ -44,7 +44,7 @@ body:
     id: city
     attributes:
       label: City
-      description: Labs are grouped by city — this decides which file the entry belongs in.
+      description: Labs are grouped by city — this decides which folder the entry belongs in.
       placeholder: "e.g. Melbourne"
     validations:
       required: true
