@@ -1,6 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- AdSense site verification — Google requires this exact snippet in
+         every page's <head>. Loaded the same guarded way as the ad slot
+         further down: the build-github-page.yml workflow sed-replaces
+         %%ADSENSE_CLIENT_ID%% from a repo secret; the Docker/self-hosted
+         build never runs that step, so the token stays literal here and
+         this bails out before requesting anything from Google — no ad
+         script for self-hosted users. -->
+    <script>
+        (function () {
+            var client = "%%ADSENSE_CLIENT_ID%%";
+            if (!client || client.indexOf('%%') === 0) return;
+            var loader = document.createElement('script');
+            loader.async = true;
+            loader.crossOrigin = 'anonymous';
+            loader.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + encodeURIComponent(client);
+            document.head.appendChild(loader);
+        })();
+    </script>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="icon" type="image/svg+xml" href="/icon.svg">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -120,12 +138,10 @@
 
     <div class="w-full max-w-2xl space-y-3">
 
-    <!-- AdSense slot — GitHub Pages only. The build-github-page.yml workflow
-         sed-replaces %%ADSENSE_CLIENT_ID%%/%%ADSENSE_SLOT_ID%% below from repo
-         secrets (see that workflow for setup); the Docker/self-hosted build
-         never runs that step, so these tokens stay literal there and the guard
-         script bails out before requesting anything from Google — no ad script,
-         no ad slot, for self-hosted users. -->
+    <!-- AdSense slot — GitHub Pages only. Same %%ADSENSE_SLOT_ID%% guard as
+         the library-loading script in <head> (see there for how/why); the
+         library itself is loaded from <head>, so this only needs to show
+         the slot and queue the unit once that's configured. -->
     <div id="adSlot" class="hidden justify-center">
         <ins class="adsbygoogle"
              style="display:block; width:100%"
@@ -141,11 +157,6 @@
             if (!client || !slot || client.indexOf('%%') === 0 || slot.indexOf('%%') === 0) return;
 
             document.getElementById('adSlot').classList.replace('hidden', 'flex');
-            var loader = document.createElement('script');
-            loader.async = true;
-            loader.crossOrigin = 'anonymous';
-            loader.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + encodeURIComponent(client);
-            document.head.appendChild(loader);
             (window.adsbygoogle = window.adsbygoogle || []).push({});
         })();
     </script>
