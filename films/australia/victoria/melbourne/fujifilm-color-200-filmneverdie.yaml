@@ -1,0 +1,15 @@
+name: FujiFilm Color
+boxSpeed: 200
+maxPushPull: 1
+process: C41
+format: 35mm
+hidden: false
+bundles:
+  - rolls: 1
+    exposures: 36
+    filmCost: 23.5
+    storeName: FilmNeverDie
+    buyLink: https://filmneverdie.com/products/fujifilm-200-35mm-36-exp
+    availability: city
+    state: Victoria
+    city: Melbourne

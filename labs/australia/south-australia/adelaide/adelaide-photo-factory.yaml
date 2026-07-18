@@ -1,0 +1,87 @@
+name: Adelaide Photo Factory
+hidden: false
+address: 66 Gawler Place, Adelaide SA 5000, Australia
+phone: 08 8221 6500
+email: apf.lab1@gmail.com
+website: https://adelaidephotofactory.com.au
+services:
+  - devCost: 11
+    pushPullCost: 0
+    pushPullType: flat
+    highResScan: false
+    tiffScan: false
+    noPushPull: true
+    processes:
+      - C41
+  - devCost: 18
+    pushPullCost: 0
+    pushPullType: flat
+    highResScan: false
+    tiffScan: false
+    noPushPull: true
+    processes:
+      - C41
+  - devCost: 22
+    pushPullCost: 0
+    pushPullType: flat
+    highResScan: true
+    tiffScan: false
+    noPushPull: true
+    processes:
+      - C41
+  - devCost: 29
+    pushPullCost: 0
+    pushPullType: flat
+    highResScan: false
+    tiffScan: false
+    noPushPull: true
+    processes:
+      - C41
+  - devCost: 15
+    pushPullCost: 0
+    pushPullType: flat
+    highResScan: false
+    tiffScan: false
+    noPushPull: true
+    processes:
+      - BW
+  - devCost: 22
+    pushPullCost: 0
+    pushPullType: flat
+    highResScan: false
+    tiffScan: false
+    noPushPull: true
+    processes:
+      - BW
+  - devCost: 26
+    pushPullCost: 0
+    pushPullType: flat
+    highResScan: true
+    tiffScan: false
+    noPushPull: true
+    processes:
+      - BW
+  - devCost: 25
+    pushPullCost: 0
+    pushPullType: flat
+    highResScan: false
+    tiffScan: false
+    noPushPull: true
+    processes:
+      - BW
+  - devCost: 25
+    pushPullCost: 0
+    pushPullType: flat
+    highResScan: true
+    tiffScan: false
+    noPushPull: true
+    processes:
+      - BW
+  - devCost: 35
+    pushPullCost: 0
+    pushPullType: flat
+    highResScan: false
+    tiffScan: false
+    noPushPull: true
+    processes:
+      - BW

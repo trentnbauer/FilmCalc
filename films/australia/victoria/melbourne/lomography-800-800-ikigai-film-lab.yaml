@@ -1,0 +1,15 @@
+name: Lomography 800
+boxSpeed: 800
+maxPushPull: 1
+process: C41
+format: 35mm
+hidden: false
+bundles:
+  - rolls: 1
+    exposures: 36
+    filmCost: 30.0
+    storeName: Ikigai Film Lab
+    buyLink: https://ikigaifilmlab.com.au/store/kodak-gold-800-lomography-800-35mm-36exp
+    availability: city
+    state: Victoria
+    city: Melbourne

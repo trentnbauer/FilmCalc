@@ -1,0 +1,12 @@
+name: FujiFilm Color
+boxSpeed: 200
+maxPushPull: 1
+process: C41
+format: 35mm
+hidden: false
+bundles:
+  - rolls: 1
+    exposures: 36
+    filmCost: 41.1
+    storeName: Woolworths
+    buyLink: ''

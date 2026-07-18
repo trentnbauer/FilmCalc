@@ -1,0 +1,15 @@
+name: FujiFilm Color
+boxSpeed: 200
+maxPushPull: 1
+process: C41
+format: 35mm
+hidden: false
+bundles:
+  - rolls: 1
+    exposures: 36
+    filmCost: 19.5
+    storeName: Walkens
+    buyLink: https://walkens.com.au/products/fujifilm-200-35mm?variant=44813910671549&country=AU&currency=AUD&utm_medium=product_sync&utm_source=google&utm_content=sag_organic&utm_campaign=sag_organic&gad_source=1&gad_campaignid=17181065002&gbraid=0AAAAADBByy5tpW6BX3WlkcSGm1Gyi-dsT&gclid=CjwKCAjwmdLSBhANEiwAkREMN_LxbJYNfRjd6PKiYkStf04JewuhHF_63iiar-UERmvtivsel9Pc5BoCDC4QAvD_BwE
+    availability: city
+    state: Victoria
+    city: Melbourne

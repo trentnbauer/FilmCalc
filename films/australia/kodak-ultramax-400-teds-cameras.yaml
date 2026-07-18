@@ -1,0 +1,12 @@
+name: Kodak UltraMax
+boxSpeed: 400
+maxPushPull: 1
+process: C41
+format: 35mm
+hidden: false
+bundles:
+  - rolls: 1
+    exposures: 24
+    filmCost: 21.95
+    storeName: Teds Cameras
+    buyLink: https://www.teds.com.au/products/kodak-ultramax-135-36-400-35mm-film

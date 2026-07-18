@@ -1,0 +1,12 @@
+name: Harman Phoenix II
+boxSpeed: 200
+maxPushPull: 1
+process: C41
+format: 35mm
+hidden: false
+bundles:
+  - rolls: 1
+    exposures: 36
+    filmCost: 24.95
+    storeName: Teds Cameras
+    buyLink: https://www.teds.com.au/products/phoenix-ii-135-36exp-200-iso-35mm-film

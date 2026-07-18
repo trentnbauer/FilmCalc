@@ -1,0 +1,54 @@
+name: Focus Pocus
+hidden: false
+address: 13/7 Leake Street, Fremantle WA 6160, Australia
+email: hello@focuspocus.com.au
+website: https://focuspocus.com.au
+services:
+  - devCost: 22
+    pushPullCost: 5
+    pushPullType: flat
+    highResScan: false
+    tiffScan: false
+    noPushPull: false
+    processes:
+      - C41
+  - devCost: 26
+    pushPullCost: 5
+    pushPullType: flat
+    highResScan: true
+    tiffScan: true
+    noPushPull: false
+    processes:
+      - C41
+  - devCost: 25
+    pushPullCost: 5
+    pushPullType: flat
+    highResScan: false
+    tiffScan: false
+    noPushPull: false
+    processes:
+      - BW
+  - devCost: 28
+    pushPullCost: 5
+    pushPullType: flat
+    highResScan: true
+    tiffScan: true
+    noPushPull: false
+    processes:
+      - BW
+  - devCost: 30
+    pushPullCost: 5
+    pushPullType: flat
+    highResScan: false
+    tiffScan: false
+    noPushPull: false
+    processes:
+      - E6
+  - devCost: 35
+    pushPullCost: 5
+    pushPullType: flat
+    highResScan: true
+    tiffScan: true
+    noPushPull: false
+    processes:
+      - E6

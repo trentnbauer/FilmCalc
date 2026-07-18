@@ -1,0 +1,25 @@
+name: PhotoAccess
+hidden: false
+address: Manuka Arts Centre, 30 Manuka Circle, Griffith ACT 2603, Australia
+phone: (02) 6295 7810
+email: hello@photoaccess.org.au
+website: https://photoaccess.org.au
+services:
+  - devCost: 13
+    pushPullCost: 5
+    pushPullType: flat
+    highResScan: false
+    tiffScan: false
+    noPushPull: false
+    processes:
+      - C41
+      - BW
+  - devCost: 30
+    pushPullCost: 5
+    pushPullType: flat
+    highResScan: false
+    tiffScan: false
+    noPushPull: false
+    processes:
+      - C41
+      - BW

@@ -1,0 +1,12 @@
+name: 1 Shot
+boxSpeed: 400
+maxPushPull: 1
+process: C41
+format: 35mm
+hidden: false
+bundles:
+  - rolls: 1
+    exposures: 24
+    filmCost: 25.95
+    storeName: JB HiFi
+    buyLink: ''

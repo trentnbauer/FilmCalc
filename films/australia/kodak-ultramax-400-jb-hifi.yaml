@@ -1,0 +1,17 @@
+name: Kodak Ultramax
+boxSpeed: 400
+maxPushPull: 1
+process: C41
+format: 35mm
+hidden: false
+bundles:
+  - rolls: 3
+    exposures: 24
+    filmCost: 59
+    storeName: JB HiFi
+    buyLink: ''
+  - rolls: 1
+    exposures: 36
+    filmCost: 27.95
+    storeName: JB HiFi
+    buyLink: ''
