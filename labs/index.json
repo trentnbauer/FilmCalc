@@ -1,9 +1,44 @@
 [
   {
+    "file": "adelaide.yaml",
+    "label": "Adelaide Labs",
+    "country": "Australia",
+    "state": "South Australia",
+    "city": "Adelaide"
+  },
+  {
+    "file": "brisbane.yaml",
+    "label": "Brisbane Labs",
+    "country": "Australia",
+    "state": "Queensland",
+    "city": "Brisbane"
+  },
+  {
+    "file": "canberra.yaml",
+    "label": "Canberra Labs",
+    "country": "Australia",
+    "state": "Australian Capital Territory",
+    "city": "Canberra"
+  },
+  {
     "file": "melbourne.yaml",
     "label": "Melbourne Labs",
     "country": "Australia",
     "state": "Victoria",
     "city": "Melbourne"
+  },
+  {
+    "file": "perth.yaml",
+    "label": "Perth Labs",
+    "country": "Australia",
+    "state": "Western Australia",
+    "city": "Perth"
+  },
+  {
+    "file": "sydney.yaml",
+    "label": "Sydney Labs",
+    "country": "Australia",
+    "state": "New South Wales",
+    "city": "Sydney"
   }
 ]
