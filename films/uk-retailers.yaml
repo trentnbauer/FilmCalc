@@ -1,0 +1,371 @@
+label: UK Retailers
+country: United Kingdom
+films:
+  - name: Cinestill BwXX
+    boxSpeed: 250
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 16.00
+        storeName: London Camera Exchange
+        buyLink: https://www.lcegroup.co.uk/New/Cinestill-BwXX-BW-135-Film-36-Exp_227625.html
+  - name: Cinestill 400Dynamic
+    boxSpeed: 400
+    maxPushPull: 3
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 18.00
+        storeName: London Camera Exchange
+        buyLink: https://www.lcegroup.co.uk/New/Cinestill-400Dynamic-Colour-135-Film-36-Exp_227624.html
+  - name: Cinestill 50Daylight
+    boxSpeed: 50
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 18.00
+        storeName: London Camera Exchange
+        buyLink: https://www.lcegroup.co.uk/New/Cinestill-50Daylight-Colour-135-Film-36-Exp_227617.html
+  - name: Cinestill 800Tungsten
+    boxSpeed: 800
+    maxPushPull: 2
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 18.00
+        storeName: London Camera Exchange
+        buyLink: https://www.lcegroup.co.uk/New/Cinestill-800Tungsten-Colour-135-Film-36-Exp_159289.html
+  - name: Fomapan 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 5.99
+        storeName: London Camera Exchange
+        buyLink: https://www.lcegroup.co.uk/New/Fomapan-100-135-36_159252.html
+  - name: Fomapan 400
+    boxSpeed: 400
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 5.99
+        storeName: London Camera Exchange
+        buyLink: https://www.lcegroup.co.uk/New/Fomapan-400-135-36_160183.html
+  - name: Fomapan 200
+    boxSpeed: 200
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 6.49
+        storeName: London Camera Exchange
+        buyLink: https://www.lcegroup.co.uk/New/Fomapan-200-135-36_159279.html
+  - name: Fujifilm EC
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 12.99
+        storeName: London Camera Exchange
+        buyLink: https://www.lcegroup.co.uk/New/Fujifilm-200-EC-135-36_132475.html
+  - name: Fujifilm 400
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 17.99
+        storeName: London Camera Exchange
+        buyLink: https://www.lcegroup.co.uk/New/Fujifilm-400-135-36_159804.html
+  - name: HARMAN Phoenix 200
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 12.99
+        storeName: London Camera Exchange
+        buyLink: >-
+          https://www.lcegroup.co.uk/New/HARMAN-Phoenix-200-Colour-Film-(35mm-Roll-Film-36-Exposures)_155309.html
+  - name: HARMAN Phoenix II 200
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 12.99
+        storeName: London Camera Exchange
+        buyLink: >-
+          https://www.lcegroup.co.uk/New/HARMAN-Phoenix-II-200-Colour-Film-(35mm-Roll-Film-36-Exposures)_204244.html
+  - name: HARMAN Red 125
+    boxSpeed: 125
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 12.99
+        storeName: London Camera Exchange
+        buyLink: >-
+          https://www.lcegroup.co.uk/New/HARMAN-Red-125-Redscale-Colour-Film-(35mm-Roll-Film-36-Exposures)_190047.html
+  - name: HARMAN Switch Azure 125
+    boxSpeed: 125
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 12.99
+        storeName: London Camera Exchange
+        buyLink: >-
+          https://www.lcegroup.co.uk/New/HARMAN-Switch-Azure-125-Colour-Film-(35mm-Roll-Film-36-Exposures)_224782.html
+  - name: Ilford HP5+
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 24
+        filmCost: 8.50
+        storeName: London Camera Exchange
+        buyLink: https://www.lcegroup.co.uk/New/Ilford-HP5-PLUS-135-24_140127.html
+      - rolls: 1
+        exposures: 36
+        filmCost: 10.50
+        storeName: London Camera Exchange
+        buyLink: https://www.lcegroup.co.uk/New/Ilford-HP5-PLUS-135-36_76190.html
+  - name: Ilford FP4+
+    boxSpeed: 125
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 10.49
+        storeName: London Camera Exchange
+        buyLink: https://www.lcegroup.co.uk/New/Ilford-FP4-PLUS-135-36_76192.html
+  - name: Ilford XP2 Super
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 10.99
+        storeName: London Camera Exchange
+        buyLink: https://www.lcegroup.co.uk/New/Ilford-XP2-Super-400-135-36_130206.html
+  - name: Ilford Delta 3200
+    boxSpeed: 3200
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 14.99
+        storeName: London Camera Exchange
+        buyLink: https://www.lcegroup.co.uk/New/Ilford-Delta-3200-135-36_159206.html
+  - name: Kodak Colorplus
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 24
+        filmCost: 8.50
+        storeName: London Camera Exchange
+        buyLink: https://www.lcegroup.co.uk/New/Kodak-ColorPlus-200-135-24_167297.html
+      - rolls: 1
+        exposures: 36
+        filmCost: 9.99
+        storeName: London Camera Exchange
+        buyLink: https://www.lcegroup.co.uk/New/Kodak-ColorPlus-200-135-36_130202.html
+      - rolls: 5
+        exposures: 36
+        filmCost: 44.99
+        storeName: London Camera Exchange
+        buyLink: >-
+          https://www.lcegroup.co.uk/New/Kodak-ColorPlus-200-135-36-(5-rolls)_171793.html
+      - rolls: 10
+        exposures: 36
+        filmCost: 89.99
+        storeName: London Camera Exchange
+        buyLink: >-
+          https://www.lcegroup.co.uk/New/Kodak-ColorPlus-200-135-36-(10-rolls)_171794.html
+  - name: Kodak Ultramax
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 12.40
+        storeName: London Camera Exchange
+        buyLink: >-
+          https://www.lcegroup.co.uk/New/Kodak-UltraMax-400-13536-colour-film_140133.html
+      - rolls: 3
+        exposures: 36
+        filmCost: 34.99
+        storeName: London Camera Exchange
+        buyLink: >-
+          https://www.lcegroup.co.uk/New/Kodak-UltraMax-400-135-36-(Triple-Pack)_159830.html
+  - name: Kodak Gold
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 24
+        filmCost: 12.99
+        storeName: London Camera Exchange
+        buyLink: >-
+          https://www.lcegroup.co.uk/New/Kodak-Gold-200-13524-colour-film_132310.html
+      - rolls: 1
+        exposures: 36
+        filmCost: 15.99
+        storeName: London Camera Exchange
+        buyLink: >-
+          https://www.lcegroup.co.uk/New/Kodak-Gold-200-13536-colour-film_140116.html
+      - rolls: 3
+        exposures: 24
+        filmCost: 31.00
+        storeName: London Camera Exchange
+        buyLink: >-
+          https://www.lcegroup.co.uk/New/Kodak-Gold-200-135-24-(3-Pack)_159755.html
+  - name: Kodak Portra 800
+    boxSpeed: 800
+    maxPushPull: 2
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 21.90
+        storeName: London Camera Exchange
+        buyLink: https://www.lcegroup.co.uk/New/Kodak-Portra-800-135-36_159290.html
+  - name: Kodak Ektar 100
+    boxSpeed: 100
+    maxPushPull: 0
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 23.99
+        storeName: London Camera Exchange
+        buyLink: https://www.lcegroup.co.uk/New/Kodak-Ektar-100-13536-Exp_141436.html
+  - name: Kodak Portra 160
+    boxSpeed: 160
+    maxPushPull: 2
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 5
+        exposures: 36
+        filmCost: 82.99
+        storeName: London Camera Exchange
+        buyLink: >-
+          https://www.lcegroup.co.uk/New/Kodak-Portra-160-Pro-Pack-5-135-36_76182.html
+  - name: Kodak Portra 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 5
+        exposures: 36
+        filmCost: 99.00
+        storeName: London Camera Exchange
+        buyLink: >-
+          https://www.lcegroup.co.uk/New/Kodak-Portra-400-Pro-Pack-5-135-36_76183.html
+  - name: Leica Monopan 50
+    boxSpeed: 50
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 10.00
+        storeName: London Camera Exchange
+        buyLink: >-
+          https://www.lcegroup.co.uk/New/Leica-MONOPAN-50-Black-and-White-Film-(135-36)_202182.html
+  - name: Lucky C200
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 10.99
+        storeName: London Camera Exchange
+        buyLink: >-
+          https://www.lcegroup.co.uk/New/Misc-Lucky-C200-Colour-135-Film-36-Exp_232864.html
+      - rolls: 10
+        exposures: 36
+        filmCost: 99.99
+        storeName: London Camera Exchange
+        buyLink: >-
+          https://www.lcegroup.co.uk/New/Misc-Lucky-C200-Colour-135-Film-36-Exp-(10-Pack)_232865.html
