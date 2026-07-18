@@ -1,13 +1,32 @@
 [
   {
+    "file": "adelaide-retailers.yaml",
+    "label": "Adelaide Retailers",
+    "country": "Australia",
+    "state": "South Australia",
+    "city": "Adelaide"
+  },
+  {
     "file": "australian-retailers.yaml",
     "label": "Australian-Retailers",
     "country": "Australia"
   },
   {
-    "file": "us-retailers.yaml",
-    "label": "US-Retailers",
-    "country": "United States"
+    "file": "canberra-retailers.yaml",
+    "label": "Canberra Retailers",
+    "country": "Australia",
+    "state": "Australian Capital Territory",
+    "city": "Canberra"
+  },
+  {
+    "file": "germany-retailers.yaml",
+    "label": "Germany Retailers",
+    "country": "Germany"
+  },
+  {
+    "file": "japan-retailers.yaml",
+    "label": "Japan Retailers",
+    "country": "Japan"
   },
   {
     "file": "melbourne-retailers.yaml",
@@ -22,5 +41,15 @@
     "country": "Australia",
     "state": "New South Wales",
     "city": "Sydney"
+  },
+  {
+    "file": "uk-retailers.yaml",
+    "label": "UK Retailers",
+    "country": "United Kingdom"
+  },
+  {
+    "file": "us-retailers.yaml",
+    "label": "US Retailers",
+    "country": "United States"
   }
 ]
