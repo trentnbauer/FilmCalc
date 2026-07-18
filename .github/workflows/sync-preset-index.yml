@@ -2,17 +2,12 @@ name: Sync preset index manifests
 
 # films/index.json and labs/index.json are the manifest the app fetches to
 # discover which preset files exist (static hosting has no real directory
-# listing). Their content — file, label, country, state, city — comes from
-# each YAML file's own top-level fields where present, or (for files using
-# the newer one-entry-per-file schema with no such fields) from how many
-# folders deep the file sits under `films/`/`labs/` — see
-# .github/scripts/generate-manifests.py's docstring for the exact rule.
-# This workflow keeps the manifests in sync automatically instead of anyone
-# hand-editing them (see #114/#116 follow-up: region metadata belongs in
-# the data — the YAML fields or the folder path — not duplicated by hand
-# into a second file that can drift). Shares its generator with the Docker
-# build (build-docker-image.yml) via generate-manifests.py so there's only
-# one implementation to keep correct (issue #165).
+# listing). Their content — file, label, country, state, city — all comes
+# from each YAML file's own top-level fields, so contributors and the
+# film-lab-intake bot only ever need to touch the YAML; this workflow keeps
+# the manifests in sync automatically instead of anyone hand-editing them
+# (see #114/#116 follow-up: region metadata belongs in the data, not
+# duplicated by hand into a second file that can drift).
 on:
   push:
     branches: [main]
@@ -33,8 +28,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Regenerate films/index.json and labs/index.json from the preset data
-        run: python3 .github/scripts/generate-manifests.py films labs
+      - name: Regenerate films/index.json and labs/index.json from the YAML files
+        run: |
+          python3 - <<'PY'
+          import glob, json, yaml
+
+          def build_index(folder):
+              entries = []
+              for path in sorted(glob.glob(f"{folder}/*.yaml") + glob.glob(f"{folder}/*.yml")):
+                  doc = yaml.safe_load(open(path, encoding="utf-8"))
+                  if not isinstance(doc, dict):
+                      continue
+                  filename = path.split("/")[-1]
+                  entry = {"file": filename, "label": doc.get("label") or filename}
+                  for key in ("country", "state", "city"):
+                      if doc.get(key):
+                          entry[key] = doc[key]
+                  entries.append(entry)
+              return entries
+
+          for folder in ("films", "labs"):
+              entries = build_index(folder)
+              with open(f"{folder}/index.json", "w", encoding="utf-8", newline="\n") as f:
+                  json.dump(entries, f, indent=2)
+                  f.write("\n")
+          PY
 
       - name: Open a PR if the manifests changed
         # main requires a PR (repo ruleset) — a direct push here would just get
@@ -56,6 +74,6 @@ jobs:
           git push -u origin "$branch"
           gh pr create \
             --title "Sync films/index.json and labs/index.json from preset data" \
-            --body "Automated: regenerated from the folder structure and content of \`films/\`/\`labs/\` after a push to main (see .github/scripts/generate-manifests.py)." \
+            --body "Automated: regenerated from the \`label\`/\`country\`/\`state\`/\`city\` fields in \`films/*.yaml\` and \`labs/*.yaml\` after a push to main." \
             --base main --head "$branch"
           gh pr merge "$branch" --auto --squash
