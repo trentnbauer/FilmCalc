@@ -1,0 +1,15 @@
+name: Kodak Pro Image 100
+boxSpeed: 100
+maxPushPull: 1
+process: C41
+format: 35mm
+hidden: false
+bundles:
+  - rolls: 1
+    exposures: 36
+    filmCost: 20.0
+    storeName: Ikigai Film Lab
+    buyLink: https://ikigaifilmlab.com.au/store/kodak-professional-pro-image-100-35mm-film
+    availability: city
+    state: Victoria
+    city: Melbourne

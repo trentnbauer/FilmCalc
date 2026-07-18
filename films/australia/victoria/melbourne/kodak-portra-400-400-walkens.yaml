@@ -1,0 +1,15 @@
+name: Kodak Portra 400
+boxSpeed: 400
+maxPushPull: 2
+process: C41
+format: '120'
+hidden: false
+bundles:
+  - rolls: 1
+    exposures: 12
+    filmCost: 36
+    storeName: Walkens
+    buyLink: https://walkens.com.au/products/kodak-portra-400-120-film
+    availability: city
+    state: Victoria
+    city: Melbourne

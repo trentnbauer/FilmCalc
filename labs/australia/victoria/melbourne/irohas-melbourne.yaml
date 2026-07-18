@@ -1,0 +1,34 @@
+name: Irohas Melbourne
+hidden: false
+website: https://irohasphoto.com.au
+services:
+  - devCost: 17
+    pushPullCost: 5
+    pushPullType: per_stop
+    turnaroundTime: next_day
+    highResScan: true
+    tiffScan: false
+    noPushPull: false
+    mailBackCost: 15
+    processes:
+      - C41
+  - devCost: 19
+    pushPullCost: 5
+    pushPullType: per_stop
+    turnaroundTime: same_week
+    highResScan: true
+    tiffScan: false
+    noPushPull: false
+    mailBackCost: 15
+    processes:
+      - BW
+  - devCost: 21
+    pushPullCost: 5
+    pushPullType: per_stop
+    turnaroundTime: same_week
+    highResScan: true
+    tiffScan: false
+    noPushPull: false
+    mailBackCost: 15
+    processes:
+      - E6

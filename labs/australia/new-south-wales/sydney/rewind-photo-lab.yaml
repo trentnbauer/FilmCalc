@@ -1,0 +1,102 @@
+name: Rewind Photo Lab
+hidden: false
+address: 338-356 Mitchell Road, Alexandria NSW 2015, Australia
+phone: +61 2 8041 7049
+email: mail@rewindphotolab.com.au
+website: https://rewindphotolab.com.au
+services:
+  - devCost: 11
+    pushPullCost: 0
+    pushPullType: flat
+    highResScan: false
+    tiffScan: false
+    noPushPull: true
+    mailBackCost: 13
+    processes:
+      - C41
+  - devCost: 14
+    pushPullCost: 0
+    pushPullType: flat
+    highResScan: false
+    tiffScan: false
+    noPushPull: true
+    mailBackCost: 13
+    processes:
+      - BW
+      - E6
+  - devCost: 20
+    pushPullCost: 0
+    pushPullType: flat
+    highResScan: false
+    tiffScan: false
+    noPushPull: true
+    mailBackCost: 13
+    processes:
+      - C41
+  - devCost: 23
+    pushPullCost: 0
+    pushPullType: flat
+    highResScan: false
+    tiffScan: false
+    noPushPull: true
+    mailBackCost: 13
+    processes:
+      - BW
+      - E6
+  - devCost: 25
+    pushPullCost: 0
+    pushPullType: flat
+    highResScan: false
+    tiffScan: true
+    noPushPull: true
+    mailBackCost: 13
+    processes:
+      - C41
+  - devCost: 28
+    pushPullCost: 0
+    pushPullType: flat
+    highResScan: false
+    tiffScan: true
+    noPushPull: true
+    mailBackCost: 13
+    processes:
+      - BW
+      - E6
+  - devCost: 40
+    pushPullCost: 0
+    pushPullType: flat
+    highResScan: true
+    tiffScan: false
+    noPushPull: true
+    mailBackCost: 13
+    processes:
+      - C41
+  - devCost: 43
+    pushPullCost: 0
+    pushPullType: flat
+    highResScan: true
+    tiffScan: false
+    noPushPull: true
+    mailBackCost: 13
+    processes:
+      - BW
+      - E6
+  - devCost: 45
+    pushPullCost: 0
+    pushPullType: flat
+    highResScan: true
+    tiffScan: true
+    noPushPull: true
+    mailBackCost: 13
+    processes:
+      - C41
+  - devCost: 48
+    pushPullCost: 0
+    pushPullType: flat
+    highResScan: true
+    tiffScan: true
+    noPushPull: true
+    mailBackCost: 13
+    processes:
+      - BW
+      - E6

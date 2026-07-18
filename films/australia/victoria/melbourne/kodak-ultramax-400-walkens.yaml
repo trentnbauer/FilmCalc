@@ -1,0 +1,15 @@
+name: Kodak Ultramax
+boxSpeed: 400
+maxPushPull: 1
+process: C41
+format: 35mm
+hidden: false
+bundles:
+  - rolls: 3
+    exposures: 36
+    filmCost: 60
+    storeName: Walkens
+    buyLink: https://walkens.com.au/products/kodak-ultramax-400-35mm-36exp-3-pack?variant=46212088463549&country=AU&currency=AUD&utm_medium=product_sync&utm_source=google&utm_content=sag_organic&utm_campaign=sag_organic&gad_source=1&gad_campaignid=17181065002&gbraid=0AAAAADBByy702yk-BGUXuaKWjQkZuYXfL&gclid=CjwKCAjwx7LSBhB3EiwAjcodxKiS0Zql1QCEv34utnT491kY9NR92r-DHULGNBttjogbU9u4xN_GDhoCIT0QAvD_BwE
+    availability: city
+    state: Victoria
+    city: Melbourne

@@ -1,0 +1,15 @@
+name: Fujifilm Superia Premium 400
+boxSpeed: 400
+maxPushPull: 1
+process: C41
+format: 35mm
+hidden: false
+bundles:
+  - rolls: 1
+    exposures: 36
+    filmCost: 39.0
+    storeName: Ikigai Film Lab
+    buyLink: https://ikigaifilmlab.com.au/store/fujifilm-superia-premium-400-35mm-36-exp
+    availability: city
+    state: Victoria
+    city: Melbourne
