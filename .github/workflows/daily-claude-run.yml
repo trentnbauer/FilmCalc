@@ -5,11 +5,11 @@ name: Daily Claude Run
 # Sydney/Melbourne that's 1am AEST but 2am AEDT during daylight saving
 # (Oct-Apr).
 #
-# Three tiers, processed in order (see the prompt below for the exact
+# Four tiers, processed in order (see the prompt below for the exact
 # rules). Scope is deliberately narrow: data corrections, calculation
-# bugs, bug reports, security hardening, and code-scanning alerts --
-# feature requests and anything else get left alone for a human to
-# triage.
+# bugs, bug reports, security hardening, code-scanning alerts, and (last,
+# lowest priority) new-language translation requests -- feature requests
+# and anything else get left alone for a human to triage.
 on:
   schedule:
     - cron: '0 15 * * *'
@@ -73,12 +73,12 @@ jobs:
           prompt: |
             You are running as a scheduled, unattended job with no human present. Be conservative:
             implement real, working fixes, and do not refactor or "improve" unrelated code. This run
-            only handles data corrections, calculation bugs, bug reports, security hardening, and
-            code-scanning alerts — never feature requests, and never any other open issue that isn't
-            clearly one of those. Never push to main directly, and never approve your own PR (GitHub
-            blocks self-approval anyway).
+            only handles data corrections, calculation bugs, bug reports, security hardening,
+            code-scanning alerts, and new-language translation requests — never feature requests, and
+            never any other open issue that isn't clearly one of those. Never push to main directly,
+            and never approve your own PR (GitHub blocks self-approval anyway).
 
-            Work through these three tiers, strictly in order. Fully finish every item in a tier
+            Work through these four tiers, strictly in order. Fully finish every item in a tier
             (PR opened/merged, or skipped with a comment/note, plus tracking applied) before starting
             the next item, and don't begin a lower tier while any higher tier still has unprocessed
             items:
@@ -213,6 +213,53 @@ jobs:
             the original issue and confirmed your fix. Then apply the auto-merge confidence bar above
             (minus the vulnerability carve-out noted higher up): if it holds, merge it yourself; if not,
             leave it open for review. Either way, label the issue `claude-attempted`.
+
+            **Tier 4 — New-language translation requests (PR only, never auto-merge)**
+
+            Only start this tier once Tiers 1-3 have nothing left unprocessed — it's the lowest
+            priority, and the slowest per item. From the same issue listing: take every remaining open
+            issue labelled `i18n` (the "Add a language" template), skipping any already labelled
+            `claude-attempted`.
+
+            For each: read the requested language name and ISO 639-1 code from the issue body. Check
+            `js/i18n.js`'s `STRINGS` object for a top-level key matching that code — if it already
+            exists, don't duplicate it; comment on the issue saying so, label it `claude-attempted`, and
+            move on.
+
+            Otherwise, translate the entire app:
+            1. Read every key in `STRINGS.en` (currently ~470 keys) and write a matching
+               `STRINGS.<code>` object translating every value — preserve every `{placeholder}` token
+               verbatim (never translate the token name inside the braces), keep photography
+               terminology consistent (push/pull, box speed, mail-back, hi-res scan, etc. — skim a
+               couple of existing non-English locales for precedent), and do not add, drop, merge, or
+               reorder keys relative to `en`.
+            2. Add a `language<Name>` display-name key (e.g. `languageGerman: 'German'`) to **every**
+               existing locale's `STRINGS` block, including the new one describing itself, and to `en`.
+            3. In `index.html`, add an `<option>` for the new locale to both `#languageSelect`
+               (Settings > Appearance) and `#languageWelcomeSelect` (the first-run welcome popup),
+               matching the existing `<option>` pattern for `es`/`ja`.
+            4. In `js/modals.js`, add an entry for the new code to `WELCOME_CONTINUE_LABELS` (the
+               popup's "Continue" button label, translated).
+            5. Run `node .github/scripts/verify-i18n-parity.js` — it must print `OK` with zero exit
+               code before you go any further. Fix any key/placeholder mismatch it reports; don't open
+               a PR with a failing verification.
+            6. Run `node --check js/i18n.js` and `node --check js/modals.js`, and confirm `index.html`
+               is still well-formed (same check as the auto-merge confidence bar above). Run
+               `node --test tests/` too, even though it won't exercise i18n directly — it must still
+               pass.
+
+            Commit, push to a branch named `claude/issue-<number>-<lang-code>`, and open a PR with
+            `Closes #<number>`, the verification output, and an explicit note that **translation
+            accuracy has not been reviewed by a native or fluent speaker** and needs one before merge —
+            unlike the other tiers, never auto-merge this one, regardless of how confident you are.
+            Machine/AI translation of ~470 strings covering photography-specific terminology is exactly
+            the kind of thing that reads fine to a non-speaker and is wrong to a native one; that
+            judgment call belongs to a human every time. Label the issue `claude-attempted` either way.
+
+            If translating in full genuinely isn't feasible (e.g. you can't confidently translate
+            photography-specific terms into this language without risking nonsense), don't guess or do
+            a partial job — comment on the issue explaining what's uncertain and @-mentioning
+            `author.login`, and still label it `claude-attempted`.
 
             ---
 
