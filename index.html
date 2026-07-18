@@ -347,6 +347,28 @@
                     </div>
                 </div>
 
+                <!-- Mail-back shipping toggle — same system as the Dev Cost
+                     tab's (see index.html's devCostIncludeMailBackToggle
+                     comment for the full rationale), replicated here with
+                     its own lookup-prefixed IDs/state (issue #210) since
+                     Quick Calculate's fees are already tab-local, same as
+                     onceOffFee/perRollFee above. Off by default; wired in
+                     js/film-lookup.js via effectiveMailBackFee() from
+                     js/dev-cost-calc.js — the same helper the Dev Cost tab
+                     uses, so both tabs agree on how mail-back is costed. -->
+                <div class="flex items-center gap-2 flex-wrap text-left">
+                    <label for="lookupIncludeMailBackToggle" title="Labs with no stated mail-back fee are hidden while this is on — unknown isn't the same as free (issue #200)." data-i18n-title="mailBackToggleTitle" class="inline-flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300 cursor-pointer">
+                        <input type="checkbox" id="lookupIncludeMailBackToggle" class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500">
+                        <span data-i18n="includeMailBackLabel">📦 Include mail-back shipping</span>
+                    </label>
+                    <div id="lookupMailBackRollCountWrap" class="hidden items-center gap-1.5 flex-wrap">
+                        <label for="lookupMailBackRollCount" class="text-xs text-gray-500 dark:text-gray-400" data-i18n="rollsMailedTogetherLabel">Rolls mailed together</label>
+                        <input type="number" inputmode="numeric" min="1" step="1" id="lookupMailBackRollCount" value="1" class="w-16 border p-1 rounded text-xs dark:bg-gray-700 dark:border-gray-600">
+                        <label for="lookupMailToLabFee" class="text-xs text-gray-500 dark:text-gray-400" data-i18n="mailToLabFeeLabel">Mail-to-lab fee ($)</label>
+                        <input type="number" inputmode="decimal" min="0" step="0.01" id="lookupMailToLabFee" placeholder="drop off" data-i18n-placeholder="dropOffPlaceholder" class="w-20 border p-1 rounded text-xs dark:bg-gray-700 dark:border-gray-600">
+                    </div>
+                </div>
+
                     </div>
                 </details>
             </div>

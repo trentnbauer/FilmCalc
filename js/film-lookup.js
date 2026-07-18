@@ -160,6 +160,32 @@ function renderLoadedFilmSummary() {
     el.innerHTML = `<span class="font-mono">${bits.join(' · ')}</span>`;
 }
 
+// ---------- Mail-back shipping (issue #210) ----------
+// Same system as the Dev Cost tab's (js/dev-cost-ui.js) — off by default,
+// since a saved lab's mailBackCost only applies if you actually mail this
+// roll back, not every visit. Quick Calculate already reads all its other
+// fields fresh from the DOM on every recalculation (onceOffFee, perRollFee,
+// etc.) rather than caching them in module-level state the way the Dev Cost
+// tab does, so this follows the same pattern instead of introducing a
+// second, differently-shaped state mechanism in the same file.
+function lookupMailBackOpts() {
+    const toggle = document.getElementById('lookupIncludeMailBackToggle');
+    return {
+        includeMailBack: !!(toggle && toggle.checked),
+        mailBackRollCount: parseInt(document.getElementById('lookupMailBackRollCount').value) || 1,
+        mailToLabFee: parseFloat(document.getElementById('lookupMailToLabFee').value) || 0
+    };
+}
+(function initLookupMailBackToggle() {
+    const toggle = document.getElementById('lookupIncludeMailBackToggle');
+    const rollCountWrap = document.getElementById('lookupMailBackRollCountWrap');
+    if (!toggle || !rollCountWrap) return;
+    toggle.addEventListener('change', () => {
+        rollCountWrap.classList.toggle('hidden', !toggle.checked);
+        rollCountWrap.classList.toggle('flex', toggle.checked);
+    });
+})();
+
 function updateLabComparison() {
     const bestPicksContainer = document.getElementById('labBestPicks');
     const container = document.getElementById('labComparison');
@@ -200,6 +226,7 @@ function updateLabComparison() {
 
     const onceOffFee = parseFloat(document.getElementById('onceOffFee').value) || 0;
     const perRollFee = parseFloat(document.getElementById('perRollFee').value) || 0;
+    const mailBackOpts = lookupMailBackOpts();
 
     const stops = warningStops;
     const currentProcess = document.getElementById('processSelect').value || 'C41';
@@ -220,14 +247,16 @@ function updateLabComparison() {
         const services = normalizeLabServices(lab);
 
         return services
-            .filter(tier => !(tier.noPushPull && stops > 0) && tierMatchesFilmProcess(tier, { process: currentProcess }))
+            .filter(tier => !(tier.noPushPull && stops > 0) && tierMatchesFilmProcess(tier, { process: currentProcess })
+                && (!mailBackOpts.includeMailBack || tier.mailBackCost !== null))
             .map(tier => {
             let activePushPullCost = 0;
             if (stops > 0) {
                 activePushPullCost = (tier.pushPullType === 'per_stop') ? (tier.pushPullCost * stops) : tier.pushPullCost;
             }
+            const mailBackFee = effectiveMailBackFee(tier, mailBackOpts);
 
-            const labCostPerRoll = tier.devCost + activePushPullCost + tier.mailBackCost + perRollFee;
+            const labCostPerRoll = tier.devCost + activePushPullCost + mailBackFee + perRollFee;
             const grandTotal = filmCost + (labCostPerRoll * rolls) + onceOffFee;
             const costPerRoll = rolls > 0 ? grandTotal / rolls : 0;
             const costPerPhoto = totalPhotos > 0 ? grandTotal / totalPhotos : 0;
@@ -245,9 +274,9 @@ function updateLabComparison() {
                 turnaroundTime: tier.turnaroundTime,
                 // Breakdown fields for the expandable row.
                 filmCostPerPhoto: totalPhotos > 0 ? filmCost / totalPhotos : 0,
-                devCostPerPhoto: exposures > 0 ? (tier.devCost + activePushPullCost + tier.mailBackCost) / exposures : 0,
+                devCostPerPhoto: exposures > 0 ? (tier.devCost + activePushPullCost + mailBackFee) / exposures : 0,
                 pushPullFeePerPhoto: exposures > 0 ? activePushPullCost / exposures : 0,
-                mailBackFeePerPhoto: exposures > 0 ? tier.mailBackCost / exposures : 0,
+                mailBackFeePerPhoto: exposures > 0 ? mailBackFee / exposures : 0,
                 filmCostPerRoll,
                 exposures
             };
@@ -462,6 +491,7 @@ function updateCheaperAlternative() {
     const allLabs = getAllLabs();
     const labNames = Object.keys(allLabs).filter(n => !allLabs[n].hidden);
     if (labNames.length === 0) { container.innerHTML = ''; return; }
+    const mailBackOpts = lookupMailBackOpts();
 
     // Cheapest lab dev (+ push/pull) for a film of this process at this
     // target speed — shared between the current entry and alternatives,
@@ -470,12 +500,13 @@ function updateCheaperAlternative() {
         let best = null;
         labNames.forEach(labName => {
             normalizeLabServices(allLabs[labName])
-                .filter(tier => !(tier.noPushPull && stopsAbs > 0) && tierMatchesFilmProcess(tier, { process }))
+                .filter(tier => !(tier.noPushPull && stopsAbs > 0) && tierMatchesFilmProcess(tier, { process })
+                    && (!mailBackOpts.includeMailBack || tier.mailBackCost !== null))
                 .forEach(tier => {
                     const pushPullFee = stopsAbs > 0
                         ? ((tier.pushPullType === 'per_stop') ? tier.pushPullCost * stopsAbs : tier.pushPullCost)
                         : 0;
-                    const devPerPhoto = (tier.devCost + pushPullFee + tier.mailBackCost) / exposures;
+                    const devPerPhoto = (tier.devCost + pushPullFee + effectiveMailBackFee(tier, mailBackOpts)) / exposures;
                     if (best === null || devPerPhoto < best) best = devPerPhoto;
                 });
         });
@@ -495,10 +526,11 @@ function updateCheaperAlternative() {
         if (!tier) return null;
         if (!tierMatchesFilmProcess(tier, { process })) return null;
         if (tier.noPushPull && stopsAbs > 0) return null;
+        if (mailBackOpts.includeMailBack && tier.mailBackCost === null) return null;
         const pushPullFee = stopsAbs > 0
             ? ((tier.pushPullType === 'per_stop') ? tier.pushPullCost * stopsAbs : tier.pushPullCost)
             : 0;
-        return (tier.devCost + pushPullFee + tier.mailBackCost) / exposures;
+        return (tier.devCost + pushPullFee + effectiveMailBackFee(tier, mailBackOpts)) / exposures;
     }
 
     // Find the cheapest saved film (same box speed, same process, within
