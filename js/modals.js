@@ -744,13 +744,21 @@ function labelFromParsed(parsed) {
 let presetEntries = [];
 let presetListLoaded = false;
 
-function presetCheckboxHtml(i) {
-    const e = presetEntries[i];
-    return `<label class="flex items-center gap-2 text-sm px-2 py-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-700/40 cursor-pointer">
-        <input type="checkbox" class="import-preset-checkbox rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500" data-index="${i}">
-        <span class="flex-1 text-gray-700 dark:text-gray-300">${escapeHtml(e.label)}</span>
-        <span class="text-xs px-1.5 py-0.5 rounded font-semibold uppercase ${e.type === 'Film' ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' : 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300'}">${e.type === 'Film' ? t('filmTypeLabel') : t('labTypeLabel')}</span>
-    </label>`;
+// The set of preset indices currently selected for import. Selection only
+// happens at the country/state/city level (issue #231) — there's no
+// per-film checkbox, since a location can hold dozens of near-identical
+// stocks and ticking each one individually blew the list out.
+let selectedPresetIndices = new Set();
+
+// Small "8 Film · 2 Lab" breakdown shown next to a group's checkbox so
+// it's clear how many — and what — a tick actually imports.
+function countBadgeHtml(indices) {
+    const films = indices.filter(i => presetEntries[i].type === 'Film').length;
+    const labs = indices.length - films;
+    const parts = [];
+    if (films > 0) parts.push(`<span class="text-xs px-1.5 py-0.5 rounded font-semibold uppercase bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">${films} ${t('filmTypeLabel')}</span>`);
+    if (labs > 0) parts.push(`<span class="text-xs px-1.5 py-0.5 rounded font-semibold uppercase bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300">${labs} ${t('labTypeLabel')}</span>`);
+    return parts.join('');
 }
 
 // Groups preset indices as Country -> { countryWide: [...], states: { State
@@ -775,15 +783,23 @@ function buildPresetTree() {
 
 // Renders the Country -> State -> City tree as nested <details> — native
 // expand/collapse, no extra JS state to track. Country-wide presets (no
-// state/city) sit directly under their country, alongside the state list.
+// state/city) get their own "Nationwide" row alongside the state list, so
+// they're still reachable even though they don't belong to any city.
 // Everything starts collapsed except a lone country (nothing to hide) or
 // whatever applyGeoDefaultsToPresetTree() opens once the geo lookup lands.
-// Each level's summary/header also carries a "select all" checkbox (issue
-// #231) so a whole country/state/city can be imported in one tick instead
-// of ticking every individual film — the per-preset checkboxes underneath
-// are still there for picking just one or two out of a group.
-function groupCheckboxHtml(label) {
-    return `<input type="checkbox" class="preset-group-checkbox rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500" aria-label="${escapeHtml(label)}">`;
+//
+// Selection (issue #231) only happens at this group granularity — country,
+// state, city, or the country's "Nationwide" bucket — never per film, so a
+// location with dozens of near-identical stocks doesn't blow the list out.
+// Each checkbox's data-indices carries every preset index in its scope;
+// toggling one adds/removes that whole set from selectedPresetIndices, and
+// every checkbox's checked/indeterminate state is then re-derived from that
+// set (see syncGroupCheckboxes), so parent/child boxes always agree.
+function groupCheckboxHtml(label, indices) {
+    return `
+        <input type="checkbox" class="preset-group-checkbox rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500" aria-label="${escapeHtml(label)}" data-indices="${escapeHtml(JSON.stringify(indices))}">
+        <span class="flex-1">${escapeHtml(label)}</span>
+        ${countBadgeHtml(indices)}`;
 }
 
 function renderPresetTree(tree) {
@@ -795,48 +811,49 @@ function renderPresetTree(tree) {
         const statesHtml = stateNames.map(state => {
             const cities = states[state];
             const cityNames = Object.keys(cities).sort();
+            const stateIndices = cityNames.flatMap(city => cities[city]);
             const citiesHtml = cityNames.map(city => `
-                <div class="preset-city-group pl-3 py-1" data-city="${escapeHtml(city)}">
-                    <p class="flex items-center gap-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide px-2">
-                        ${groupCheckboxHtml(city)}
-                        <span>${escapeHtml(city)}</span>
-                    </p>
-                    ${cities[city].map(presetCheckboxHtml).join('')}
-                </div>`).join('');
+                <label class="preset-city-group flex items-center gap-2 pl-3 py-1.5 px-2 text-xs font-semibold text-gray-500 dark:text-gray-400 rounded hover:bg-gray-50 dark:hover:bg-gray-700/40 cursor-pointer" data-city="${escapeHtml(city)}">
+                    ${groupCheckboxHtml(city, cities[city])}
+                </label>`).join('');
             return `
                 <details class="preset-state-group pl-3" data-state="${escapeHtml(state)}">
                     <summary class="flex items-center gap-2 cursor-pointer select-none text-xs font-semibold text-gray-500 dark:text-gray-400 py-1.5">
-                        ${groupCheckboxHtml(state)}
-                        <span>${escapeHtml(state)}</span>
+                        ${groupCheckboxHtml(state, stateIndices)}
                     </summary>
                     ${citiesHtml}
                 </details>`;
         }).join('');
+        const stateIndicesAll = stateNames.flatMap(state => Object.values(states[state]).flat());
+        const countryIndices = [...countryWide, ...stateIndicesAll];
+        // Only worth its own row when there's also state/city data to
+        // distinguish it from — otherwise it's identical to the country
+        // checkbox above it.
+        const nationwideHtml = (countryWide.length > 0 && stateNames.length > 0) ? `
+            <label class="preset-city-group flex items-center gap-2 py-1.5 px-2 text-xs font-semibold text-gray-500 dark:text-gray-400 rounded hover:bg-gray-50 dark:hover:bg-gray-700/40 cursor-pointer">
+                ${groupCheckboxHtml(t('nationwideLabel'), countryWide)}
+            </label>` : '';
         return `
             <details class="preset-country-group" data-country="${escapeHtml(country)}" ${singleCountry ? 'open' : ''}>
                 <summary class="flex items-center gap-2 cursor-pointer select-none text-sm font-semibold text-gray-700 dark:text-gray-300 py-1.5">
-                    ${groupCheckboxHtml(country)}
-                    <span>${escapeHtml(country)}</span>
+                    ${groupCheckboxHtml(country, countryIndices)}
                 </summary>
                 <div class="pl-2">
-                    ${countryWide.map(presetCheckboxHtml).join('')}
+                    ${nationwideHtml}
                     ${statesHtml}
                 </div>
             </details>`;
     }).join('');
 }
 
-// Reflects each group checkbox's checked/indeterminate state from the
-// preset checkboxes nested under it — call after any preset or group
-// checkbox changes.
+// Re-derives every group checkbox's checked/indeterminate state from
+// selectedPresetIndices — call after the set changes.
 function syncGroupCheckboxes() {
     importPresetList.querySelectorAll('.preset-group-checkbox').forEach(gcb => {
-        const scope = gcb.closest('.preset-country-group, .preset-state-group, .preset-city-group');
-        if (!scope) return;
-        const boxes = [...scope.querySelectorAll('.import-preset-checkbox')];
-        const checkedCount = boxes.filter(b => b.checked).length;
-        gcb.checked = boxes.length > 0 && checkedCount === boxes.length;
-        gcb.indeterminate = checkedCount > 0 && checkedCount < boxes.length;
+        const indices = JSON.parse(gcb.dataset.indices);
+        const selectedCount = indices.filter(i => selectedPresetIndices.has(i)).length;
+        gcb.checked = indices.length > 0 && selectedCount === indices.length;
+        gcb.indeterminate = selectedCount > 0 && selectedCount < indices.length;
     });
 }
 
@@ -846,11 +863,10 @@ function attachGroupCheckboxHandlers() {
         // also toggle the details element open/closed on every tick.
         gcb.addEventListener('click', (e) => e.stopPropagation());
         gcb.addEventListener('change', () => {
-            const scope = gcb.closest('.preset-country-group, .preset-state-group, .preset-city-group');
-            scope.querySelectorAll('.import-preset-checkbox').forEach(cb => { cb.checked = gcb.checked; });
+            const indices = JSON.parse(gcb.dataset.indices);
+            indices.forEach(i => gcb.checked ? selectedPresetIndices.add(i) : selectedPresetIndices.delete(i));
             syncGroupCheckboxes();
-            const anyChecked = [...importPresetList.querySelectorAll('.import-preset-checkbox')].some(c => c.checked);
-            importSelectedPresetsBtn.disabled = !anyChecked;
+            importSelectedPresetsBtn.disabled = selectedPresetIndices.size === 0;
         });
     });
 }
@@ -895,14 +911,8 @@ async function loadPresetList() {
         importPresetList.innerHTML = `<p class="text-xs text-gray-400 text-center py-2">${t('noPresetsFound')}</p>`;
         return;
     }
+    selectedPresetIndices = new Set();
     importPresetList.innerHTML = renderPresetTree(buildPresetTree());
-    importPresetList.querySelectorAll('.import-preset-checkbox').forEach(cb => {
-        cb.addEventListener('change', () => {
-            syncGroupCheckboxes();
-            const anyChecked = [...importPresetList.querySelectorAll('.import-preset-checkbox')].some(c => c.checked);
-            importSelectedPresetsBtn.disabled = !anyChecked;
-        });
-    });
     attachGroupCheckboxHandlers();
     applyGeoDefaultsToPresetTree();
 }
@@ -1082,9 +1092,8 @@ importDropzone.addEventListener('drop', (e) => {
 });
 
 importSelectedPresetsBtn.addEventListener('click', async () => {
-    const checked = [...importPresetList.querySelectorAll('.import-preset-checkbox:checked')];
-    if (!checked.length) return;
-    const chosen = checked.map(cb => presetEntries[parseInt(cb.dataset.index)]);
+    if (selectedPresetIndices.size === 0) return;
+    const chosen = [...selectedPresetIndices].map(i => presetEntries[i]);
     importSelectedPresetsBtn.disabled = true;
     importSelectedPresetsBtn.textContent = t('importingEllipsis');
     // Reuses the parsed doc loadPresetList() already fetched for each entry
