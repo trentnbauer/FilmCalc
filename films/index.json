@@ -1,8 +1,22 @@
 [
   {
+    "file": "adelaide-retailers.yaml",
+    "label": "Adelaide Retailers",
+    "country": "Australia",
+    "state": "South Australia",
+    "city": "Adelaide"
+  },
+  {
     "file": "australian-retailers.yaml",
     "label": "Australian-Retailers",
     "country": "Australia"
+  },
+  {
+    "file": "canberra-retailers.yaml",
+    "label": "Canberra Retailers",
+    "country": "Australia",
+    "state": "Australian Capital Territory",
+    "city": "Canberra"
   },
   {
     "file": "melbourne-retailers.yaml",

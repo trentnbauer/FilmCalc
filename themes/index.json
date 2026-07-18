@@ -1,10 +1,46 @@
 [
-  { "file": "deuteranopia.yaml", "label": "Deuteranopia" },
-  { "file": "forest.yaml", "label": "Forest" },
-  { "file": "midnight.yaml", "label": "Midnight" },
-  { "file": "monochrome.yaml", "label": "Monochrome" },
-  { "file": "ocean.yaml", "label": "Ocean" },
-  { "file": "protanopia.yaml", "label": "Protanopia" },
-  { "file": "sepia.yaml", "label": "Sepia" },
-  { "file": "tritanopia.yaml", "label": "Tritanopia" }
+  {
+    "file": "deuteranopia.yaml",
+    "label": "Deuteranopia"
+  },
+  {
+    "file": "forest.yaml",
+    "label": "Forest"
+  },
+  {
+    "file": "high-contrast.yaml",
+    "label": "High Contrast"
+  },
+  {
+    "file": "midnight.yaml",
+    "label": "Midnight"
+  },
+  {
+    "file": "monochrome.yaml",
+    "label": "Monochrome"
+  },
+  {
+    "file": "ocean.yaml",
+    "label": "Ocean"
+  },
+  {
+    "file": "oled-midnight.yaml",
+    "label": "OLED Midnight"
+  },
+  {
+    "file": "protanopia.yaml",
+    "label": "Protanopia"
+  },
+  {
+    "file": "sepia.yaml",
+    "label": "Sepia"
+  },
+  {
+    "file": "solarized.yaml",
+    "label": "Solarized"
+  },
+  {
+    "file": "tritanopia.yaml",
+    "label": "Tritanopia"
+  }
 ]
