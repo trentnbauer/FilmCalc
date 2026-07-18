@@ -22,6 +22,15 @@ permissions:
   contents: write
   pull-requests: write
 
+# Two pushes to main in quick succession used to each spawn their own
+# uniquely-named branch+PR (see #243/#252 follow-up), since a run starting
+# before the previous run's PR merged had no way to know one was already
+# open. Serializing runs on a single group, plus reusing one fixed branch
+# name below, means a second run either finds nothing left to do (the first
+# already merged) or updates the still-open PR instead of opening a duplicate.
+concurrency:
+  group: sync-preset-index
+
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -67,13 +76,16 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          branch="sync-preset-index-${{ github.run_id }}"
-          git checkout -b "$branch"
+          branch="sync-preset-index"
+          git checkout -B "$branch"
           git add films/index.json labs/index.json
           git commit -m "Sync films/index.json and labs/index.json from preset data"
-          git push -u origin "$branch"
-          gh pr create \
-            --title "Sync films/index.json and labs/index.json from preset data" \
-            --body "Automated: regenerated from the \`label\`/\`country\`/\`state\`/\`city\` fields in \`films/*.yaml\` and \`labs/*.yaml\` after a push to main." \
-            --base main --head "$branch"
+          git push --force-with-lease -u origin "$branch"
+          state=$(gh pr view "$branch" --json state -q .state 2>/dev/null || echo "NONE")
+          if [ "$state" != "OPEN" ]; then
+            gh pr create \
+              --title "Sync films/index.json and labs/index.json from preset data" \
+              --body "Automated: regenerated from the \`label\`/\`country\`/\`state\`/\`city\` fields in \`films/*.yaml\` and \`labs/*.yaml\` after a push to main." \
+              --base main --head "$branch"
+          fi
           gh pr merge "$branch" --auto --squash
