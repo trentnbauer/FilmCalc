@@ -1074,7 +1074,7 @@ const WELCOME_GREETINGS = [
     { lang: 'ar', text: 'مرحبًا بك في FilmCalc، اختر لغتك' },
     { lang: 'ru', text: 'Добро пожаловать в FilmCalc, выберите свой язык' },
 ];
-const WELCOME_CONTINUE_LABELS = { en: 'Continue', es: 'Continuar', ja: '続ける', de: 'Weiter', pt: 'Continuar' };
+const WELCOME_CONTINUE_LABELS = { en: 'Continue', es: 'Continuar', ja: '続ける', de: 'Weiter', pt: 'Continuar', fr: 'Continuer' };
 
 let firstLaunchPopupHandledImportPrompt = false;
 
