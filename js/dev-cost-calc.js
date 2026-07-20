@@ -24,7 +24,8 @@ const TURNAROUND_RANK = { next_day: 0, same_week: 1, longer: 2 };
 // "Kodak Colorplus" across two preset files — collapse into a single film
 // entry instead of appearing as duplicates once both are imported.
 function filmKey(name, boxSpeed, format) {
-    return `${String(name || '').trim().toLowerCase()}|${boxSpeed || 0}|${format || '35mm'}`;
+    const normalizedName = String(name || '').trim().replace(/\s+/g, ' ').toLowerCase();
+    return `${normalizedName}|${boxSpeed || 0}|${format || '35mm'}`;
 }
 
 // Bridges the current { bundles: [...] } schema with the older flat

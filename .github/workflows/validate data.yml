@@ -30,7 +30,7 @@ jobs:
       - name: Check the YAML is valid and complete
         run: |
           python3 - <<'PY'
-          import glob, sys, yaml
+          import glob, re, sys, yaml
           from collections import defaultdict
 
           VALID_PROCESSES = {"C41", "BW", "E6", "ECN2"}
@@ -71,7 +71,8 @@ jobs:
                       if key not in film:
                           err(path, f"{where}: missing required field '{key}'")
                   if film.get("name"):
-                      norm_key = (film["name"].strip().lower(), film.get("boxSpeed"), film.get("format", "35mm"))
+                      norm_name = re.sub(r"\s+", " ", film["name"].strip()).lower()
+                      norm_key = (norm_name, film.get("boxSpeed"), film.get("format", "35mm"))
                       film_name_spellings[norm_key].add(film["name"])
                       film_name_locations[norm_key].append(path)
                   if film.get("process") and film["process"] not in VALID_PROCESSES:
