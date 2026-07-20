@@ -35,7 +35,7 @@ films:
         availability: city
         state: Victoria
         city: Melbourne
-  - name: Kodak Ultramax
+  - name: Kodak UltraMax
     boxSpeed: 400
     maxPushPull: 1
     process: C41
@@ -239,7 +239,7 @@ films:
         availability: city
         state: Victoria
         city: Melbourne
-  - name: Kodak Colorplus
+  - name: Kodak ColorPlus
     boxSpeed: 200
     maxPushPull: 1
     process: C41

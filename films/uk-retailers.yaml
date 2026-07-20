@@ -214,7 +214,7 @@ films:
         filmCost: 14.99
         storeName: London Camera Exchange
         buyLink: https://www.lcegroup.co.uk/New/Ilford-Delta-3200-135-36_159206.html
-  - name: Kodak Colorplus
+  - name: Kodak ColorPlus
     boxSpeed: 200
     maxPushPull: 1
     process: C41
@@ -249,7 +249,7 @@ films:
         storeName: Wilkinson Cameras
         buyLink: >-
           https://www.wilkinson.co.uk/kodak-colorplus-200-36-exposure-35mm-colour-negative-film/
-  - name: Kodak Ultramax
+  - name: Kodak UltraMax
     boxSpeed: 400
     maxPushPull: 1
     process: C41

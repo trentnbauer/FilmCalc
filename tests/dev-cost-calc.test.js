@@ -74,6 +74,21 @@ test('filmKey distinguishes same name at different box speeds/formats', () => {
     assert.equal(filmKey('Kodak Gold', 200, '35mm'), filmKey('Kodak Gold', 200, '35mm'));
 });
 
+test('filmKey treats names as the same film regardless of case/whitespace', () => {
+    assert.equal(filmKey('Kodak ColorPlus', 200, '35mm'), filmKey('Kodak Colorplus', 200, '35mm'));
+    assert.equal(filmKey('Kodak ColorPlus', 200, '35mm'), filmKey('  Kodak ColorPlus  ', 200, '35mm'));
+    assert.equal(filmKey('Kodak ColorPlus', 200, '35mm'), filmKey('Kodak   ColorPlus', 200, '35mm'));
+});
+
+test('filmKey still keys the same name separately per box speed/format', () => {
+    const keys = new Set([
+        filmKey('Kodak Color', 200, '35mm'),
+        filmKey('Kodak Color', 400, '35mm'),
+        filmKey('Kodak Color', 200, '120'),
+    ]);
+    assert.equal(keys.size, 3);
+});
+
 test('normalizeFilmBundles falls back to the legacy flat schema', () => {
     const bundles = normalizeFilmBundles({ rolls: '3', exposures: '24', filmCost: '9.5' });
     assert.deepEqual(bundles, [{ rolls: 3, exposures: 24, filmCost: 9.5, storeName: '', buyLink: '', availability: 'national', state: '', city: '' }]);

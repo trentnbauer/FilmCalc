@@ -1,7 +1,7 @@
 label: Japan Retailers
 country: Japan
 films:
-- name: Kodak Ultramax
+- name: Kodak UltraMax
   boxSpeed: 400
   maxPushPull: 1
   process: C41
@@ -40,7 +40,7 @@ films:
     filmCost: 5210
     storeName: Yodobashi Camera
     buyLink: https://www.yodobashi.com/product/100000001009036354/
-- name: Kodak Colorplus
+- name: Kodak ColorPlus
   boxSpeed: 200
   maxPushPull: 1
   process: C41

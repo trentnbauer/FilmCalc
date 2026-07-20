@@ -31,7 +31,7 @@ films:
         filmCost: 150
         storeName: eBay
         buyLink: https://www.ebay.com.au/itm/122005535954
-  - name: Kodak Ultramax
+  - name: Kodak UltraMax
     boxSpeed: 400
     maxPushPull: 1
     process: C41
@@ -184,7 +184,7 @@ films:
         filmCost: 24.95
         storeName: Teds Cameras
         buyLink: https://www.teds.com.au/products/phoenix-ii-135-36exp-200-iso-35mm-film
-  - name: Kodak Colorplus
+  - name: Kodak ColorPlus
     boxSpeed: 200
     maxPushPull: 1
     process: C41
