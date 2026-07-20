@@ -31,6 +31,7 @@ jobs:
         run: |
           python3 - <<'PY'
           import glob, sys, yaml
+          from collections import defaultdict
 
           VALID_PROCESSES = {"C41", "BW", "E6", "ECN2"}
           VALID_FORMATS = {"35mm", "120", "110", "127", "220", "sheet"}
@@ -44,6 +45,15 @@ jobs:
               errors.append(f"{f}: {msg}")
 
           # ---- films ----
+          # Tracks every spelling seen for each (name, boxSpeed, format) once
+          # normalised (trimmed + lowercased) — the app merges film entries
+          # across preset files by that same normalised key at import time
+          # (see filmKey() in js/dev-cost-calc.js), so two spellings that only
+          # differ in case/whitespace (e.g. "Kodak ColorPlus" vs.
+          # "Kodak Colorplus") silently show up as duplicate entries instead
+          # of merging.
+          film_name_spellings = defaultdict(set)
+          film_name_locations = defaultdict(list)
           for path in sorted(glob.glob("films/*.yaml") + glob.glob("films/*.yml")):
               try:
                   doc = yaml.safe_load(open(path))
@@ -60,6 +70,10 @@ jobs:
                   for key in ("name", "boxSpeed", "process", "bundles"):
                       if key not in film:
                           err(path, f"{where}: missing required field '{key}'")
+                  if film.get("name"):
+                      norm_key = (film["name"].strip().lower(), film.get("boxSpeed"), film.get("format", "35mm"))
+                      film_name_spellings[norm_key].add(film["name"])
+                      film_name_locations[norm_key].append(path)
                   if film.get("process") and film["process"] not in VALID_PROCESSES:
                       err(path, f"{where}: process '{film['process']}' must be one of {sorted(VALID_PROCESSES)}")
                   fmt = film.get("format", "35mm")
@@ -83,6 +97,18 @@ jobs:
                           err(path, f"{bw}: availability '{avail}' needs a 'state'")
                       if avail == "city" and not b.get("city"):
                           err(path, f"{bw}: availability 'city' needs a 'city'")
+
+          for norm_key, spellings in film_name_spellings.items():
+              if len(spellings) > 1:
+                  name, box_speed, fmt = norm_key
+                  files = ", ".join(sorted(set(film_name_locations[norm_key])))
+                  err(
+                      files,
+                      f"'{name}' at {box_speed} ISO ({fmt}) is spelled {sorted(spellings)} across these "
+                      "files — the app merges film entries across preset files by name+boxSpeed+format, "
+                      "so mismatched capitalisation/whitespace shows up as duplicate entries instead of "
+                      "merging. Use the exact same spelling everywhere."
+                  )
 
           # ---- labs ----
           for path in sorted(glob.glob("labs/*.yaml") + glob.glob("labs/*.yml")):

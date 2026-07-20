@@ -1,7 +1,7 @@
 label: Germany Retailers
 country: Germany
 films:
-  - name: Kodak Ultramax
+  - name: Kodak UltraMax
     boxSpeed: 400
     maxPushPull: 1
     process: C41

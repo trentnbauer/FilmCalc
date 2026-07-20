@@ -910,6 +910,31 @@ function mergeFilmProfiles(saved, incoming) {
     return saved;
 }
 
+// One-time cleanup for installs that saved duplicate film entries — e.g.
+// "Kodak ColorPlus" and "Kodak Colorplus" as two separate filmProfiles
+// entries — before filmKey() started normalising name casing/whitespace.
+// Re-derives every saved profile's key with the current filmKey() and
+// merges any that now collide, combining bundles instead of dropping one.
+// Safe to call on every load: a no-op once nothing remaps or collides.
+function migrateFilmProfileKeys() {
+    const saved = readJSON('filmProfiles', {});
+    const remapped = {};
+    let changed = false;
+    Object.keys(saved).forEach(oldKey => {
+        const film = saved[oldKey];
+        if (!film || !film.name) return;
+        const newKey = filmKey(film.name, film.boxSpeed, film.format);
+        if (newKey !== oldKey) changed = true;
+        if (remapped[newKey]) {
+            remapped[newKey] = { ...film, bundles: mergeFilmBundles(remapped[newKey].bundles, film.bundles) };
+            changed = true;
+        } else {
+            remapped[newKey] = film;
+        }
+    });
+    if (changed) localStorage.setItem('filmProfiles', JSON.stringify(remapped));
+}
+
 // Merges one parsed YAML document (combined config.yaml shape, or a
 // standalone films.yaml/labs.yaml array) into localStorage. Shared by
 // both the preset-picker and file-upload import paths below.

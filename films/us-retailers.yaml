@@ -71,7 +71,7 @@ films:
         filmCost: 26.98
         storeName: Walmart
         buyLink: https://www.walmart.com/ip/Foma-Fomapan-100-Classic-35mm-Black-and-White-Negative-Film-36-Exposures/1933919554
-  - name: Kodak Ultramax
+  - name: Kodak UltraMax
     boxSpeed: 400
     maxPushPull: 1
     process: C41
@@ -183,7 +183,7 @@ films:
         filmCost: 34.00
         storeName: Walmart
         buyLink: https://www.walmart.com/c/kp/35mm-film
-  - name: Kodak Colorplus
+  - name: Kodak ColorPlus
     boxSpeed: 200
     maxPushPull: 1
     process: C41

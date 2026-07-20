@@ -2714,6 +2714,11 @@
         initWriteConfigButton();
 
         (async () => {
+            // Fold together any pre-existing duplicate film entries (e.g. saved
+            // under both "Kodak ColorPlus" and "Kodak Colorplus") before
+            // anything reads filmProfiles — see migrateFilmProfileKeys() in
+            // js/modals.js.
+            migrateFilmProfileKeys();
             await loadOptions();
             populateOptionSelects();
             // Reflect persisted/default filter values now that options exist.

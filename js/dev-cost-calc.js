@@ -18,8 +18,13 @@ const TURNAROUND_RANK = { next_day: 0, same_week: 1, longer: 2 };
 
 // Films are keyed by name + box speed + format, so e.g. "Kodak Gold 200" in
 // 35mm and 120 are distinct entries that don't overwrite each other.
+//
+// The name is trimmed/lowercased before keying so contributions that differ
+// only in whitespace or capitalisation — e.g. "Kodak ColorPlus" vs.
+// "Kodak Colorplus" across two preset files — collapse into a single film
+// entry instead of appearing as duplicates once both are imported.
 function filmKey(name, boxSpeed, format) {
-    return `${name}|${boxSpeed || 0}|${format || '35mm'}`;
+    return `${String(name || '').trim().toLowerCase()}|${boxSpeed || 0}|${format || '35mm'}`;
 }
 
 // Bridges the current { bundles: [...] } schema with the older flat
