@@ -562,14 +562,29 @@ function findHiResFastestUpgrade(candidates, cheapest, thresholdPercent) {
 }
 
 // Used by every Dev Cost view (Per Photo / Per Lab / Per Film / Per ISO) to
-// pin any favourited lab(s) to the top of the displayed list ahead of price
-// order, so "my lab" doesn't get buried below cheaper options. Rows stay
-// price/sort-ordered within each group (favourites, then the rest); the
-// true price rank comes from the caller's own price-sorted list, so the
-// "cheapest" marker stays accurate even when a favourite is shown first.
+// pin a favourited lab's own CHEAPEST row to the top of the displayed list
+// ahead of price order, so "my lab" doesn't get buried below cheaper
+// options. Only that one row is pinned per favourite lab — a lab can appear
+// in priceSortedRows more than once (once per film in Per ISO, once per
+// service tier in Per Film), and pinning every one of those rows used to
+// bury the actual price-sorted list under a wall of that lab's own entries
+// instead of surfacing just its best option (issue: Per ISO listing "every
+// film" at the home/favourite lab ahead of anything else). priceSortedRows
+// is already price-ascending, so the first row seen for a given lab is its
+// cheapest; every later row for that same lab stays in its normal price
+// position among "the rest" instead of also being pulled to the front.
 function reorderFavouriteLabsFirst(priceSortedRows, favouriteLabNames) {
-    const favs = priceSortedRows.filter(e => favouriteLabNames.has(e.labName));
-    const rest = priceSortedRows.filter(e => !favouriteLabNames.has(e.labName));
+    const pinned = new Set();
+    const favs = [];
+    const rest = [];
+    priceSortedRows.forEach(e => {
+        if (favouriteLabNames.has(e.labName) && !pinned.has(e.labName)) {
+            pinned.add(e.labName);
+            favs.push(e);
+        } else {
+            rest.push(e);
+        }
+    });
     return [...favs, ...rest];
 }
 
@@ -584,14 +599,21 @@ function reorderFavouriteFilmsFirst(priceSortedRows, favouriteFilmKeys) {
 }
 
 // Per Film specifically also has a single configured "default" (home) lab
-// from the Favourites setup — pinned to the top since it's the lab every
-// other part of the app (Film Lookup, pinned comparisons) already treats as
-// "your" lab for cost purposes. Per Film uses real pinning (above) instead
-// of favourite-lab reordering for everything else.
+// from the Favourites setup — its own cheapest row is pinned to the top
+// since it's the lab every other part of the app (Film Lookup, pinned
+// comparisons) already treats as "your" lab for cost purposes. Only that
+// one row is pinned (same reasoning as reorderFavouriteLabsFirst above —
+// the default lab can have several rows, e.g. one per film in Per ISO or
+// one per service tier in Per Film, and pinning all of them buried the
+// real price order instead of just surfacing the home lab's best option).
+// Per Film uses real pinning (above) instead of favourite-lab reordering
+// for everything else.
 function reorderDefaultLabFirst(priceSortedRows, defaultLabName) {
-    const def = defaultLabName ? priceSortedRows.filter(e => e.labName === defaultLabName) : [];
-    const rest = priceSortedRows.filter(e => e.labName !== defaultLabName);
-    return [...def, ...rest];
+    if (!defaultLabName) return priceSortedRows;
+    const idx = priceSortedRows.findIndex(e => e.labName === defaultLabName);
+    if (idx === -1) return priceSortedRows;
+    const rest = priceSortedRows.filter((e, i) => i !== idx);
+    return [priceSortedRows[idx], ...rest];
 }
 
 // UMD-lite: plain globals for the browser <script src> case, CommonJS
