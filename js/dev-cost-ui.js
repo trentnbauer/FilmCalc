@@ -519,20 +519,29 @@ function updateIsoPriceCalculator() {
     // of the chosen sort — so "cheapest" stays meaningful even when
     // sorting by turnaround or scan.
     const priceRank = (entries, entry) => entries.slice().sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto).indexOf(entry);
-    // The configured default (home) lab is pinned first, ahead of
-    // favourited labs, the same way Per Film pins it — so "my lab"
-    // always surfaces even when it's neither the cheapest nor
-    // starred as a favourite. Favourited labs are pinned next, ahead
-    // of whatever sort is active, without disturbing the true price
-    // rank used for the ⭐ "cheapest" marker.
+    // The configured default (home) lab's own CHEAPEST film at this ISO is
+    // pinned first, ahead of favourited labs' own cheapest picks, the same
+    // way Per Film pins it — so "my lab" always surfaces even when it's
+    // neither the cheapest nor starred as a favourite. Only that single
+    // row per lab is pinned/labelled (see reorderDefaultLabFirst /
+    // reorderFavouriteLabsFirst in dev-cost-calc.js) — a lab can have a row
+    // for every film it's shown for, and pinning + labelling ALL of them
+    // used to bury the price-sorted list under a wall of "my home lab"
+    // entries instead of surfacing just its best option.
     const defaultLabName = getDefaultLabPref()?.lab || null;
-    const renderBucket = (sorted, all) => reorderDefaultLabFirst(reorderFavouriteLabsFirst(sorted, favouriteLabs), defaultLabName).map(e => {
-        const rank = priceRank(all, e);
-        const pinReason = (e.labName === defaultLabName && rank !== 0)
-            ? 'default'
-            : (isFavLab(e.labName) && rank !== 0);
-        return renderIsoRow(e, rank, pinReason);
-    }).join('');
+    const renderBucket = (sorted, all) => {
+        const cheapestPerLab = new Map();
+        all.slice().sort((a, b) => a.totalCostPerPhoto - b.totalCostPerPhoto)
+            .forEach(e => { if (!cheapestPerLab.has(e.labName)) cheapestPerLab.set(e.labName, e); });
+        return reorderDefaultLabFirst(reorderFavouriteLabsFirst(sorted, favouriteLabs), defaultLabName).map(e => {
+            const rank = priceRank(all, e);
+            const isLabsCheapest = cheapestPerLab.get(e.labName) === e;
+            const pinReason = (isLabsCheapest && e.labName === defaultLabName && rank !== 0)
+                ? 'default'
+                : (isLabsCheapest && isFavLab(e.labName) && rank !== 0);
+            return renderIsoRow(e, rank, pinReason);
+        }).join('');
+    };
 
     const noMatchMsg = (allBucket, emptyMsg) => `<p class="text-xs text-gray-400 text-center py-2">${allBucket.length ? t('noOptionsMatchFilters') : emptyMsg}</p>`;
     const nativeHtml = native.length
@@ -1159,9 +1168,15 @@ function updateCostPerFilmTab() {
     const defaultLabName = getDefaultLabPref()?.lab || null;
     const rows = reorderDefaultLabFirst(priceSortedRows, defaultLabName);
     const entriesByPinKey = new Map(priceSortedRows.map(e => [matrixRowKey('film', e), e]));
+    // The default lab can have more than one row here (one per matching
+    // service tier) — only its own cheapest row is actually pinned to the
+    // front by reorderDefaultLabFirst, so only that row should carry the
+    // "shown first, default lab" label; a pricier tier at the same lab
+    // stays in its normal price position and isn't pinned.
+    const defaultLabCheapestRow = defaultLabName ? priceSortedRows.find(e => e.labName === defaultLabName) : null;
     container.innerHTML = pinnedBlock + formatComparisonBlock + expandAllControl() + rows.map(e => {
         const rank = priceSortedRows.indexOf(e);
-        const pinReason = (e.labName === defaultLabName && rank !== 0) ? 'default' : null;
+        const pinReason = (e === defaultLabCheapestRow && rank !== 0) ? 'default' : null;
         return renderMatrixRow(e, rank, 'film', pinReason, rank === 0 ? upgrade : undefined);
     }).join('');
     setDevCostExportRows(rows.map(matrixEntryToExportRow));

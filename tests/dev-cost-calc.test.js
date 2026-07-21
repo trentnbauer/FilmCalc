@@ -574,6 +574,34 @@ test('reorderDefaultLabFirst pins the named lab ahead, others keep their order',
     assert.deepEqual(reorderDefaultLabFirst(rows, null).map(r => r.labName), ['A', 'B', 'C']);
 });
 
+// Regression coverage for: a lab can appear more than once in a
+// price-sorted row list — once per film in Per ISO, once per service tier
+// in Per Film — and pinning EVERY row for the home/favourite lab used to
+// bury the real price order under a wall of that lab's own entries
+// (reported as "Per ISO showing every film for my home lab first").
+// filmName distinguishes the otherwise-identical rows below so
+// assertions can identify which one survived at each position.
+test('reorderDefaultLabFirst only pins the lab\'s own cheapest row when it repeats, rest stay in price order', () => {
+    const rows = [
+        { labName: 'Other', filmName: 'X', totalCostPerPhoto: 0.2 },
+        { labName: 'Home', filmName: 'Cheapest', totalCostPerPhoto: 0.3 },
+        { labName: 'Other', filmName: 'Y', totalCostPerPhoto: 0.4 },
+        { labName: 'Home', filmName: 'Pricier', totalCostPerPhoto: 0.5 }
+    ];
+    const reordered = reorderDefaultLabFirst(rows, 'Home');
+    assert.deepEqual(reordered.map(r => r.filmName), ['Cheapest', 'X', 'Y', 'Pricier']);
+});
+
+test('reorderFavouriteLabsFirst only pins each favourite lab\'s own cheapest row when it repeats', () => {
+    const rows = [
+        { labName: 'Other', filmName: 'X', totalCostPerPhoto: 0.1 },
+        { labName: 'Fav', filmName: 'Cheapest', totalCostPerPhoto: 0.2 },
+        { labName: 'Fav', filmName: 'Pricier', totalCostPerPhoto: 0.3 }
+    ];
+    const reordered = reorderFavouriteLabsFirst(rows, new Set(['Fav']));
+    assert.deepEqual(reordered.map(r => r.filmName), ['Cheapest', 'X', 'Pricier']);
+});
+
 // ---------- findHiResFastestUpgrade (issue: apply the "cheapest hi-res +
 // fastest" recommendation from Film Lookup to Lab Costs' Per Film/Photo) ----------
 
