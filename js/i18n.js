@@ -38,6 +38,7 @@ const STRINGS = {
 
         themeLabel: 'Theme',
         languageLabel: 'Language',
+        translationDisclaimer: 'Translations are best effort — FilmCalc is written for English.',
         languageEnglish: 'English',
         languageSpanish: 'Spanish',
         languageJapanese: 'Japanese',
@@ -539,6 +540,7 @@ const STRINGS = {
 
         themeLabel: 'Tema',
         languageLabel: 'Idioma',
+        translationDisclaimer: 'Las traducciones son un esfuerzo aproximado — FilmCalc está escrito en inglés.',
         languageEnglish: 'Inglés',
         languageSpanish: 'Español',
         languageJapanese: 'Japonés',
@@ -1035,6 +1037,7 @@ const STRINGS = {
 
         themeLabel: 'テーマ',
         languageLabel: '言語',
+        translationDisclaimer: '翻訳は可能な範囲で行っています — FilmCalcは英語で作成されています。',
         languageEnglish: '英語',
         languageSpanish: 'スペイン語',
         languageJapanese: '日本語',
@@ -1530,6 +1533,7 @@ const STRINGS = {
 
         themeLabel: 'Design',
         languageLabel: 'Sprache',
+        translationDisclaimer: 'Übersetzungen sind ein bestmöglicher Versuch — FilmCalc ist auf Englisch geschrieben.',
         languageEnglish: 'Englisch',
         languageSpanish: 'Spanisch',
         languageJapanese: 'Japanisch',
@@ -2030,6 +2034,7 @@ const STRINGS = {
 
         themeLabel: 'Tema',
         languageLabel: 'Idioma',
+        translationDisclaimer: 'As traduções são feitas da melhor forma possível — o FilmCalc é escrito em inglês.',
         languageEnglish: 'Inglês',
         languageSpanish: 'Espanhol',
         languageJapanese: 'Japonês',
@@ -2530,6 +2535,7 @@ const STRINGS = {
 
         themeLabel: 'Thème',
         languageLabel: 'Langue',
+        translationDisclaimer: 'Les traductions sont fournies au mieux — FilmCalc est rédigé en anglais.',
         languageEnglish: 'Anglais',
         languageSpanish: 'Espagnol',
         languageJapanese: 'Japonais',
@@ -3030,6 +3036,7 @@ const STRINGS = {
 
         themeLabel: '테마',
         languageLabel: '언어',
+        translationDisclaimer: '번역은 최선을 다한 결과입니다 — FilmCalc는 영어로 작성되었습니다.',
         languageEnglish: '영어',
         languageSpanish: '스페인어',
         languageJapanese: '일본어',
@@ -3530,6 +3537,7 @@ const STRINGS = {
 
         themeLabel: '主题',
         languageLabel: '语言',
+        translationDisclaimer: '翻译为尽力而为的结果 —— FilmCalc 以英文编写。',
         languageEnglish: '英语',
         languageSpanish: '西班牙语',
         languageJapanese: '日语',
@@ -4030,6 +4038,7 @@ const STRINGS = {
 
         themeLabel: 'Tema',
         languageLabel: 'Lingua',
+        translationDisclaimer: 'Le traduzioni sono un tentativo il più accurato possibile — FilmCalc è scritto in inglese.',
         languageEnglish: 'Inglese',
         languageSpanish: 'Spagnolo',
         languageJapanese: 'Giapponese',
@@ -4530,6 +4539,7 @@ const STRINGS = {
 
         themeLabel: 'Тема',
         languageLabel: 'Язык',
+        translationDisclaimer: 'Переводы выполняются по мере возможности — FilmCalc написан на английском языке.',
         languageEnglish: 'Английский',
         languageSpanish: 'Испанский',
         languageJapanese: 'Японский',

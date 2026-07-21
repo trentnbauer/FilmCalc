@@ -661,6 +661,10 @@
                     </div>
                     <div class="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3 mb-3">
                         <h4 class="font-semibold text-gray-700 dark:text-gray-300 text-sm" data-i18n="languageLabel">Language</h4>
+                        <div class="flex items-start gap-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg px-3 py-2">
+                            <span class="text-blue-500 dark:text-blue-400">ℹ️</span>
+                            <p class="text-xs text-blue-800 dark:text-blue-300" data-i18n="translationDisclaimer">Translations are best effort — FilmCalc is written for English.</p>
+                        </div>
                         <select id="languageSelect" class="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 text-sm">
                             <option value="en" data-i18n="languageEnglish">English</option>
                             <option value="es" data-i18n="languageSpanish">Spanish</option>
@@ -911,6 +915,7 @@
                         <option value="it">Italiano</option>
                         <option value="ru">Русский</option>
                     </select>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mb-4 -mt-2" data-i18n="translationDisclaimer">Translations are best effort — FilmCalc is written for English.</p>
                     <button id="languageWelcomeContinueBtn" type="button" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-medium">Continue</button>
                 </div>
                 <div id="languageWelcomeStep2" class="hidden">
