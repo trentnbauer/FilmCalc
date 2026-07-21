@@ -187,6 +187,28 @@ test('sortIsoEntries: scan mode ranks hi-res first, price tie-break', () => {
     assert.deepEqual(sorted.map(e => e.labName), ['B', 'C', 'A']);
 });
 
+// Regression coverage for: at a shooting ISO no film is natively rated for
+// (e.g. 1600 for color), every result is a push, and price-only sorting
+// used to let a cheap-but-over-limit push outrank film that's actually
+// within its own Max Push/Pull range.
+const ENTRIES_WITH_OVER_LIMIT = [
+    { labName: 'Cheap-OverLimit', turnaroundTime: 'same_week', highResScan: false, totalCostPerPhoto: 0.1, overLimit: true },
+    { labName: 'Pricier-InRange', turnaroundTime: 'same_week', highResScan: false, totalCostPerPhoto: 0.5, overLimit: false },
+    { labName: 'Cheapest-InRange', turnaroundTime: 'longer', highResScan: false, totalCostPerPhoto: 0.3, overLimit: false }
+];
+
+test('sortIsoEntries: in-range entries always sort ahead of over-limit ones, regardless of sort mode', () => {
+    const byPrice = sortIsoEntries(ENTRIES_WITH_OVER_LIMIT, 'price');
+    assert.deepEqual(byPrice.map(e => e.labName), ['Cheapest-InRange', 'Pricier-InRange', 'Cheap-OverLimit']);
+
+    // Turnaround mode still ranks in-range entries by turnaround (Pricier-InRange
+    // is same_week, ahead of Cheapest-InRange's longer) before falling back to
+    // price — but the over-limit entry is last regardless, even though it'd
+    // otherwise tie on turnaround with Pricier-InRange.
+    const byTurnaround = sortIsoEntries(ENTRIES_WITH_OVER_LIMIT, 'turnaround');
+    assert.deepEqual(byTurnaround.map(e => e.labName), ['Pricier-InRange', 'Cheapest-InRange', 'Cheap-OverLimit']);
+});
+
 test('pickIsoCandidate: price mode picks the cheapest candidate', () => {
     const picked = pickIsoCandidate(ENTRIES, 'price');
     assert.equal(picked.labName, 'C');

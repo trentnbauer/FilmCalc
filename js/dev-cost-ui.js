@@ -179,6 +179,12 @@ let cheapestSort = localStorage.getItem('cheapestSort') || 'price';
 let devCostFilterTurnaround = '';
 let devCostFilterHiRes = false;
 let devCostFilterTiff = false;
+// Per ISO only (issue: sorting a push/pull list by price alone let a
+// cheap-but-over-limit option outrank film that's actually within its own
+// Max Push/Pull range — see sortIsoEntries() in js/dev-cost-calc.js for
+// the ranking fix; this toggle goes a step further and hides over-limit
+// options entirely). Not persisted, matching the filter pills above.
+let isoHideOverLimit = false;
 // Mail-back shipping toggle (issue #179) — off by default: a saved lab's
 // mailBackCost used to be baked unconditionally into every cost comparison,
 // which overstated the true cost for a lab you normally drop off at /
@@ -299,6 +305,12 @@ function renderDevCostActiveFilters() {
     }
     if (devCostFilterHiRes) chips.push({ label: t('hiResBadgeLabel'), clear: () => { devCostFilterHiRes = false; renderDevCostFilterBar(); refreshActiveCheapestSubTab(); } });
     if (devCostFilterTiff) chips.push({ label: t('tiffBadgeLabel'), clear: () => { devCostFilterTiff = false; renderDevCostFilterBar(); refreshActiveCheapestSubTab(); } });
+    // Per ISO only — the toggle pill lives inside updateIsoPriceCalculator()'s
+    // own controls row, not the shared filter bar above, since "over its
+    // push/pull limit" is a concept only Per ISO's push/pull rows have.
+    if (isoHideOverLimit && activeCheapestSubTab === 'iso') {
+        chips.push({ label: t('hideOverLimitLabel'), clear: () => { isoHideOverLimit = false; refreshActiveCheapestSubTab(); } });
+    }
     if (devCostIncludeMailBack) {
         const mailToLabSuffix = devCostMailToLabFee > 0 ? t('mailToLabSuffix', { amount: `${CUR()}${devCostMailToLabFee.toFixed(2)}` }) : '';
         chips.push({
@@ -487,9 +499,18 @@ function updateIsoPriceCalculator() {
     // "no matches for this filter" apart from "no film at this ISO at
     // all" in the messaging below.
     const hasActiveDevCostFilter = devCostFilterTurnaround || devCostFilterHiRes || devCostFilterTiff;
-    const { native, push, pull } = hasActiveDevCostFilter
+    const { native: filteredNative, push: filteredPush, pull: filteredPull } = hasActiveDevCostFilter
         ? computeIsoPriceOptions(targetIso, allFilms, allLabs, { ...baseOpts, turnaround: devCostFilterTurnaround, hiRes: devCostFilterHiRes, tiff: devCostFilterTiff })
         : { native: allNative, push: allPush, pull: allPull };
+    // "Hide over-limit" (issue: sorting alone still left over-limit push/pull
+    // options visible, just lower down — some users want them gone entirely,
+    // e.g. once they've confirmed nothing at this ISO is actually in range).
+    // Applied after the turnaround/hi-res/tiff filter above, same as any
+    // other narrowing step. native is never over-limit (0 stops), so this
+    // only ever removes push/pull rows in practice.
+    const native = isoHideOverLimit ? filteredNative.filter(e => !e.overLimit) : filteredNative;
+    const push = isoHideOverLimit ? filteredPush.filter(e => !e.overLimit) : filteredPush;
+    const pull = isoHideOverLimit ? filteredPull.filter(e => !e.overLimit) : filteredPull;
     const sortedNative = sortIsoEntries(native, cheapestSort);
     const sortedPush = sortIsoEntries(push, cheapestSort);
     const sortedPull = sortIsoEntries(pull, cheapestSort);
@@ -525,12 +546,14 @@ function updateIsoPriceCalculator() {
         : noMatchMsg(allPull, t('noFilmCanBePulledMessage'));
 
     const sortPill = (mode, label, title) => `<button type="button" data-sort="${mode}" title="${title}" class="cheapest-sort-pill px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${cheapestSort === mode ? 'bg-indigo-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}">${label}</button>`;
+    const hideOverLimitPill = `<button type="button" id="isoHideOverLimitBtn" title="${t('hideOverLimitTitle')}" aria-pressed="${isoHideOverLimit}" class="px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${isoHideOverLimit ? 'bg-red-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}">${t('hideOverLimitLabel')}</button>`;
     const controls = `<div class="flex items-center justify-between gap-2 flex-wrap mb-3">
         <div class="flex items-center gap-1.5 flex-wrap">
             <span class="text-xs text-gray-400 dark:text-gray-500 font-semibold uppercase tracking-wide">${t('sortLabel')}</span>
             ${sortPill('price', t('sortByPriceLabel'), t('sortByPriceTitle'))}
             ${sortPill('turnaround', t('turnaroundRowLabel'), t('sortByTurnaroundTitle'))}
             ${sortPill('scan', t('scanRowLabel'), t('sortByScanTitle'))}
+            ${hideOverLimitPill}
         </div>
         <button type="button" id="isoExpandAllBtn" class="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline">${expandAllIso ? t('collapseAllLabel') : t('expandAllLabel')}</button>
     </div>`;
@@ -562,6 +585,12 @@ function updateIsoPriceCalculator() {
         localStorage.setItem('cheapestSort', cheapestSort);
         updateIsoPriceCalculator();
     }));
+    // Hide-over-limit toggle.
+    const hideOverLimitBtn = document.getElementById('isoHideOverLimitBtn');
+    if (hideOverLimitBtn) hideOverLimitBtn.addEventListener('click', () => {
+        isoHideOverLimit = !isoHideOverLimit;
+        refreshActiveCheapestSubTab();
+    });
     // Favourite-lab stars.
     container.querySelectorAll('.fav-star').forEach(star => star.addEventListener('click', (e) => {
         e.stopPropagation();
