@@ -1196,3 +1196,47 @@ let firstLaunchPopupHandledImportPrompt = false;
     });
     document.getElementById('firstLaunchDismissBtn').addEventListener('click', dismiss);
 })();
+
+// ---------- Feedback nudge (issue: ask engaged users for feedback,
+// without interrupting a first visit) ----------
+// Tracks cumulative ACTIVE usage time (tab open and in the foreground —
+// a browser left idle overnight on this page shouldn't count) in the
+// 'usageTimeMs' localStorage key, ticking it up every
+// FEEDBACK_TICK_MS while document.visibilityState is 'visible'. That
+// total persists and accumulates across separate visits, so "an hour of
+// use" means an hour actually spent in the app, not an hour since first
+// install. Once it crosses FEEDBACK_PROMPT_THRESHOLD_MS, a small corner
+// card offers a link to GitHub Discussions — marked seen immediately
+// (not on dismiss) so it's genuinely a one-time nudge, same as every
+// other "seen" flag in this app; clearing all data (or the browser's own
+// storage) is the only way to see it again.
+const FEEDBACK_PROMPT_THRESHOLD_MS = 60 * 60 * 1000;
+const FEEDBACK_TICK_MS = 15000;
+(function initFeedbackPrompt() {
+    if (localStorage.getItem('hasSeenFeedbackPrompt') === 'true') return;
+    const banner = document.getElementById('feedbackPromptBanner');
+    const closeBtn = document.getElementById('feedbackPromptCloseBtn');
+    if (!banner || !closeBtn) return;
+
+    function showBanner() {
+        localStorage.setItem('hasSeenFeedbackPrompt', 'true');
+        banner.classList.remove('hidden');
+    }
+    closeBtn.addEventListener('click', () => banner.classList.add('hidden'));
+
+    let usageMs = parseInt(localStorage.getItem('usageTimeMs')) || 0;
+    if (usageMs >= FEEDBACK_PROMPT_THRESHOLD_MS) {
+        showBanner();
+        return;
+    }
+
+    const tick = setInterval(() => {
+        if (document.visibilityState !== 'visible') return;
+        usageMs += FEEDBACK_TICK_MS;
+        localStorage.setItem('usageTimeMs', String(usageMs));
+        if (usageMs >= FEEDBACK_PROMPT_THRESHOLD_MS) {
+            clearInterval(tick);
+            showBanner();
+        }
+    }, FEEDBACK_TICK_MS);
+})();

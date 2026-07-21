@@ -1038,6 +1038,24 @@
          See showToast() in js/modals.js. -->
     <div id="toast" role="status" aria-live="polite" class="hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-[70] max-w-sm w-[calc(100%-2rem)] px-4 py-3 rounded-lg shadow-lg text-sm font-medium text-center text-white"></div>
 
+    <!-- Feedback nudge — shown once, after ~1hr of cumulative active use
+         (tracked via localStorage, see initFeedbackPrompt() in
+         js/modals.js). A fixed corner card rather than a top banner so it
+         doesn't reflow whatever the visitor is in the middle of doing. -->
+    <div id="feedbackPromptBanner" role="region" aria-label="Feedback request" class="hidden fixed bottom-4 right-4 z-[65] max-w-xs w-[calc(100%-2rem)] bg-white dark:bg-gray-800 border-2 border-blue-400 dark:border-blue-600 rounded-xl shadow-lg p-4 text-left">
+        <div class="flex items-start gap-2">
+            <span class="text-2xl leading-none" aria-hidden="true">📸</span>
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold text-gray-900 dark:text-white" data-i18n="feedbackPromptHeading">Enjoying FilmCalc?</p>
+                <p class="text-xs text-gray-600 dark:text-gray-400 mt-1" data-i18n="feedbackPromptMessage">You've used FilmCalc for a while now — got any feedback or feature ideas?</p>
+                <div class="flex items-center gap-3 mt-3">
+                    <a href="https://github.com/trentnbauer/FilmCalc/discussions" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition-colors" data-i18n="feedbackPromptLinkLabel">💬 Share Feedback ↗</a>
+                </div>
+            </div>
+            <button id="feedbackPromptCloseBtn" type="button" class="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-lg leading-none" aria-label="Dismiss" data-i18n-aria-label="closeLabel">✕</button>
+        </div>
+    </div>
+
     </div>
 
     <!-- i18n: STRINGS dictionary + t()/applyI18n() helpers. Must load first —
@@ -1540,7 +1558,8 @@
             'globalProcess', 'globalFormat', 'activeTheme', 'theme',
             'currencySymbol', 'defaultLabPref',
             'pinnedLabResults', 'pinnedDevCostResults', 'cheapestSort', 'favouriteLabs', 'favouriteFilms',
-            'hasSeenImportPrompt', 'hasSeenLanguagePrompt'
+            'hasSeenImportPrompt', 'hasSeenLanguagePrompt',
+            'hasSeenFeedbackPrompt', 'usageTimeMs'
         ];
         document.getElementById('deleteAllDataBtn').addEventListener('click', async () => {
             const confirmed = await showConfirm(t('confirmDeleteAllDataMessage'), t('deleteEverythingButton'));
