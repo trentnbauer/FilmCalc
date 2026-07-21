@@ -220,8 +220,17 @@ function filmMatchesProcessAndFormat(f, process, format) {
 // Sorts already-computed Per ISO entries for display. Mirrors the
 // comparator in pickIsoCandidate() so the picked entry and the list order
 // always agree.
+//
+// Being within the film's own Max Push/Pull limit always outranks the
+// active sort mode (price/turnaround/scan) — otherwise a cheap-but-risky
+// over-limit push/pull buys its way to the top of a price-sorted list
+// ahead of film that's actually safe to shoot at this ISO (issue: at a
+// speed no film is natively rated for, e.g. 1600 for color, every result
+// is a push, so price-only sorting surfaced ones beyond their own
+// push/pull limit before ones within it).
 function sortIsoEntries(entries, sortMode) {
     return entries.slice().sort((a, b) => {
+        if (!!a.overLimit !== !!b.overLimit) return a.overLimit ? 1 : -1;
         if (sortMode === 'turnaround') {
             const ta = TURNAROUND_RANK[a.turnaroundTime] ?? 9, tb = TURNAROUND_RANK[b.turnaroundTime] ?? 9;
             if (ta !== tb) return ta - tb;
