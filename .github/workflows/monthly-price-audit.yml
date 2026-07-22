@@ -1,0 +1,60 @@
+name: Monthly Price Audit
+
+# Opens this month's price-audit checklist issues (one per films/*.yaml or labs/*.yaml
+# file) on the 1st of every month. Nothing here verifies any prices itself — Tier 5 of
+# daily-claude-run.yml works through the checklists a few items a night over the rest of
+# the month, since fetching and checking every film/lab price in one run would blow well
+# past a single Claude Code session's budget. Runs at 14:00 UTC, half an hour before that
+# nightly job's own 15:00 UTC schedule, so the freshly opened issues are already there
+# the first time it looks for them.
+on:
+  schedule:
+    - cron: '0 14 1 * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  open-audit-issues:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Ensure tracking labels exist
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh label create "price-audit" \
+            --repo ${{ github.repository }} \
+            --color "0e8a16" \
+            --description "Monthly film/lab price audit checklist for one data file. Worked through by daily-claude-run.yml Tier 5." \
+            --force
+          gh label create "price-audit-flag" \
+            --repo ${{ github.repository }} \
+            --color "d93f0b" \
+            --description "A price-audit entry Claude couldn't confidently verify. Reply with the correct value and mention @claude to apply it." \
+            --force
+
+      - name: Skip if last month's audit isn't finished yet
+        id: guard
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          open_count=$(gh issue list --repo ${{ github.repository }} --label price-audit --state open --json number -q 'length')
+          if [ "$open_count" -gt 0 ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "$open_count price-audit issue(s) still open — not starting a new batch this month."
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open this month's price-audit issues
+        if: steps.guard.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/generate-price-audit-issues.py
