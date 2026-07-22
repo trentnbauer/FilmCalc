@@ -5,11 +5,12 @@ name: Daily Claude Run
 # Sydney/Melbourne that's 1am AEST but 2am AEDT during daylight saving
 # (Oct-Apr).
 #
-# Four tiers, processed in order (see the prompt below for the exact
+# Five tiers, processed in order (see the prompt below for the exact
 # rules). Scope is deliberately narrow: data corrections, calculation
-# bugs, bug reports, security hardening, code-scanning alerts, and (last,
-# lowest priority) new-language translation requests -- feature requests
-# and anything else get left alone for a human to triage.
+# bugs, bug reports, security hardening, code-scanning alerts, new-language
+# translation requests, and (last, lowest priority) working through any
+# open monthly price-audit checklists -- feature requests and anything
+# else get left alone for a human to triage.
 on:
   schedule:
     - cron: '0 15 * * *'
@@ -47,6 +48,16 @@ jobs:
             --color "5319e7" \
             --description "Claude already handled this issue (PR opened, or skipped as too ambiguous). Remove to retry." \
             --force
+          gh label create "price-audit" \
+            --repo ${{ github.repository }} \
+            --color "0e8a16" \
+            --description "Monthly film/lab price audit checklist for one data file. Worked through by daily-claude-run.yml Tier 5." \
+            --force
+          gh label create "price-audit-flag" \
+            --repo ${{ github.repository }} \
+            --color "d93f0b" \
+            --description "A price-audit entry Claude couldn't confidently verify. Reply with the correct value and mention @claude to apply it." \
+            --force
 
       - name: Prepare Tier 1 security-alert data
         # The Claude GitHub App's own installation token has no
@@ -69,7 +80,7 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           additional_permissions: |
             actions: read
-          claude_args: '--allowed-tools "Bash(gh:*),Bash(git:*),Bash(node:*),Bash(python3:*),Read,Edit,Write,Grep,Glob"'
+          claude_args: '--allowed-tools "Bash(gh:*),Bash(git:*),Bash(node:*),Bash(python3:*),Read,Edit,Write,Grep,Glob,WebFetch"'
           prompt: |
             You are running as a scheduled, unattended job with no human present. Be conservative:
             implement real, working fixes, and do not refactor or "improve" unrelated code. This run
@@ -78,7 +89,7 @@ jobs:
             never any other open issue that isn't clearly one of those. Never push to main directly,
             and never approve your own PR (GitHub blocks self-approval anyway).
 
-            Work through these four tiers, strictly in order. Fully finish every item in a tier
+            Work through these five tiers, strictly in order. Fully finish every item in a tier
             (PR opened/merged, or skipped with a comment/note, plus tracking applied) before starting
             the next item, and don't begin a lower tier while any higher tier still has unprocessed
             items:
@@ -260,6 +271,36 @@ jobs:
             photography-specific terms into this language without risking nonsense), don't guess or do
             a partial job — comment on the issue explaining what's uncertain and @-mentioning
             `author.login`, and still label it `claude-attempted`.
+
+            **Tier 5 — Monthly price audit (lowest priority, only if everything else is caught up)**
+
+            Only start this tier once Tiers 1-4 have nothing left unprocessed this run — it exists to
+            fill spare time on quiet nights, not to compete with anything a person is actually waiting
+            on.
+
+            List open issues labelled `price-audit`:
+            ```
+            gh issue list --repo ${{ github.repository }} --label price-audit --state open --json number,title
+            ```
+            If there are none, there's nothing to do this tier — stop.
+
+            Each such issue is a checklist of film/lab entries from one data file under `films/` or
+            `labs/`, generated on the 1st of the month by `monthly-price-audit.yml`. The full procedure
+            for what to do with each item — including exactly when to tick a box, when to leave a
+            `PRICE-AUDIT-FINDING` comment, when to open a `price-audit-flag` issue instead, and what to
+            do once every box is checked — is written into the issue body itself. Read and follow it
+            exactly. When it has you edit a YAML file directly (the "once every box is checked" finalize
+            step), follow `DATA_SPEC.md`'s formatting rules, same as any other data change in this repo.
+
+            Work through open `price-audit` issues in any order, and within each issue work unchecked
+            boxes top to bottom. This can be a lot of items — you will likely run out of turns before
+            finishing all of them, and that's expected: after every single item (ticking a box, posting
+            a finding comment, or opening a flag issue), immediately save that progress with
+            `gh issue edit <number> --body-file <file>` before starting the next item, so a run that
+            gets cut off mid-audit loses nothing — tomorrow night's Tier 5 just resumes at the next
+            unchecked box. Never batch several items' worth of tick-marks into one save. If you sense
+            you're low on remaining turns, finish the item you're on, save, and stop there rather than
+            starting another.
 
             ---
 
