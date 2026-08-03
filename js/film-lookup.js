@@ -533,8 +533,22 @@ function updateCheaperAlternative() {
         return (tier.devCost + pushPullFee + effectiveMailBackFee(tier, mailBackOpts)) / exposures;
     }
 
+    // Current entry's own total. Uses the default lab from Settings when
+    // one is set and it can handle this process/push; otherwise cheapest.
+    const exposures = parseInt(document.getElementById('exposures').value) || 36;
+    const cheapestDev = cheapestDevPerPhoto(exposures);
+    const preferredDev = preferredDevPerPhoto(exposures);
+    // Headline uses the preferred lab if set & applicable, else cheapest.
+    const usingPreferred = preferredDev !== null;
+    const currentDevCpp = usingPreferred ? preferredDev : cheapestDev;
+
     // Find the cheapest saved film (same box speed, same process, within
-    // its own push/pull limit) on a full film + dev basis.
+    // its own push/pull limit) on a full film + dev basis. Dev cost here
+    // must be priced at the *same* lab as the current entry above (issue
+    // #268) -- otherwise this ends up comparing "my preferred lab + this
+    // film" against "some other, unrelated lab + that film", which makes
+    // an alternative look cheaper purely because it's paired with a
+    // different lab, not because the film itself is cheaper.
     let bestAlt = null;
     Object.values(allFilms).forEach(f => {
         if (f.hidden) return;
@@ -552,7 +566,7 @@ function updateCheaperAlternative() {
         normalizeFilmBundles(f, camera120OverrideExposures()).forEach(b => {
             const filmCpp = computeCostPerPhoto(b.filmCost, b.rolls, b.exposures);
             if (filmCpp === null || filmCpp <= 0 || !b.exposures) return;
-            const devCpp = cheapestDevPerPhoto(b.exposures);
+            const devCpp = usingPreferred ? preferredDevPerPhoto(b.exposures) : cheapestDevPerPhoto(b.exposures);
             if (devCpp === null) return;
             const totalCpp = filmCpp + devCpp;
             if (bestAlt === null || totalCpp < bestAlt.totalCpp) {
@@ -561,14 +575,6 @@ function updateCheaperAlternative() {
         });
     });
 
-    // Current entry's own total. Uses the default lab from Settings when
-    // one is set and it can handle this process/push; otherwise cheapest.
-    const exposures = parseInt(document.getElementById('exposures').value) || 36;
-    const cheapestDev = cheapestDevPerPhoto(exposures);
-    const preferredDev = preferredDevPerPhoto(exposures);
-    // Headline uses the preferred lab if set & applicable, else cheapest.
-    const usingPreferred = preferredDev !== null;
-    const currentDevCpp = usingPreferred ? preferredDev : cheapestDev;
     const currentTotal = currentDevCpp !== null ? currentFilmCostPerPhoto + currentDevCpp : null;
     const pref = getDefaultLabPref();
     const cheapestTotal = cheapestDev !== null ? currentFilmCostPerPhoto + cheapestDev : null;
