@@ -255,7 +255,9 @@
                  switchTab/the Format change handler). -->
             <div id="globalCamera120Row" class="hidden flex items-center gap-2">
                 <label for="globalCamera120" class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide shrink-0" title="120's frame count depends on your camera back, not the film stock. Sets the Exposures used in Film Lookup and every Lab Costs calculation for 120 films." data-i18n="camera120Label" data-i18n-title="camera120Help">120 Camera</label>
-                <select id="globalCamera120" title="120's frame count depends on your camera back, not the film stock. Sets the Exposures used in Film Lookup and every Lab Costs calculation for 120 films." data-i18n-title="camera120Help" class="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm"></select>
+                <div class="flex-1 min-w-0">
+                    <select id="globalCamera120" title="120's frame count depends on your camera back, not the film stock. Sets the Exposures used in Film Lookup and every Lab Costs calculation for 120 films." data-i18n-title="camera120Help" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm"></select>
+                </div>
             </div>
 
             <!-- Dev Cost process filter. Hidden on other tabs (toggled in switchTab). -->
