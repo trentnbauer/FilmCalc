@@ -37,7 +37,13 @@ class FakeClient:
 
 
 ZONES = [Zone(id="zone-1", name="example.com")]
-TUNNEL = {"id": "tunnel-1", "name": "test", "account_tag": "acct", "tunnel_secret": "secret"}
+# Placeholder fixture values only -- not real Cloudflare credentials.
+TUNNEL = {
+    "id": "tunnel-1",
+    "name": "test",
+    "account_tag": "fixture-account-tag",
+    "tunnel_secret": "fixture-not-a-real-secret",
+}
 
 
 def new_hostname_config(**overrides):
