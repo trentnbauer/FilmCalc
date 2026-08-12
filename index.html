@@ -50,6 +50,14 @@
                page's side gutters so the actual UI gets more room. */
             .page-shell { padding-left: 6px !important; padding-right: 6px !important; }
             .app-card { border: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: #111113 !important; }
+            /* Rows throughout (calculator fields, lab/film/library list
+               rows, section headers, the top nav cluster) all use tight
+               desktop padding/gaps that read as cramped once everything's
+               stacked into one narrow column — open them up a bit. */
+            .calc-field { padding: 13px 14px !important; gap: 10px !important; }
+            .list-row { padding: 13px 14px !important; }
+            .section-head { margin-top: 24px !important; margin-bottom: 12px !important; gap: 12px !important; }
+            .top-controls { gap: 9px !important; row-gap: 12px !important; }
         }
         input:focus, select:focus { outline: 1px solid var(--acc); outline-offset: 0; }
         button:hover { filter: brightness(1.15); }

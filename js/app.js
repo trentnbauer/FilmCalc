@@ -369,7 +369,7 @@ function renderHeader(s) {
 </span>
 <span style="${NARROW};font-weight:700;font-size:13px;letter-spacing:.2em;color:#c9c5bd;text-transform:uppercase">Filmcalc</span>
 </button>
-<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+<div class="top-controls" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
 <button type="button" onclick="App.toggleView('expired')" style="background:${eb.bg};border:1px solid ${eb.border};border-radius:5px;padding:6px 10px;color:${eb.color};font-size:10px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Expired Calc</button>
 <button type="button" onclick="App.toggleView('library')" style="background:${lb.bg};border:1px solid ${lb.border};border-radius:5px;padding:6px 10px;color:${lb.color};font-size:10px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Film and lab library</button>
 <a href="https://github.com/trentnbauer/FilmCalc/wiki" target="_blank" rel="noopener noreferrer" title="Wiki" style="display:flex;align-items:center;justify-content:center;width:29px;height:29px;background:#141416;border:1px solid #2c2c30;border-radius:5px;color:#8b8781;box-sizing:border-box">
@@ -443,9 +443,14 @@ ${renderPushWarning(s)}
 
 <div style="border-top:1px solid #212125;background:#0f0f11">
 <button type="button" onclick="App.toggleExtras()" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:transparent;border:0;padding:8px 12px;color:#6d6a64;${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;cursor:pointer">
-<span>Extra fees</span><span style="${MONO}">${s.extrasOpen ? '–' : '+'}</span>
+<span>Extra fees / Advanced</span><span style="${MONO}">${s.extrasOpen ? '–' : '+'}</span>
 </button>
 ${s.extrasOpen ? `<div style="display:flex;align-items:center;gap:16px;padding:0 12px 12px;flex-wrap:wrap">
+<div style="display:flex;align-items:center;gap:8px">
+<span style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781">Shooting at</span>
+<input value="${escapeHtml(s.devSpeed)}" oninput="App.setField('devSpeed',this.value)" onblur="App.fillBox()" data-fkey="devSpeed" inputmode="numeric" placeholder="same as box" style="width:92px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:5px 8px;color:#eae7e1;font-size:13px;${MONO}">
+<button type="button" onclick="App.matchBox()" style="background:transparent;border:1px solid #33333a;border-radius:4px;padding:5px 8px;color:#8b8781;font-size:9px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">= box</button>
+</div>
 <div style="display:flex;align-items:center;gap:8px">
 <span style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781">Once-off</span>
 <input value="${escapeHtml(s.onceOff)}" oninput="App.setField('onceOff',this.value)" data-fkey="onceOff" inputmode="decimal" placeholder="0.00" style="width:76px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:5px 8px;color:#eae7e1;font-size:13px;${MONO}">
@@ -607,7 +612,7 @@ ${badges}
 </div>`;
         }).join('');
         return `<div style="background:${rowBg}">
-<button type="button" onclick="App.toggleLab('${escapeHtml(l.name)}')" style="width:100%;display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:12px;padding:9px 12px;background:transparent;border:0;cursor:pointer;text-align:left">
+<button type="button" onclick="App.toggleLab('${escapeHtml(l.name)}')" class="list-row" style="width:100%;display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:12px;padding:9px 12px;background:transparent;border:0;cursor:pointer;text-align:left">
 <span style="${MONO};font-size:11px;color:${i === 0 ? 'var(--acc)' : '#5f5c57'}">${rank}</span>
 <span style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
 <span style="font-size:13px;color:#eae7e1">${escapeHtml(l.name)}</span>
@@ -627,7 +632,7 @@ ${open ? `<div style="padding:0 12px 12px 46px">
 </div>`;
     }).join('');
     return `
-<div style="display:flex;align-items:center;gap:10px;margin:18px 0 8px;flex-wrap:wrap">
+<div class="section-head" style="display:flex;align-items:center;gap:10px;margin:18px 0 8px;flex-wrap:wrap">
 <div style="width:5px;height:5px;background:var(--acc);border-radius:50%"></div>
 <div style="${NARROW};font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">Saved Lab Costs</div>
 <div style="flex:1;height:1px;background:#26262a;min-width:20px"></div>
@@ -670,7 +675,7 @@ function renderFilmSection(s, rows) {
 <a href="${sanitizeUrl(b.buyLink)}" target="_blank" rel="noopener noreferrer" title="Open the shop listing" style="display:flex;align-items:center;padding:0 10px;background:#0f0f11;border:1px solid #26262a;border-radius:5px;color:var(--acc);font-size:9px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none;white-space:nowrap">Buy ↗</a>
 </div>`).join('');
         return `<div style="background:${open ? '#1a1a1d' : '#131315'}">
-<button type="button" onclick="App.toggleFilm('${escapeHtml(key)}')" style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;padding:9px 12px;background:transparent;border:0;cursor:pointer;text-align:left;width:100%">
+<button type="button" onclick="App.toggleFilm('${escapeHtml(key)}')" class="list-row" style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;padding:9px 12px;background:transparent;border:0;cursor:pointer;text-align:left;width:100%">
 <span><span style="display:block;font-size:13px;color:#eae7e1">${escapeHtml(f.name)}</span>
 <span style="display:block;font-size:10px;color:#6d6a64;${MONO};margin-top:1px">${meta}</span></span>
 <span style="text-align:right;${MONO};font-size:15px;color:${row.perRoll <= cheapestPerRoll + 0.001 ? 'var(--acc)' : '#c9c5bd'}">${CUR()}${money(row.perRoll)}</span>
@@ -685,7 +690,7 @@ ${options}
         ? 'Per-roll price is the cheapest saved price for each stock, plus the push/pull stops shown to reach your shooting ISO. Open a stock to see all its saved prices.'
         : 'Per-roll price is the cheapest saved price for each stock. Open a stock to see all its saved prices.';
     return `
-<div style="display:flex;align-items:center;gap:10px;margin:18px 0 8px;flex-wrap:wrap">
+<div class="section-head" style="display:flex;align-items:center;gap:10px;margin:18px 0 8px;flex-wrap:wrap">
 <div style="width:5px;height:5px;background:var(--acc);border-radius:50%"></div>
 <div style="${NARROW};font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">Saved film stock</div>
 <div style="flex:1;height:1px;background:#26262a;min-width:20px"></div>
@@ -708,13 +713,10 @@ function renderMainView(s) {
     const filmRows = computeFilmRows(s, home);
     const cheaper = computeCheaperFilm(s, home);
     return `<div style="padding:16px 18px 18px">
-<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+<div class="section-head" style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
 <div style="width:5px;height:5px;background:var(--acc);border-radius:50%"></div>
 <div style="${NARROW};font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">Film lookup</div>
 <div style="flex:1;height:1px;background:#26262a;min-width:20px"></div>
-<span style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#5f5c57">Shooting at</span>
-<input value="${escapeHtml(s.devSpeed)}" oninput="App.setField('devSpeed',this.value)" onblur="App.fillBox()" data-fkey="devSpeed" inputmode="numeric" placeholder="same as box" style="width:92px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #3d3d45;border-radius:5px;padding:5px 7px;color:#eae7e1;font-size:12px;${MONO}">
-<button type="button" onclick="App.matchBox()" style="background:transparent;border:1px solid #33333a;border-radius:5px;padding:5px 7px;color:#8b8781;font-size:9px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">= box</button>
 <select onchange="App.setField('format',this.value)" style="background:#1a1a1d;border:1px solid #33333a;border-radius:5px;padding:5px 7px;color:#c9c5bd;font-size:11px;${MONO}">${FORMAT_OPTIONS.map(o => `<option value="${o.value}" ${s.format === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>
 <select onchange="App.setField('process',this.value)" style="background:#1a1a1d;border:1px solid #33333a;border-radius:5px;padding:5px 7px;color:#c9c5bd;font-size:11px;${MONO}">${PROCESS_OPTIONS.map(o => `<option value="${o.value}" ${s.process === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>
 </div>
@@ -795,7 +797,7 @@ function renderLibraryView(s) {
     const filmRows = films.map(([key, f]) => {
         const bundles = normalizeFilmBundles(f);
         const cheapest = bundles.slice().sort((a, b) => a.filmCost / a.rolls - b.filmCost / b.rolls)[0];
-        return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 11px;background:#131315">
+        return `<div class="list-row" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 11px;background:#131315">
 <div><div style="font-size:12px;color:${f.hidden ? '#6d6a64' : '#eae7e1'}">${escapeHtml(f.name)}</div>
 <div style="font-size:10px;color:#6d6a64;${MONO};margin-top:1px">${f.boxSpeed} · ${procLabel(f.process)} · ${cheapest.exposures}exp · ${bundles.length} prices</div></div>
 <div style="display:flex;align-items:center;gap:6px">
@@ -809,7 +811,7 @@ function renderLibraryView(s) {
         const tiers = normalizeLabServices(l);
         const cheapest = tiers.slice().sort((a, b) => a.devCost - b.devCost)[0];
         const labelList = (Array.isArray(l.services) ? l.services : [l]).map(t => t.label || tierDescription(normalizeLabServices({ services: [t] })[0])).join(' · ');
-        return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 11px;background:#131315">
+        return `<div class="list-row" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 11px;background:#131315">
 <div><div style="font-size:12px;color:${l.hidden ? '#6d6a64' : '#eae7e1'}">${escapeHtml(name)}</div>
 <div style="font-size:10px;color:#6d6a64;${MONO};margin-top:1px">${tiers.length} tiers · ${escapeHtml(labelList)}</div></div>
 <div style="display:flex;align-items:center;gap:6px">
