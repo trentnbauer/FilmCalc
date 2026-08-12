@@ -393,18 +393,17 @@ function renderCalculator(s) {
     const rolls = Math.max(1, Math.round(num(s.rolls)) || 1);
     return `
 <div style="border:1px solid #26262a;border-radius:8px;background:#131315;overflow:hidden">
-<div class="calc-outer" style="display:grid;grid-template-columns:246px minmax(0,1fr);gap:1px;background:#212125">
+<div class="calc-outer" style="display:flex;flex-direction:column;gap:1px;background:#212125">
 
-<div class="calc-field" style="padding:11px 12px;background:#131315">
+<div class="calc-field" style="padding:11px 12px;background:#131315;min-width:0">
+<div style="display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap">
+<div>
 <div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:7px">Box speed</div>
 <div style="display:flex;align-items:center;gap:7px">
 <input value="${escapeHtml(s.boxSpeed)}" oninput="App.setField('boxSpeed',this.value)" onblur="App.fillBox()" data-fkey="boxSpeed" inputmode="numeric" placeholder="400" style="width:78px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:#eae7e1;font-size:14px;${MONO}">
 <span style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#5f5c57">ISO</span>
 </div>
 </div>
-
-<div class="calc-field" style="padding:11px 12px;background:#131315;min-width:0">
-<div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap">
 <div>
 <div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:7px">EXP count</div>
 <input value="${escapeHtml(expShown)}" oninput="App.setField('exposures',this.value)" ${is120 ? 'disabled' : ''} data-fkey="exposures" inputmode="numeric" placeholder="36" style="width:56px;max-width:100%;box-sizing:border-box;background:${is120 ? '#141416' : '#1a1a1d'};border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:${is120 ? '#8b8781' : '#eae7e1'};font-size:14px;${MONO}">
@@ -417,7 +416,7 @@ ${is120 ? `<select onchange="App.setField('frame120',this.value)" title="Frame s
 </div>
 </div>
 
-<div class="calc-field" style="grid-column:1 / -1;padding:12px;background:#131315">
+<div class="calc-field" style="padding:12px;background:#131315">
 <div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:2px">Film cost</div>
 <div style="font-size:10px;color:#5f5c57;margin-bottom:8px">Pack + postage</div>
 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">

@@ -34,18 +34,7 @@
         a:hover { color: #ffa268; text-decoration: underline; }
         input, select, button { font-family: inherit; }
         input::placeholder { color: #55534e; }
-        /* .calc-outer holds Box speed and EXP count side by side on wide
-           screens (246px/1fr) — on a narrow phone viewport that fixed
-           column plus the value column's content no longer fits, and
-           since the card wrapping it uses overflow:hidden the excess just
-           gets silently clipped instead of wrapping. Below 600px, stack
-           them full-width instead. Each field's own label already sits
-           above its input at every width (not just mobile) — that's
-           plain markup, not a breakpoint concern. !important is required
-           here because .calc-outer is otherwise styled inline, which
-           always outranks an unmarked stylesheet rule. */
         @media (max-width: 600px) {
-            .calc-outer { grid-template-columns: 1fr !important; }
             /* On a phone the card's border/radius/shadow just eats width
                without adding anything — drop the "boxed" look and the
                page's side gutters so the actual UI gets more room. */
