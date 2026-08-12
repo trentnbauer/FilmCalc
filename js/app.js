@@ -816,10 +816,9 @@ function renderLibraryView(s) {
     const labRows = labs.map(([name, l]) => {
         const tiers = normalizeLabServices(l);
         const cheapest = tiers.slice().sort((a, b) => a.devCost - b.devCost)[0];
-        const labelList = (Array.isArray(l.services) ? l.services : [l]).map(t => t.label || tierDescription(normalizeLabServices({ services: [t] })[0])).join(' · ');
         return `<div class="list-row" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 11px;background:#131315">
 <div><div style="font-size:12px;color:${l.hidden ? '#6d6a64' : '#eae7e1'}">${escapeHtml(name)}</div>
-<div style="font-size:10px;color:#6d6a64;${MONO};margin-top:1px">${tiers.length} tiers · ${escapeHtml(labelList)}</div></div>
+<div style="font-size:10px;color:#6d6a64;${MONO};margin-top:1px">${tiers.length} tier${tiers.length === 1 ? '' : 's'}</div></div>
 <div style="display:flex;align-items:center;gap:6px">
 <div style="${MONO};font-size:12px;color:#8b8781">${CUR()}${money(cheapest.devCost)}</div>
 <button type="button" onclick="App.toggleHidden('lab','${escapeHtml(name)}')" title="Keep it saved but out of lookups" style="background:#1a1a1d;border:1px solid #33333a;border-radius:4px;height:24px;padding:0 7px;color:#8b8781;font-size:9px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${l.hidden ? t('v2ButtonShow') : t('v2ButtonHide')}</button>
