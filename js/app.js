@@ -1055,6 +1055,14 @@ function renderSetupModal(s) {
 <div style="${NARROW};font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#eae7e1;margin-bottom:6px">${t('v2SetupTitle')}</div>
 <p style="margin:0 0 16px;font-size:12px;color:#6d6a64">${t('v2SetupIntro')}</p>
 <div style="display:flex;flex-direction:column;gap:14px">
+<div style="border:1px solid #26262a;border-radius:8px;background:#131315;padding:12px">
+<div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:8px">${t('v2SettingsStarterPresets')}</div>
+${renderPresetImport()}
+<div style="margin-top:10px;padding-top:10px;border-top:1px solid #212125">
+<label style="display:inline-flex;align-items:center;background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#8b8781;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonImportYaml')}<input type="file" accept=".yaml,.yml,text/yaml" onchange="App.importYamlFile(this.files[0])" style="display:none"></label>
+</div>
+${s.importNote ? `<div style="margin-top:8px;font-size:10px;color:#8b8781">${escapeHtml(s.importNote)}</div>` : ''}
+</div>
 <div>
 <div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:6px">${t('v2SettingsHomeLab')}</div>
 <select onchange="App.setHomeLab(this.value)" style="${FIELD_INPUT}">
