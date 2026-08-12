@@ -58,6 +58,10 @@
 <body>
     <div id="app"></div>
 
+    <!-- i18n: STRINGS dictionary + t()/setLocale() helpers. Must load
+         before js/app.js, which calls t() directly inside its render
+         functions rather than the old data-i18n attribute hydration. -->
+    <script src="js/i18n.js"></script>
     <!-- Dev Cost / Per ISO calculation engine — pure global functions, no
          DOM, no localStorage. Must load before js/app.js, which calls
          these directly rather than duplicating the maths. See
