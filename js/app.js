@@ -419,6 +419,7 @@ ${is120 ? `<select onchange="App.setField('frame120',this.value)" title="Frame s
 <div class="calc-field" style="padding:12px;background:#131315">
 <div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:2px">Film cost</div>
 <div style="font-size:10px;color:#5f5c57;margin-bottom:8px">Pack + postage</div>
+<div style="display:flex;flex-direction:column;gap:8px">
 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
 <div style="display:flex;align-items:center;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding-left:8px;height:31px;box-sizing:border-box;width:110px">
 <span style="${MONO};font-size:13px;color:#6d6a64">${CUR()}</span>
@@ -426,10 +427,14 @@ ${is120 ? `<select onchange="App.setField('frame120',this.value)" title="Frame s
 </div>
 <span style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#5f5c57;white-space:nowrap">pack of</span>
 <input value="${escapeHtml(s.rolls)}" oninput="App.setField('rolls',this.value)" data-fkey="rolls" inputmode="numeric" placeholder="1" style="width:46px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:#eae7e1;font-size:14px;${MONO}">
-<span style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#5f5c57;white-space:nowrap">rolls · plus postage</span>
+<span style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#5f5c57;white-space:nowrap">rolls</span>
+</div>
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+<span style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#5f5c57;white-space:nowrap">plus postage</span>
 <div style="display:flex;align-items:center;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding-left:8px;height:31px;box-sizing:border-box;width:110px">
 <span style="${MONO};font-size:13px;color:#6d6a64">${CUR()}</span>
 <input value="${escapeHtml(s.postage)}" oninput="App.setField('postage',this.value)" data-fkey="postage" inputmode="decimal" placeholder="3.95" style="width:100%;min-width:0;background:transparent;border:0;padding:0 8px 0 3px;color:#eae7e1;font-size:14px;${MONO}">
+</div>
 </div>
 </div>
 <div style="display:flex;align-items:center;gap:8px;font-size:10px;color:#6d6a64;${MONO};margin-top:6px;height:12px">
@@ -748,9 +753,11 @@ function renderExpiredModal(s) {
 </div>
 <div style="padding:9px 12px;background:#131315">
 <div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:7px">Expiry date</div>
+<div style="display:flex;flex-direction:column;gap:8px">
 <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
 <select onchange="App.setField('expiryMonth',this.value)" style="width:110px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:#eae7e1;font-size:13px;${MONO}">${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m, i) => `<option value="${i + 1}" ${String(s.expiryMonth) === String(i + 1) ? 'selected' : ''}>${m}</option>`).join('')}</select>
 <input value="${escapeHtml(s.expiryYear)}" oninput="App.setField('expiryYear',this.value)" data-fkey="expiryYear" inputmode="numeric" placeholder="2006" style="width:80px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:#eae7e1;font-size:14px;${MONO}">
+</div>
 <span style="font-size:10px;color:#5f5c57;${MONO}">${c.ageNote}</span>
 </div>
 </div>
