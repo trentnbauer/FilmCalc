@@ -906,18 +906,19 @@ const TURNAROUND_OPTIONS = [{ value: 'next_day', label: 'Next day' }, { value: '
 
 function renderEditLabModal(s) {
     const d = s.draft;
+    const tierLabel = (text) => `<div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#5f5c57;margin-bottom:4px">${text}</div>`;
     const tiers = d.services.map((t, i) => `
-<div style="border:1px solid #26262a;border-radius:6px;background:#0f0f11;padding:10px;margin-bottom:8px">
-<div style="display:grid;grid-template-columns:1fr 90px 90px 26px;gap:8px;align-items:center;margin-bottom:8px">
-<input value="${escapeHtml(t.label || '')}" oninput="App.setTierField(${i},'label',this.value)" data-fkey="tier-${i}-label" placeholder="Tier name" style="${FIELD_INPUT};font-size:12px">
-<div style="display:flex;align-items:center;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding-left:6px"><span style="${MONO};font-size:11px;color:#6d6a64">${CUR()}</span><input value="${t.devCost}" oninput="App.setTierField(${i},'devCost',this.value)" data-fkey="tier-${i}-devCost" inputmode="decimal" placeholder="Cost/roll" style="width:100%;background:transparent;border:0;padding:6px;color:#eae7e1;font-size:12px;${MONO}"></div>
-<div style="display:flex;align-items:center;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding-left:6px"><span style="${MONO};font-size:11px;color:#6d6a64">${CUR()}</span><input value="${t.mailBackCost ?? ''}" oninput="App.setTierField(${i},'mailBackCost',this.value)" data-fkey="tier-${i}-mailBackCost" inputmode="decimal" placeholder="n/a" style="width:100%;background:transparent;border:0;padding:6px;color:#eae7e1;font-size:12px;${MONO}"></div>
-<button type="button" onclick="App.removeTier(${i})" title="Remove tier" style="width:24px;height:24px;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;color:#8b8781;cursor:pointer">×</button>
+<div style="border:1px solid #212125;border-radius:6px;background:#131315;padding:10px;margin-bottom:8px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px">
+<div style="font-size:12px;color:#c9c5bd">${escapeHtml(tierDescription(t))}</div>
+<button type="button" onclick="App.removeTier(${i})" title="Remove tier" style="flex-shrink:0;width:24px;height:24px;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;color:#8b8781;cursor:pointer">×</button>
 </div>
-<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">
-<select onchange="App.setTierField(${i},'turnaroundTime',this.value)" style="${FIELD_INPUT};font-size:12px">${TURNAROUND_OPTIONS.map(o => `<option value="${o.value}" ${t.turnaroundTime === o.value ? 'selected' : ''}>${o.label}</option>`).join('')}</select>
-<input value="${t.pushPullCost}" oninput="App.setTierField(${i},'pushPullCost',this.value)" data-fkey="tier-${i}-pushPullCost" inputmode="decimal" placeholder="Push/pull fee" style="${FIELD_INPUT};font-size:12px;${MONO}">
-<select onchange="App.setTierField(${i},'pushPullType',this.value)" style="${FIELD_INPUT};font-size:12px"><option value="per_stop" ${t.pushPullType === 'per_stop' ? 'selected' : ''}>Per stop</option><option value="flat" ${t.pushPullType === 'flat' ? 'selected' : ''}>Flat fee</option></select>
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+<div style="width:100px">${tierLabel('Cost/roll')}<div style="display:flex;align-items:center;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding-left:6px"><span style="${MONO};font-size:11px;color:#6d6a64">${CUR()}</span><input value="${t.devCost}" oninput="App.setTierField(${i},'devCost',this.value)" data-fkey="tier-${i}-devCost" inputmode="decimal" style="width:100%;background:transparent;border:0;padding:6px;color:#eae7e1;font-size:12px;${MONO}"></div></div>
+<div style="width:100px">${tierLabel('Mail-back')}<div style="display:flex;align-items:center;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding-left:6px"><span style="${MONO};font-size:11px;color:#6d6a64">${CUR()}</span><input value="${t.mailBackCost ?? ''}" oninput="App.setTierField(${i},'mailBackCost',this.value)" data-fkey="tier-${i}-mailBackCost" inputmode="decimal" placeholder="n/a" style="width:100%;background:transparent;border:0;padding:6px;color:#eae7e1;font-size:12px;${MONO}"></div></div>
+<div style="width:130px">${tierLabel('Turnaround')}<select onchange="App.setTierField(${i},'turnaroundTime',this.value)" style="${FIELD_INPUT};font-size:12px">${TURNAROUND_OPTIONS.map(o => `<option value="${o.value}" ${t.turnaroundTime === o.value ? 'selected' : ''}>${o.label}</option>`).join('')}</select></div>
+<div style="width:120px">${tierLabel('Push/pull fee')}<input value="${t.pushPullCost}" oninput="App.setTierField(${i},'pushPullCost',this.value)" data-fkey="tier-${i}-pushPullCost" inputmode="decimal" style="${FIELD_INPUT};font-size:12px;${MONO}"></div>
+<div style="width:110px">${tierLabel('Charged')}<select onchange="App.setTierField(${i},'pushPullType',this.value)" style="${FIELD_INPUT};font-size:12px"><option value="per_stop" ${t.pushPullType === 'per_stop' ? 'selected' : ''}>Per stop</option><option value="flat" ${t.pushPullType === 'flat' ? 'selected' : ''}>Flat fee</option></select></div>
 </div>
 <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px">
 ${pill('Hi-res', t.highResScan, `App.toggleTierFlag(${i},'highResScan')`)}
