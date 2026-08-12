@@ -1604,9 +1604,9 @@ function mRow(label, controlHtml, first) {
 }
 
 function mSectionHead(label, trailing) {
-    return `<div style="display:flex;align-items:center;gap:10px;margin:20px 0 10px">
-<div style="width:5px;height:5px;background:var(--acc);border-radius:50%"></div>
-<div style="${NARROW};font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">${label}</div>
+    return `<div style="display:flex;align-items:center;gap:10px;margin:36px 0 14px">
+<div style="width:6px;height:6px;background:var(--acc);border-radius:50%"></div>
+<div style="${NARROW};font-size:16px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#eae7e1">${label}</div>
 <div style="flex:1;height:1px;background:#26262a"></div>
 ${trailing || ''}
 </div>`;
@@ -1787,9 +1787,9 @@ ${bundles}
     const shootIso = num(s.devSpeed) || num(s.boxSpeed);
 
     return `<div style="padding:16px 12px 0">
-<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-<div style="width:5px;height:5px;background:var(--acc);border-radius:50%"></div>
-<div style="${NARROW};font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">Film lookup</div>
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+<div style="width:6px;height:6px;background:var(--acc);border-radius:50%"></div>
+<div style="${NARROW};font-size:16px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#eae7e1">Film lookup</div>
 <div style="flex:1;height:1px;background:#26262a"></div>
 </div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
@@ -1873,18 +1873,18 @@ function renderMobileLibrary(s) {
     }).join('');
     return `<div style="padding:16px 12px 0;display:flex;flex-direction:column;gap:20px">
 <div>
-<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-<div style="width:5px;height:5px;background:var(--acc);border-radius:50%"></div>
-<div style="${NARROW};font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">Films</div>
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+<div style="width:6px;height:6px;background:var(--acc);border-radius:50%"></div>
+<div style="${NARROW};font-size:16px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#eae7e1">Films</div>
 <div style="flex:1;height:1px;background:#26262a"></div>
 <button type="button" onclick="App.newFilm()" style="height:36px;background:#141416;border:1px solid #2c2c30;border-radius:8px;padding:0 12px;color:#8b8781;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">New</button>
 </div>
 <div style="display:flex;flex-direction:column;gap:8px">${filmCards || `<div style="padding:14px;font-size:12px;color:#5f5c57;background:#131315;border:1px solid #26262a;border-radius:10px">Nothing saved yet.</div>`}</div>
 </div>
 <div>
-<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-<div style="width:5px;height:5px;background:var(--acc);border-radius:50%"></div>
-<div style="${NARROW};font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">Labs</div>
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+<div style="width:6px;height:6px;background:var(--acc);border-radius:50%"></div>
+<div style="${NARROW};font-size:16px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#eae7e1">Labs</div>
 <div style="flex:1;height:1px;background:#26262a"></div>
 <button type="button" onclick="App.newLab()" style="height:36px;background:#141416;border:1px solid #2c2c30;border-radius:8px;padding:0 12px;color:#8b8781;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">New</button>
 </div>
@@ -1907,9 +1907,9 @@ function renderMobileExpired(s) {
 </button>`;
     }).join('');
     return `<div style="padding:16px 12px 0">
-<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-<div style="width:5px;height:5px;background:var(--acc);border-radius:50%"></div>
-<div style="${NARROW};font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">Expired film</div>
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+<div style="width:6px;height:6px;background:var(--acc);border-radius:50%"></div>
+<div style="${NARROW};font-size:16px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#eae7e1">Expired film</div>
 <div style="flex:1;height:1px;background:#26262a"></div>
 </div>
 <p style="margin:0 0 12px;font-size:14px;line-height:1.5;color:#8b8781">Old film loses speed as it ages. Enter the roll's box speed and expiry, and this gives you what to rate it at.</p>
