@@ -34,6 +34,18 @@
         a:hover { color: #ffa268; text-decoration: underline; }
         input, select, button { font-family: inherit; }
         input::placeholder { color: #55534e; }
+        /* The calculator's label|value grids use a fixed-width label column
+           (e.g. 246px/88px) so desktop rows line up — on a narrow phone
+           viewport that fixed column plus the value column's content no
+           longer fits, and since the card wrapping it uses overflow:hidden
+           the excess just gets silently clipped instead of wrapping. Below
+           600px, stack label above value instead. !important is required
+           here because these grids are otherwise styled inline, which
+           always outranks an unmarked stylesheet rule. */
+        @media (max-width: 600px) {
+            .calc-outer { grid-template-columns: 1fr !important; }
+            .calc-field { grid-template-columns: 1fr !important; }
+        }
         input:focus, select:focus { outline: 1px solid var(--acc); outline-offset: 0; }
         button:hover { filter: brightness(1.15); }
     </style>

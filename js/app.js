@@ -159,7 +159,7 @@ const state = {
     view: 'main', // main | expired | library | settings
     draft: null, draftKind: null, draftKey: null,
     setupOpen: false,
-    extrasOpen: false, presetsOpen: false, expandedLab: null, expandedFilm: null,
+    extrasOpen: false, expandedLab: null, expandedFilm: null,
     format: localStorage.getItem('globalFormat') || '35mm',
     process: localStorage.getItem('globalProcess') || 'C41',
     boxSpeed: '', devSpeed: '', packCost: '', postage: '', rolls: '1', exposures: '36',
@@ -287,7 +287,7 @@ function computeFilmRows(s, home) {
         const devPerRoll = home ? home.pick.devCost + pushFeeFor(home.pick, stopsAbs) + home.pick.mailFee : 0;
         const perFrame = (bestBundle.filmCost / bestBundle.rolls + devPerRoll) / bestBundle.exposures;
         return { f, bundle: bestBundle, bundles, stopsAbs, dir: stopsSigned > 0 ? 'push' : 'pull', packPrice: bestBundle.filmCost, perRoll: bestBundle.filmCost / bestBundle.rolls, perFrame, exposures: bestBundle.exposures };
-    }).filter(Boolean).sort((a, b) => (a.stopsAbs === 0 ? 0 : 1) - (b.stopsAbs === 0 ? 0 : 1) || a.stopsAbs - b.stopsAbs || a.perFrame - b.perFrame);
+    }).filter(Boolean).sort((a, b) => (a.stopsAbs === 0 ? 0 : 1) - (b.stopsAbs === 0 ? 0 : 1) || a.stopsAbs - b.stopsAbs || a.perRoll - b.perRoll);
     return rows;
 }
 
@@ -385,24 +385,6 @@ function renderHeader(s) {
 </div>`;
 }
 
-function renderPresets(s) {
-    if (!s.presetsOpen) return '';
-    const films = Object.entries(getAllFilms()).filter(([, f]) => !f.hidden && (f.format || '35mm') === s.format && (f.process || 'C41') === s.process);
-    const rows = films.map(([key, f]) => {
-        const bundles = normalizeFilmBundles(f);
-        const cheapest = bundles.slice().sort((a, b) => (a.filmCost / a.rolls) - (b.filmCost / b.rolls))[0];
-        return `<button type="button" onclick="App.loadFilm('${escapeHtml(key)}')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;background:#131315;border:0;cursor:pointer;text-align:left">
-<span><span style="display:block;font-size:12px;color:#eae7e1">${escapeHtml(f.name)}</span>
-<span style="display:block;font-size:10px;color:#6d6a64;${MONO};margin-top:1px">${f.boxSpeed} · ${escapeHtml(f.process || 'C41')} · ${cheapest.rolls}×${cheapest.exposures}exp</span></span>
-<span style="${MONO};font-size:12px;color:var(--acc)">${CUR()}${money(cheapest.filmCost)}</span>
-</button>`;
-    }).join('');
-    return `<div style="margin-bottom:12px;border:1px solid #33333a;border-radius:8px;background:#0f0f11;overflow:hidden">
-<div style="padding:8px 12px;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#8b8781;border-bottom:1px solid #212125">Saved film stocks</div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#212125">${rows || '<div style="padding:12px;font-size:11px;color:#5f5c57">No saved films match this format/process yet.</div>'}</div>
-</div>`;
-}
-
 function renderCalculator(s) {
     const is120 = s.format === '120', is35 = s.format === '35mm';
     const frame35Options = Object.keys(FRAME35).map(k => `<option value="${k}" ${s.frame35 === k ? 'selected' : ''}>${FRAME35[k].label}</option>`).join('');
@@ -411,27 +393,27 @@ function renderCalculator(s) {
     const rolls = Math.max(1, Math.round(num(s.rolls)) || 1);
     return `
 <div style="border:1px solid #26262a;border-radius:8px;background:#131315;overflow:hidden">
-<div style="display:grid;grid-template-columns:246px minmax(0,1fr);gap:1px;background:#212125">
+<div class="calc-outer" style="display:grid;grid-template-columns:246px minmax(0,1fr);gap:1px;background:#212125">
 
-<div style="display:grid;grid-template-columns:88px 1fr;align-items:center;gap:10px;padding:9px 12px;background:#131315">
+<div class="calc-field" style="display:grid;grid-template-columns:88px 1fr;align-items:center;gap:10px;padding:9px 12px;background:#131315">
 <div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781">Box speed</div>
 <div style="display:flex;align-items:center;gap:7px">
-<input value="${escapeHtml(s.boxSpeed)}" oninput="App.setField('boxSpeed',this.value)" onblur="App.fillBox()" inputmode="numeric" placeholder="400" style="width:78px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:#eae7e1;font-size:14px;${MONO}">
+<input value="${escapeHtml(s.boxSpeed)}" oninput="App.setField('boxSpeed',this.value)" onblur="App.fillBox()" data-fkey="boxSpeed" inputmode="numeric" placeholder="400" style="width:78px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:#eae7e1;font-size:14px;${MONO}">
 <span style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#5f5c57">ISO</span>
 </div>
 </div>
 
-<div style="display:grid;grid-template-columns:82px minmax(0,1fr);align-items:center;gap:10px;padding:9px 12px;background:#131315;min-width:0">
+<div class="calc-field" style="display:grid;grid-template-columns:82px minmax(0,1fr);align-items:center;gap:10px;padding:9px 12px;background:#131315;min-width:0">
 <div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781">EXP Count</div>
 <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0">
-<input value="${escapeHtml(expShown)}" oninput="App.setField('exposures',this.value)" ${is120 ? 'disabled' : ''} inputmode="numeric" placeholder="36" style="width:56px;box-sizing:border-box;background:${is120 ? '#141416' : '#1a1a1d'};border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:${is120 ? '#8b8781' : '#eae7e1'};font-size:14px;${MONO}">
+<input value="${escapeHtml(expShown)}" oninput="App.setField('exposures',this.value)" ${is120 ? 'disabled' : ''} data-fkey="exposures" inputmode="numeric" placeholder="36" style="width:56px;max-width:100%;box-sizing:border-box;background:${is120 ? '#141416' : '#1a1a1d'};border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:${is120 ? '#8b8781' : '#eae7e1'};font-size:14px;${MONO}">
 <span style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#5f5c57;white-space:nowrap">Camera Type</span>
 ${is35 ? `<select onchange="App.setField('frame35',this.value)" title="Frame size your camera shoots — half frame doubles the shots per roll, XPan cuts them" style="height:31px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:0 7px;color:#c9c5bd;font-size:12px;${MONO}">${frame35Options}</select>` : ''}
 ${is120 ? `<select onchange="App.setField('frame120',this.value)" title="Frame size your camera back shoots — sets exposures per roll" style="height:31px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:0 7px;color:#c9c5bd;font-size:12px;${MONO}">${frame120Options}</select>` : ''}
 </div>
 </div>
 
-<div style="grid-column:1 / -1;display:grid;grid-template-columns:88px 1fr;align-items:start;gap:10px;padding:10px 12px;background:#131315">
+<div class="calc-field" style="grid-column:1 / -1;display:grid;grid-template-columns:88px 1fr;align-items:start;gap:10px;padding:10px 12px;background:#131315">
 <div style="padding-top:7px">
 <div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781">Film cost</div>
 <div style="font-size:10px;color:#5f5c57;margin-top:2px">Pack + postage</div>
@@ -440,14 +422,14 @@ ${is120 ? `<select onchange="App.setField('frame120',this.value)" title="Frame s
 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
 <div style="display:flex;align-items:center;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding-left:8px;height:31px;box-sizing:border-box;width:110px">
 <span style="${MONO};font-size:13px;color:#6d6a64">${CUR()}</span>
-<input value="${escapeHtml(s.packCost)}" oninput="App.setField('packCost',this.value)" inputmode="decimal" placeholder="50.00" style="width:100%;min-width:0;background:transparent;border:0;padding:0 8px 0 3px;color:#eae7e1;font-size:14px;${MONO}">
+<input value="${escapeHtml(s.packCost)}" oninput="App.setField('packCost',this.value)" data-fkey="packCost" inputmode="decimal" placeholder="50.00" style="width:100%;min-width:0;background:transparent;border:0;padding:0 8px 0 3px;color:#eae7e1;font-size:14px;${MONO}">
 </div>
 <span style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#5f5c57;white-space:nowrap">pack of</span>
-<input value="${escapeHtml(s.rolls)}" oninput="App.setField('rolls',this.value)" inputmode="numeric" placeholder="1" style="width:46px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:#eae7e1;font-size:14px;${MONO}">
+<input value="${escapeHtml(s.rolls)}" oninput="App.setField('rolls',this.value)" data-fkey="rolls" inputmode="numeric" placeholder="1" style="width:46px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:#eae7e1;font-size:14px;${MONO}">
 <span style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#5f5c57;white-space:nowrap">rolls · plus postage</span>
 <div style="display:flex;align-items:center;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding-left:8px;height:31px;box-sizing:border-box;width:110px">
 <span style="${MONO};font-size:13px;color:#6d6a64">${CUR()}</span>
-<input value="${escapeHtml(s.postage)}" oninput="App.setField('postage',this.value)" inputmode="decimal" placeholder="3.95" style="width:100%;min-width:0;background:transparent;border:0;padding:0 8px 0 3px;color:#eae7e1;font-size:14px;${MONO}">
+<input value="${escapeHtml(s.postage)}" oninput="App.setField('postage',this.value)" data-fkey="postage" inputmode="decimal" placeholder="3.95" style="width:100%;min-width:0;background:transparent;border:0;padding:0 8px 0 3px;color:#eae7e1;font-size:14px;${MONO}">
 </div>
 </div>
 <div style="display:flex;align-items:center;gap:8px;font-size:10px;color:#6d6a64;${MONO};margin-top:6px;height:12px">
@@ -466,11 +448,11 @@ ${renderPushWarning(s)}
 ${s.extrasOpen ? `<div style="display:flex;align-items:center;gap:16px;padding:0 12px 12px;flex-wrap:wrap">
 <div style="display:flex;align-items:center;gap:8px">
 <span style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781">Once-off</span>
-<input value="${escapeHtml(s.onceOff)}" oninput="App.setField('onceOff',this.value)" inputmode="decimal" placeholder="0.00" style="width:76px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:5px 8px;color:#eae7e1;font-size:13px;${MONO}">
+<input value="${escapeHtml(s.onceOff)}" oninput="App.setField('onceOff',this.value)" data-fkey="onceOff" inputmode="decimal" placeholder="0.00" style="width:76px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:5px 8px;color:#eae7e1;font-size:13px;${MONO}">
 </div>
 <div style="display:flex;align-items:center;gap:8px">
 <span style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781">Per roll</span>
-<input value="${escapeHtml(s.perRoll)}" oninput="App.setField('perRoll',this.value)" inputmode="decimal" placeholder="0.00" style="width:76px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:5px 8px;color:#eae7e1;font-size:13px;${MONO}">
+<input value="${escapeHtml(s.perRoll)}" oninput="App.setField('perRoll',this.value)" data-fkey="perRoll" inputmode="decimal" placeholder="0.00" style="width:76px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:5px 8px;color:#eae7e1;font-size:13px;${MONO}">
 </div>
 <div style="display:flex;align-items:center;gap:8px">
 <span style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781">Mail-back</span>
@@ -676,7 +658,7 @@ function renderFilmSection(s, rows) {
         const key = filmKey(f.name, f.boxSpeed, f.format);
         const open = s.expandedFilm === key;
         const meta = `${f.boxSpeed} · ${procLabel(f.process)} · ${row.exposures}exp · ${row.bundles.length} price${row.bundles.length === 1 ? '' : 's'}${row.stopsAbs ? ` · ${row.stopsAbs} stop ${row.dir}` : ''}`;
-        const cheapestPerFrame = rows[0] ? rows[0].perFrame : row.perFrame;
+        const cheapestPerRoll = rows[0] ? rows[0].perRoll : row.perRoll;
         const options = row.bundles.slice().sort((a, b) => (a.filmCost / a.rolls) - (b.filmCost / b.rolls)).map(b => `
 <div style="display:flex;align-items:stretch;gap:4px;margin-bottom:4px">
 <button type="button" onclick="App.loadFilmBundle('${escapeHtml(key)}','${escapeHtml(b.storeName)}',${b.rolls},${b.exposures})" style="flex:1;display:grid;grid-template-columns:1fr 78px 78px 74px;align-items:center;gap:12px;padding:7px 10px;background:#0f0f11;border:1px solid #26262a;border-radius:5px;cursor:pointer;text-align:left">
@@ -688,12 +670,10 @@ function renderFilmSection(s, rows) {
 <a href="${sanitizeUrl(b.buyLink)}" target="_blank" rel="noopener noreferrer" title="Open the shop listing" style="display:flex;align-items:center;padding:0 10px;background:#0f0f11;border:1px solid #26262a;border-radius:5px;color:var(--acc);font-size:9px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none;white-space:nowrap">Buy ↗</a>
 </div>`).join('');
         return `<div style="background:${open ? '#1a1a1d' : '#131315'}">
-<button type="button" onclick="App.toggleFilm('${escapeHtml(key)}')" style="display:grid;grid-template-columns:1fr 78px 78px 74px;align-items:center;gap:12px;padding:9px 12px;background:transparent;border:0;cursor:pointer;text-align:left;width:100%">
+<button type="button" onclick="App.toggleFilm('${escapeHtml(key)}')" style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;padding:9px 12px;background:transparent;border:0;cursor:pointer;text-align:left;width:100%">
 <span><span style="display:block;font-size:13px;color:#eae7e1">${escapeHtml(f.name)}</span>
 <span style="display:block;font-size:10px;color:#6d6a64;${MONO};margin-top:1px">${meta}</span></span>
-<span style="text-align:right;${MONO};font-size:13px;color:#8b8781">${CUR()}${money(row.packPrice)}</span>
-<span style="text-align:right;${MONO};font-size:13px;color:#c9c5bd">${CUR()}${money(row.perRoll)}</span>
-<span style="text-align:right;${MONO};font-size:15px;color:${row.perFrame <= cheapestPerFrame + 0.001 ? 'var(--acc)' : '#c9c5bd'}">${CUR()}${money(row.perFrame)}</span>
+<span style="text-align:right;${MONO};font-size:15px;color:${row.perRoll <= cheapestPerRoll + 0.001 ? 'var(--acc)' : '#c9c5bd'}">${CUR()}${money(row.perRoll)}</span>
 </button>
 ${open ? `<div style="padding:0 12px 10px 12px;display:flex;flex-direction:column;gap:1px;background:transparent">
 <div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#5f5c57;padding:4px 0 6px">Where to buy — cheapest first</div>
@@ -702,8 +682,8 @@ ${options}
 </div>`;
     }).join('');
     const note = s.isoFilter === 'shoot'
-        ? 'Per-frame price includes the home lab’s dev cost, and the push/pull it takes each stock to reach your shooting ISO.'
-        : 'Per-frame price includes the home lab’s dev cost.';
+        ? 'Per-roll price is the cheapest saved price for each stock, plus the push/pull stops shown to reach your shooting ISO. Open a stock to see all its saved prices.'
+        : 'Per-roll price is the cheapest saved price for each stock. Open a stock to see all its saved prices.';
     return `
 <div style="display:flex;align-items:center;gap:10px;margin:18px 0 8px;flex-wrap:wrap">
 <div style="width:5px;height:5px;background:var(--acc);border-radius:50%"></div>
@@ -713,8 +693,8 @@ ${options}
 <select onchange="App.setField('isoFilter',this.value)" style="background:#1a1a1d;border:1px solid #33333a;border-radius:5px;padding:5px 7px;color:#c9c5bd;font-size:11px;${MONO}">${isoOptions}</select>
 </div>
 <div style="display:flex;flex-direction:column;gap:1px;border:1px solid #26262a;border-radius:8px;overflow:hidden;background:#212125">
-<div style="display:grid;grid-template-columns:1fr 78px 78px 74px;gap:12px;padding:7px 12px;background:#0f0f11;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#5f5c57">
-<div>Stock — click for prices</div><div style="text-align:right">Pack</div><div style="text-align:right">Per roll</div><div style="text-align:right">Per frame</div>
+<div style="display:grid;grid-template-columns:1fr auto;gap:12px;padding:7px 12px;background:#0f0f11;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#5f5c57">
+<div>Stock — click for prices</div><div style="text-align:right">Per roll</div>
 </div>
 ${filmRows || `<div style="padding:14px;font-size:12px;color:#5f5c57;background:#131315">No film stock saved for ${s.format} · ${procLabel(s.process)} yet.</div>`}
 </div>
@@ -733,13 +713,11 @@ function renderMainView(s) {
 <div style="${NARROW};font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">Film lookup</div>
 <div style="flex:1;height:1px;background:#26262a;min-width:20px"></div>
 <span style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#5f5c57">Shooting at</span>
-<input value="${escapeHtml(s.devSpeed)}" oninput="App.setField('devSpeed',this.value)" onblur="App.fillBox()" inputmode="numeric" placeholder="same as box" style="width:92px;box-sizing:border-box;background:#1a1a1d;border:1px solid #3d3d45;border-radius:5px;padding:5px 7px;color:#eae7e1;font-size:12px;${MONO}">
+<input value="${escapeHtml(s.devSpeed)}" oninput="App.setField('devSpeed',this.value)" onblur="App.fillBox()" data-fkey="devSpeed" inputmode="numeric" placeholder="same as box" style="width:92px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #3d3d45;border-radius:5px;padding:5px 7px;color:#eae7e1;font-size:12px;${MONO}">
 <button type="button" onclick="App.matchBox()" style="background:transparent;border:1px solid #33333a;border-radius:5px;padding:5px 7px;color:#8b8781;font-size:9px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">= box</button>
-<button type="button" onclick="App.togglePresets()" title="Saved film stocks" style="background:transparent;border:1px solid #33333a;border-radius:5px;padding:5px 7px;color:#8b8781;font-size:9px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">Presets</button>
 <select onchange="App.setField('format',this.value)" style="background:#1a1a1d;border:1px solid #33333a;border-radius:5px;padding:5px 7px;color:#c9c5bd;font-size:11px;${MONO}">${FORMAT_OPTIONS.map(o => `<option value="${o.value}" ${s.format === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>
 <select onchange="App.setField('process',this.value)" style="background:#1a1a1d;border:1px solid #33333a;border-radius:5px;padding:5px 7px;color:#c9c5bd;font-size:11px;${MONO}">${PROCESS_OPTIONS.map(o => `<option value="${o.value}" ${s.process === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>
 </div>
-${renderPresets(s)}
 ${renderCalculator(s)}
 ${renderHero(s, r, home, cheapest, r.exp)}
 ${renderCheaperFilm(cheaper)}
@@ -763,13 +741,13 @@ function renderExpiredModal(s) {
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#212125">
 <div style="display:grid;grid-template-columns:92px 1fr;align-items:center;gap:10px;padding:9px 12px;background:#131315">
 <div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781">Box speed</div>
-<input value="${escapeHtml(s.expBox)}" oninput="App.setField('expBox',this.value)" inputmode="numeric" placeholder="400" style="width:80px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:#eae7e1;font-size:14px;${MONO}">
+<input value="${escapeHtml(s.expBox)}" oninput="App.setField('expBox',this.value)" data-fkey="expBox" inputmode="numeric" placeholder="400" style="width:80px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:#eae7e1;font-size:14px;${MONO}">
 </div>
 <div style="display:grid;grid-template-columns:92px 1fr;align-items:center;gap:10px;padding:9px 12px;background:#131315">
 <div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781">Expiry date</div>
 <div style="display:flex;align-items:center;gap:6px">
 <select onchange="App.setField('expiryMonth',this.value)" style="width:110px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:#eae7e1;font-size:13px;${MONO}">${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m, i) => `<option value="${i + 1}" ${String(s.expiryMonth) === String(i + 1) ? 'selected' : ''}>${m}</option>`).join('')}</select>
-<input value="${escapeHtml(s.expiryYear)}" oninput="App.setField('expiryYear',this.value)" inputmode="numeric" placeholder="2006" style="width:80px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:#eae7e1;font-size:14px;${MONO}">
+<input value="${escapeHtml(s.expiryYear)}" oninput="App.setField('expiryYear',this.value)" data-fkey="expiryYear" inputmode="numeric" placeholder="2006" style="width:80px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:#eae7e1;font-size:14px;${MONO}">
 <span style="font-size:10px;color:#5f5c57;${MONO}">${c.ageNote}</span>
 </div>
 </div>
@@ -876,11 +854,11 @@ function renderEditFilmModal(s) {
     const d = s.draft;
     const options = d.bundles.map((b, i) => `
 <div style="display:grid;grid-template-columns:1fr 60px 60px 90px 1fr 26px;gap:6px;align-items:center;padding:6px 0">
-<input value="${escapeHtml(b.storeName)}" oninput="App.setBundleField(${i},'storeName',this.value)" placeholder="Store" style="${FIELD_INPUT};font-size:12px">
-<input value="${b.rolls}" oninput="App.setBundleField(${i},'rolls',this.value)" inputmode="numeric" placeholder="Rolls" style="${FIELD_INPUT};font-size:12px;${MONO}">
-<input value="${b.exposures}" oninput="App.setBundleField(${i},'exposures',this.value)" inputmode="numeric" placeholder="Exp" style="${FIELD_INPUT};font-size:12px;${MONO}">
-<input value="${b.filmCost}" oninput="App.setBundleField(${i},'filmCost',this.value)" inputmode="decimal" placeholder="Price" style="${FIELD_INPUT};font-size:12px;${MONO}">
-<input value="${escapeHtml(b.buyLink)}" oninput="App.setBundleField(${i},'buyLink',this.value)" placeholder="https://…" style="${FIELD_INPUT};font-size:12px">
+<input value="${escapeHtml(b.storeName)}" oninput="App.setBundleField(${i},'storeName',this.value)" data-fkey="bundle-${i}-storeName" placeholder="Store" style="${FIELD_INPUT};font-size:12px">
+<input value="${b.rolls}" oninput="App.setBundleField(${i},'rolls',this.value)" data-fkey="bundle-${i}-rolls" inputmode="numeric" placeholder="Rolls" style="${FIELD_INPUT};font-size:12px;${MONO}">
+<input value="${b.exposures}" oninput="App.setBundleField(${i},'exposures',this.value)" data-fkey="bundle-${i}-exposures" inputmode="numeric" placeholder="Exp" style="${FIELD_INPUT};font-size:12px;${MONO}">
+<input value="${b.filmCost}" oninput="App.setBundleField(${i},'filmCost',this.value)" data-fkey="bundle-${i}-filmCost" inputmode="decimal" placeholder="Price" style="${FIELD_INPUT};font-size:12px;${MONO}">
+<input value="${escapeHtml(b.buyLink)}" oninput="App.setBundleField(${i},'buyLink',this.value)" data-fkey="bundle-${i}-buyLink" placeholder="https://…" style="${FIELD_INPUT};font-size:12px">
 <button type="button" onclick="App.removeBundle(${i})" title="Remove" style="width:24px;height:24px;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;color:#8b8781;cursor:pointer">×</button>
 </div>`).join('');
     return `<div style="position:fixed;inset:0;z-index:60;background:rgba(6,6,7,.74);display:flex;align-items:flex-start;justify-content:center;padding:48px 16px;overflow:auto"><div style="width:100%;max-width:660px;background:linear-gradient(180deg,#151517,#111113);border:1px solid #33333a;border-radius:10px;box-shadow:0 30px 80px -20px #000;padding:16px 18px 20px">
@@ -891,11 +869,11 @@ function renderEditFilmModal(s) {
 <button type="button" onclick="App.cancelDraft()" title="Close" style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;background:#1a1a1d;border:1px solid #33333a;border-radius:5px;color:#8b8781;cursor:pointer;padding:0;font-size:14px">×</button>
 </div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
-${field('Name', `<input value="${escapeHtml(d.name)}" oninput="App.setDraftField('name',this.value)" style="${FIELD_INPUT}">`)}
-${field('Box speed / ISO', `<input value="${d.boxSpeed}" oninput="App.setDraftField('boxSpeed',this.value)" inputmode="numeric" style="${FIELD_INPUT};${MONO}">`)}
+${field('Name', `<input value="${escapeHtml(d.name)}" oninput="App.setDraftField('name',this.value)" data-fkey="draft-name" style="${FIELD_INPUT}">`)}
+${field('Box speed / ISO', `<input value="${d.boxSpeed}" oninput="App.setDraftField('boxSpeed',this.value)" data-fkey="draft-boxSpeed" inputmode="numeric" style="${FIELD_INPUT};${MONO}">`)}
 ${field('Format', `<select onchange="App.setDraftField('format',this.value)" style="${FIELD_INPUT}">${FORMAT_OPTIONS.map(o => `<option value="${o.value}" ${d.format === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>`)}
 ${field('Process', `<select onchange="App.setDraftField('process',this.value)" style="${FIELD_INPUT}">${PROCESS_OPTIONS.map(o => `<option value="${o.value}" ${d.process === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>`)}
-${field('Max push/pull (stops)', `<input value="${d.maxPushPull}" oninput="App.setDraftField('maxPushPull',this.value)" inputmode="numeric" placeholder="2" style="${FIELD_INPUT};${MONO}">`)}
+${field('Max push/pull (stops)', `<input value="${d.maxPushPull}" oninput="App.setDraftField('maxPushPull',this.value)" data-fkey="draft-maxPushPull" inputmode="numeric" placeholder="2" style="${FIELD_INPUT};${MONO}">`)}
 </div>
 <div style="border:1px solid #26262a;border-radius:8px;background:#0f0f11;padding:10px 12px">
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -921,14 +899,14 @@ function renderEditLabModal(s) {
     const tiers = d.services.map((t, i) => `
 <div style="border:1px solid #26262a;border-radius:6px;background:#0f0f11;padding:10px;margin-bottom:8px">
 <div style="display:grid;grid-template-columns:1fr 90px 90px 26px;gap:8px;align-items:center;margin-bottom:8px">
-<input value="${escapeHtml(t.label || '')}" oninput="App.setTierField(${i},'label',this.value)" placeholder="Tier name" style="${FIELD_INPUT};font-size:12px">
-<div style="display:flex;align-items:center;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding-left:6px"><span style="${MONO};font-size:11px;color:#6d6a64">${CUR()}</span><input value="${t.devCost}" oninput="App.setTierField(${i},'devCost',this.value)" inputmode="decimal" placeholder="Cost/roll" style="width:100%;background:transparent;border:0;padding:6px;color:#eae7e1;font-size:12px;${MONO}"></div>
-<div style="display:flex;align-items:center;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding-left:6px"><span style="${MONO};font-size:11px;color:#6d6a64">${CUR()}</span><input value="${t.mailBackCost ?? ''}" oninput="App.setTierField(${i},'mailBackCost',this.value)" inputmode="decimal" placeholder="n/a" style="width:100%;background:transparent;border:0;padding:6px;color:#eae7e1;font-size:12px;${MONO}"></div>
+<input value="${escapeHtml(t.label || '')}" oninput="App.setTierField(${i},'label',this.value)" data-fkey="tier-${i}-label" placeholder="Tier name" style="${FIELD_INPUT};font-size:12px">
+<div style="display:flex;align-items:center;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding-left:6px"><span style="${MONO};font-size:11px;color:#6d6a64">${CUR()}</span><input value="${t.devCost}" oninput="App.setTierField(${i},'devCost',this.value)" data-fkey="tier-${i}-devCost" inputmode="decimal" placeholder="Cost/roll" style="width:100%;background:transparent;border:0;padding:6px;color:#eae7e1;font-size:12px;${MONO}"></div>
+<div style="display:flex;align-items:center;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding-left:6px"><span style="${MONO};font-size:11px;color:#6d6a64">${CUR()}</span><input value="${t.mailBackCost ?? ''}" oninput="App.setTierField(${i},'mailBackCost',this.value)" data-fkey="tier-${i}-mailBackCost" inputmode="decimal" placeholder="n/a" style="width:100%;background:transparent;border:0;padding:6px;color:#eae7e1;font-size:12px;${MONO}"></div>
 <button type="button" onclick="App.removeTier(${i})" title="Remove tier" style="width:24px;height:24px;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;color:#8b8781;cursor:pointer">×</button>
 </div>
 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">
 <select onchange="App.setTierField(${i},'turnaroundTime',this.value)" style="${FIELD_INPUT};font-size:12px">${TURNAROUND_OPTIONS.map(o => `<option value="${o.value}" ${t.turnaroundTime === o.value ? 'selected' : ''}>${o.label}</option>`).join('')}</select>
-<input value="${t.pushPullCost}" oninput="App.setTierField(${i},'pushPullCost',this.value)" inputmode="decimal" placeholder="Push/pull fee" style="${FIELD_INPUT};font-size:12px;${MONO}">
+<input value="${t.pushPullCost}" oninput="App.setTierField(${i},'pushPullCost',this.value)" data-fkey="tier-${i}-pushPullCost" inputmode="decimal" placeholder="Push/pull fee" style="${FIELD_INPUT};font-size:12px;${MONO}">
 <select onchange="App.setTierField(${i},'pushPullType',this.value)" style="${FIELD_INPUT};font-size:12px"><option value="per_stop" ${t.pushPullType === 'per_stop' ? 'selected' : ''}>Per stop</option><option value="flat" ${t.pushPullType === 'flat' ? 'selected' : ''}>Flat fee</option></select>
 </div>
 <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px">
@@ -949,11 +927,11 @@ ${PROCESS_OPTIONS.map(o => pill(o.label, t.processes.includes(o.value), `App.tog
 <button type="button" onclick="App.cancelDraft()" title="Close" style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;background:#1a1a1d;border:1px solid #33333a;border-radius:5px;color:#8b8781;cursor:pointer;padding:0;font-size:14px">×</button>
 </div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
-${field('Name', `<input value="${escapeHtml(d.name)}" oninput="App.setDraftField('name',this.value)" style="${FIELD_INPUT}">`)}
-${field('Address', `<input value="${escapeHtml(d.address || '')}" oninput="App.setDraftField('address',this.value)" placeholder="Street, suburb, state, postcode" style="${FIELD_INPUT}">`)}
-${field('Website', `<input value="${escapeHtml(d.website || '')}" oninput="App.setDraftField('website',this.value)" placeholder="https://…" style="${FIELD_INPUT}">`)}
-${field('Phone', `<input value="${escapeHtml(d.phone || '')}" oninput="App.setDraftField('phone',this.value)" style="${FIELD_INPUT}">`)}
-${field('Email', `<input value="${escapeHtml(d.email || '')}" oninput="App.setDraftField('email',this.value)" style="${FIELD_INPUT}">`)}
+${field('Name', `<input value="${escapeHtml(d.name)}" oninput="App.setDraftField('name',this.value)" data-fkey="draft-name" style="${FIELD_INPUT}">`)}
+${field('Address', `<input value="${escapeHtml(d.address || '')}" oninput="App.setDraftField('address',this.value)" data-fkey="draft-address" placeholder="Street, suburb, state, postcode" style="${FIELD_INPUT}">`)}
+${field('Website', `<input value="${escapeHtml(d.website || '')}" oninput="App.setDraftField('website',this.value)" data-fkey="draft-website" placeholder="https://…" style="${FIELD_INPUT}">`)}
+${field('Phone', `<input value="${escapeHtml(d.phone || '')}" oninput="App.setDraftField('phone',this.value)" data-fkey="draft-phone" style="${FIELD_INPUT}">`)}
+${field('Email', `<input value="${escapeHtml(d.email || '')}" oninput="App.setDraftField('email',this.value)" data-fkey="draft-email" style="${FIELD_INPUT}">`)}
 </div>
 <div style="border:1px solid #26262a;border-radius:8px;background:#0f0f11;padding:10px 12px">
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -1016,8 +994,8 @@ ${tierLabels.map(l => `<option value="${escapeHtml(l)}" ${s.defaultTier === l ? 
 `)}
 ${settingsSection('Calculator', `
 <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
-<div><div style="font-size:10px;color:#8b8781;margin-bottom:5px">Rolls per mail-back parcel</div><input value="${s.mailRolls}" oninput="App.setSetting('mailRolls',this.value)" inputmode="numeric" style="${FIELD_INPUT};width:80px;${MONO}"></div>
-<div><div style="font-size:10px;color:#8b8781;margin-bottom:5px">Upgrade threshold %</div><input value="${s.upgradePct}" oninput="App.setSetting('upgradePct',this.value)" inputmode="decimal" style="${FIELD_INPUT};width:80px;${MONO}"></div>
+<div><div style="font-size:10px;color:#8b8781;margin-bottom:5px">Rolls per mail-back parcel</div><input value="${s.mailRolls}" oninput="App.setSetting('mailRolls',this.value)" data-fkey="mailRolls" inputmode="numeric" style="${FIELD_INPUT};width:80px;${MONO}"></div>
+<div><div style="font-size:10px;color:#8b8781;margin-bottom:5px">Upgrade threshold %</div><input value="${s.upgradePct}" oninput="App.setSetting('upgradePct',this.value)" data-fkey="upgradePct" inputmode="decimal" style="${FIELD_INPUT};width:80px;${MONO}"></div>
 </div>
 `)}
 ${settingsSection('Hidden presets', `
@@ -1101,9 +1079,41 @@ function renderFooter(s) {
 }
 
 // ==================== Top-level render ====================
+// Every state change does a full innerHTML replace (no framework, no
+// virtual DOM) — the simplest thing that works for a form this size, but
+// it destroys and recreates the currently-focused <input> on every single
+// keystroke. On mobile that reads as "the keyboard closes as you type"
+// (the OS dismisses the keyboard the instant the focused element is
+// removed from the DOM), and on desktop it silently drops cursor
+// position. Fix: every input/select this file renders that fires
+// App.set*() on input/change carries a stable data-fkey identifying which
+// field it is; capture the focused element's fkey + text selection right
+// before the innerHTML swap, then refocus the matching element (by the
+// same fkey) afterwards, restoring the caret. Deterministic because
+// render() is a pure function of state — the field with a given fkey
+// lands in the same place in the new markup as long as its position in
+// state hasn't changed shape (e.g. a draft's bundle/tier array order).
+function captureFocus(root) {
+    const el = document.activeElement;
+    if (!el || !root.contains(el) || !el.hasAttribute('data-fkey')) return null;
+    const focus = { key: el.getAttribute('data-fkey') };
+    if (typeof el.selectionStart === 'number') { focus.start = el.selectionStart; focus.end = el.selectionEnd; }
+    return focus;
+}
+function restoreFocus(root, focus) {
+    if (!focus) return;
+    const el = root.querySelector(`[data-fkey="${focus.key}"]`);
+    if (!el) return;
+    el.focus({ preventScroll: true });
+    if (focus.start !== undefined && typeof el.setSelectionRange === 'function') {
+        try { el.setSelectionRange(focus.start, focus.end); } catch { /* not a text-selectable input */ }
+    }
+}
+
 function render() {
     const root = document.getElementById('app');
     if (!root) return;
+    const focus = captureFocus(root);
     document.documentElement.style.setProperty('--acc', state.accent);
     let body;
     if (state.draft !== null) {
@@ -1127,6 +1137,7 @@ ${body}
 ${renderFooter(state)}
 </div>
 </div>`;
+    restoreFocus(root, focus);
 }
 
 // ==================== Controller ====================
@@ -1144,7 +1155,6 @@ const App = {
     },
     matchBox() { state.devSpeed = state.boxSpeed; render(); },
     fillBox() { if (!state.boxSpeed && state.devSpeed) state.boxSpeed = state.devSpeed; render(); },
-    togglePresets() { state.presetsOpen = !state.presetsOpen; render(); },
     toggleExtras() { state.extrasOpen = !state.extrasOpen; render(); },
     toggleFlag(key) {
         state[key] = !state[key];
@@ -1175,7 +1185,6 @@ const App = {
         state.rolls = String(bundle.rolls || 1);
         state.exposures = String(bundle.exposures || 36);
         state.loadedFilmKey = filmKey(f.name, f.boxSpeed, f.format);
-        state.presetsOpen = false;
         persistScope();
         render();
     },
