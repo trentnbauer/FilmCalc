@@ -1128,10 +1128,10 @@ function render() {
         body = renderMainView(state);
     }
     root.innerHTML = `
-<div style="min-height:100vh;display:flex;justify-content:center;padding:18px 16px 60px;background:radial-gradient(120% 80% at 50% -10%,#17171a 0%,#0b0b0c 60%)">
+<div class="page-shell" style="min-height:100vh;display:flex;justify-content:center;padding:18px 16px 60px;background:radial-gradient(120% 80% at 50% -10%,#17171a 0%,#0b0b0c 60%)">
 <div style="width:100%;max-width:720px">
 ${renderHeader(state)}
-<div style="background:linear-gradient(180deg,#151517,#111113);border:1px solid #2a2a2e;border-radius:10px;box-shadow:0 24px 60px -30px #000,inset 0 1px 0 rgba(255,255,255,.05);overflow:hidden">
+<div class="app-card" style="background:linear-gradient(180deg,#151517,#111113);border:1px solid #2a2a2e;border-radius:10px;box-shadow:0 24px 60px -30px #000,inset 0 1px 0 rgba(255,255,255,.05);overflow:hidden">
 ${body}
 </div>
 ${renderFooter(state)}
