@@ -15,15 +15,17 @@
 //   - The 10-locale i18n system (js/i18n.js) — every string here is a
 //     plain literal, matching the mockup, which is English-only itself.
 //   - The 11 accessibility/colour theme YAML files (js/themes.js) — this
-//     UI has one dark palette + a 5-swatch accent picker, per the mockup.
-//     Dark/light toggle exists in the header for parity with the mockup,
-//     but (same as the mockup itself) no light palette is defined yet.
+//     UI has one dark palette, fixed (no user-configurable accent picker;
+//     each section heading gets its own fixed colour instead — see
+//     SECTION_COLORS). Dark/light toggle exists in the header for parity
+//     with the mockup, but (same as the mockup itself) no light palette
+//     is defined yet.
 //   - Changelog popup, "Add via AI" modal, generic YAML file-drop import.
 // Still preserved, just re-implemented against this file's own state
 // instead of the old DOM: JSON backup export/import, region-file preset
 // import (films/labs index.json + per-region YAML), hide/edit/delete for
-// saved films and labs, home lab + preferred tier + accent + mail-back
-// settings, and self-hosted config.yaml auto-load.
+// saved films and labs, home lab + preferred tier + mail-back settings,
+// and self-hosted config.yaml auto-load.
 
 // ---------- Small shared helpers (moved from the old index.html) ----------
 function escapeHtml(str) {
@@ -173,7 +175,6 @@ const state = {
     fWeek: readJSON('reqFilters', {}).week || false,
     isoFilter: 'shoot',
     loadedFilmKey: '',
-    accent: localStorage.getItem('accent') || '#ff7a2f',
     mailRolls: localStorage.getItem('mailBackRollCount') || '1',
     upgradePct: localStorage.getItem('upgradeThresholdPercent') || '4',
     libProcess: 'all', libFormat: 'all',
@@ -361,6 +362,11 @@ function computeExpired(s) {
 // below, since there's no framework here to bind real closures.
 const MONO = "font-family:'IBM Plex Mono',monospace";
 const NARROW = "font-family:'Archivo Narrow',Archivo,sans-serif";
+// Each of the three main section headings gets its own fixed colour
+// (heading text + the dot beside it) instead of the shared --acc, so
+// which section you're in stays legible while scrolling past one long
+// page — a companion to making the headings themselves bigger.
+const SECTION_COLORS = { lookup: '#ff7a2f', labs: '#5fa8d3', films: '#8fbf6a' };
 function btnTone(on) { return on ? { bg: '#1c1512', border: '#5a3a1c', color: 'var(--acc)' } : { bg: '#141416', border: '#2c2c30', color: '#8b8781' }; }
 function pill(label, on, onclick) {
     const b = btnTone(on);
@@ -649,8 +655,8 @@ ${open ? `<div style="padding:0 12px 12px 46px">
     }).join('');
     return `
 <div class="section-head" style="display:flex;align-items:center;gap:10px;margin:18px 0 8px;flex-wrap:wrap">
-<div style="width:5px;height:5px;background:var(--acc);border-radius:50%"></div>
-<div style="${NARROW};font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">${t('v2SectionSavedLabCosts')}</div>
+<div style="width:5px;height:5px;background:${SECTION_COLORS.labs};border-radius:50%"></div>
+<div style="${NARROW};font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:${SECTION_COLORS.labs}">${t('v2SectionSavedLabCosts')}</div>
 <div style="flex:1;height:1px;background:#26262a;min-width:20px"></div>
 <button type="button" onclick="App.newLab()" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:5px 9px;color:#8b8781;font-size:10px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2ButtonNewLab')}</button>
 <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#5f5c57">${s.format} · ${escapeHtml(procLabel(s.process))} · ${r.stopsAbs} stop ${r.stopsSigned < 0 ? 'pull' : 'push'}</div>
@@ -707,8 +713,8 @@ ${options}
         : 'Per-roll price is the cheapest saved price for each stock. Open a stock to see all its saved prices.';
     return `
 <div class="section-head" style="display:flex;align-items:center;gap:10px;margin:18px 0 8px;flex-wrap:wrap">
-<div style="width:5px;height:5px;background:var(--acc);border-radius:50%"></div>
-<div style="${NARROW};font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">${t('v2SectionSavedFilmStock')}</div>
+<div style="width:5px;height:5px;background:${SECTION_COLORS.films};border-radius:50%"></div>
+<div style="${NARROW};font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:${SECTION_COLORS.films}">${t('v2SectionSavedFilmStock')}</div>
 <div style="flex:1;height:1px;background:#26262a;min-width:20px"></div>
 <span style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#5f5c57">ISO</span>
 <select onchange="App.setField('isoFilter',this.value)" style="background:#1a1a1d;border:1px solid #33333a;border-radius:5px;padding:5px 7px;color:#c9c5bd;font-size:11px;${MONO}">${isoOptions}</select>
@@ -730,8 +736,8 @@ function renderMainView(s) {
     const cheaper = computeCheaperFilm(s, home);
     return `<div style="padding:16px 18px 18px">
 <div class="section-head" style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
-<div style="width:5px;height:5px;background:var(--acc);border-radius:50%"></div>
-<div style="${NARROW};font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">${t('v2SectionFilmLookup')}</div>
+<div style="width:5px;height:5px;background:${SECTION_COLORS.lookup};border-radius:50%"></div>
+<div style="${NARROW};font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:${SECTION_COLORS.lookup}">${t('v2SectionFilmLookup')}</div>
 <div style="flex:1;height:1px;background:#26262a;min-width:20px"></div>
 <select onchange="App.setField('format',this.value)" style="background:#1a1a1d;border:1px solid #33333a;border-radius:5px;padding:5px 7px;color:#c9c5bd;font-size:11px;${MONO}">${FORMAT_OPTIONS.map(o => `<option value="${o.value}" ${s.format === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>
 <select onchange="App.setField('process',this.value)" style="background:#1a1a1d;border:1px solid #33333a;border-radius:5px;padding:5px 7px;color:#c9c5bd;font-size:11px;${MONO}">${PROCESS_OPTIONS.map(o => `<option value="${o.value}" ${s.process === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>
@@ -985,8 +991,6 @@ function settingsSection(title, body) {
 }
 
 function renderSettingsView(s) {
-    const accents = ['#ff7a2f', '#e2564a', '#d8b34a', '#5fa8d3', '#8fbf6a'];
-    const swatches = accents.map(c => `<button type="button" onclick="App.setAccent('${c}')" title="${c}" style="width:22px;height:22px;border-radius:50%;background:${c};border:2px solid ${s.accent === c ? '#eae7e1' : '#26262a'};cursor:pointer;padding:0"></button>`).join('');
     const labNames = Object.keys(getAllLabs());
     const tierLabels = [...new Set(Object.values(getAllLabs()).flatMap(l => normalizeLabServices(l).map((t, i) => ((Array.isArray(l.services) ? l.services : [l])[i] || {}).label || tierDescription(t))))];
     const hidden = [
@@ -998,7 +1002,6 @@ function renderSettingsView(s) {
         ['fr', 'Français'], ['ko', '한국어'], ['zh', '中文 (简体)'], ['it', 'Italiano'], ['ru', 'Русский']
     ];
     return `<div style="padding:16px 18px 20px;display:flex;flex-direction:column;gap:1px;border:1px solid #26262a;border-radius:8px;overflow:hidden">
-${settingsSection(t('v2SettingsAccent'), `<div style="display:flex;align-items:center;gap:8px">${swatches}</div>`)}
 ${settingsSection(t('v2SettingsLanguage'), `
 <select onchange="App.setLanguage(this.value)" style="${FIELD_INPUT};max-width:280px;margin-bottom:8px">
 ${languages.map(([code, label]) => `<option value="${code}" ${currentLocale === code ? 'selected' : ''}>${escapeHtml(label)}</option>`).join('')}
@@ -1050,11 +1053,9 @@ ${settingsSection(t('v2SettingsData'), `
 }
 
 // First-run onboarding, also reachable from Settings → Data → "Re-run
-// setup". Kept deliberately small — home lab, preferred tier, language,
-// accent — everything else already has its own home in Settings.
+// setup". Kept deliberately small — home lab, preferred tier, language —
+// everything else already has its own home in Settings.
 function renderSetupModal(s) {
-    const accents = ['#ff7a2f', '#e2564a', '#d8b34a', '#5fa8d3', '#8fbf6a'];
-    const swatches = accents.map(c => `<button type="button" onclick="App.setAccent('${c}')" title="${c}" style="width:24px;height:24px;border-radius:50%;background:${c};border:2px solid ${s.accent === c ? '#eae7e1' : '#26262a'};cursor:pointer;padding:0"></button>`).join('');
     const labNames = Object.keys(getAllLabs());
     const tierLabels = [...new Set(Object.values(getAllLabs()).flatMap(l => normalizeLabServices(l).map((t, i) => ((Array.isArray(l.services) ? l.services : [l])[i] || {}).label || tierDescription(t))))];
     const languages = [
@@ -1092,10 +1093,6 @@ ${tierLabels.map(l => `<option value="${escapeHtml(l)}" ${s.defaultTier === l ? 
 <select onchange="App.setLanguage(this.value)" style="${FIELD_INPUT}">
 ${languages.map(([code, label]) => `<option value="${code}" ${currentLocale === code ? 'selected' : ''}>${escapeHtml(label)}</option>`).join('')}
 </select>
-</div>
-<div>
-<div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:6px">${t('v2SettingsAccent')}</div>
-<div style="display:flex;align-items:center;gap:8px">${swatches}</div>
 </div>
 </div>
 <button type="button" onclick="App.closeSetup()" style="margin-top:18px;width:100%;background:#1c1512;border:1px solid #5a3a1c;border-radius:5px;padding:9px 16px;color:var(--acc);font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2ButtonDone')}</button>
@@ -1205,7 +1202,6 @@ function render() {
     const root = document.getElementById('app');
     if (!root) return;
     const focus = captureFocus(root);
-    document.documentElement.style.setProperty('--acc', state.accent);
     if (isMobileViewport()) {
         root.innerHTML = renderMobile(state);
         restoreFocus(root, focus);
@@ -1438,7 +1434,6 @@ const App = {
         render();
     },
 
-    setAccent(hex) { state.accent = hex; localStorage.setItem('accent', hex); render(); },
     setHomeLab(name) { state.homeLab = name; setHomeLab(name); render(); },
     setDefaultTier(label) { state.defaultTier = label; setDefaultTierLabel(label); render(); },
     setLanguage(code) {
@@ -1456,7 +1451,7 @@ const App = {
     },
 
     exportBackup() {
-        const data = { films: getAllFilms(), labs: getAllLabs(), homeLab: getHomeLab(), defaultTierLabel: getDefaultTierLabel(), accent: state.accent };
+        const data = { films: getAllFilms(), labs: getAllLabs(), homeLab: getHomeLab(), defaultTierLabel: getDefaultTierLabel() };
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
@@ -1474,7 +1469,6 @@ const App = {
                 if (parsed.labs && typeof parsed.labs === 'object') writeJSON('labProfiles', { ...readJSON('labProfiles', {}), ...parsed.labs });
                 if (parsed.homeLab) setHomeLab(parsed.homeLab);
                 if (parsed.defaultTierLabel) setDefaultTierLabel(parsed.defaultTierLabel);
-                if (parsed.accent) { state.accent = parsed.accent; localStorage.setItem('accent', parsed.accent); }
                 state.homeLab = getHomeLab(); state.defaultTier = getDefaultTierLabel();
                 state.importNote = 'Backup imported.';
             } catch {
@@ -1603,10 +1597,11 @@ function mRow(label, controlHtml, first) {
 </div>`;
 }
 
-function mSectionHead(label, trailing) {
+function mSectionHead(label, trailing, color) {
+    color = color || 'var(--acc)';
     return `<div style="display:flex;align-items:center;gap:10px;margin:36px 0 14px">
-<div style="width:6px;height:6px;background:var(--acc);border-radius:50%"></div>
-<div style="${NARROW};font-size:16px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#eae7e1">${label}</div>
+<div style="width:6px;height:6px;background:${color};border-radius:50%"></div>
+<div style="${NARROW};font-size:16px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:${color}">${label}</div>
 <div style="flex:1;height:1px;background:#26262a"></div>
 ${trailing || ''}
 </div>`;
@@ -1756,6 +1751,7 @@ ${open ? `<div style="padding:0 14px 14px">
 </div>`;
     }).join('');
 
+    const isoValues = [...new Set(Object.values(getAllFilms()).filter(f => !f.hidden && (f.format || '35mm') === s.format && (f.process || 'C41') === s.process).map(f => parseFloat(f.boxSpeed) || 0))].sort((a, b) => a - b);
     const shownFilmRows = s.isoFilter === 'shoot' && !s.allowPushPull ? filmRows.filter(row => row.stopsAbs === 0) : filmRows;
     const cheapestFilmPerRoll = shownFilmRows.length ? Math.min(...shownFilmRows.map(row => row.perRoll)) : 0;
     const filmCards = shownFilmRows.map(row => {
@@ -1788,8 +1784,8 @@ ${bundles}
 
     return `<div style="padding:16px 12px 0">
 <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-<div style="width:6px;height:6px;background:var(--acc);border-radius:50%"></div>
-<div style="${NARROW};font-size:16px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#eae7e1">Film lookup</div>
+<div style="width:6px;height:6px;background:${SECTION_COLORS.lookup};border-radius:50%"></div>
+<div style="${NARROW};font-size:16px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:${SECTION_COLORS.lookup}">Film lookup</div>
 <div style="flex:1;height:1px;background:#26262a"></div>
 </div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
@@ -1819,7 +1815,7 @@ ${pushWarn ? `<div style="display:flex;align-items:center;gap:9px;margin-top:10p
 <button type="button" onclick="App.clearForm()" style="flex:1;height:44px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Clear</button>
 </div>
 
-${mSectionHead('Saved lab costs', `<span style="${MONO};font-size:12px;color:#7a7770">${r.ranked.length} of ${totalLabs}</span>`)}
+${mSectionHead('Saved lab costs', `<span style="${MONO};font-size:12px;color:#7a7770">${r.ranked.length} of ${totalLabs}</span>`, SECTION_COLORS.labs)}
 <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
 <span style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#7a7770;white-space:nowrap">Requires</span>
 ${chips}
@@ -1827,11 +1823,12 @@ ${chips}
 <div style="${MONO};margin:-2px 0 10px;font-size:12px;color:#7a7770">${filterNote}</div>
 <div style="display:flex;flex-direction:column;gap:8px">${labRows || `<div style="padding:14px;font-size:12px;color:#5f5c57;background:#131315;border:1px solid #26262a;border-radius:10px">No labs saved yet — add one.</div>`}</div>
 
-${mSectionHead('Saved film stock')}
+${mSectionHead('Saved film stock', null, SECTION_COLORS.films)}
 <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
 <select onchange="App.setField('isoFilter',this.value)" style="height:36px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 8px;color:#c9c5bd;font-size:13px;${MONO}">
 <option value="shoot" ${s.isoFilter === 'shoot' ? 'selected' : ''}>Shooting ${shootIso || '—'}</option>
 <option value="all" ${s.isoFilter === 'all' ? 'selected' : ''}>All</option>
+${isoValues.map(v => `<option value="${v}" ${s.isoFilter === String(v) ? 'selected' : ''}>${v}</option>`).join('')}
 </select>
 </div>
 <button type="button" onclick="App.togglePushPull()" style="display:flex;align-items:center;gap:10px;width:100%;height:44px;padding:0 12px;margin-bottom:10px;border-radius:8px;cursor:pointer;text-align:left;${s.allowPushPull ? 'background:#17140f;border:1px solid #5a3a1c;color:var(--acc)' : 'background:#141416;border:1px solid #2c2c30;color:#8b8781'}">
