@@ -178,8 +178,16 @@ const state = {
     upgradePct: localStorage.getItem('upgradeThresholdPercent') || '4',
     libProcess: 'all', libFormat: 'all',
     expBox: '400', expiryMonth: String(new Date().getMonth() + 1), expiryYear: '', filmType: 'c41', storage: 'controlled',
-    importNote: ''
+    importNote: '',
+    // Mobile-shell-only fields (harmless on desktop, which never reads them).
+    menuOpen: false, toast: '', allowPushPull: true
 };
+let toastTimer = null;
+function flash(msg) {
+    state.toast = msg;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { state.toast = ''; render(); }, 1800);
+}
 function persistFilters() {
     writeJSON('reqFilters', { hiRes: state.fHiRes, tiff: state.fTiff, rush: state.fRush, mail: state.fMail, week: state.fWeek });
 }
@@ -1185,11 +1193,24 @@ function restoreFocus(root, focus) {
     }
 }
 
+// Below this width, render() dispatches to the purpose-built mobile shell
+// (renderMobile()) instead of the desktop layout further down — a
+// different structure (sticky header + live cost summary, hamburger nav,
+// full-screen edit takeovers), not just narrower CSS on the same markup.
+// Both share the same `state` and the same App.* handlers/calc engine.
+const MOBILE_BREAKPOINT = '(max-width: 640px)';
+function isMobileViewport() { return window.matchMedia(MOBILE_BREAKPOINT).matches; }
+
 function render() {
     const root = document.getElementById('app');
     if (!root) return;
     const focus = captureFocus(root);
     document.documentElement.style.setProperty('--acc', state.accent);
+    if (isMobileViewport()) {
+        root.innerHTML = renderMobile(state);
+        restoreFocus(root, focus);
+        return;
+    }
     let body;
     if (state.draft !== null) {
         body = state.draftKind === 'film' ? renderEditFilmModal(state) : renderEditLabModal(state);
@@ -1230,8 +1251,18 @@ const App = {
         render();
     },
     matchBox() { state.devSpeed = state.boxSpeed; render(); },
-    fillBox() { if (!state.boxSpeed && state.devSpeed) state.boxSpeed = state.devSpeed; render(); },
+    // Re-rendering unconditionally here (even when there's nothing to
+    // fill) used to replace the whole DOM on every blur — including a
+    // blur fired mid-click by tapping some other button, which could
+    // swap that button's element out from under the click between
+    // mousedown and mouseup and eat the tap (menu button on mobile, in
+    // particular, since blurring Box speed to tap it is a common path).
+    fillBox() { if (!state.boxSpeed && state.devSpeed) { state.boxSpeed = state.devSpeed; render(); } },
     toggleExtras() { state.extrasOpen = !state.extrasOpen; render(); },
+    toggleMenu() { state.menuOpen = !state.menuOpen; render(); },
+    closeMenu() { state.menuOpen = false; render(); },
+    goView(name) { state.view = name; state.menuOpen = false; render(); },
+    togglePushPull() { state.allowPushPull = !state.allowPushPull; render(); },
     toggleFlag(key) {
         state[key] = !state[key];
         if (key.startsWith('f')) persistFilters();
@@ -1262,6 +1293,7 @@ const App = {
         state.exposures = String(bundle.exposures || 36);
         state.loadedFilmKey = filmKey(f.name, f.boxSpeed, f.format);
         persistScope();
+        flash('Loaded ' + f.name);
         render();
     },
     loadCheaperFilm() {
@@ -1371,6 +1403,7 @@ const App = {
             if (state.draftKey && state.homeLab === state.draftKey) state.homeLab = d.name.trim();
         }
         state.draft = null; state.draftKind = null; state.draftKey = null;
+        flash('Saved');
         render();
     },
     cancelDraft() { state.draft = null; state.draftKind = null; state.draftKey = null; render(); },
@@ -1551,6 +1584,480 @@ function restoreFromShareLink() {
     history.replaceState(null, '', location.pathname);
 }
 
+// ==================== Mobile shell ====================
+// A structurally different layout, not a CSS-narrowed version of the
+// desktop one — sticky header with a live cost summary, hamburger nav,
+// full-screen edit takeovers, a bottom toast. Built from the "FilmCalc
+// Mobile 1b" mockup. Shares `state`, the App.* handlers, and the real
+// calc engine (rankLabs/computeFilmRows/computeExpired/computeCheaperFilm)
+// with the desktop render path — only the markup differs.
+const M_LABEL = "font-family:'Archivo Narrow',Archivo,sans-serif;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#a9a59e";
+const M_INPUT = "box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px;color:#eae7e1;font-size:16px;" + MONO;
+const M_ROW = "display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 14px;border-top:1px solid #212125";
+const M_CARD = "border:1px solid #26262a;border-radius:10px;background:#131315;overflow:hidden";
+
+function mRow(label, controlHtml, first) {
+    return `<div style="${first ? M_ROW.replace(';border-top:1px solid #212125', '') : M_ROW}">
+<label class="narrow" style="${M_LABEL}">${label}</label>
+<div style="display:flex;align-items:center;gap:8px">${controlHtml}</div>
+</div>`;
+}
+
+function mSectionHead(label, trailing) {
+    return `<div style="display:flex;align-items:center;gap:10px;margin:20px 0 10px">
+<div style="width:5px;height:5px;background:var(--acc);border-radius:50%"></div>
+<div style="${NARROW};font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">${label}</div>
+<div style="flex:1;height:1px;background:#26262a"></div>
+${trailing || ''}
+</div>`;
+}
+
+function renderMobileHeader(s) {
+    const viewLabel = { library: 'Library', expired: 'Expired', settings: 'Settings' }[s.view] || '';
+    return `<div style="position:sticky;top:0;z-index:20;background:#0e0e10;border-bottom:1px solid #26262a">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px">
+<button type="button" onclick="App.goView('main')" style="display:flex;align-items:center;gap:9px;background:transparent;border:0;padding:0;cursor:pointer">
+<span style="width:26px;height:26px;border-radius:50%;background:linear-gradient(160deg,#2b2b2f,#131315);border:1px solid #3a3a3f;display:flex;align-items:center;justify-content:center"><span style="width:9px;height:9px;border-radius:50%;border:2px solid var(--acc)"></span></span>
+<span style="${NARROW};font-weight:700;font-size:15px;letter-spacing:.2em;color:#c9c5bd;text-transform:uppercase">Filmcalc</span>
+</button>
+<div style="display:flex;align-items:center;gap:8px">
+<span style="${MONO};font-size:12px;color:#7a7770">${escapeHtml(viewLabel)}</span>
+<button type="button" onclick="App.toggleMenu()" aria-label="Menu" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;padding:0;cursor:pointer">
+<svg style="width:20px;height:20px" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"></path></svg>
+</button>
+</div>
+</div>
+${renderMobileSummary(s)}
+</div>`;
+}
+
+function renderMobileSummary(s) {
+    if (s.view !== 'main') return '';
+    const r = rankLabs(s);
+    const cheapest = r.ranked[0] || null;
+    const home = r.ranked.find(l => l.name === s.homeLab) || cheapest;
+    if (!home) return '';
+    const homeLine = home.name === s.homeLab ? `${escapeHtml(home.name)} · home` : escapeHtml(home.name);
+    const filmPct = Math.max(6, Math.min(100, (home.filmPerRoll / home.roll) * 100));
+    const pushText = home.pick.pushFee > 0
+        ? `+ ${CUR()}${money(home.pick.pushFee)} ${r.stopsSigned < 0 ? 'pull' : 'push'}`
+        : (home.pick.mailFee > 0 ? `+ ${CUR()}${money(home.pick.mailFee)} mail` : '');
+    return `<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:9px 12px 11px;border-top:1px solid #1c1c20;background:#131315">
+<div>
+<div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#7a7770">${homeLine}</div>
+<div style="display:flex;align-items:baseline;gap:3px;margin-top:2px"><span style="${MONO};font-size:14px;color:#6d6a64">${CUR()}</span><span style="${MONO};font-size:26px;line-height:1;color:#eae7e1">${money(home.cpp)}</span><span style="font-size:12px;color:#7a7770">/frame</span></div>
+<div style="${MONO};display:flex;flex-direction:column;gap:2px;margin-top:6px;font-size:12px;color:#8b8781">
+<span>Roll <span style="color:#c9c5bd">${CUR()}${money(home.filmPerRoll)}</span></span>
+<span>Dev <span style="color:#c9c5bd">${CUR()}${money(home.pick.devCost)}</span> <span style="color:var(--acc)">${pushText}</span></span>
+</div>
+</div>
+<div style="text-align:right">
+<div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#7a7770">Cheapest</div>
+<div style="display:flex;align-items:baseline;gap:6px;justify-content:flex-end;margin-top:2px"><span style="${MONO};font-size:18px;color:var(--acc)">${CUR()}${money(cheapest.cpp)}</span></div>
+<div style="font-size:12px;color:#8b8781;margin-top:2px">${escapeHtml(cheapest.name)}</div>
+<div style="${MONO};margin-top:6px;font-size:12px;color:#7a7770">Roll total<br><span style="color:#c9c5bd;font-size:14px">${CUR()}${money(home.roll)}</span></div>
+</div>
+</div>
+<div style="height:3px;background:#0f0f11;display:flex"><div style="background:var(--acc);width:${filmPct}%"></div></div>`;
+}
+
+function renderMobileMenu(s) {
+    if (!s.menuOpen) return '';
+    const items = [
+        ['main', 'Film lookup'], ['library', 'Library'], ['expired', 'Expired calc'], ['settings', 'Settings']
+    ].map(([view, label]) => {
+        const on = s.view === view;
+        return `<button type="button" onclick="App.goView('${view}')" style="height:52px;display:flex;align-items:center;padding:0 14px;border-radius:8px;font-size:15px;letter-spacing:.08em;text-transform:uppercase;text-align:left;cursor:pointer;${on ? 'background:#1c1512;border:1px solid #5a3a1c;color:var(--acc)' : 'background:#1a1a1d;border:1px solid #2c2c30;color:#c9c5bd'}">${label}</button>`;
+    }).join('');
+    return `<div onclick="App.closeMenu()" style="position:fixed;inset:0;z-index:40;background:rgba(6,6,7,.66);display:flex;justify-content:flex-end">
+<div onclick="event.stopPropagation()" style="width:264px;height:100%;background:#131315;border-left:1px solid #2c2c30;padding:14px 12px;display:flex;flex-direction:column;gap:8px;box-sizing:border-box">
+<div style="${NARROW};font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#7a7770;padding:4px 8px 8px">Menu</div>
+${items}
+<a href="https://github.com/trentnbauer/FilmCalc/wiki" target="_blank" rel="noopener noreferrer" style="height:52px;display:flex;align-items:center;padding:0 14px;background:#1a1a1d;border:1px solid #2c2c30;border-radius:8px;color:#c9c5bd;font-size:15px;letter-spacing:.08em;text-transform:uppercase">Wiki ↗</a>
+</div>
+</div>`;
+}
+
+function renderMobileToast(s) {
+    if (!s.toast) return '';
+    return `<div style="position:fixed;left:12px;right:12px;bottom:16px;z-index:60;padding:14px;background:#1c1512;border:1px solid #5a3a1c;border-radius:10px;color:var(--acc);font-size:14px;text-align:center">${escapeHtml(s.toast)}</div>`;
+}
+
+function renderMobileFooter(s) {
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:20px;padding:0 14px">
+<span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#4a4844">FilmCalc</span>
+<span style="${MONO};font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#4a4844">${formatLabel(s.format)} · ${procLabel(s.process)}</span>
+</div>`;
+}
+
+function renderMobileLookup(s) {
+    const is120 = s.format === '120', is35 = s.format === '35mm';
+    const r = rankLabs(s);
+    const home = r.ranked.find(l => l.name === s.homeLab) || r.ranked[0];
+    const filmRows = computeFilmRows(s, home);
+    const rolls = Math.max(1, Math.round(num(s.rolls)) || 1);
+    const stopsAbs = r.stopsAbs;
+    const loaded = getAllFilms()[s.loadedFilmKey];
+    const limit = loaded ? parseFloat(loaded.maxPushPull ?? 1) : 2;
+    const pushWarn = stopsAbs > limit;
+
+    const expShown = is120 ? String(FRAME120[s.frame120] || '') : s.exposures;
+    const cameraControl = is35
+        ? `<select onchange="App.setField('frame35',this.value)" style="width:140px;${M_INPUT};height:44px;font-family:'IBM Plex Mono',monospace;font-size:15px">${Object.keys(FRAME35).map(k => `<option value="${k}" ${s.frame35 === k ? 'selected' : ''}>${FRAME35[k].label}</option>`).join('')}</select>`
+        : is120
+            ? `<select onchange="App.setField('frame120',this.value)" style="width:140px;${M_INPUT};height:44px;font-family:'IBM Plex Mono',monospace;font-size:15px">${Object.keys(FRAME120).map(k => `<option value="${k}" ${s.frame120 === k ? 'selected' : ''}>${k}</option>`).join('')}</select>`
+            : `<span style="width:26px"></span>`;
+
+    // Requires chips
+    const chips = requireFilters().map(f => {
+        const on = s[f.key];
+        return `<button type="button" onclick="App.toggleFlag('${f.key}')" style="flex:none;height:36px;border-radius:20px;padding:0 14px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;${on ? 'background:#1c1512;border:1px solid #5a3a1c;color:var(--acc)' : 'background:#141416;border:1px solid #2c2c30;color:#8b8781'}">${f.label}</button>`;
+    }).join('');
+    const totalLabs = Object.keys(getAllLabs()).filter(n => !getAllLabs()[n].hidden).length;
+    const filterNote = r.ranked.length < totalLabs
+        ? `${totalLabs - r.ranked.length} lab${totalLabs - r.ranked.length === 1 ? '' : 's'} hidden by these filters`
+        : `All saved labs qualify`;
+
+    const labRows = r.ranked.map((l, i) => {
+        const cheapest = r.ranked[0];
+        const isHome = l.name === s.homeLab;
+        const open = s.expandedLab === l.name;
+        const tag = i === 0 ? 'Cheapest' : `+${((l.cpp - cheapest.cpp) * 100).toFixed(0)}c`;
+        const cardBorder = i === 0 ? '#5a3a1c' : '#26262a', cardBg = i === 0 ? '#17140f' : '#131315';
+        const priceColor = i === 0 ? 'var(--acc)' : '#c9c5bd';
+        const tagColor = (i === 0 || isHome) ? 'var(--acc)' : '#7a7770';
+        const detail = `${escapeHtml(l.pick.label)} · ${CUR()}${money(l.pick.devCost)}` +
+            (l.pick.pushFee ? ` + ${CUR()}${money(l.pick.pushFee)} ${r.stopsSigned < 0 ? 'pull' : 'push'}` : '') +
+            (l.pick.mailFee ? ` + ${CUR()}${money(l.pick.mailFee)} mail` : '');
+        const tierRows = l.tiers.map(t => {
+            const picked = t === l.pick;
+            const color = picked ? 'var(--acc)' : (t.ok ? '#c9c5bd' : '#55534e');
+            return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px;border:1px solid #26262a;border-radius:8px;background:#0f0f11">
+<span><span style="display:block;font-size:14px;color:${color}">${escapeHtml(t.label)}</span><span style="${MONO};display:block;font-size:12px;color:#7a7770;margin-top:3px">${t.ok ? (picked ? 'used here' : 'qualifies') : escapeHtml(t.why)}</span></span>
+<span style="${MONO};font-size:15px;color:${color}">${CUR()}${money(t.cost)}</span>
+</div>`;
+        }).join('');
+        return `<div style="border-radius:10px;overflow:hidden;border:1px solid ${cardBorder};background:${cardBg}">
+<button type="button" onclick="App.toggleLab('${escapeHtml(l.name)}')" style="width:100%;background:transparent;border:0;padding:14px;text-align:left;cursor:pointer">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+<span style="font-size:16px;color:#eae7e1">${escapeHtml(l.name)}</span>
+<span style="${MONO};font-size:20px;color:${priceColor}">${CUR()}${money(l.cpp)}</span>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:6px">
+<span style="${MONO};font-size:12px;color:#8b8781">${detail}</span>
+<span style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:${tagColor}">${tag}</span>
+</div>
+</button>
+${open ? `<div style="padding:0 14px 14px">
+<div style="${MONO};font-size:12px;color:#7a7770;margin-bottom:8px">${escapeHtml(l.lab.address || 'address not saved')}</div>
+<div style="display:flex;flex-direction:column;gap:6px">${tierRows}</div>
+<button type="button" onclick="App.editLab('${escapeHtml(l.name)}')" style="margin-top:10px;width:100%;height:44px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Edit lab</button>
+</div>` : ''}
+</div>`;
+    }).join('');
+
+    const shownFilmRows = s.isoFilter === 'shoot' && !s.allowPushPull ? filmRows.filter(row => row.stopsAbs === 0) : filmRows;
+    const cheapestFilmPerRoll = shownFilmRows.length ? Math.min(...shownFilmRows.map(row => row.perRoll)) : 0;
+    const filmCards = shownFilmRows.map(row => {
+        const f = row.f;
+        const key = filmKey(f.name, f.boxSpeed, f.format);
+        const open = s.expandedFilm === key;
+        const cheap = row.perRoll <= cheapestFilmPerRoll + 0.001;
+        const meta = `${f.boxSpeed} · ${procLabel(f.process)} · ${row.exposures}exp${row.stopsAbs ? ` · ${row.stopsAbs} stop ${row.dir}` : ''}`;
+        const bundles = row.bundles.slice().sort((a, b) => a.filmCost / a.rolls - b.filmCost / b.rolls).map(b => `
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;background:#0f0f11;border:1px solid #26262a;border-radius:8px">
+<button type="button" onclick="App.loadFilmBundle('${escapeHtml(key)}','${escapeHtml(b.storeName)}',${b.rolls},${b.exposures})" style="flex:1;min-width:0;background:transparent;border:0;padding:0;text-align:left;cursor:pointer"><span style="display:block;font-size:14px;color:#c9c5bd">${escapeHtml(b.storeName || 'Unnamed store')}</span><span style="${MONO};display:block;font-size:12px;color:#7a7770;margin-top:3px">${b.rolls}×${b.exposures} · ${CUR()}${money(b.filmCost)} · ${CUR()}${money(b.filmCost / b.rolls)}/roll</span></button>
+<a href="${sanitizeUrl(b.buyLink)}" target="_blank" rel="noopener noreferrer" style="height:40px;display:flex;align-items:center;padding:0 14px;background:#1c1512;border:1px solid #5a3a1c;border-radius:8px;color:var(--acc);font-size:12px;letter-spacing:.14em;text-transform:uppercase">Buy ↗</a>
+</div>`).join('');
+        return `<div style="border-radius:10px;overflow:hidden;border:1px solid ${cheap ? '#5a3a1c' : '#26262a'};background:${cheap ? '#17140f' : '#131315'}">
+<button type="button" onclick="App.toggleFilm('${escapeHtml(key)}')" style="width:100%;background:transparent;border:0;padding:14px;text-align:left;cursor:pointer">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+<span><span style="display:block;font-size:16px;color:#eae7e1">${escapeHtml(f.name)}</span><span style="${MONO};display:block;font-size:12px;color:#7a7770;margin-top:4px">${meta}</span></span>
+<span style="${MONO};font-size:20px;color:${cheap ? 'var(--acc)' : '#c9c5bd'}">${CUR()}${money(row.perRoll)}</span>
+</div>
+</button>
+${open ? `<div style="padding:0 14px 14px;display:flex;flex-direction:column;gap:6px">
+<div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#7a7770">Where to buy</div>
+${bundles}
+<button type="button" onclick="App.editFilm('${escapeHtml(key)}')" style="height:44px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Edit film</button>
+</div>` : ''}
+</div>`;
+    }).join('');
+
+    const shootIso = num(s.devSpeed) || num(s.boxSpeed);
+
+    return `<div style="padding:16px 12px 0">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+<div style="width:5px;height:5px;background:var(--acc);border-radius:50%"></div>
+<div style="${NARROW};font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">Film lookup</div>
+<div style="flex:1;height:1px;background:#26262a"></div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+<select onchange="App.setField('format',this.value)" style="height:44px;${M_INPUT}">${FORMAT_OPTIONS.map(o => `<option value="${o.value}" ${s.format === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>
+<select onchange="App.setField('process',this.value)" style="height:44px;${M_INPUT}">${PROCESS_OPTIONS.map(o => `<option value="${o.value}" ${s.process === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>
+</div>
+<div style="${M_CARD}">
+${mRow('Box speed', `<input value="${escapeHtml(s.boxSpeed)}" oninput="App.setField('boxSpeed',this.value)" onblur="App.fillBox()" data-fkey="m-boxSpeed" inputmode="numeric" placeholder="400" style="width:96px;height:44px;text-align:right;${M_INPUT}"><span style="width:26px;font-size:12px;text-transform:uppercase;color:#7a7770">ISO</span>`, true)}
+${mRow('Exposures', `<input value="${escapeHtml(expShown)}" oninput="App.setField('exposures',this.value)" ${is120 ? 'disabled' : ''} data-fkey="m-exposures" inputmode="numeric" placeholder="36" style="width:96px;height:44px;text-align:right;${M_INPUT};${is120 ? 'color:#6d6a64' : ''}"><span style="width:26px"></span>`)}
+${mRow('Camera', cameraControl)}
+${mRow('Pack price', `<div style="display:flex;align-items:center;width:96px;height:44px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px"><span style="${MONO};font-size:15px;color:#6d6a64">${CUR()}</span><input value="${escapeHtml(s.packCost)}" oninput="App.setField('packCost',this.value)" data-fkey="m-packCost" inputmode="decimal" placeholder="50.00" style="width:100%;min-width:0;text-align:right;background:transparent;border:0;color:#eae7e1;font-size:16px;${MONO}"></div><span style="width:26px"></span>`)}
+${mRow('Pack of', `<input value="${escapeHtml(s.rolls)}" oninput="App.setField('rolls',this.value)" data-fkey="m-rolls" inputmode="numeric" placeholder="1" style="width:96px;height:44px;text-align:right;${M_INPUT}"><span style="width:26px;font-size:12px;text-transform:uppercase;color:#7a7770">Rl</span>`)}
+${mRow('Postage', `<div style="display:flex;align-items:center;width:96px;height:44px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px"><span style="${MONO};font-size:15px;color:#6d6a64">${CUR()}</span><input value="${escapeHtml(s.postage)}" oninput="App.setField('postage',this.value)" data-fkey="m-postage" inputmode="decimal" placeholder="3.95" style="width:100%;min-width:0;text-align:right;background:transparent;border:0;color:#eae7e1;font-size:16px;${MONO}"></div><span style="width:26px"></span>`)}
+<button type="button" onclick="App.toggleExtras()" style="width:100%;height:48px;display:flex;align-items:center;justify-content:space-between;background:#0f0f11;border:0;border-top:1px solid #212125;padding:0 14px;color:#8b8781;font-size:12px;letter-spacing:.16em;text-transform:uppercase;cursor:pointer"><span>Extra fees · shooting ISO, mail-back</span><span style="${MONO};font-size:16px">${s.extrasOpen ? '–' : '+'}</span></button>
+${s.extrasOpen ? `<div style="background:#0f0f11;border-top:1px solid #212125">
+${mRow('Shooting at', `<input value="${escapeHtml(s.devSpeed)}" oninput="App.setField('devSpeed',this.value)" onblur="App.fillBox()" data-fkey="m-devSpeed" inputmode="numeric" placeholder="same as box" style="width:96px;height:44px;text-align:right;${M_INPUT}"><button type="button" onclick="App.matchBox()" style="width:26px;height:44px;background:transparent;border:0;color:#7a7770;font-size:11px;text-transform:uppercase;cursor:pointer">=</button>`, true)}
+${mRow('Mail-back', `<button type="button" onclick="App.toggleFlag('fMail')" style="width:56px;height:32px;border-radius:16px;border:1px solid #33333a;position:relative;cursor:pointer;padding:0;background:${s.fMail ? 'var(--acc)' : '#1a1a1d'}"><span style="position:absolute;top:3px;width:24px;height:24px;border-radius:50%;background:#eae7e1;transition:left .15s;left:${s.fMail ? '29px' : '3px'}"></span></button><span style="width:26px"></span>`)}
+</div>` : ''}
+</div>
+<div style="${MONO};margin-top:8px;font-size:12px;color:#7a7770;line-height:1.5">${CUR()}${money(num(s.packCost) / rolls)} per roll · ${rolls} roll${rolls === 1 ? '' : 's'} · ${CUR()}${money(num(s.postage) / rolls)} postage · ${r.exp} shots</div>
+${pushWarn ? `<div style="display:flex;align-items:center;gap:9px;margin-top:10px;padding:12px 14px;border:1px solid #5a3a1c;border-radius:10px;background:#17140f">
+<span style="width:7px;height:7px;border-radius:50%;background:var(--acc);flex-shrink:0"></span>
+<span style="font-size:13px;line-height:1.45;color:#ffa268">${stopsAbs} stops of ${r.stopsSigned > 0 ? 'push' : 'pull'} — ${loaded ? `${escapeHtml(loaded.name)} is rated for ${limit === 0 ? 'no push/pull' : '±' + limit}` : 'most stocks hold ±2'}, so expect heavy grain and contrast shift.</span>
+</div>` : ''}
+<div style="display:flex;align-items:center;gap:10px;margin-top:14px">
+<button type="button" onclick="App.saveToLibrary()" style="flex:1;height:44px;background:#1c1512;border:1px solid #5a3a1c;border-radius:8px;color:var(--acc);font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Save to library</button>
+<button type="button" onclick="App.clearForm()" style="flex:1;height:44px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Clear</button>
+</div>
+
+${mSectionHead('Saved lab costs', `<span style="${MONO};font-size:12px;color:#7a7770">${r.ranked.length} of ${totalLabs}</span>`)}
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+<span style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#7a7770;white-space:nowrap">Requires</span>
+${chips}
+</div>
+<div style="${MONO};margin:-2px 0 10px;font-size:12px;color:#7a7770">${filterNote}</div>
+<div style="display:flex;flex-direction:column;gap:8px">${labRows || `<div style="padding:14px;font-size:12px;color:#5f5c57;background:#131315;border:1px solid #26262a;border-radius:10px">No labs saved yet — add one.</div>`}</div>
+
+${mSectionHead('Saved film stock')}
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+<select onchange="App.setField('isoFilter',this.value)" style="height:36px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 8px;color:#c9c5bd;font-size:13px;${MONO}">
+<option value="shoot" ${s.isoFilter === 'shoot' ? 'selected' : ''}>Shooting ${shootIso || '—'}</option>
+<option value="all" ${s.isoFilter === 'all' ? 'selected' : ''}>All</option>
+</select>
+</div>
+<button type="button" onclick="App.togglePushPull()" style="display:flex;align-items:center;gap:10px;width:100%;height:44px;padding:0 12px;margin-bottom:10px;border-radius:8px;cursor:pointer;text-align:left;${s.allowPushPull ? 'background:#17140f;border:1px solid #5a3a1c;color:var(--acc)' : 'background:#141416;border:1px solid #2c2c30;color:#8b8781'}">
+<span style="display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:4px;font-size:13px;${s.allowPushPull ? 'background:var(--acc);border:1px solid var(--acc);color:#131315' : 'background:#1a1a1d;border:1px solid #33333a;color:transparent'}">✓</span>
+<span style="font-size:13px;letter-spacing:.08em;text-transform:uppercase">Include push/pull stocks</span>
+</button>
+<div style="display:flex;flex-direction:column;gap:8px">${filmCards || `<div style="padding:14px;font-size:12px;color:#5f5c57;background:#131315;border:1px solid #26262a;border-radius:10px">No film stock saved for ${formatLabel(s.format)} · ${procLabel(s.process)} yet.</div>`}</div>
+<div style="${MONO};margin-top:10px;font-size:12px;line-height:1.5;color:#5f5c57">Per-roll price is the cheapest saved price for each stock, plus the push/pull stops needed to reach your shooting ISO.</div>
+</div>`;
+}
+
+function mLibCard(kind, key, name, meta, price, hidden) {
+    return `<div style="border:1px solid #26262a;border-radius:10px;background:#131315;padding:14px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+<span><span style="display:block;font-size:16px;color:${hidden ? '#6d6a64' : '#eae7e1'}">${escapeHtml(name)}</span><span style="${MONO};display:block;font-size:12px;color:#7a7770;margin-top:4px">${meta}</span></span>
+<span style="${MONO};font-size:17px;color:#c9c5bd">${price}</span>
+</div>
+<div style="display:flex;gap:8px;margin-top:12px">
+<button type="button" onclick="App.toggleHidden('${kind}','${escapeHtml(key)}')" style="flex:1;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#8b8781;font-size:12px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${hidden ? t('v2ButtonShow') : t('v2ButtonHide')}</button>
+<button type="button" onclick="App.${kind === 'film' ? 'editFilm' : 'editLab'}('${escapeHtml(key)}')" style="flex:1;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#8b8781;font-size:12px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">Edit</button>
+<button type="button" onclick="App.removeItem('${kind}','${escapeHtml(key)}')" style="width:52px;height:44px;display:flex;align-items:center;justify-content:center;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#8b8781;cursor:pointer;padding:0"><svg style="width:16px;height:16px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 7h14M10 7V5h4v2M6 7l1 13h10l1-13M10 11v6M14 11v6"></path></svg></button>
+</div>
+</div>`;
+}
+
+function renderMobileLibrary(s) {
+    const allFilms = getAllFilms(), allLabs = getAllLabs();
+    const filmCards = Object.entries(allFilms).map(([key, f]) => {
+        const bundles = normalizeFilmBundles(f);
+        const cheapest = bundles.slice().sort((a, b) => a.filmCost / a.rolls - b.filmCost / b.rolls)[0];
+        const meta = `${f.boxSpeed} · ${procLabel(f.process)} · ${bundles.length} price${bundles.length === 1 ? '' : 's'}`;
+        return mLibCard('film', key, f.name, meta, `${CUR()}${money(cheapest.filmCost / cheapest.rolls)}`, f.hidden);
+    }).join('');
+    const labCards = Object.entries(allLabs).map(([name, l]) => {
+        const tiers = normalizeLabServices(l);
+        const cheapest = tiers.slice().sort((a, b) => a.devCost - b.devCost)[0];
+        const meta = `${tiers.length} tier${tiers.length === 1 ? '' : 's'}`;
+        return mLibCard('lab', name, name, meta, `${CUR()}${money(cheapest.devCost)}`, l.hidden);
+    }).join('');
+    return `<div style="padding:16px 12px 0;display:flex;flex-direction:column;gap:20px">
+<div>
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+<div style="width:5px;height:5px;background:var(--acc);border-radius:50%"></div>
+<div style="${NARROW};font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">Films</div>
+<div style="flex:1;height:1px;background:#26262a"></div>
+<button type="button" onclick="App.newFilm()" style="height:36px;background:#141416;border:1px solid #2c2c30;border-radius:8px;padding:0 12px;color:#8b8781;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">New</button>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">${filmCards || `<div style="padding:14px;font-size:12px;color:#5f5c57;background:#131315;border:1px solid #26262a;border-radius:10px">Nothing saved yet.</div>`}</div>
+</div>
+<div>
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+<div style="width:5px;height:5px;background:var(--acc);border-radius:50%"></div>
+<div style="${NARROW};font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">Labs</div>
+<div style="flex:1;height:1px;background:#26262a"></div>
+<button type="button" onclick="App.newLab()" style="height:36px;background:#141416;border:1px solid #2c2c30;border-radius:8px;padding:0 12px;color:#8b8781;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">New</button>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">${labCards || `<div style="padding:14px;font-size:12px;color:#5f5c57;background:#131315;border:1px solid #26262a;border-radius:10px">Nothing saved yet.</div>`}</div>
+</div>
+</div>`;
+}
+
+function renderMobileExpired(s) {
+    const c = computeExpired(s);
+    const storageOptions = [
+        ['cold', 'Cold stored', 'Fridge or freezer since new; ages slowest.'],
+        ['controlled', 'Climate controlled', 'Indoors at steady room temperature, out of sunlight; the normal rate.'],
+        ['uncontrolled', 'Uncontrolled', 'Shed, garage, roof space or a hot car; ages fastest.']
+    ].map(([key, label, help]) => {
+        const on = s.storage === key;
+        return `<button type="button" onclick="App.setField('storage','${key}')" style="display:block;width:100%;text-align:left;border-radius:8px;padding:12px;cursor:pointer;${on ? 'background:#17140f;border:1px solid #5a3a1c' : 'background:#1a1a1d;border:1px solid #33333a'}">
+<span style="display:block;font-size:15px;color:${on ? 'var(--acc)' : '#c9c5bd'}">${label}</span>
+<span style="display:block;font-size:12px;line-height:1.45;color:#7a7770;margin-top:4px">${help}</span>
+</button>`;
+    }).join('');
+    return `<div style="padding:16px 12px 0">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+<div style="width:5px;height:5px;background:var(--acc);border-radius:50%"></div>
+<div style="${NARROW};font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">Expired film</div>
+<div style="flex:1;height:1px;background:#26262a"></div>
+</div>
+<p style="margin:0 0 12px;font-size:14px;line-height:1.5;color:#8b8781">Old film loses speed as it ages. Enter the roll's box speed and expiry, and this gives you what to rate it at.</p>
+<div style="${M_CARD}">
+${mRow('Box speed', `<input value="${escapeHtml(s.expBox)}" oninput="App.setField('expBox',this.value)" data-fkey="m-expBox" inputmode="numeric" style="width:120px;height:44px;text-align:right;${M_INPUT}">`, true)}
+${mRow('Expiry', `<select onchange="App.setField('expiryMonth',this.value)" style="width:88px;height:44px;${M_INPUT};font-size:15px">${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => `<option value="${i + 1}" ${String(s.expiryMonth) === String(i + 1) ? 'selected' : ''}>${m}</option>`).join('')}</select><input value="${escapeHtml(s.expiryYear)}" oninput="App.setField('expiryYear',this.value)" data-fkey="m-expiryYear" inputmode="numeric" placeholder="2006" style="width:96px;height:44px;text-align:right;${M_INPUT}">`)}
+${mRow('Film type', `<select onchange="App.setField('filmType',this.value)" style="width:180px;height:44px;${M_INPUT};font-size:15px"><option value="c41" ${s.filmType === 'c41' ? 'selected' : ''}>C-41 colour</option><option value="bw" ${s.filmType === 'bw' ? 'selected' : ''}>B&amp;W</option><option value="e6" ${s.filmType === 'e6' ? 'selected' : ''}>E-6 slide</option></select>`)}
+<div style="padding:11px 14px;border-top:1px solid #212125">
+<label style="${M_LABEL};display:block;margin-bottom:8px">Storage</label>
+<div style="display:flex;flex-direction:column;gap:6px">${storageOptions}</div>
+</div>
+<div style="display:flex;align-items:baseline;gap:12px;padding:14px;border-top:1px solid #212125;background:#0f0f11;flex-wrap:wrap">
+<div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#7a7770">Rate it at</div>
+<div style="${MONO};font-size:30px;color:var(--acc)">${c.rated}</div>
+<div style="font-size:13px;color:#a9a59e">${c.note}</div>
+</div>
+</div>
+<div style="${MONO};margin-top:10px;font-size:12px;color:#7a7770">${c.ageNote}</div>
+</div>`;
+}
+
+function mField(label, inputHtml) {
+    return `<div><div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:6px">${label}</div>${inputHtml}</div>`;
+}
+const M_FIELD_INPUT = "width:100%;box-sizing:border-box;height:48px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 12px;color:#eae7e1;font-size:16px";
+
+function renderMobileEditFilm(s) {
+    const d = s.draft;
+    const bundles = d.bundles.map((b, i) => `
+<div style="border:1px solid #26262a;border-radius:10px;background:#131315;padding:14px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;gap:10px">
+<input value="${escapeHtml(b.storeName)}" oninput="App.setBundleField(${i},'storeName',this.value)" data-fkey="m-bundle-${i}-storeName" placeholder="Store" style="flex:1;${M_FIELD_INPUT}">
+<button type="button" onclick="App.removeBundle(${i})" style="width:44px;height:48px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#8b8781;font-size:16px;cursor:pointer;padding:0">×</button>
+</div>
+<div style="display:flex;gap:10px">
+<input value="${b.rolls}" oninput="App.setBundleField(${i},'rolls',this.value)" data-fkey="m-bundle-${i}-rolls" inputmode="numeric" placeholder="Rolls" style="flex:1;min-width:0;${M_FIELD_INPUT};${MONO}">
+<input value="${b.exposures}" oninput="App.setBundleField(${i},'exposures',this.value)" data-fkey="m-bundle-${i}-exposures" inputmode="numeric" placeholder="Exp" style="flex:1;min-width:0;${M_FIELD_INPUT};${MONO}">
+<input value="${b.filmCost}" oninput="App.setBundleField(${i},'filmCost',this.value)" data-fkey="m-bundle-${i}-filmCost" inputmode="decimal" placeholder="Price" style="flex:1;min-width:0;${M_FIELD_INPUT};${MONO}">
+</div>
+<input value="${escapeHtml(b.buyLink)}" oninput="App.setBundleField(${i},'buyLink',this.value)" data-fkey="m-bundle-${i}-buyLink" inputmode="url" placeholder="https://… buy link" style="${M_FIELD_INPUT}">
+</div>`).join('');
+    return `<div style="position:fixed;inset:0;z-index:50;background:#0b0b0c;display:flex;flex-direction:column">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border-bottom:1px solid #26262a;background:#0e0e10">
+<span style="${NARROW};font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">Edit film stock</span>
+<button type="button" onclick="App.cancelDraft()" style="width:44px;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#8b8781;font-size:18px;cursor:pointer;padding:0">×</button>
+</div>
+<div style="flex:1;overflow:auto;padding:14px 12px;display:flex;flex-direction:column;gap:10px">
+${mField('Name', `<input value="${escapeHtml(d.name)}" oninput="App.setDraftField('name',this.value)" data-fkey="m-draft-name" style="${M_FIELD_INPUT}">`)}
+<div style="display:flex;gap:10px">
+<div style="flex:1">${mField('Box speed', `<input value="${d.boxSpeed}" oninput="App.setDraftField('boxSpeed',this.value)" data-fkey="m-draft-boxSpeed" inputmode="numeric" style="${M_FIELD_INPUT};${MONO}">`)}</div>
+<div style="flex:1">${mField('Max push/pull', `<input value="${d.maxPushPull}" oninput="App.setDraftField('maxPushPull',this.value)" data-fkey="m-draft-maxPushPull" inputmode="numeric" style="${M_FIELD_INPUT};${MONO}">`)}</div>
+</div>
+<div style="display:flex;gap:10px">
+<div style="flex:1">${mField('Format', `<select onchange="App.setDraftField('format',this.value)" style="${M_FIELD_INPUT}">${FORMAT_OPTIONS.map(o => `<option value="${o.value}" ${d.format === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>`)}</div>
+<div style="flex:1">${mField('Process', `<select onchange="App.setDraftField('process',this.value)" style="${M_FIELD_INPUT}">${PROCESS_OPTIONS.map(o => `<option value="${o.value}" ${d.process === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>`)}</div>
+</div>
+<div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-top:6px">Where to buy</div>
+<button type="button" onclick="App.addBundle()" style="height:48px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">+ Add price</button>
+${bundles}
+</div>
+<div style="display:flex;gap:10px;padding:12px;border-top:1px solid #26262a;background:#0e0e10">
+<button type="button" onclick="App.saveDraft()" style="flex:1;height:50px;background:#1c1512;border:1px solid #5a3a1c;border-radius:8px;color:var(--acc);font-size:13px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Save film</button>
+<button type="button" onclick="App.cancelDraft()" style="width:110px;height:50px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;font-size:13px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Cancel</button>
+</div>
+</div>`;
+}
+
+function renderMobileEditLab(s) {
+    const d = s.draft;
+    const tiers = d.services.map((t, i) => `
+<div style="border:1px solid #26262a;border-radius:10px;background:#131315;padding:14px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px">
+<span style="font-size:15px;color:#c9c5bd">${escapeHtml(tierDescription(t))}</span>
+<button type="button" onclick="App.removeTier(${i})" style="width:40px;height:40px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#8b8781;font-size:16px;cursor:pointer;padding:0">×</button>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0">
+<label style="font-size:14px;color:#a9a59e">Cost / roll</label>
+<div style="display:flex;align-items:center;width:120px;height:44px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px"><span style="${MONO};font-size:15px;color:#6d6a64">${CUR()}</span><input value="${t.devCost}" oninput="App.setTierField(${i},'devCost',this.value)" data-fkey="m-tier-${i}-devCost" inputmode="decimal" style="width:100%;min-width:0;text-align:right;background:transparent;border:0;color:#eae7e1;font-size:16px;${MONO}"></div>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid #212125">
+<label style="font-size:14px;color:#a9a59e">Mail-back</label>
+<div style="display:flex;align-items:center;width:120px;height:44px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px"><span style="${MONO};font-size:15px;color:#6d6a64">${CUR()}</span><input value="${t.mailBackCost ?? ''}" oninput="App.setTierField(${i},'mailBackCost',this.value)" data-fkey="m-tier-${i}-mailBackCost" inputmode="decimal" placeholder="n/a" style="width:100%;min-width:0;text-align:right;background:transparent;border:0;color:#eae7e1;font-size:16px;${MONO}"></div>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid #212125">
+<label style="font-size:14px;color:#a9a59e">Push/pull fee</label>
+<div style="display:flex;align-items:center;width:120px;height:44px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px"><span style="${MONO};font-size:15px;color:#6d6a64">${CUR()}</span><input value="${t.pushPullCost}" oninput="App.setTierField(${i},'pushPullCost',this.value)" data-fkey="m-tier-${i}-pushPullCost" inputmode="decimal" style="width:100%;min-width:0;text-align:right;background:transparent;border:0;color:#eae7e1;font-size:16px;${MONO}"></div>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid #212125">
+<label style="font-size:14px;color:#a9a59e">Charged</label>
+<select onchange="App.setTierField(${i},'pushPullType',this.value)" style="width:150px;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px;color:#eae7e1;font-size:15px"><option value="per_stop" ${t.pushPullType === 'per_stop' ? 'selected' : ''}>Per stop</option><option value="flat" ${t.pushPullType === 'flat' ? 'selected' : ''}>Flat fee</option></select>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid #212125">
+<label style="font-size:14px;color:#a9a59e">Turnaround</label>
+<select onchange="App.setTierField(${i},'turnaroundTime',this.value)" style="width:150px;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px;color:#eae7e1;font-size:15px">${TURNAROUND_OPTIONS.map(o => `<option value="${o.value}" ${t.turnaroundTime === o.value ? 'selected' : ''}>${o.label}</option>`).join('')}</select>
+</div>
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-top:12px;border-top:1px solid #212125">
+${pill('Hi-res', t.highResScan, `App.toggleTierFlag(${i},'highResScan')`)}
+${pill('TIFF', t.tiffScan, `App.toggleTierFlag(${i},'tiffScan')`)}
+${pill('No push/pull', t.noPushPull, `App.toggleTierFlag(${i},'noPushPull')`)}
+</div>
+<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-top:10px">
+${PROCESS_OPTIONS.map(o => pill(o.label, t.processes.includes(o.value), `App.toggleTierProcess(${i},'${o.value}')`)).join('')}
+</div>
+</div>`).join('');
+    return `<div style="position:fixed;inset:0;z-index:50;background:#0b0b0c;display:flex;flex-direction:column">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border-bottom:1px solid #26262a;background:#0e0e10">
+<span style="${NARROW};font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">Edit lab</span>
+<button type="button" onclick="App.cancelDraft()" style="width:44px;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#8b8781;font-size:18px;cursor:pointer;padding:0">×</button>
+</div>
+<div style="flex:1;overflow:auto;padding:14px 12px;display:flex;flex-direction:column;gap:10px">
+${mField('Name', `<input value="${escapeHtml(d.name)}" oninput="App.setDraftField('name',this.value)" data-fkey="m-draft-name" style="${M_FIELD_INPUT}">`)}
+${mField('Address', `<input value="${escapeHtml(d.address || '')}" oninput="App.setDraftField('address',this.value)" data-fkey="m-draft-address" placeholder="Street, suburb, state" style="${M_FIELD_INPUT}">`)}
+${mField('Website', `<input value="${escapeHtml(d.website || '')}" oninput="App.setDraftField('website',this.value)" data-fkey="m-draft-website" placeholder="https://…" style="${M_FIELD_INPUT}">`)}
+${mField('Phone', `<input value="${escapeHtml(d.phone || '')}" oninput="App.setDraftField('phone',this.value)" data-fkey="m-draft-phone" style="${M_FIELD_INPUT}">`)}
+${mField('Email', `<input value="${escapeHtml(d.email || '')}" oninput="App.setDraftField('email',this.value)" data-fkey="m-draft-email" style="${M_FIELD_INPUT}">`)}
+<div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-top:6px">Service tiers</div>
+<button type="button" onclick="App.addTier()" style="height:48px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">+ Add tier</button>
+${tiers}
+</div>
+<div style="display:flex;gap:10px;padding:12px;border-top:1px solid #26262a;background:#0e0e10">
+<button type="button" onclick="App.saveDraft()" style="flex:1;height:50px;background:#1c1512;border:1px solid #5a3a1c;border-radius:8px;color:var(--acc);font-size:13px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Save lab</button>
+<button type="button" onclick="App.cancelDraft()" style="width:110px;height:50px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;font-size:13px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Cancel</button>
+</div>
+</div>`;
+}
+
+// Top-level mobile composer — mirrors desktop render()'s dispatch (draft
+// modal > view), but as a self-contained page (own header/menu/toast/
+// footer) rather than desktop's card-in-a-frame.
+function renderMobile(s) {
+    let body;
+    if (s.draft !== null) {
+        return (s.draftKind === 'film' ? renderMobileEditFilm(s) : renderMobileEditLab(s)) + renderMobileToast(s);
+    }
+    if (s.view === 'library') body = renderMobileLibrary(s);
+    else if (s.view === 'expired') body = renderMobileExpired(s);
+    else if (s.view === 'settings') body = renderSettingsView(s);
+    else body = renderMobileLookup(s);
+    return `<div style="min-height:100vh;background:radial-gradient(120% 80% at 50% -10%,#17171a 0%,#0b0b0c 60%);padding-bottom:48px">
+${renderMobileHeader(s)}
+${body}
+${renderMobileFooter(s)}
+</div>
+${renderMobileMenu(s)}
+${s.setupOpen ? renderSetupModal(s) : ''}
+${renderMobileToast(s)}`;
+}
+
 async function initApp() {
     migrateFilmProfileKeys();
     migrateLegacyDefaultLabPref();
@@ -1567,6 +2074,11 @@ async function initApp() {
     }
     render();
     loadDefaults();
+    // Re-render on crossing the mobile/desktop breakpoint (rotate, resize,
+    // devtools panel) — matchMedia's own listener rather than a raw
+    // window `resize` handler, since it only fires on the boundary that
+    // actually matters instead of every pixel of drag.
+    window.matchMedia(MOBILE_BREAKPOINT).addEventListener('change', render);
 }
 
 document.addEventListener('DOMContentLoaded', initApp);
