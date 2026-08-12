@@ -393,32 +393,32 @@ function renderCalculator(s) {
     const rolls = Math.max(1, Math.round(num(s.rolls)) || 1);
     return `
 <div style="border:1px solid #26262a;border-radius:8px;background:#131315;overflow:hidden">
-<div class="calc-outer" style="display:grid;grid-template-columns:246px minmax(0,1fr);gap:1px;background:#212125">
+<div class="calc-outer" style="display:flex;flex-direction:column;gap:1px;background:#212125">
 
-<div class="calc-field" style="display:grid;grid-template-columns:88px 1fr;align-items:center;gap:10px;padding:9px 12px;background:#131315">
-<div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781">Box speed</div>
+<div class="calc-field" style="padding:11px 12px;background:#131315;min-width:0">
+<div style="display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap">
+<div>
+<div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:7px">Box speed</div>
 <div style="display:flex;align-items:center;gap:7px">
 <input value="${escapeHtml(s.boxSpeed)}" oninput="App.setField('boxSpeed',this.value)" onblur="App.fillBox()" data-fkey="boxSpeed" inputmode="numeric" placeholder="400" style="width:78px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:#eae7e1;font-size:14px;${MONO}">
 <span style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#5f5c57">ISO</span>
 </div>
 </div>
-
-<div class="calc-field" style="display:grid;grid-template-columns:82px minmax(0,1fr);align-items:center;gap:10px;padding:9px 12px;background:#131315;min-width:0">
-<div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781">EXP Count</div>
-<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0">
+<div>
+<div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:7px">EXP count</div>
 <input value="${escapeHtml(expShown)}" oninput="App.setField('exposures',this.value)" ${is120 ? 'disabled' : ''} data-fkey="exposures" inputmode="numeric" placeholder="36" style="width:56px;max-width:100%;box-sizing:border-box;background:${is120 ? '#141416' : '#1a1a1d'};border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:${is120 ? '#8b8781' : '#eae7e1'};font-size:14px;${MONO}">
-<span style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#5f5c57;white-space:nowrap">Camera Type</span>
+</div>
+<div>
+<div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:7px">Camera type</div>
 ${is35 ? `<select onchange="App.setField('frame35',this.value)" title="Frame size your camera shoots — half frame doubles the shots per roll, XPan cuts them" style="height:31px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:0 7px;color:#c9c5bd;font-size:12px;${MONO}">${frame35Options}</select>` : ''}
 ${is120 ? `<select onchange="App.setField('frame120',this.value)" title="Frame size your camera back shoots — sets exposures per roll" style="height:31px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:0 7px;color:#c9c5bd;font-size:12px;${MONO}">${frame120Options}</select>` : ''}
 </div>
 </div>
-
-<div class="calc-field" style="grid-column:1 / -1;display:grid;grid-template-columns:88px 1fr;align-items:start;gap:10px;padding:10px 12px;background:#131315">
-<div style="padding-top:7px">
-<div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781">Film cost</div>
-<div style="font-size:10px;color:#5f5c57;margin-top:2px">Pack + postage</div>
 </div>
-<div>
+
+<div class="calc-field" style="padding:12px;background:#131315">
+<div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:2px">Film cost</div>
+<div style="font-size:10px;color:#5f5c57;margin-bottom:8px">Pack + postage</div>
 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
 <div style="display:flex;align-items:center;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding-left:8px;height:31px;box-sizing:border-box;width:110px">
 <span style="${MONO};font-size:13px;color:#6d6a64">${CUR()}</span>
@@ -437,7 +437,6 @@ ${is120 ? `<select onchange="App.setField('frame120',this.value)" title="Frame s
 </div>
 </div>
 </div>
-</div>
 
 ${renderPushWarning(s)}
 
@@ -445,22 +444,24 @@ ${renderPushWarning(s)}
 <button type="button" onclick="App.toggleExtras()" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:transparent;border:0;padding:8px 12px;color:#6d6a64;${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;cursor:pointer">
 <span>Extra fees / Advanced</span><span style="${MONO}">${s.extrasOpen ? '–' : '+'}</span>
 </button>
-${s.extrasOpen ? `<div style="display:flex;align-items:center;gap:16px;padding:0 12px 12px;flex-wrap:wrap">
+${s.extrasOpen ? `<div style="display:flex;align-items:flex-start;gap:18px;padding:0 12px 12px;flex-wrap:wrap">
+<div>
+<div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781;margin-bottom:6px">Shooting at</div>
 <div style="display:flex;align-items:center;gap:8px">
-<span style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781">Shooting at</span>
 <input value="${escapeHtml(s.devSpeed)}" oninput="App.setField('devSpeed',this.value)" onblur="App.fillBox()" data-fkey="devSpeed" inputmode="numeric" placeholder="same as box" style="width:92px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:5px 8px;color:#eae7e1;font-size:13px;${MONO}">
 <button type="button" onclick="App.matchBox()" style="background:transparent;border:1px solid #33333a;border-radius:4px;padding:5px 8px;color:#8b8781;font-size:9px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">= box</button>
 </div>
-<div style="display:flex;align-items:center;gap:8px">
-<span style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781">Once-off</span>
+</div>
+<div>
+<div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781;margin-bottom:6px">Once-off</div>
 <input value="${escapeHtml(s.onceOff)}" oninput="App.setField('onceOff',this.value)" data-fkey="onceOff" inputmode="decimal" placeholder="0.00" style="width:76px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:5px 8px;color:#eae7e1;font-size:13px;${MONO}">
 </div>
-<div style="display:flex;align-items:center;gap:8px">
-<span style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781">Per roll</span>
+<div>
+<div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781;margin-bottom:6px">Per roll</div>
 <input value="${escapeHtml(s.perRoll)}" oninput="App.setField('perRoll',this.value)" data-fkey="perRoll" inputmode="decimal" placeholder="0.00" style="width:76px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:5px 8px;color:#eae7e1;font-size:13px;${MONO}">
 </div>
-<div style="display:flex;align-items:center;gap:8px">
-<span style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781">Mail-back</span>
+<div>
+<div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781;margin-bottom:6px">Mail-back</div>
 <button type="button" onclick="App.toggleFlag('fMail')" title="Adds each lab's mail-back fee and hides labs that don't post rolls home" style="width:44px;height:22px;border-radius:11px;border:1px solid #33333a;background:${s.fMail ? 'var(--acc)' : '#1a1a1d'};position:relative;cursor:pointer;padding:0">
 <span style="position:absolute;top:2px;left:${s.fMail ? '24px' : '2px'};width:16px;height:16px;border-radius:50%;background:#eae7e1;transition:left .15s"></span>
 </button>
@@ -741,33 +742,30 @@ function renderExpiredModal(s) {
 <p style="margin:0 0 12px;font-size:12px;color:#6d6a64">Roughly one stop of speed lost per decade — faster if it was stored warm.</p>
 <div style="border:1px solid #26262a;border-radius:8px;background:#131315;overflow:hidden">
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#212125">
-<div style="display:grid;grid-template-columns:92px 1fr;align-items:center;gap:10px;padding:9px 12px;background:#131315">
-<div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781">Box speed</div>
+<div style="padding:9px 12px;background:#131315">
+<div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:7px">Box speed</div>
 <input value="${escapeHtml(s.expBox)}" oninput="App.setField('expBox',this.value)" data-fkey="expBox" inputmode="numeric" placeholder="400" style="width:80px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:#eae7e1;font-size:14px;${MONO}">
 </div>
-<div style="display:grid;grid-template-columns:92px 1fr;align-items:center;gap:10px;padding:9px 12px;background:#131315">
-<div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781">Expiry date</div>
-<div style="display:flex;align-items:center;gap:6px">
+<div style="padding:9px 12px;background:#131315">
+<div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:7px">Expiry date</div>
+<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
 <select onchange="App.setField('expiryMonth',this.value)" style="width:110px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:#eae7e1;font-size:13px;${MONO}">${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m, i) => `<option value="${i + 1}" ${String(s.expiryMonth) === String(i + 1) ? 'selected' : ''}>${m}</option>`).join('')}</select>
 <input value="${escapeHtml(s.expiryYear)}" oninput="App.setField('expiryYear',this.value)" data-fkey="expiryYear" inputmode="numeric" placeholder="2006" style="width:80px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:#eae7e1;font-size:14px;${MONO}">
 <span style="font-size:10px;color:#5f5c57;${MONO}">${c.ageNote}</span>
 </div>
 </div>
 </div>
-<div style="display:grid;grid-template-columns:92px 1fr;align-items:start;gap:10px;padding:9px 12px;border-top:1px solid #212125;background:#131315">
-<div style="padding-top:5px;${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781">Film</div>
-<div>
+<div style="padding:9px 12px;border-top:1px solid #212125;background:#131315">
+<div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:7px">Film</div>
 <select onchange="App.setField('filmType',this.value)" style="width:160px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:#eae7e1;font-size:13px;${MONO}">
 <option value="c41" ${s.filmType === 'c41' ? 'selected' : ''}>C-41 colour</option>
 <option value="bw" ${s.filmType === 'bw' ? 'selected' : ''}>B&amp;W</option>
 <option value="e6" ${s.filmType === 'e6' ? 'selected' : ''}>E-6 slide</option>
 </select>
 </div>
-</div>
-<div style="display:grid;grid-template-columns:92px 1fr;align-items:start;gap:10px;padding:9px 12px;border-top:1px solid #212125;background:#131315">
-<div style="padding-top:5px;${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781">Storage</div>
-<div>
-<select onchange="App.setField('storage',this.value)" style="width:240px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:#eae7e1;font-size:13px;${MONO}">
+<div style="padding:9px 12px;border-top:1px solid #212125;background:#131315">
+<div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:7px">Storage</div>
+<select onchange="App.setField('storage',this.value)" style="width:240px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:#eae7e1;font-size:13px;${MONO}">
 <option value="cold" ${s.storage === 'cold' ? 'selected' : ''}>Cold stored</option>
 <option value="controlled" ${s.storage === 'controlled' ? 'selected' : ''}>Climate controlled</option>
 <option value="uncontrolled" ${s.storage === 'uncontrolled' ? 'selected' : ''}>Uncontrolled</option>
@@ -776,7 +774,6 @@ function renderExpiredModal(s) {
 <div style="font-size:10px;color:#6d6a64"><span style="color:#8b8781">Cold stored</span> — kept in a fridge or freezer since new; ages slowest.</div>
 <div style="font-size:10px;color:#6d6a64"><span style="color:#8b8781">Climate controlled</span> — indoors at steady room temperature, out of sunlight; the normal rate.</div>
 <div style="font-size:10px;color:#6d6a64"><span style="color:#8b8781">Uncontrolled</span> — shed, garage, roof space or a hot car; ages fastest.</div>
-</div>
 </div>
 </div>
 <div style="display:flex;align-items:baseline;gap:12px;padding:10px 12px;border-top:1px solid #212125;background:#0f0f11">
