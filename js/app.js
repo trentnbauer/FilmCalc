@@ -860,14 +860,19 @@ const FIELD_INPUT = "width:100%;box-sizing:border-box;background:#1a1a1d;border:
 
 function renderEditFilmModal(s) {
     const d = s.draft;
+    const bundleLabel = (text) => `<div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#5f5c57;margin-bottom:4px">${text}</div>`;
     const options = d.bundles.map((b, i) => `
-<div style="display:grid;grid-template-columns:1fr 60px 60px 90px 1fr 26px;gap:6px;align-items:center;padding:6px 0">
-<input value="${escapeHtml(b.storeName)}" oninput="App.setBundleField(${i},'storeName',this.value)" data-fkey="bundle-${i}-storeName" placeholder="Store" style="${FIELD_INPUT};font-size:12px">
-<input value="${b.rolls}" oninput="App.setBundleField(${i},'rolls',this.value)" data-fkey="bundle-${i}-rolls" inputmode="numeric" placeholder="Rolls" style="${FIELD_INPUT};font-size:12px;${MONO}">
-<input value="${b.exposures}" oninput="App.setBundleField(${i},'exposures',this.value)" data-fkey="bundle-${i}-exposures" inputmode="numeric" placeholder="Exp" style="${FIELD_INPUT};font-size:12px;${MONO}">
-<input value="${b.filmCost}" oninput="App.setBundleField(${i},'filmCost',this.value)" data-fkey="bundle-${i}-filmCost" inputmode="decimal" placeholder="Price" style="${FIELD_INPUT};font-size:12px;${MONO}">
-<input value="${escapeHtml(b.buyLink)}" oninput="App.setBundleField(${i},'buyLink',this.value)" data-fkey="bundle-${i}-buyLink" placeholder="https://…" style="${FIELD_INPUT};font-size:12px">
-<button type="button" onclick="App.removeBundle(${i})" title="Remove" style="width:24px;height:24px;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;color:#8b8781;cursor:pointer">×</button>
+<div style="border:1px solid #212125;border-radius:6px;background:#131315;padding:9px;margin-bottom:6px">
+<div style="display:flex;align-items:flex-end;gap:8px;margin-bottom:8px">
+<div style="flex:1;min-width:0">${bundleLabel('Store')}<input value="${escapeHtml(b.storeName)}" oninput="App.setBundleField(${i},'storeName',this.value)" data-fkey="bundle-${i}-storeName" placeholder="Store" style="${FIELD_INPUT};font-size:12px"></div>
+<button type="button" onclick="App.removeBundle(${i})" title="Remove" style="flex-shrink:0;width:26px;height:31px;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;color:#8b8781;cursor:pointer">×</button>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<div style="width:64px">${bundleLabel('Rolls')}<input value="${b.rolls}" oninput="App.setBundleField(${i},'rolls',this.value)" data-fkey="bundle-${i}-rolls" inputmode="numeric" placeholder="Rolls" style="${FIELD_INPUT};font-size:12px;${MONO}"></div>
+<div style="width:64px">${bundleLabel('Exp')}<input value="${b.exposures}" oninput="App.setBundleField(${i},'exposures',this.value)" data-fkey="bundle-${i}-exposures" inputmode="numeric" placeholder="Exp" style="${FIELD_INPUT};font-size:12px;${MONO}"></div>
+<div style="width:84px">${bundleLabel('Price')}<input value="${b.filmCost}" oninput="App.setBundleField(${i},'filmCost',this.value)" data-fkey="bundle-${i}-filmCost" inputmode="decimal" placeholder="Price" style="${FIELD_INPUT};font-size:12px;${MONO}"></div>
+<div style="flex:1;min-width:140px">${bundleLabel('Buy link')}<input value="${escapeHtml(b.buyLink)}" oninput="App.setBundleField(${i},'buyLink',this.value)" data-fkey="bundle-${i}-buyLink" placeholder="https://…" style="${FIELD_INPUT};font-size:12px"></div>
+</div>
 </div>`).join('');
     return `<div style="position:fixed;inset:0;z-index:60;background:rgba(6,6,7,.74);display:flex;align-items:flex-start;justify-content:center;padding:48px 16px;overflow:auto"><div style="width:100%;max-width:660px;background:linear-gradient(180deg,#151517,#111113);border:1px solid #33333a;border-radius:10px;box-shadow:0 30px 80px -20px #000;padding:16px 18px 20px">
 <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
@@ -887,9 +892,6 @@ ${field('Max push/pull (stops)', `<input value="${d.maxPushPull}" oninput="App.s
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
 <div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781">Where to buy</div>
 <button type="button" onclick="App.addBundle()" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:4px 9px;color:#8b8781;font-size:9px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">+ Add price</button>
-</div>
-<div style="display:grid;grid-template-columns:1fr 60px 60px 90px 1fr 26px;gap:6px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#5f5c57;padding-bottom:4px;border-bottom:1px solid #212125">
-<div>Store</div><div>Rolls</div><div>Exp</div><div>Price</div><div>Buy link</div><div></div>
 </div>
 ${options}
 </div>
