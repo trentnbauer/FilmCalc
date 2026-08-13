@@ -517,6 +517,7 @@ films:
   boxSpeed: 200
   maxPushPull: 1
   process: C41
+  colorType: speciality
   format: 35mm
   hidden: false
   bundles:
@@ -529,6 +530,7 @@ films:
   boxSpeed: 200
   maxPushPull: 1
   process: C41
+  colorType: speciality
   format: 35mm
   hidden: false
   bundles:
@@ -546,6 +548,7 @@ films:
   boxSpeed: 125
   maxPushPull: 1
   process: C41
+  colorType: speciality
   format: 35mm
   hidden: false
   bundles:

@@ -103,6 +103,11 @@ test('filmColorType respects an explicit colorType override (e.g. Ilford XP2 Sup
     assert.equal(filmColorType({ process: 'BW', colorType: 'color' }), 'color');
 });
 
+test('filmColorType never infers speciality — only an explicit override sets it (e.g. Harman Phoenix, redscale)', () => {
+    assert.equal(filmColorType({ process: 'C41', colorType: 'speciality' }), 'speciality');
+    assert.equal(filmColorType({ process: 'C41' }), 'color');
+});
+
 test('normalizeFilmBundles falls back to the legacy flat schema', () => {
     const bundles = normalizeFilmBundles({ rolls: '3', exposures: '24', filmCost: '9.5' });
     assert.deepEqual(bundles, [{ rolls: 3, exposures: 24, filmCost: 9.5, storeName: '', buyLink: '', availability: 'national', state: '', city: '' }]);
