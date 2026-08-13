@@ -73,7 +73,8 @@ films:
 | `name` | The stock name **without the ISO**, since `boxSpeed` carries that. `Kodak Gold 200` → `Kodak Gold`. But `Kodak Portra 400` stays as-is, because "400" distinguishes it from Portra 160/800 — it's part of the product name, not just its speed. Use judgement. |
 | `boxSpeed` | The rated ISO. A plain number, no quotes. |
 | `maxPushPull` | Stops the stock tolerates being pushed/pulled. `2` for flexible stocks (Tri-X, HP5+, Portra 400, Delta). `1` for typical consumer colour (Gold 200, ColorPlus, UltraMax). `0` for stocks that shouldn't be pushed (Ektar 100). **If you are not confident, use 1.** |
-| `process` | Exactly one of: `C41` (colour negative), `BW` (black & white), `E6` (slide/reversal), `ECN2` (motion picture colour negative, e.g. Kodak Vision3). |
+| `process` | Exactly one of: `C41` (colour negative), `BW` (black & white), `E6` (slide/reversal), `ECN2` (motion picture colour negative, e.g. Kodak Vision3). This is the development *chemistry*, not necessarily what the resulting image looks like — see `colorType` below. |
+| `colorType` | **Optional.** `color` or `bw` — what the developed image actually looks like. Omit it and the app infers `bw` from `process: BW` and `color` from everything else, which is right for almost every stock. Only set it explicitly for a chromogenic black-and-white film that develops in C-41 chemistry but shoots black & white — e.g. Ilford XP2 Super, Kodak BW400CN — where `process: C41` alone would be misread as a colour stock. |
 | `format` | Exactly one of: `35mm`, `120`, `110`, `127`, `220`, `sheet`. |
 | `hidden` | Always `false`. |
 | `bundles` | **One entry per pack size the shop sells.** A single roll, a 3-pack and a 5-pack of the same stock are three `bundles` entries under one film — not three films. |

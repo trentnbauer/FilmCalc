@@ -589,6 +589,7 @@ films:
     boxSpeed: 400
     maxPushPull: 2
     process: C41
+    colorType: bw
     format: '120'
     hidden: false
     bundles:

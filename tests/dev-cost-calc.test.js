@@ -13,6 +13,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const {
     filmKey,
+    filmColorType,
     normalizeFilmBundles,
     normalizeLabServices,
     computeCostPerPhoto,
@@ -87,6 +88,19 @@ test('filmKey still keys the same name separately per box speed/format', () => {
         filmKey('Kodak Color', 200, '120'),
     ]);
     assert.equal(keys.size, 3);
+});
+
+test('filmColorType infers bw from process: BW, color from everything else', () => {
+    assert.equal(filmColorType({ process: 'BW' }), 'bw');
+    assert.equal(filmColorType({ process: 'C41' }), 'color');
+    assert.equal(filmColorType({ process: 'E6' }), 'color');
+    assert.equal(filmColorType({ process: 'ECN2' }), 'color');
+    assert.equal(filmColorType({}), 'color');
+});
+
+test('filmColorType respects an explicit colorType override (e.g. Ilford XP2 Super)', () => {
+    assert.equal(filmColorType({ process: 'C41', colorType: 'bw' }), 'bw');
+    assert.equal(filmColorType({ process: 'BW', colorType: 'color' }), 'color');
 });
 
 test('normalizeFilmBundles falls back to the legacy flat schema', () => {
