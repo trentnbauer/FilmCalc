@@ -367,9 +367,9 @@ const NARROW = "font-family:'Archivo Narrow',Archivo,sans-serif";
 // which section you're in stays legible while scrolling past one long
 // page — a companion to making the headings themselves bigger.
 const SECTION_COLORS = { lookup: '#ff7a2f', labs: '#5fa8d3', films: '#8fbf6a' };
-function btnTone(on) { return on ? { bg: '#1c1512', border: '#5a3a1c', color: 'var(--acc)' } : { bg: '#141416', border: '#2c2c30', color: '#8b8781' }; }
-function pill(label, on, onclick) {
-    const b = btnTone(on);
+function btnTone(on, color) { return on ? { bg: '#1c1512', border: '#5a3a1c', color: color || 'var(--acc)' } : { bg: '#141416', border: '#2c2c30', color: '#8b8781' }; }
+function pill(label, on, onclick, color) {
+    const b = btnTone(on, color);
     return `<button type="button" onclick="${onclick}" style="background:${b.bg};border:1px solid ${b.border};border-radius:20px;padding:5px 11px;color:${b.color};font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${escapeHtml(label)}</button>`;
 }
 
@@ -611,7 +611,7 @@ function renderLabSection(s, r) {
     const total = Object.keys(getAllLabs()).filter(n => !getAllLabs()[n].hidden).length;
     const shown = r.ranked.length;
     const filterNote = shown < total ? `${total - shown} labs hidden` : `${shown} lab${shown === 1 ? '' : 's'}`;
-    const filterChips = requireFilters().map(f => pill(f.label, s[f.key], `App.toggleFlag('${f.key}')`)).join('');
+    const filterChips = requireFilters().map(f => pill(f.label, s[f.key], `App.toggleFlag('${f.key}')`, SECTION_COLORS.labs)).join('');
     const rows = r.ranked.map((l, i) => {
         const rank = String(i + 1).padStart(2, '0');
         const cheapest = r.ranked[0];
@@ -622,7 +622,7 @@ function renderLabSection(s, r) {
         const detail = `${escapeHtml(l.pick.label)} · ${CUR()}${money(l.pick.cost)}/roll${l.pick.mailFee > 0 ? ` · incl. ${CUR()}${money(l.pick.mailFee)} mail-back` : ''}`;
         const tierRows = l.tiers.map(t => {
             const picked = t === l.pick;
-            const color = picked ? 'var(--acc)' : (t.ok ? '#c9c5bd' : '#55534e');
+            const color = picked ? SECTION_COLORS.labs : (t.ok ? '#c9c5bd' : '#55534e');
             const badges = fmtTierBadges(t).map(b => `<span style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#8b8781;border:1px solid #33333a;border-radius:10px;padding:2px 7px">${b}</span>`).join('');
             return `<div style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;padding:8px 10px;background:${picked ? '#17140f' : '#131315'}">
 <span style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
@@ -635,14 +635,14 @@ ${badges}
         }).join('');
         return `<div style="background:${rowBg}">
 <button type="button" onclick="App.toggleLab('${escapeHtml(l.name)}')" class="list-row" style="width:100%;display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:12px;padding:9px 12px;background:transparent;border:0;cursor:pointer;text-align:left">
-<span style="${MONO};font-size:11px;color:${i === 0 ? 'var(--acc)' : '#5f5c57'}">${rank}</span>
+<span style="${MONO};font-size:11px;color:${i === 0 ? SECTION_COLORS.labs : '#5f5c57'}">${rank}</span>
 <span style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
 <span style="font-size:13px;color:#eae7e1">${escapeHtml(l.name)}</span>
-${isHome ? `<span style="font-size:10px;color:var(--acc);letter-spacing:.12em;text-transform:uppercase">${t('v2TagHome')}</span>` : ''}
+${isHome ? `<span style="font-size:10px;color:${SECTION_COLORS.labs};letter-spacing:.12em;text-transform:uppercase">${t('v2TagHome')}</span>` : ''}
 <span style="font-size:10px;color:#6d6a64;${MONO}">${detail}</span>
 </span>
 <span style="display:flex;align-items:baseline;gap:8px">
-<span style="${MONO};font-size:16px;color:${i === 0 ? 'var(--acc)' : '#c9c5bd'}">${CUR()}${money(l.cpp)}</span>
+<span style="${MONO};font-size:16px;color:${i === 0 ? SECTION_COLORS.labs : '#c9c5bd'}">${CUR()}${money(l.cpp)}</span>
 <span style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#5f5c57;width:52px;text-align:right">${tag}</span>
 </span>
 </button>
@@ -694,13 +694,13 @@ function renderFilmSection(s, rows) {
 <span style="text-align:right;font-size:12px;color:#8b8781;${MONO}">${CUR()}${money(b.filmCost)}</span>
 <span style="text-align:right;font-size:12px;color:#c9c5bd;${MONO}">${CUR()}${money(b.filmCost / b.rolls)}</span>
 </button>
-<a href="${sanitizeUrl(b.buyLink)}" target="_blank" rel="noopener noreferrer" title="Open the shop listing" style="display:flex;align-items:center;padding:0 10px;background:#0f0f11;border:1px solid #26262a;border-radius:5px;color:var(--acc);font-size:9px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none;white-space:nowrap">Buy ↗</a>
+<a href="${sanitizeUrl(b.buyLink)}" target="_blank" rel="noopener noreferrer" title="Open the shop listing" style="display:flex;align-items:center;padding:0 10px;background:#0f0f11;border:1px solid #26262a;border-radius:5px;color:${SECTION_COLORS.films};font-size:9px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none;white-space:nowrap">Buy ↗</a>
 </div>`).join('');
         return `<div style="background:${open ? '#1a1a1d' : '#131315'}">
 <button type="button" onclick="App.toggleFilm('${escapeHtml(key)}')" class="list-row" style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;padding:9px 12px;background:transparent;border:0;cursor:pointer;text-align:left;width:100%">
 <span><span style="display:block;font-size:13px;color:#eae7e1">${escapeHtml(f.name)}</span>
 <span style="display:block;font-size:10px;color:#6d6a64;${MONO};margin-top:1px">${meta}</span></span>
-<span style="text-align:right;${MONO};font-size:15px;color:${row.perRoll <= cheapestPerRoll + 0.001 ? 'var(--acc)' : '#c9c5bd'}">${CUR()}${money(row.perRoll)}</span>
+<span style="text-align:right;${MONO};font-size:15px;color:${row.perRoll <= cheapestPerRoll + 0.001 ? SECTION_COLORS.films : '#c9c5bd'}">${CUR()}${money(row.perRoll)}</span>
 </button>
 ${open ? `<div style="padding:0 12px 10px 12px;display:flex;flex-direction:column;gap:1px;background:transparent">
 <div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#5f5c57;padding:4px 0 6px">Where to buy — cheapest first</div>
@@ -1099,19 +1099,28 @@ ${languages.map(([code, label]) => `<option value="${code}" ${currentLocale === 
 </div></div>`;
 }
 
+// Checkboxes rather than a single-choice <select> — a user setting up
+// FilmCalc for, say, Melbourne wants both the Melbourne AND the
+// Australia-wide retailer files in one go, not one picked-import-repick
+// cycle per file (issue: the old single-select forced exactly one region
+// at a time).
+function presetCheckList(kind, entries) {
+    return entries.map(f => `<label style="display:flex;align-items:center;gap:8px;padding:6px 2px;font-size:12px;color:#c9c5bd;cursor:pointer"><input type="checkbox" class="preset-check" data-kind="${kind}" value="${escapeHtml(f.file)}" style="width:16px;height:16px;accent-color:var(--acc);cursor:pointer">${escapeHtml(f.label)}</label>`).join('');
+}
 function renderPresetImport() {
     if (!presetFilmIndex || !presetLabIndex) { loadPresetIndexes(); return `<div style="font-size:11px;color:#5f5c57">Loading…</div>`; }
-    const filmOpts = presetFilmIndex.map(f => `<option value="${escapeHtml(f.file)}">${escapeHtml(f.label)}</option>`).join('');
-    const labOpts = presetLabIndex.map(f => `<option value="${escapeHtml(f.file)}">${escapeHtml(f.label)}</option>`).join('');
-    return `<div style="font-size:10px;color:#5f5c57;margin-bottom:8px">Community-contributed regional film/lab price lists shipped with FilmCalc — pick your region to add real data instead of typing it all by hand.</div>
-<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-<select id="presetFilmSelect" style="${FIELD_INPUT};max-width:220px"><option value="">Film prices…</option>${filmOpts}</select>
-<button type="button" onclick="App.importPreset('films', document.getElementById('presetFilmSelect').value)" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#8b8781;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">Import</button>
-</div>
-<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px">
-<select id="presetLabSelect" style="${FIELD_INPUT};max-width:220px"><option value="">Lab prices…</option>${labOpts}</select>
-<button type="button" onclick="App.importPreset('labs', document.getElementById('presetLabSelect').value)" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#8b8781;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">Import</button>
-</div>`;
+    // One combined "Import selected" button for both lists, not one per
+    // list — importing re-renders the whole page, which would otherwise
+    // wipe the checked state of whichever list's checkboxes weren't just
+    // submitted (they're plain uncontrolled checkboxes, not tied to
+    // state) — ticking films and labs, then importing once, is the only
+    // way both actually make it in.
+    return `<div style="font-size:10px;color:#5f5c57;margin-bottom:8px">Community-contributed regional film/lab price lists shipped with FilmCalc — tick any that apply to you (more than one is fine) to add real data instead of typing it all by hand.</div>
+<div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781;margin-bottom:4px">Films</div>
+<div style="display:flex;flex-direction:column;max-height:160px;overflow:auto;border:1px solid #26262a;border-radius:6px;padding:4px 8px;margin-bottom:10px">${presetCheckList('films', presetFilmIndex)}</div>
+<div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781;margin-bottom:4px">Labs</div>
+<div style="display:flex;flex-direction:column;max-height:160px;overflow:auto;border:1px solid #26262a;border-radius:6px;padding:4px 8px;margin-bottom:10px">${presetCheckList('labs', presetLabIndex)}</div>
+<button type="button" onclick="App.importPresetSelected()" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#8b8781;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">Import selected</button>`;
 }
 
 // ---------- Merge helpers (ported from the old js/modals.js import path —
@@ -1485,25 +1494,43 @@ const App = {
         state.importNote = 'All saved data deleted.';
         render();
     },
-    importPreset(kind, file) {
-        if (!file) return;
-        const path = `${kind}/${file}`;
-        fetch(path).then(r => r.text()).then(text => {
-            const parsed = jsyaml.load(text) || {};
-            if (kind === 'films') {
+    // Imports every checked region file — films AND labs together in one
+    // pass, not one button per kind, since importing triggers a
+    // full re-render that would otherwise wipe the checked state of
+    // whichever list wasn't just submitted (plain uncontrolled
+    // checkboxes, not tied to state). Fetched in parallel, merged one
+    // after another so a film/lab shared across two chosen files (e.g. a
+    // national + a city retailer file) combines instead of the second
+    // overwriting the first.
+    importPresetSelected() {
+        const filmFiles = [...document.querySelectorAll('.preset-check[data-kind="films"]:checked')].map(el => el.value);
+        const labFiles = [...document.querySelectorAll('.preset-check[data-kind="labs"]:checked')].map(el => el.value);
+        if (!filmFiles.length && !labFiles.length) { state.importNote = 'Tick at least one region first.'; render(); return; }
+        const fetchAll = (kind, files) => Promise.all(files.map(file => fetch(`${kind}/${file}`).then(r => r.text()).then(text => ({ file, parsed: jsyaml.load(text) || {} })).catch(() => ({ file, parsed: null }))));
+        Promise.all([fetchAll('films', filmFiles), fetchAll('labs', labFiles)]).then(([filmResults, labResults]) => {
+            let filmCount = 0, labCount = 0;
+            const failed = [];
+            filmResults.forEach(({ file, parsed }) => {
+                if (!parsed) { failed.push(file); return; }
                 const entries = Array.isArray(parsed.films) ? parsed.films : [];
-                const incoming = buildFilmProfilesFromEntries(entries);
-                writeJSON('filmProfiles', mergeFilmProfiles(readJSON('filmProfiles', {}), incoming));
-                state.importNote = `Imported ${entries.length} film entr${entries.length === 1 ? 'y' : 'ies'} from ${parsed.label || file}.`;
-            } else {
+                writeJSON('filmProfiles', mergeFilmProfiles(readJSON('filmProfiles', {}), buildFilmProfilesFromEntries(entries)));
+                filmCount += entries.length;
+            });
+            labResults.forEach(({ file, parsed }) => {
+                if (!parsed) { failed.push(file); return; }
                 const entries = Array.isArray(parsed.labs) ? parsed.labs : [];
                 const saved = readJSON('labProfiles', {});
                 entries.forEach(l => { if (l.name) saved[l.name] = l; });
                 writeJSON('labProfiles', saved);
-                state.importNote = `Imported ${entries.length} lab${entries.length === 1 ? '' : 's'} from ${parsed.label || file}.`;
-            }
+                labCount += entries.length;
+            });
+            const parts = [];
+            if (filmCount) parts.push(`${filmCount} film entr${filmCount === 1 ? 'y' : 'ies'}`);
+            if (labCount) parts.push(`${labCount} lab${labCount === 1 ? '' : 's'}`);
+            const total = filmFiles.length + labFiles.length;
+            state.importNote = (parts.length ? `Imported ${parts.join(' and ')}` : 'Nothing to import') + ` from ${total} region file${total === 1 ? '' : 's'}.` + (failed.length ? ` Couldn't load ${failed.join(', ')}.` : '');
             render();
-        }).catch(() => { state.importNote = `Couldn't load ${file}.`; render(); });
+        });
     },
 
     // Restores the generic "drop a config.yaml / films.yaml / labs.yaml"
@@ -1706,7 +1733,7 @@ function renderMobileLookup(s) {
     // Requires chips
     const chips = requireFilters().map(f => {
         const on = s[f.key];
-        return `<button type="button" onclick="App.toggleFlag('${f.key}')" style="flex:none;height:36px;border-radius:20px;padding:0 14px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;${on ? 'background:#1c1512;border:1px solid #5a3a1c;color:var(--acc)' : 'background:#141416;border:1px solid #2c2c30;color:#8b8781'}">${f.label}</button>`;
+        return `<button type="button" onclick="App.toggleFlag('${f.key}')" style="flex:none;height:36px;border-radius:20px;padding:0 14px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;${on ? `background:#1c1512;border:1px solid #5a3a1c;color:${SECTION_COLORS.labs}` : 'background:#141416;border:1px solid #2c2c30;color:#8b8781'}">${f.label}</button>`;
     }).join('');
     const totalLabs = Object.keys(getAllLabs()).filter(n => !getAllLabs()[n].hidden).length;
     const filterNote = r.ranked.length < totalLabs
@@ -1719,14 +1746,14 @@ function renderMobileLookup(s) {
         const open = s.expandedLab === l.name;
         const tag = i === 0 ? 'Cheapest' : `+${((l.cpp - cheapest.cpp) * 100).toFixed(0)}c`;
         const cardBorder = i === 0 ? '#5a3a1c' : '#26262a', cardBg = i === 0 ? '#17140f' : '#131315';
-        const priceColor = i === 0 ? 'var(--acc)' : '#c9c5bd';
-        const tagColor = (i === 0 || isHome) ? 'var(--acc)' : '#7a7770';
+        const priceColor = i === 0 ? SECTION_COLORS.labs : '#c9c5bd';
+        const tagColor = (i === 0 || isHome) ? SECTION_COLORS.labs : '#7a7770';
         const detail = `${escapeHtml(l.pick.label)} · ${CUR()}${money(l.pick.devCost)}` +
             (l.pick.pushFee ? ` + ${CUR()}${money(l.pick.pushFee)} ${r.stopsSigned < 0 ? 'pull' : 'push'}` : '') +
             (l.pick.mailFee ? ` + ${CUR()}${money(l.pick.mailFee)} mail` : '');
         const tierRows = l.tiers.map(t => {
             const picked = t === l.pick;
-            const color = picked ? 'var(--acc)' : (t.ok ? '#c9c5bd' : '#55534e');
+            const color = picked ? SECTION_COLORS.labs : (t.ok ? '#c9c5bd' : '#55534e');
             return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px;border:1px solid #26262a;border-radius:8px;background:#0f0f11">
 <span><span style="display:block;font-size:14px;color:${color}">${escapeHtml(t.label)}</span><span style="${MONO};display:block;font-size:12px;color:#7a7770;margin-top:3px">${t.ok ? (picked ? 'used here' : 'qualifies') : escapeHtml(t.why)}</span></span>
 <span style="${MONO};font-size:15px;color:${color}">${CUR()}${money(t.cost)}</span>
@@ -1763,13 +1790,13 @@ ${open ? `<div style="padding:0 14px 14px">
         const bundles = row.bundles.slice().sort((a, b) => a.filmCost / a.rolls - b.filmCost / b.rolls).map(b => `
 <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;background:#0f0f11;border:1px solid #26262a;border-radius:8px">
 <button type="button" onclick="App.loadFilmBundle('${escapeHtml(key)}','${escapeHtml(b.storeName)}',${b.rolls},${b.exposures})" style="flex:1;min-width:0;background:transparent;border:0;padding:0;text-align:left;cursor:pointer"><span style="display:block;font-size:14px;color:#c9c5bd">${escapeHtml(b.storeName || 'Unnamed store')}</span><span style="${MONO};display:block;font-size:12px;color:#7a7770;margin-top:3px">${b.rolls}×${b.exposures} · ${CUR()}${money(b.filmCost)} · ${CUR()}${money(b.filmCost / b.rolls)}/roll</span></button>
-<a href="${sanitizeUrl(b.buyLink)}" target="_blank" rel="noopener noreferrer" style="height:40px;display:flex;align-items:center;padding:0 14px;background:#1c1512;border:1px solid #5a3a1c;border-radius:8px;color:var(--acc);font-size:12px;letter-spacing:.14em;text-transform:uppercase">Buy ↗</a>
+<a href="${sanitizeUrl(b.buyLink)}" target="_blank" rel="noopener noreferrer" style="height:40px;display:flex;align-items:center;padding:0 14px;background:#1c1512;border:1px solid #5a3a1c;border-radius:8px;color:${SECTION_COLORS.films};font-size:12px;letter-spacing:.14em;text-transform:uppercase">Buy ↗</a>
 </div>`).join('');
         return `<div style="border-radius:10px;overflow:hidden;border:1px solid ${cheap ? '#5a3a1c' : '#26262a'};background:${cheap ? '#17140f' : '#131315'}">
 <button type="button" onclick="App.toggleFilm('${escapeHtml(key)}')" style="width:100%;background:transparent;border:0;padding:14px;text-align:left;cursor:pointer">
 <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
 <span><span style="display:block;font-size:16px;color:#eae7e1">${escapeHtml(f.name)}</span><span style="${MONO};display:block;font-size:12px;color:#7a7770;margin-top:4px">${meta}</span></span>
-<span style="${MONO};font-size:20px;color:${cheap ? 'var(--acc)' : '#c9c5bd'}">${CUR()}${money(row.perRoll)}</span>
+<span style="${MONO};font-size:20px;color:${cheap ? SECTION_COLORS.films : '#c9c5bd'}">${CUR()}${money(row.perRoll)}</span>
 </div>
 </button>
 ${open ? `<div style="padding:0 14px 14px;display:flex;flex-direction:column;gap:6px">
@@ -1831,8 +1858,8 @@ ${mSectionHead('Saved film stock', null, SECTION_COLORS.films)}
 ${isoValues.map(v => `<option value="${v}" ${s.isoFilter === String(v) ? 'selected' : ''}>${v}</option>`).join('')}
 </select>
 </div>
-<button type="button" onclick="App.togglePushPull()" style="display:flex;align-items:center;gap:10px;width:100%;height:44px;padding:0 12px;margin-bottom:10px;border-radius:8px;cursor:pointer;text-align:left;${s.allowPushPull ? 'background:#17140f;border:1px solid #5a3a1c;color:var(--acc)' : 'background:#141416;border:1px solid #2c2c30;color:#8b8781'}">
-<span style="display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:4px;font-size:13px;${s.allowPushPull ? 'background:var(--acc);border:1px solid var(--acc);color:#131315' : 'background:#1a1a1d;border:1px solid #33333a;color:transparent'}">✓</span>
+<button type="button" onclick="App.togglePushPull()" style="display:flex;align-items:center;gap:10px;width:100%;height:44px;padding:0 12px;margin-bottom:10px;border-radius:8px;cursor:pointer;text-align:left;${s.allowPushPull ? `background:#17140f;border:1px solid #5a3a1c;color:${SECTION_COLORS.films}` : 'background:#141416;border:1px solid #2c2c30;color:#8b8781'}">
+<span style="display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:4px;font-size:13px;${s.allowPushPull ? `background:${SECTION_COLORS.films};border:1px solid ${SECTION_COLORS.films};color:#131315` : 'background:#1a1a1d;border:1px solid #33333a;color:transparent'}">✓</span>
 <span style="font-size:13px;letter-spacing:.08em;text-transform:uppercase">Include push/pull stocks</span>
 </button>
 <div style="display:flex;flex-direction:column;gap:8px">${filmCards || `<div style="padding:14px;font-size:12px;color:#5f5c57;background:#131315;border:1px solid #26262a;border-radius:10px">No film stock saved for ${formatLabel(s.format)} · ${procLabel(s.process)} yet.</div>`}</div>
