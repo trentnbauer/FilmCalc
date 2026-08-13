@@ -923,6 +923,7 @@ ${field('Name', `<input value="${escapeHtml(d.name)}" oninput="App.setDraftField
 ${field('Box speed / ISO', `<input value="${d.boxSpeed}" oninput="App.setDraftField('boxSpeed',this.value)" data-fkey="draft-boxSpeed" inputmode="numeric" style="${FIELD_INPUT};${MONO}">`)}
 ${field('Format', `<select onchange="App.setDraftField('format',this.value)" style="${FIELD_INPUT}">${FORMAT_OPTIONS.map(o => `<option value="${o.value}" ${d.format === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>`)}
 ${field('Process', `<select onchange="App.setDraftField('process',this.value)" style="${FIELD_INPUT}">${PROCESS_OPTIONS.map(o => `<option value="${o.value}" ${d.process === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>`)}
+${field('Type', `<select onchange="App.setDraftField('colorType',this.value)" title="What the developed image looks like — separate from Process (the development chemistry). Only differs from Process for things like Ilford XP2 Super (B&W image, C-41 chemistry) or a redscale/experimental stock (Speciality)." style="${FIELD_INPUT}">${FILM_TYPE_OPTIONS.map(o => `<option value="${o.value}" ${(d.colorType || filmColorType(d)) === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>`)}
 ${field('Max push/pull (stops)', `<input value="${d.maxPushPull}" oninput="App.setDraftField('maxPushPull',this.value)" data-fkey="draft-maxPushPull" inputmode="numeric" placeholder="2" style="${FIELD_INPUT};${MONO}">`)}
 </div>
 <div style="border:1px solid #26262a;border-radius:8px;background:#0f0f11;padding:10px 12px">
@@ -2048,6 +2049,7 @@ ${mField('Name', `<input value="${escapeHtml(d.name)}" oninput="App.setDraftFiel
 <div style="flex:1">${mField('Format', `<select onchange="App.setDraftField('format',this.value)" style="${M_FIELD_INPUT}">${FORMAT_OPTIONS.map(o => `<option value="${o.value}" ${d.format === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>`)}</div>
 <div style="flex:1">${mField('Process', `<select onchange="App.setDraftField('process',this.value)" style="${M_FIELD_INPUT}">${PROCESS_OPTIONS.map(o => `<option value="${o.value}" ${d.process === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>`)}</div>
 </div>
+${mField('Type', `<select onchange="App.setDraftField('colorType',this.value)" style="${M_FIELD_INPUT}">${FILM_TYPE_OPTIONS.map(o => `<option value="${o.value}" ${(d.colorType || filmColorType(d)) === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>`)}
 <div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-top:6px">Where to buy</div>
 <button type="button" onclick="App.addBundle()" style="height:48px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">+ Add price</button>
 ${bundles}
