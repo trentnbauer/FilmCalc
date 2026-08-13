@@ -28,6 +28,17 @@ function filmKey(name, boxSpeed, format) {
     return `${normalizedName}|${boxSpeed || 0}|${format || '35mm'}`;
 }
 
+// What the developed image actually looks like ('color' or 'bw'), as
+// distinct from `process` (the development chemistry). Almost every film
+// is exactly what its process implies (BW chemistry -> bw image, anything
+// else -> color image), so colorType is only ever stored explicitly on the
+// rare chromogenic black & white stock that develops in C-41 chemistry but
+// shoots black & white — e.g. Ilford XP2 Super. See DATA_SPEC.md.
+function filmColorType(film) {
+    if (film.colorType === 'bw' || film.colorType === 'color') return film.colorType;
+    return film.process === 'BW' ? 'bw' : 'color';
+}
+
 // Bridges the current { bundles: [...] } schema with the older flat
 // single-bundle schema so both keep working.
 //
@@ -623,6 +634,7 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         TURNAROUND_RANK,
         filmKey,
+        filmColorType,
         normalizeFilmBundles,
         normalizeLabServices,
         computeCostPerPhoto,

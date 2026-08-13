@@ -309,6 +309,7 @@ films:
   boxSpeed: 400
   maxPushPull: 1
   process: C41
+  colorType: bw
   format: 35mm
   hidden: false
   bundles:

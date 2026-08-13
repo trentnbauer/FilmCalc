@@ -81,6 +81,15 @@ let PROCESS_OPTIONS = [
     { value: 'C41', label: 'C-41' }, { value: 'BW', label: 'B&W' },
     { value: 'E6', label: 'E-6' }, { value: 'ECN2', label: 'ECN-2' }
 ];
+// The everyday film-lookup dropdown — what the image looks like, not the
+// development chemistry (see filmColorType() in js/dev-cost-calc.js). Kept
+// separate from PROCESS_OPTIONS/state.process, which now lives under
+// "Extra fees / Advanced" as Development Type and still drives actual lab
+// tier matching, since that's genuinely chemistry-specific (a chromogenic
+// B&W stock like Ilford XP2 Super develops in C-41, not BW chemistry).
+const FILM_TYPE_OPTIONS = [{ value: 'color', label: 'Color' }, { value: 'bw', label: 'B&W' }];
+const DEV_TYPE_DEFAULT = { color: 'C41', bw: 'BW' };
+const PUSH_PULL_OPTIONS = [-3, -2, -1, 0, 1, 2, 3];
 async function loadOptions() {
     try {
         const res = await fetch('options.yaml');
@@ -164,7 +173,14 @@ const state = {
     extrasOpen: false, expandedLab: null, expandedFilm: null,
     format: localStorage.getItem('globalFormat') || '35mm',
     process: localStorage.getItem('globalProcess') || 'C41',
-    boxSpeed: '', devSpeed: '', packCost: '', postage: '', rolls: '1', exposures: '36',
+    // Named filmColor, NOT filmType — state.filmType already exists below,
+    // owned by the Expired Film calculator ('c41'/'bw'/'e6', a different
+    // concept). Reusing that key here silently collided: the second
+    // `filmType:` in this same object literal won the init value, and every
+    // onchange/onclick sharing App.setField('filmType', …) fought over one
+    // slot instead of two.
+    filmColor: localStorage.getItem('globalFilmColor') || 'color',
+    boxSpeed: '', pushPull: '0', packCost: '', postage: '', rolls: '1', exposures: '36',
     onceOff: '', perRoll: '',
     frame35: localStorage.getItem('globalCamera35Type') || 'full',
     frame120: localStorage.getItem('globalCamera120Type') || '6x7',
@@ -196,10 +212,14 @@ function persistFilters() {
 function num(v) { const n = parseFloat(v); return isNaN(n) ? 0 : n; }
 function money(n) { return (n || 0).toFixed(2); }
 
-function stopsSignedFor(boxSpeed, devSpeed) {
-    const b = parseFloat(boxSpeed), d = parseFloat(devSpeed);
-    if (!b || !d) return 0;
-    return Math.round(Math.log2(d / b));
+function pushPullStops(s) { return parseInt(s.pushPull) || 0; }
+// The ISO the roll is actually shot at, derived from Box Speed + the
+// push/pull stops selector — replaces the old free-text "Shooting at
+// (Target ISO)" field, which this ISO is still shown/used as internally.
+function effectiveShootIso(s) {
+    const box = parseFloat(s.boxSpeed);
+    if (!box) return 0;
+    return Math.round(box * Math.pow(2, pushPullStops(s)));
 }
 
 function currentExposuresPerRoll(s) {
@@ -239,7 +259,7 @@ function pushFeeFor(t, stopsAbs) {
 // structured data for the new template instead of building HTML strings.
 function rankLabs(s) {
     const rolls = Math.max(1, Math.round(num(s.rolls)) || 1);
-    const stopsSigned = stopsSignedFor(s.boxSpeed, s.devSpeed || s.boxSpeed);
+    const stopsSigned = pushPullStops(s);
     const stopsAbs = Math.abs(stopsSigned);
     const filmPerRoll = num(s.packCost) / rolls + num(s.postage) / rolls + num(s.perRoll) + num(s.onceOff) / rolls;
     const exp = currentExposuresPerRoll(s);
@@ -275,9 +295,9 @@ function rankLabs(s) {
 // under one lab context, not a per-film lab search.
 function computeFilmRows(s, home) {
     const allFilms = getAllFilms();
-    const shootIso = num(s.devSpeed) || num(s.boxSpeed);
+    const shootIso = effectiveShootIso(s) || num(s.boxSpeed);
     const camOverride = camOverrideExposures(s);
-    const rows = Object.values(allFilms).filter(f => !f.hidden && (f.format || '35mm') === s.format && (f.process || 'C41') === s.process).map(f => {
+    const rows = Object.values(allFilms).filter(f => !f.hidden && (f.format || '35mm') === s.format && filmColorType(f) === s.filmColor).map(f => {
         const boxSpeed = parseFloat(f.boxSpeed) || 0;
         if (!boxSpeed) return null;
         const stopsSigned = shootIso ? Math.round(Math.log2(shootIso / boxSpeed)) : 0;
@@ -304,14 +324,14 @@ function computeFilmRows(s, home) {
 // push/pull it needs) to reach the current shooting ISO — a "you could pay
 // less" nudge. Mirrors js/film-lookup.js's updateCheaperAlternative().
 function computeCheaperFilm(s, home) {
-    const target = num(s.devSpeed) || num(s.boxSpeed);
+    const target = effectiveShootIso(s) || num(s.boxSpeed);
     const loaded = getAllFilms()[s.loadedFilmKey];
     const curCpp = home ? home.cpp : null;
     if (!target || !home) return { has: false, label: `Cheapest film at ISO ${target || '—'}`, text: 'Enter a box speed to compare.', url: '', load: null };
 
     const camOverride = camOverrideExposures(s);
     let best = null;
-    Object.values(getAllFilms()).filter(f => !f.hidden && (f.format || '35mm') === s.format && (f.process || 'C41') === s.process).forEach(f => {
+    Object.values(getAllFilms()).filter(f => !f.hidden && (f.format || '35mm') === s.format && filmColorType(f) === s.filmColor).forEach(f => {
         const boxSpeed = parseFloat(f.boxSpeed) || 0;
         if (!boxSpeed) return;
         const stopsAbs = Math.abs(Math.round(Math.log2(target / boxSpeed)));
@@ -414,9 +434,13 @@ function renderCalculator(s) {
 <div>
 <div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:9px">${t('v2LabelBoxSpeed')}</div>
 <div style="display:flex;align-items:center;gap:8px">
-<input value="${escapeHtml(s.boxSpeed)}" oninput="App.setField('boxSpeed',this.value)" onblur="App.fillBox()" data-fkey="boxSpeed" inputmode="numeric" placeholder="400" style="width:78px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:7px 8px;color:#eae7e1;font-size:14px;${MONO}">
+<input value="${escapeHtml(s.boxSpeed)}" oninput="App.setField('boxSpeed',this.value)" data-fkey="boxSpeed" inputmode="numeric" placeholder="400" style="width:78px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:7px 8px;color:#eae7e1;font-size:14px;${MONO}">
 <span style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#5f5c57">${t('v2UnitIso')}</span>
 </div>
+</div>
+<div>
+<div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:9px">${t('v2LabelPushPull')}</div>
+<select onchange="App.setField('pushPull',this.value)" title="${t('v2HelpPushPull')}" style="height:32px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:0 7px;color:#c9c5bd;font-size:12px;${MONO}">${PUSH_PULL_OPTIONS.map(n => `<option value="${n}" ${String(s.pushPull) === String(n) ? 'selected' : ''}>${n > 0 ? '+' + n : n}</option>`).join('')}</select>
 </div>
 <div>
 <div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:9px">${t('v2LabelExpCount')}</div>
@@ -465,11 +489,8 @@ ${renderPushWarning(s)}
 </button>
 ${s.extrasOpen ? `<div style="display:flex;align-items:flex-start;gap:24px;padding:4px 14px 16px;flex-wrap:wrap">
 <div>
-<div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781;margin-bottom:8px">${t('v2LabelShootingAt')}</div>
-<div style="display:flex;align-items:center;gap:8px">
-<input value="${escapeHtml(s.devSpeed)}" oninput="App.setField('devSpeed',this.value)" onblur="App.fillBox()" data-fkey="devSpeed" inputmode="numeric" placeholder="same as box" style="width:92px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:#eae7e1;font-size:13px;${MONO}">
-<button type="button" onclick="App.matchBox()" style="background:transparent;border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:#8b8781;font-size:9px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonMatchBox')}</button>
-</div>
+<div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781;margin-bottom:8px">${t('v2LabelDevType')}</div>
+<select onchange="App.setField('process',this.value)" title="${t('v2HelpDevType')}" style="height:31px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:0 7px;color:#eae7e1;font-size:13px;${MONO}">${PROCESS_OPTIONS.map(o => `<option value="${o.value}" ${s.process === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>
 </div>
 <div>
 <div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781;margin-bottom:8px">${t('v2LabelOnceOff')}</div>
@@ -491,7 +512,7 @@ ${s.extrasOpen ? `<div style="display:flex;align-items:flex-start;gap:24px;paddi
 }
 
 function renderPushWarning(s) {
-    const stopsSigned = stopsSignedFor(s.boxSpeed, s.devSpeed || s.boxSpeed);
+    const stopsSigned = pushPullStops(s);
     const signed = Math.abs(stopsSigned);
     const loaded = getAllFilms()[s.loadedFilmKey];
     const limit = loaded ? (parseFloat(loaded.maxPushPull ?? 1)) : 2;
@@ -552,7 +573,7 @@ function renderHero(s, ranked, home, cheapest, exp) {
 <div style="${MONO};font-size:15px;color:#c9c5bd;margin-top:2px">${CUR()}${money(home.pick.devCost)}</div>
 </div>
 ${pushVisible ? `<div>
-<div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#5f5c57">${s.devSpeed && num(s.devSpeed) < num(s.boxSpeed) ? 'Pull' : 'Push'}/roll</div>
+<div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#5f5c57">${pushPullStops(s) < 0 ? 'Pull' : 'Push'}/roll</div>
 <div style="${MONO};font-size:15px;color:var(--acc);margin-top:2px">${CUR()}${money(home.pick.pushFee)}</div>
 </div>` : ''}
 <div>
@@ -676,11 +697,12 @@ ${rows || `<div style="padding:14px;font-size:12px;color:#5f5c57;background:#131
 
 function procLabel(v) { return (PROCESS_OPTIONS.find(o => o.value === v) || {}).label || v; }
 function formatLabel(v) { return (FORMAT_OPTIONS.find(o => o.value === v) || {}).label || v; }
+function filmTypeLabel(v) { return (FILM_TYPE_OPTIONS.find(o => o.value === v) || {}).label || v; }
 
 function renderFilmSection(s, rows) {
     const allFilms = getAllFilms();
-    const shootIso = num(s.devSpeed) || num(s.boxSpeed);
-    const isoValues = [...new Set(Object.values(allFilms).filter(f => !f.hidden && (f.format || '35mm') === s.format && (f.process || 'C41') === s.process).map(f => parseFloat(f.boxSpeed) || 0))].sort((a, b) => a - b);
+    const shootIso = effectiveShootIso(s) || num(s.boxSpeed);
+    const isoValues = [...new Set(Object.values(allFilms).filter(f => !f.hidden && (f.format || '35mm') === s.format && filmColorType(f) === s.filmColor).map(f => parseFloat(f.boxSpeed) || 0))].sort((a, b) => a - b);
     const isoOptions = [`<option value="shoot" ${s.isoFilter === 'shoot' ? 'selected' : ''}>Shooting ${shootIso || '—'}</option>`, `<option value="all" ${s.isoFilter === 'all' ? 'selected' : ''}>All</option>`]
         .concat(isoValues.map(v => `<option value="${v}" ${s.isoFilter === String(v) ? 'selected' : ''}>${v}</option>`)).join('');
     const filmRows = rows.map(row => {
@@ -726,7 +748,7 @@ ${options}
 <div style="display:grid;grid-template-columns:1fr auto;gap:12px;padding:7px 12px;background:#0f0f11;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#5f5c57">
 <div>Stock — click for prices</div><div style="text-align:right">Per roll</div>
 </div>
-${filmRows || `<div style="padding:14px;font-size:12px;color:#5f5c57;background:#131315">No film stock saved for ${s.format} · ${procLabel(s.process)} yet.</div>`}
+${filmRows || `<div style="padding:14px;font-size:12px;color:#5f5c57;background:#131315">No film stock saved for ${s.format} · ${filmTypeLabel(s.filmColor)} yet.</div>`}
 </div>
 <div style="margin-top:6px;font-size:10px;color:#5f5c57;${MONO}">${note}</div>`;
 }
@@ -743,7 +765,7 @@ function renderMainView(s) {
 <div style="${NARROW};font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:${SECTION_COLORS.lookup}">${t('v2SectionFilmLookup')}</div>
 <div style="flex:1;height:1px;background:#26262a;min-width:20px"></div>
 <select onchange="App.setField('format',this.value)" style="background:#1a1a1d;border:1px solid #33333a;border-radius:5px;padding:5px 7px;color:#c9c5bd;font-size:11px;${MONO}">${FORMAT_OPTIONS.map(o => `<option value="${o.value}" ${s.format === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>
-<select onchange="App.setField('process',this.value)" style="background:#1a1a1d;border:1px solid #33333a;border-radius:5px;padding:5px 7px;color:#c9c5bd;font-size:11px;${MONO}">${PROCESS_OPTIONS.map(o => `<option value="${o.value}" ${s.process === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>
+<select onchange="App.setField('filmColor',this.value)" style="background:#1a1a1d;border:1px solid #33333a;border-radius:5px;padding:5px 7px;color:#c9c5bd;font-size:11px;${MONO}">${FILM_TYPE_OPTIONS.map(o => `<option value="${o.value}" ${s.filmColor === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>
 </div>
 ${renderCalculator(s)}
 ${renderHero(s, r, home, cheapest, r.exp)}
@@ -1253,19 +1275,17 @@ const App = {
 
     setField(key, value) {
         state[key] = value;
-        if (key === 'format' || key === 'process') persistScope();
+        // Switching Color/B&W resets Development Type to that type's usual
+        // chemistry (C-41 for Color, BW for B&W) — the common case for
+        // both. A chromogenic B&W stock like Ilford XP2 Super still needs
+        // Development Type overridden to C-41 by hand afterwards, in Extra
+        // fees / Advanced.
+        if (key === 'filmColor') state.process = DEV_TYPE_DEFAULT[value] || 'C41';
+        if (key === 'format' || key === 'process' || key === 'filmColor') persistScope();
         if (key === 'frame35') localStorage.setItem('globalCamera35Type', value);
         if (key === 'frame120') localStorage.setItem('globalCamera120Type', value);
         render();
     },
-    matchBox() { state.devSpeed = state.boxSpeed; render(); },
-    // Re-rendering unconditionally here (even when there's nothing to
-    // fill) used to replace the whole DOM on every blur — including a
-    // blur fired mid-click by tapping some other button, which could
-    // swap that button's element out from under the click between
-    // mousedown and mouseup and eat the tap (menu button on mobile, in
-    // particular, since blurring Box speed to tap it is a common path).
-    fillBox() { if (!state.boxSpeed && state.devSpeed) { state.boxSpeed = state.devSpeed; render(); } },
     toggleExtras() { state.extrasOpen = !state.extrasOpen; render(); },
     toggleMenu() { state.menuOpen = !state.menuOpen; render(); },
     closeMenu() { state.menuOpen = false; render(); },
@@ -1295,6 +1315,7 @@ const App = {
     _applyFilm(f, bundle) {
         state.format = f.format || '35mm';
         state.process = f.process || 'C41';
+        state.filmColor = filmColorType(f);
         state.boxSpeed = String(f.boxSpeed || '');
         state.packCost = String(bundle.filmCost || '');
         state.rolls = String(bundle.rolls || 1);
@@ -1314,7 +1335,7 @@ const App = {
     saveToLibrary() {
         const rolls = Math.max(1, parseInt(state.rolls) || 1);
         state.draft = {
-            name: '', boxSpeed: state.boxSpeed || '', process: state.process, format: state.format,
+            name: '', boxSpeed: state.boxSpeed || '', process: state.process, colorType: state.filmColor, format: state.format,
             maxPushPull: '2', hidden: false,
             bundles: [{ storeName: '', rolls, exposures: parseInt(state.exposures) || 36, filmCost: parseFloat(state.packCost) || 0, buyLink: '' }]
         };
@@ -1323,7 +1344,7 @@ const App = {
     },
     shareLink() {
         const p = new URLSearchParams({
-            format: state.format, process: state.process, boxSpeed: state.boxSpeed, devSpeed: state.devSpeed,
+            format: state.format, process: state.process, filmColor: state.filmColor, boxSpeed: state.boxSpeed, pushPull: state.pushPull,
             packCost: state.packCost, postage: state.postage, rolls: state.rolls, exposures: state.exposures
         });
         const url = `${location.origin}${location.pathname}?${p.toString()}`;
@@ -1333,12 +1354,12 @@ const App = {
         setTimeout(() => { state.flash = ''; render(); }, 2000);
     },
     clearForm() {
-        Object.assign(state, { boxSpeed: '', devSpeed: '', packCost: '', postage: '', rolls: '1', exposures: '36', onceOff: '', perRoll: '', loadedFilmKey: '' });
+        Object.assign(state, { boxSpeed: '', pushPull: '0', packCost: '', postage: '', rolls: '1', exposures: '36', onceOff: '', perRoll: '', loadedFilmKey: '' });
         render();
     },
 
     newFilm() {
-        state.draft = { name: '', boxSpeed: '', process: state.process, format: state.format, maxPushPull: '2', hidden: false, bundles: [{ storeName: '', rolls: 1, exposures: 36, filmCost: 0, buyLink: '' }] };
+        state.draft = { name: '', boxSpeed: '', process: state.process, colorType: state.filmColor, format: state.format, maxPushPull: '2', hidden: false, bundles: [{ storeName: '', rolls: 1, exposures: 36, filmCost: 0, buyLink: '' }] };
         state.draftKind = 'film'; state.draftKey = null;
         render();
     },
@@ -1388,7 +1409,7 @@ const App = {
             const newKey = filmKey(d.name, d.boxSpeed, d.format);
             if (state.draftKey && state.draftKey !== newKey) delete saved[state.draftKey];
             saved[newKey] = {
-                name: d.name.trim(), boxSpeed: parseFloat(d.boxSpeed) || 0, process: d.process, format: d.format,
+                name: d.name.trim(), boxSpeed: parseFloat(d.boxSpeed) || 0, process: d.process, colorType: d.colorType, format: d.format,
                 maxPushPull: parseFloat(d.maxPushPull), hidden: !!d.hidden,
                 bundles: d.bundles.map(b => ({ storeName: b.storeName || '', rolls: parseInt(b.rolls) || 1, exposures: parseInt(b.exposures) || 36, filmCost: parseFloat(b.filmCost) || 0, buyLink: b.buyLink || '' }))
             };
@@ -1596,13 +1617,14 @@ function buildFilmProfilesFromEntries(entries) {
 function persistScope() {
     localStorage.setItem('globalFormat', state.format);
     localStorage.setItem('globalProcess', state.process);
+    localStorage.setItem('globalFilmColor', state.filmColor);
 }
 
 // ==================== Init ====================
 function restoreFromShareLink() {
     const p = new URLSearchParams(location.search);
     if (![...p.keys()].length) return;
-    ['format', 'process', 'boxSpeed', 'devSpeed', 'packCost', 'postage', 'rolls', 'exposures'].forEach(k => {
+    ['format', 'process', 'filmColor', 'boxSpeed', 'pushPull', 'packCost', 'postage', 'rolls', 'exposures'].forEach(k => {
         if (p.has(k)) state[k] = p.get(k);
     });
     history.replaceState(null, '', location.pathname);
@@ -1785,7 +1807,7 @@ ${labDirectionsUrl(l.name) ? `<a href="${labDirectionsUrl(l.name)}" target="_bla
 </div>`;
     }).join('');
 
-    const isoValues = [...new Set(Object.values(getAllFilms()).filter(f => !f.hidden && (f.format || '35mm') === s.format && (f.process || 'C41') === s.process).map(f => parseFloat(f.boxSpeed) || 0))].sort((a, b) => a - b);
+    const isoValues = [...new Set(Object.values(getAllFilms()).filter(f => !f.hidden && (f.format || '35mm') === s.format && filmColorType(f) === s.filmColor).map(f => parseFloat(f.boxSpeed) || 0))].sort((a, b) => a - b);
     const shownFilmRows = s.isoFilter === 'shoot' && !s.allowPushPull ? filmRows.filter(row => row.stopsAbs === 0) : filmRows;
     const cheapestFilmPerRoll = shownFilmRows.length ? Math.min(...shownFilmRows.map(row => row.perRoll)) : 0;
     const filmCards = shownFilmRows.map(row => {
@@ -1814,7 +1836,7 @@ ${bundles}
 </div>`;
     }).join('');
 
-    const shootIso = num(s.devSpeed) || num(s.boxSpeed);
+    const shootIso = effectiveShootIso(s) || num(s.boxSpeed);
 
     return `<div style="padding:16px 12px 0">
 <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
@@ -1824,18 +1846,19 @@ ${bundles}
 </div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
 <select onchange="App.setField('format',this.value)" style="height:44px;${M_INPUT}">${FORMAT_OPTIONS.map(o => `<option value="${o.value}" ${s.format === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>
-<select onchange="App.setField('process',this.value)" style="height:44px;${M_INPUT}">${PROCESS_OPTIONS.map(o => `<option value="${o.value}" ${s.process === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>
+<select onchange="App.setField('filmColor',this.value)" style="height:44px;${M_INPUT}">${FILM_TYPE_OPTIONS.map(o => `<option value="${o.value}" ${s.filmColor === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>
 </div>
 <div style="${M_CARD}">
-${mRow('Box speed', `<input value="${escapeHtml(s.boxSpeed)}" oninput="App.setField('boxSpeed',this.value)" onblur="App.fillBox()" data-fkey="m-boxSpeed" inputmode="numeric" placeholder="400" style="width:96px;height:44px;text-align:right;${M_INPUT}"><span style="width:26px;font-size:12px;text-transform:uppercase;color:#7a7770">ISO</span>`, true)}
+${mRow('Box speed', `<input value="${escapeHtml(s.boxSpeed)}" oninput="App.setField('boxSpeed',this.value)" data-fkey="m-boxSpeed" inputmode="numeric" placeholder="400" style="width:96px;height:44px;text-align:right;${M_INPUT}"><span style="width:26px;font-size:12px;text-transform:uppercase;color:#7a7770">ISO</span>`, true)}
+${mRow('Push/pull', `<select onchange="App.setField('pushPull',this.value)" style="width:96px;height:44px;text-align:right;${M_INPUT}">${PUSH_PULL_OPTIONS.map(n => `<option value="${n}" ${String(s.pushPull) === String(n) ? 'selected' : ''}>${n > 0 ? '+' + n : n}</option>`).join('')}</select><span style="width:26px;font-size:12px;text-transform:uppercase;color:#7a7770">stop</span>`)}
 ${mRow('Exposures', `<input value="${escapeHtml(expShown)}" oninput="App.setField('exposures',this.value)" ${is120 ? 'disabled' : ''} data-fkey="m-exposures" inputmode="numeric" placeholder="36" style="width:96px;height:44px;text-align:right;${M_INPUT};${is120 ? 'color:#6d6a64' : ''}"><span style="width:26px"></span>`)}
 ${mRow('Camera', cameraControl)}
 ${mRow('Pack price', `<div style="display:flex;align-items:center;width:96px;height:44px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px"><span style="${MONO};font-size:15px;color:#6d6a64">${CUR()}</span><input value="${escapeHtml(s.packCost)}" oninput="App.setField('packCost',this.value)" data-fkey="m-packCost" inputmode="decimal" placeholder="50.00" style="width:100%;min-width:0;text-align:right;background:transparent;border:0;color:#eae7e1;font-size:16px;${MONO}"></div><span style="width:26px"></span>`)}
 ${mRow('Pack of', `<input value="${escapeHtml(s.rolls)}" oninput="App.setField('rolls',this.value)" data-fkey="m-rolls" inputmode="numeric" placeholder="1" style="width:96px;height:44px;text-align:right;${M_INPUT}"><span style="width:26px;font-size:12px;text-transform:uppercase;color:#7a7770">Rl</span>`)}
 ${mRow('Postage', `<div style="display:flex;align-items:center;width:96px;height:44px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px"><span style="${MONO};font-size:15px;color:#6d6a64">${CUR()}</span><input value="${escapeHtml(s.postage)}" oninput="App.setField('postage',this.value)" data-fkey="m-postage" inputmode="decimal" placeholder="3.95" style="width:100%;min-width:0;text-align:right;background:transparent;border:0;color:#eae7e1;font-size:16px;${MONO}"></div><span style="width:26px"></span>`)}
-<button type="button" onclick="App.toggleExtras()" style="width:100%;height:48px;display:flex;align-items:center;justify-content:space-between;background:#0f0f11;border:0;border-top:1px solid #212125;padding:0 14px;color:#8b8781;font-size:12px;letter-spacing:.16em;text-transform:uppercase;cursor:pointer"><span>Extra fees · shooting ISO, mail-back</span><span style="${MONO};font-size:16px">${s.extrasOpen ? '–' : '+'}</span></button>
+<button type="button" onclick="App.toggleExtras()" style="width:100%;height:48px;display:flex;align-items:center;justify-content:space-between;background:#0f0f11;border:0;border-top:1px solid #212125;padding:0 14px;color:#8b8781;font-size:12px;letter-spacing:.16em;text-transform:uppercase;cursor:pointer"><span>Extra fees / Advanced</span><span style="${MONO};font-size:16px">${s.extrasOpen ? '–' : '+'}</span></button>
 ${s.extrasOpen ? `<div style="background:#0f0f11;border-top:1px solid #212125">
-${mRow('Shooting at', `<input value="${escapeHtml(s.devSpeed)}" oninput="App.setField('devSpeed',this.value)" onblur="App.fillBox()" data-fkey="m-devSpeed" inputmode="numeric" placeholder="same as box" style="width:96px;height:44px;text-align:right;${M_INPUT}"><button type="button" onclick="App.matchBox()" style="width:26px;height:44px;background:transparent;border:0;color:#7a7770;font-size:11px;text-transform:uppercase;cursor:pointer">=</button>`, true)}
+${mRow('Development type', `<select onchange="App.setField('process',this.value)" style="width:96px;height:44px;text-align:right;${M_INPUT}">${PROCESS_OPTIONS.map(o => `<option value="${o.value}" ${s.process === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select><span style="width:26px"></span>`, true)}
 ${mRow('Mail-back', `<button type="button" onclick="App.toggleFlag('fMail')" style="width:56px;height:32px;border-radius:16px;border:1px solid #33333a;position:relative;cursor:pointer;padding:0;background:${s.fMail ? 'var(--acc)' : '#1a1a1d'}"><span style="position:absolute;top:3px;width:24px;height:24px;border-radius:50%;background:#eae7e1;transition:left .15s;left:${s.fMail ? '29px' : '3px'}"></span></button><span style="width:26px"></span>`)}
 </div>` : ''}
 </div>
@@ -1877,7 +1900,7 @@ ${isoValues.map(v => `<option value="${v}" ${s.isoFilter === String(v) ? 'select
 <span style="display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:4px;font-size:13px;${s.allowPushPull ? `background:${SECTION_COLORS.films};border:1px solid ${SECTION_COLORS.films};color:#131315` : 'background:#1a1a1d;border:1px solid #33333a;color:transparent'}">✓</span>
 <span style="font-size:13px;letter-spacing:.08em;text-transform:uppercase">Include push/pull stocks</span>
 </button>
-<div style="display:flex;flex-direction:column;gap:8px">${filmCards || `<div style="padding:14px;font-size:12px;color:#5f5c57;background:#131315;border:1px solid #26262a;border-radius:10px">No film stock saved for ${formatLabel(s.format)} · ${procLabel(s.process)} yet.</div>`}</div>
+<div style="display:flex;flex-direction:column;gap:8px">${filmCards || `<div style="padding:14px;font-size:12px;color:#5f5c57;background:#131315;border:1px solid #26262a;border-radius:10px">No film stock saved for ${formatLabel(s.format)} · ${filmTypeLabel(s.filmColor)} yet.</div>`}</div>
 <div style="${MONO};margin-top:10px;font-size:12px;line-height:1.5;color:#5f5c57">Per-roll price is the cheapest saved price for each stock, plus the push/pull stops needed to reach your shooting ISO.</div>
 </div>`;
 }

@@ -34,6 +34,7 @@ jobs:
           from collections import defaultdict
 
           VALID_PROCESSES = {"C41", "BW", "E6", "ECN2"}
+          VALID_COLOR_TYPES = {"color", "bw"}
           VALID_FORMATS = {"35mm", "120", "110", "127", "220", "sheet"}
           VALID_TURNAROUND = {"next_day", "same_week", "longer"}
           VALID_PUSHPULL_TYPE = {"per_stop", "flat"}
@@ -77,6 +78,8 @@ jobs:
                       film_name_locations[norm_key].append(path)
                   if film.get("process") and film["process"] not in VALID_PROCESSES:
                       err(path, f"{where}: process '{film['process']}' must be one of {sorted(VALID_PROCESSES)}")
+                  if film.get("colorType") and film["colorType"] not in VALID_COLOR_TYPES:
+                      err(path, f"{where}: colorType '{film['colorType']}' must be one of {sorted(VALID_COLOR_TYPES)}")
                   fmt = film.get("format", "35mm")
                   if fmt not in VALID_FORMATS:
                       err(path, f"{where}: format '{fmt}' must be one of {sorted(VALID_FORMATS)}")
