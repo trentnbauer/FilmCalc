@@ -19,7 +19,7 @@ formats:
     label: Sheet
 processes:
   - value: C41
-    label: C41 (Color)
+    label: C41
   - value: BW
     label: B&W
   - value: E6
