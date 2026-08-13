@@ -5,6 +5,9 @@ city: Melbourne
 labs:
   - name: Hillvale Photo Melbourne
     hidden: false
+    address: 43-45 Edward Street, Brunswick VIC 3056, Australia
+    phone: (03) 9023 3689
+    email: develop@hillvale.com.au
     website: https://hillvale.com.au
     services:
       - devCost: 19
@@ -149,6 +152,8 @@ labs:
           - C41
   - name: Walkens Melbourne
     hidden: false
+    address: 338 Brunswick St, Fitzroy VIC 3065, Australia
+    email: contact@walkens.com.au
     website: https://walkens.com.au
     services:
       - devCost: 16
@@ -353,6 +358,8 @@ labs:
           - E6
   - name: Irohas Melbourne
     hidden: false
+    address: 'GL, 15 McKillop St, Melbourne VIC 3000, Australia'
+    phone: '+61 483 968 883'
     website: https://irohasphoto.com.au
     services:
       - devCost: 17
