@@ -1104,7 +1104,7 @@ ${languages.map(([code, label]) => `<option value="${code}" ${currentLocale === 
     } else if (step === 'presets') {
         stepTitle = t('v2SetupStepImport');
         stepBody = `<div style="border:1px solid #26262a;border-radius:8px;background:#131315;padding:12px">
-${renderPresetImport()}
+${renderPresetImport(false)}
 <div style="margin-top:10px;padding-top:10px;border-top:1px solid #212125">
 <label style="display:inline-flex;align-items:center;background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#8b8781;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonImportYaml')}<input type="file" accept=".yaml,.yml,text/yaml" onchange="App.importYamlFile(this.files[0])" style="display:none"></label>
 </div>
@@ -1131,8 +1131,11 @@ ${tierLabels.map(l => `<option value="${escapeHtml(l)}" ${s.defaultTier === l ? 
 </div>`;
     }
     const backBtn = s.setupStep > 0 ? `<button type="button" onclick="App.setupGoto(${s.setupStep - 1})" style="flex:1;background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:9px 16px;color:#8b8781;font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2ButtonBack')}</button>` : '';
+    // On the presets step, Next both imports whatever's ticked AND
+    // advances — no separate "Import selected" click needed first.
+    const nextAction = step === 'presets' ? 'App.setupNextFromPresets()' : `App.setupGoto(${s.setupStep + 1})`;
     const nextBtn = s.setupStep < SETUP_STEPS.length - 1
-        ? `<button type="button" onclick="App.setupGoto(${s.setupStep + 1})" style="flex:2;background:#1c1512;border:1px solid #5a3a1c;border-radius:5px;padding:9px 16px;color:var(--acc);font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2ButtonNext')}</button>`
+        ? `<button type="button" onclick="${nextAction}" style="flex:2;background:#1c1512;border:1px solid #5a3a1c;border-radius:5px;padding:9px 16px;color:var(--acc);font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2ButtonNext')}</button>`
         : `<button type="button" onclick="App.closeSetup()" style="flex:2;background:#1c1512;border:1px solid #5a3a1c;border-radius:5px;padding:9px 16px;color:var(--acc);font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2ButtonDone')}</button>`;
     return `<div style="position:fixed;inset:0;z-index:70;background:rgba(6,6,7,.74);display:flex;align-items:flex-start;justify-content:center;padding:64px 16px;overflow:auto"><div style="width:100%;max-width:460px;background:linear-gradient(180deg,#151517,#111113);border:1px solid #33333a;border-radius:10px;box-shadow:0 30px 80px -20px #000;padding:18px 20px 20px">
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
@@ -1154,7 +1157,11 @@ ${stepBody}
 function presetCheckList(kind, entries) {
     return entries.map(f => `<label style="display:flex;align-items:center;gap:8px;padding:6px 2px;font-size:12px;color:#c9c5bd;cursor:pointer"><input type="checkbox" class="preset-check" data-kind="${kind}" value="${escapeHtml(f.file)}" style="width:16px;height:16px;accent-color:var(--acc);cursor:pointer">${escapeHtml(f.label)}</label>`).join('');
 }
-function renderPresetImport() {
+// showImportButton: false on the Setup wizard's presets step, where Next
+// itself imports whatever's ticked (see App.setupNextFromPresets) — a
+// separate button there would just be a redundant extra click. Settings'
+// own Starter Presets section has no such Next button, so it keeps one.
+function renderPresetImport(showImportButton = true) {
     if (!presetFilmIndex || !presetLabIndex) { loadPresetIndexes(); return `<div style="font-size:11px;color:#5f5c57">Loading…</div>`; }
     // One combined "Import selected" button for both lists, not one per
     // list — importing re-renders the whole page, which would otherwise
@@ -1167,7 +1174,7 @@ function renderPresetImport() {
 <div style="display:flex;flex-direction:column;max-height:160px;overflow:auto;border:1px solid #26262a;border-radius:6px;padding:4px 8px;margin-bottom:10px">${presetCheckList('films', presetFilmIndex)}</div>
 <div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781;margin-bottom:4px">Labs</div>
 <div style="display:flex;flex-direction:column;max-height:160px;overflow:auto;border:1px solid #26262a;border-radius:6px;padding:4px 8px;margin-bottom:10px">${presetCheckList('labs', presetLabIndex)}</div>
-<button type="button" onclick="App.importPresetSelected()" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#8b8781;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">Import selected</button>`;
+${showImportButton ? `<button type="button" onclick="App.importPresetSelected()" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#8b8781;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">Import selected</button>` : ''}`;
 }
 
 // ---------- Merge helpers (ported from the old js/modals.js import path —
@@ -1499,6 +1506,19 @@ const App = {
     openSetup() { state.setupOpen = true; state.setupStep = 0; render(); },
     closeSetup() { state.setupOpen = false; state.setupStep = 0; localStorage.setItem('setupSeen', '1'); render(); },
     setupGoto(step) { state.setupStep = step; render(); },
+    // Next on the presets step used to require a separate "Import
+    // selected" click first. Now Next itself imports whatever's ticked
+    // (if anything) and only then advances, so there's one action instead
+    // of two. Nothing ticked just advances immediately — presets are
+    // optional, so Next shouldn't block on an empty selection.
+    setupNextFromPresets() {
+        const hasChecked = document.querySelectorAll('.preset-check:checked').length > 0;
+        if (!hasChecked) { state.setupStep += 1; render(); return; }
+        Promise.resolve(App.importPresetSelected()).then(() => {
+            state.setupStep += 1;
+            render();
+        });
+    },
     setSetting(key, value) {
         state[key] = value;
         if (key === 'mailRolls') localStorage.setItem('mailBackRollCount', value);
@@ -1554,7 +1574,7 @@ const App = {
         const labFiles = [...document.querySelectorAll('.preset-check[data-kind="labs"]:checked')].map(el => el.value);
         if (!filmFiles.length && !labFiles.length) { state.importNote = 'Tick at least one region first.'; render(); return; }
         const fetchAll = (kind, files) => Promise.all(files.map(file => fetch(`${kind}/${file}`).then(r => r.text()).then(text => ({ file, parsed: jsyaml.load(text) || {} })).catch(() => ({ file, parsed: null }))));
-        Promise.all([fetchAll('films', filmFiles), fetchAll('labs', labFiles)]).then(([filmResults, labResults]) => {
+        return Promise.all([fetchAll('films', filmFiles), fetchAll('labs', labFiles)]).then(([filmResults, labResults]) => {
             let filmCount = 0, labCount = 0;
             const failed = [];
             filmResults.forEach(({ file, parsed }) => {
