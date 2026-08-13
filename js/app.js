@@ -572,15 +572,15 @@ ${badges.map(b => `<span style="display:flex;align-items:center;gap:7px;backgrou
 }
 
 function renderCheaperFilm(cheaper) {
-    const color = cheaper.has ? 'var(--acc)' : '#8b8781';
+    const color = cheaper.has ? SECTION_COLORS.films : '#8b8781';
     const border = cheaper.has ? '#5a3a1c' : '#26262a';
     const bg = cheaper.has ? '#17140f' : '#131315';
     return `
 <div style="margin-top:8px;display:flex;align-items:center;gap:12px;padding:9px 12px;border:1px solid ${border};border-radius:8px;background:${bg};flex-wrap:wrap">
 <div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:${color}">${escapeHtml(cheaper.label)}</div>
 <div style="flex:1;min-width:180px;font-size:12px;color:#c9c5bd">${escapeHtml(cheaper.text)}</div>
-${cheaper.has ? `<button type="button" onclick="App.loadCheaperFilm()" style="background:transparent;border:0;padding:0;color:var(--acc);font-size:10px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Load</button>
-<a href="${escapeHtml(cheaper.url)}" target="_blank" rel="noopener noreferrer" style="color:var(--acc);font-size:10px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none">Buy ↗</a>` : ''}
+${cheaper.has ? `<button type="button" onclick="App.loadCheaperFilm()" style="background:transparent;border:0;padding:0;color:${SECTION_COLORS.films};font-size:10px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Load</button>
+<a href="${escapeHtml(cheaper.url)}" target="_blank" rel="noopener noreferrer" style="color:${SECTION_COLORS.films};font-size:10px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none">Buy ↗</a>` : ''}
 </div>`;
 }
 
@@ -649,7 +649,10 @@ ${isHome ? `<span style="font-size:10px;color:${SECTION_COLORS.labs};letter-spac
 ${open ? `<div style="padding:0 12px 12px 46px">
 <div style="font-size:10px;color:#6d6a64;${MONO};margin-bottom:8px">${l.tiers.length} service tier${l.tiers.length === 1 ? '' : 's'} · ${escapeHtml(l.lab.address || 'address not saved')}</div>
 <div style="display:flex;flex-direction:column;gap:1px;background:#26262a;border:1px solid #26262a;border-radius:6px;overflow:hidden">${tierRows}</div>
-<button type="button" onclick="App.editLab('${escapeHtml(l.name)}')" style="margin-top:8px;background:transparent;border:1px solid #33333a;border-radius:4px;padding:5px 9px;color:#8b8781;font-size:9px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2ButtonEditLab')}</button>
+<div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+<button type="button" onclick="App.editLab('${escapeHtml(l.name)}')" style="background:transparent;border:1px solid #33333a;border-radius:4px;padding:5px 9px;color:#8b8781;font-size:9px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2ButtonEditLab')}</button>
+${labDirectionsUrl(l.name) ? `<a href="${labDirectionsUrl(l.name)}" target="_blank" rel="noopener noreferrer" style="background:transparent;border:1px solid #33333a;border-radius:4px;padding:5px 9px;color:${SECTION_COLORS.labs};font-size:9px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none">Directions ↗</a>` : ''}
+</div>
 </div>` : ''}
 </div>`;
     }).join('');
@@ -1722,6 +1725,7 @@ function renderMobileLookup(s) {
     const loaded = getAllFilms()[s.loadedFilmKey];
     const limit = loaded ? parseFloat(loaded.maxPushPull ?? 1) : 2;
     const pushWarn = stopsAbs > limit;
+    const cheaper = computeCheaperFilm(s, home);
 
     const expShown = is120 ? String(FRAME120[s.frame120] || '') : s.exposures;
     const cameraControl = is35
@@ -1773,7 +1777,10 @@ function renderMobileLookup(s) {
 ${open ? `<div style="padding:0 14px 14px">
 <div style="${MONO};font-size:12px;color:#7a7770;margin-bottom:8px">${escapeHtml(l.lab.address || 'address not saved')}</div>
 <div style="display:flex;flex-direction:column;gap:6px">${tierRows}</div>
-<button type="button" onclick="App.editLab('${escapeHtml(l.name)}')" style="margin-top:10px;width:100%;height:44px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Edit lab</button>
+<div style="display:flex;gap:8px;margin-top:10px">
+<button type="button" onclick="App.editLab('${escapeHtml(l.name)}')" style="flex:1;height:44px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Edit lab</button>
+${labDirectionsUrl(l.name) ? `<a href="${labDirectionsUrl(l.name)}" target="_blank" rel="noopener noreferrer" style="flex:1;height:44px;display:flex;align-items:center;justify-content:center;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:${SECTION_COLORS.labs};font-size:12px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none">Directions ↗</a>` : ''}
+</div>
 </div>` : ''}
 </div>`;
     }).join('');
@@ -1837,6 +1844,14 @@ ${pushWarn ? `<div style="display:flex;align-items:center;gap:9px;margin-top:10p
 <span style="width:7px;height:7px;border-radius:50%;background:var(--acc);flex-shrink:0"></span>
 <span style="font-size:13px;line-height:1.45;color:#ffa268">${stopsAbs} stops of ${r.stopsSigned > 0 ? 'push' : 'pull'} — ${loaded ? `${escapeHtml(loaded.name)} is rated for ${limit === 0 ? 'no push/pull' : '±' + limit}` : 'most stocks hold ±2'}, so expect heavy grain and contrast shift.</span>
 </div>` : ''}
+<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;padding:12px 14px;border:1px solid ${cheaper.has ? '#5a3a1c' : '#26262a'};border-radius:10px;background:${cheaper.has ? '#17140f' : '#131315'}">
+<div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:${cheaper.has ? SECTION_COLORS.films : '#8b8781'}">${escapeHtml(cheaper.label)}</div>
+<div style="font-size:13px;line-height:1.45;color:#c9c5bd">${escapeHtml(cheaper.text)}</div>
+${cheaper.has ? `<div style="display:flex;gap:10px;margin-top:2px">
+<button type="button" onclick="App.loadCheaperFilm()" style="flex:1;height:40px;background:transparent;border:1px solid #5a3a1c;border-radius:8px;color:${SECTION_COLORS.films};font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Load</button>
+<a href="${escapeHtml(cheaper.url)}" target="_blank" rel="noopener noreferrer" style="flex:1;height:40px;display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid #5a3a1c;border-radius:8px;color:${SECTION_COLORS.films};font-size:12px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none">Buy ↗</a>
+</div>` : ''}
+</div>
 <div style="display:flex;align-items:center;gap:10px;margin-top:14px">
 <button type="button" onclick="App.saveToLibrary()" style="flex:1;height:44px;background:#1c1512;border:1px solid #5a3a1c;border-radius:8px;color:var(--acc);font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Save to library</button>
 <button type="button" onclick="App.clearForm()" style="flex:1;height:44px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Clear</button>
