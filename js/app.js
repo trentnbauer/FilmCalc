@@ -649,7 +649,10 @@ ${isHome ? `<span style="font-size:10px;color:${SECTION_COLORS.labs};letter-spac
 ${open ? `<div style="padding:0 12px 12px 46px">
 <div style="font-size:10px;color:#6d6a64;${MONO};margin-bottom:8px">${l.tiers.length} service tier${l.tiers.length === 1 ? '' : 's'} · ${escapeHtml(l.lab.address || 'address not saved')}</div>
 <div style="display:flex;flex-direction:column;gap:1px;background:#26262a;border:1px solid #26262a;border-radius:6px;overflow:hidden">${tierRows}</div>
-<button type="button" onclick="App.editLab('${escapeHtml(l.name)}')" style="margin-top:8px;background:transparent;border:1px solid #33333a;border-radius:4px;padding:5px 9px;color:#8b8781;font-size:9px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2ButtonEditLab')}</button>
+<div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+<button type="button" onclick="App.editLab('${escapeHtml(l.name)}')" style="background:transparent;border:1px solid #33333a;border-radius:4px;padding:5px 9px;color:#8b8781;font-size:9px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2ButtonEditLab')}</button>
+${labDirectionsUrl(l.name) ? `<a href="${labDirectionsUrl(l.name)}" target="_blank" rel="noopener noreferrer" style="background:transparent;border:1px solid #33333a;border-radius:4px;padding:5px 9px;color:${SECTION_COLORS.labs};font-size:9px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none">Directions ↗</a>` : ''}
+</div>
 </div>` : ''}
 </div>`;
     }).join('');
@@ -1773,7 +1776,10 @@ function renderMobileLookup(s) {
 ${open ? `<div style="padding:0 14px 14px">
 <div style="${MONO};font-size:12px;color:#7a7770;margin-bottom:8px">${escapeHtml(l.lab.address || 'address not saved')}</div>
 <div style="display:flex;flex-direction:column;gap:6px">${tierRows}</div>
-<button type="button" onclick="App.editLab('${escapeHtml(l.name)}')" style="margin-top:10px;width:100%;height:44px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Edit lab</button>
+<div style="display:flex;gap:8px;margin-top:10px">
+<button type="button" onclick="App.editLab('${escapeHtml(l.name)}')" style="flex:1;height:44px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Edit lab</button>
+${labDirectionsUrl(l.name) ? `<a href="${labDirectionsUrl(l.name)}" target="_blank" rel="noopener noreferrer" style="flex:1;height:44px;display:flex;align-items:center;justify-content:center;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:${SECTION_COLORS.labs};font-size:12px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none">Directions ↗</a>` : ''}
+</div>
 </div>` : ''}
 </div>`;
     }).join('');
