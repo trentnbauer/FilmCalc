@@ -421,7 +421,6 @@ function renderHeader(s) {
 
 function renderCalculator(s) {
     const is120 = s.format === '120', is35 = s.format === '35mm';
-    const frame35Options = Object.keys(FRAME35).map(k => `<option value="${k}" ${s.frame35 === k ? 'selected' : ''}>${FRAME35[k].label}</option>`).join('');
     const frame120Options = Object.keys(FRAME120).map(k => `<option value="${k}" ${s.frame120 === k ? 'selected' : ''}>${k}</option>`).join('');
     const expShown = is120 ? String(FRAME120[s.frame120] || '') : s.exposures;
     const rolls = Math.max(1, Math.round(num(s.rolls)) || 1);
@@ -442,14 +441,14 @@ function renderCalculator(s) {
 <div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:9px">${t('v2LabelPushPull')}</div>
 <select onchange="App.setField('pushPull',this.value)" title="${t('v2HelpPushPull')}" style="height:32px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:0 7px;color:#c9c5bd;font-size:12px;${MONO}">${PUSH_PULL_OPTIONS.map(n => `<option value="${n}" ${String(s.pushPull) === String(n) ? 'selected' : ''}>${n > 0 ? '+' + n : n}</option>`).join('')}</select>
 </div>
-<div>
+${!is120 ? `<div>
 <div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:9px">${t('v2LabelExpCount')}</div>
-<input value="${escapeHtml(expShown)}" oninput="App.setField('exposures',this.value)" ${is120 ? 'disabled' : ''} data-fkey="exposures" inputmode="numeric" placeholder="36" style="width:56px;max-width:100%;box-sizing:border-box;background:${is120 ? '#141416' : '#1a1a1d'};border:1px solid #33333a;border-radius:4px;padding:7px 8px;color:${is120 ? '#8b8781' : '#eae7e1'};font-size:14px;${MONO}">
-</div>
-<div>
+<input value="${escapeHtml(expShown)}" oninput="App.setField('exposures',this.value)" data-fkey="exposures" inputmode="numeric" placeholder="36" style="width:56px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:7px 8px;color:#eae7e1;font-size:14px;${MONO}">
+</div>` : ''}
+${!is35 ? `<div>
 <div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:9px">${t('v2LabelCameraType')}</div>
-${is35 ? `<select onchange="App.setField('frame35',this.value)" title="Frame size your camera shoots — half frame doubles the shots per roll, XPan cuts them" style="height:32px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:0 7px;color:#c9c5bd;font-size:12px;${MONO}">${frame35Options}</select>` : ''}
 ${is120 ? `<select onchange="App.setField('frame120',this.value)" title="Frame size your camera back shoots — sets exposures per roll" style="height:32px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:0 7px;color:#c9c5bd;font-size:12px;${MONO}">${frame120Options}</select>` : ''}
+</div>` : ''}
 </div>
 </div>
 </div>
@@ -488,10 +487,6 @@ ${renderPushWarning(s)}
 <span>${t('v2LabelExtraFees')}</span><span style="${MONO}">${s.extrasOpen ? '–' : '+'}</span>
 </button>
 ${s.extrasOpen ? `<div style="display:flex;align-items:flex-start;gap:24px;padding:4px 14px 16px;flex-wrap:wrap">
-<div>
-<div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781;margin-bottom:8px">${t('v2LabelDevType')}</div>
-<select onchange="App.setField('process',this.value)" title="${t('v2HelpDevType')}" style="height:31px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:0 7px;color:#eae7e1;font-size:13px;${MONO}">${PROCESS_OPTIONS.map(o => `<option value="${o.value}" ${s.process === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>
-</div>
 <div>
 <div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781;margin-bottom:8px">${t('v2LabelOnceOff')}</div>
 <input value="${escapeHtml(s.onceOff)}" oninput="App.setField('onceOff',this.value)" data-fkey="onceOff" inputmode="decimal" placeholder="0.00" style="width:76px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:#eae7e1;font-size:13px;${MONO}">
@@ -766,6 +761,7 @@ function renderMainView(s) {
 <div style="flex:1;height:1px;background:#26262a;min-width:20px"></div>
 <select onchange="App.setField('format',this.value)" style="background:#1a1a1d;border:1px solid #33333a;border-radius:5px;padding:5px 7px;color:#c9c5bd;font-size:11px;${MONO}">${FORMAT_OPTIONS.map(o => `<option value="${o.value}" ${s.format === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>
 <select onchange="App.setField('filmColor',this.value)" style="background:#1a1a1d;border:1px solid #33333a;border-radius:5px;padding:5px 7px;color:#c9c5bd;font-size:11px;${MONO}">${FILM_TYPE_OPTIONS.map(o => `<option value="${o.value}" ${s.filmColor === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>
+<select onchange="App.setField('process',this.value)" title="${t('v2HelpDevType')}" style="background:#1a1a1d;border:1px solid #33333a;border-radius:5px;padding:5px 7px;color:#c9c5bd;font-size:11px;${MONO}">${PROCESS_OPTIONS.map(o => `<option value="${o.value}" ${s.process === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>
 </div>
 ${renderCalculator(s)}
 ${renderHero(s, r, home, cheapest, r.exp)}
@@ -1773,11 +1769,9 @@ function renderMobileLookup(s) {
     const cheaper = computeCheaperFilm(s, home);
 
     const expShown = is120 ? String(FRAME120[s.frame120] || '') : s.exposures;
-    const cameraControl = is35
-        ? `<select onchange="App.setField('frame35',this.value)" style="width:140px;${M_INPUT};height:44px;font-family:'IBM Plex Mono',monospace;font-size:15px">${Object.keys(FRAME35).map(k => `<option value="${k}" ${s.frame35 === k ? 'selected' : ''}>${FRAME35[k].label}</option>`).join('')}</select>`
-        : is120
-            ? `<select onchange="App.setField('frame120',this.value)" style="width:140px;${M_INPUT};height:44px;font-family:'IBM Plex Mono',monospace;font-size:15px">${Object.keys(FRAME120).map(k => `<option value="${k}" ${s.frame120 === k ? 'selected' : ''}>${k}</option>`).join('')}</select>`
-            : `<span style="width:26px"></span>`;
+    const cameraControl = is120
+        ? `<select onchange="App.setField('frame120',this.value)" style="width:140px;${M_INPUT};height:44px;font-family:'IBM Plex Mono',monospace;font-size:15px">${Object.keys(FRAME120).map(k => `<option value="${k}" ${s.frame120 === k ? 'selected' : ''}>${k}</option>`).join('')}</select>`
+        : `<span style="width:26px"></span>`;
 
     // Requires chips
     const chips = requireFilters().map(f => {
@@ -1874,15 +1868,15 @@ ${bundles}
 <div style="${M_CARD}">
 ${mRow('Box speed', `<input value="${escapeHtml(s.boxSpeed)}" oninput="App.setField('boxSpeed',this.value)" data-fkey="m-boxSpeed" inputmode="numeric" placeholder="400" style="width:96px;height:44px;text-align:right;${M_INPUT}"><span style="width:26px;font-size:12px;text-transform:uppercase;color:#7a7770">ISO</span>`, true)}
 ${mRow('Push/pull', `<select onchange="App.setField('pushPull',this.value)" style="width:96px;height:44px;text-align:right;${M_INPUT}">${PUSH_PULL_OPTIONS.map(n => `<option value="${n}" ${String(s.pushPull) === String(n) ? 'selected' : ''}>${n > 0 ? '+' + n : n}</option>`).join('')}</select><span style="width:26px;font-size:12px;text-transform:uppercase;color:#7a7770">stop</span>`)}
-${mRow('Exposures', `<input value="${escapeHtml(expShown)}" oninput="App.setField('exposures',this.value)" ${is120 ? 'disabled' : ''} data-fkey="m-exposures" inputmode="numeric" placeholder="36" style="width:96px;height:44px;text-align:right;${M_INPUT};${is120 ? 'color:#6d6a64' : ''}"><span style="width:26px"></span>`)}
-${mRow('Camera', cameraControl)}
+${mRow('Development type', `<select onchange="App.setField('process',this.value)" style="width:96px;height:44px;text-align:right;${M_INPUT}">${PROCESS_OPTIONS.map(o => `<option value="${o.value}" ${s.process === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select><span style="width:26px"></span>`)}
+${!is120 ? mRow('Exposures', `<input value="${escapeHtml(expShown)}" oninput="App.setField('exposures',this.value)" data-fkey="m-exposures" inputmode="numeric" placeholder="36" style="width:96px;height:44px;text-align:right;${M_INPUT}"><span style="width:26px"></span>`) : ''}
+${!is35 ? mRow('Camera', cameraControl) : ''}
 ${mRow('Pack price', `<div style="display:flex;align-items:center;width:96px;height:44px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px"><span style="${MONO};font-size:15px;color:#6d6a64">${CUR()}</span><input value="${escapeHtml(s.packCost)}" oninput="App.setField('packCost',this.value)" data-fkey="m-packCost" inputmode="decimal" placeholder="50.00" style="width:100%;min-width:0;text-align:right;background:transparent;border:0;color:#eae7e1;font-size:16px;${MONO}"></div><span style="width:26px"></span>`)}
 ${mRow('Pack of', `<input value="${escapeHtml(s.rolls)}" oninput="App.setField('rolls',this.value)" data-fkey="m-rolls" inputmode="numeric" placeholder="1" style="width:96px;height:44px;text-align:right;${M_INPUT}"><span style="width:26px;font-size:12px;text-transform:uppercase;color:#7a7770">Rl</span>`)}
 ${mRow('Postage', `<div style="display:flex;align-items:center;width:96px;height:44px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px"><span style="${MONO};font-size:15px;color:#6d6a64">${CUR()}</span><input value="${escapeHtml(s.postage)}" oninput="App.setField('postage',this.value)" data-fkey="m-postage" inputmode="decimal" placeholder="3.95" style="width:100%;min-width:0;text-align:right;background:transparent;border:0;color:#eae7e1;font-size:16px;${MONO}"></div><span style="width:26px"></span>`)}
 <button type="button" onclick="App.toggleExtras()" style="width:100%;height:48px;display:flex;align-items:center;justify-content:space-between;background:#0f0f11;border:0;border-top:1px solid #212125;padding:0 14px;color:#8b8781;font-size:12px;letter-spacing:.16em;text-transform:uppercase;cursor:pointer"><span>Extra fees / Advanced</span><span style="${MONO};font-size:16px">${s.extrasOpen ? '–' : '+'}</span></button>
 ${s.extrasOpen ? `<div style="background:#0f0f11;border-top:1px solid #212125">
-${mRow('Development type', `<select onchange="App.setField('process',this.value)" style="width:96px;height:44px;text-align:right;${M_INPUT}">${PROCESS_OPTIONS.map(o => `<option value="${o.value}" ${s.process === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select><span style="width:26px"></span>`, true)}
-${mRow('Mail-back', `<button type="button" onclick="App.toggleFlag('fMail')" style="width:56px;height:32px;border-radius:16px;border:1px solid #33333a;position:relative;cursor:pointer;padding:0;background:${s.fMail ? 'var(--acc)' : '#1a1a1d'}"><span style="position:absolute;top:3px;width:24px;height:24px;border-radius:50%;background:#eae7e1;transition:left .15s;left:${s.fMail ? '29px' : '3px'}"></span></button><span style="width:26px"></span>`)}
+${mRow('Mail-back', `<button type="button" onclick="App.toggleFlag('fMail')" style="width:56px;height:32px;border-radius:16px;border:1px solid #33333a;position:relative;cursor:pointer;padding:0;background:${s.fMail ? 'var(--acc)' : '#1a1a1d'}"><span style="position:absolute;top:3px;width:24px;height:24px;border-radius:50%;background:#eae7e1;transition:left .15s;left:${s.fMail ? '29px' : '3px'}"></span></button><span style="width:26px"></span>`, true)}
 </div>` : ''}
 </div>
 <div style="${MONO};margin-top:8px;font-size:12px;color:#7a7770;line-height:1.5">${CUR()}${money(num(s.packCost) / rolls)} per roll · ${rolls} roll${rolls === 1 ? '' : 's'} · ${CUR()}${money(num(s.postage) / rolls)} postage · ${r.exp} shots</div>
