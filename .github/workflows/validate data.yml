@@ -34,7 +34,7 @@ jobs:
           from collections import defaultdict
 
           VALID_PROCESSES = {"C41", "BW", "E6", "ECN2"}
-          VALID_COLOR_TYPES = {"color", "bw"}
+          VALID_COLOR_TYPES = {"color", "bw", "speciality"}
           VALID_FORMATS = {"35mm", "120", "110", "127", "220", "sheet"}
           VALID_TURNAROUND = {"next_day", "same_week", "longer"}
           VALID_PUSHPULL_TYPE = {"per_stop", "flat"}

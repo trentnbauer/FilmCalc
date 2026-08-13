@@ -87,8 +87,11 @@ let PROCESS_OPTIONS = [
 // "Extra fees / Advanced" as Development Type and still drives actual lab
 // tier matching, since that's genuinely chemistry-specific (a chromogenic
 // B&W stock like Ilford XP2 Super develops in C-41, not BW chemistry).
-const FILM_TYPE_OPTIONS = [{ value: 'color', label: 'Color' }, { value: 'bw', label: 'B&W' }];
-const DEV_TYPE_DEFAULT = { color: 'C41', bw: 'BW' };
+const FILM_TYPE_OPTIONS = [{ value: 'color', label: 'Color' }, { value: 'bw', label: 'B&W' }, { value: 'speciality', label: 'Speciality' }];
+// Speciality stocks (redscale, Harman Phoenix, Switch Azure, …) are
+// virtually always C-41 in practice, same as plain color — still just a
+// default, override-able same as the other two.
+const DEV_TYPE_DEFAULT = { color: 'C41', bw: 'BW', speciality: 'C41' };
 const PUSH_PULL_OPTIONS = [-3, -2, -1, 0, 1, 2, 3];
 async function loadOptions() {
     try {
@@ -1770,7 +1773,7 @@ function renderMobileLookup(s) {
 
     const expShown = is120 ? String(FRAME120[s.frame120] || '') : s.exposures;
     const cameraControl = is120
-        ? `<select onchange="App.setField('frame120',this.value)" style="width:140px;${M_INPUT};height:44px;font-family:'IBM Plex Mono',monospace;font-size:15px">${Object.keys(FRAME120).map(k => `<option value="${k}" ${s.frame120 === k ? 'selected' : ''}>${k}</option>`).join('')}</select>`
+        ? `<select onchange="App.setField('frame120',this.value)" style="width:96px;${M_INPUT};height:44px;font-family:'IBM Plex Mono',monospace;font-size:15px">${Object.keys(FRAME120).map(k => `<option value="${k}" ${s.frame120 === k ? 'selected' : ''}>${k}</option>`).join('')}</select>`
         : `<span style="width:26px"></span>`;
 
     // Requires chips
