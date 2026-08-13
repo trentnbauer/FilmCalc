@@ -160,7 +160,7 @@ function migrateLegacyDefaultLabPref() {
 const state = {
     view: 'main', // main | expired | library | settings
     draft: null, draftKind: null, draftKey: null,
-    setupOpen: false,
+    setupOpen: false, setupStep: 0, // 0=language, 1=import presets, 2=home lab
     extrasOpen: false, expandedLab: null, expandedFilm: null,
     format: localStorage.getItem('globalFormat') || '35mm',
     process: localStorage.getItem('globalProcess') || 'C41',
@@ -1058,31 +1058,46 @@ ${settingsSection(t('v2SettingsData'), `
 // First-run onboarding, also reachable from Settings → Data → "Re-run
 // setup". Kept deliberately small — home lab, preferred tier, language —
 // everything else already has its own home in Settings.
+// Three steps, in this order because each depends on the previous one
+// having happened: presets need to import BEFORE the home-lab step so
+// that dropdown actually has labs in it (it used to sit next to the
+// import controls on one page, so a brand new user always saw it blank —
+// nothing had been imported yet at the point it rendered).
+const SETUP_STEPS = ['language', 'presets', 'homeLab'];
 function renderSetupModal(s) {
+    const step = SETUP_STEPS[s.setupStep] || 'language';
     const labNames = Object.keys(getAllLabs());
     const tierLabels = [...new Set(Object.values(getAllLabs()).flatMap(l => normalizeLabServices(l).map((t, i) => ((Array.isArray(l.services) ? l.services : [l])[i] || {}).label || tierDescription(t))))];
     const languages = [
         ['en', 'English'], ['es', 'Español'], ['ja', '日本語'], ['de', 'Deutsch'], ['pt', 'Português (BR)'],
         ['fr', 'Français'], ['ko', '한국어'], ['zh', '中文 (简体)'], ['it', 'Italiano'], ['ru', 'Русский']
     ];
-    return `<div style="position:fixed;inset:0;z-index:70;background:rgba(6,6,7,.74);display:flex;align-items:flex-start;justify-content:center;padding:64px 16px;overflow:auto"><div style="width:100%;max-width:460px;background:linear-gradient(180deg,#151517,#111113);border:1px solid #33333a;border-radius:10px;box-shadow:0 30px 80px -20px #000;padding:18px 20px 20px">
-<div style="${NARROW};font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#eae7e1;margin-bottom:6px">${t('v2SetupTitle')}</div>
-<p style="margin:0 0 16px;font-size:12px;color:#6d6a64">${t('v2SetupIntro')}</p>
-<div style="display:flex;flex-direction:column;gap:14px">
-<div style="border:1px solid #26262a;border-radius:8px;background:#131315;padding:12px">
-<div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:8px">${t('v2SettingsStarterPresets')}</div>
+    const dots = SETUP_STEPS.map((_, i) => `<span style="width:6px;height:6px;border-radius:50%;background:${i === s.setupStep ? 'var(--acc)' : '#33333a'}"></span>`).join('');
+    let stepTitle, stepBody;
+    if (step === 'language') {
+        stepTitle = t('v2SetupStepLanguage');
+        stepBody = `<select onchange="App.setLanguage(this.value)" style="${FIELD_INPUT}">
+${languages.map(([code, label]) => `<option value="${code}" ${currentLocale === code ? 'selected' : ''}>${escapeHtml(label)}</option>`).join('')}
+</select>`;
+    } else if (step === 'presets') {
+        stepTitle = t('v2SetupStepImport');
+        stepBody = `<div style="border:1px solid #26262a;border-radius:8px;background:#131315;padding:12px">
 ${renderPresetImport()}
 <div style="margin-top:10px;padding-top:10px;border-top:1px solid #212125">
 <label style="display:inline-flex;align-items:center;background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#8b8781;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonImportYaml')}<input type="file" accept=".yaml,.yml,text/yaml" onchange="App.importYamlFile(this.files[0])" style="display:none"></label>
 </div>
 ${s.importNote ? `<div style="margin-top:8px;font-size:10px;color:#8b8781">${escapeHtml(s.importNote)}</div>` : ''}
-</div>
+</div>`;
+    } else {
+        stepTitle = t('v2SetupStepHomeLab');
+        stepBody = `<div style="display:flex;flex-direction:column;gap:14px">
 <div>
 <div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:6px">${t('v2SettingsHomeLab')}</div>
 <select onchange="App.setHomeLab(this.value)" style="${FIELD_INPUT}">
 <option value="">—</option>
 ${labNames.map(n => `<option value="${escapeHtml(n)}" ${s.homeLab === n ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('')}
 </select>
+${!labNames.length ? `<div style="margin-top:6px;font-size:10px;color:#5f5c57">${t('v2SetupNoLabsYet')}</div>` : ''}
 </div>
 <div>
 <div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:6px">${t('v2SetupPreferredTier')}</div>
@@ -1091,14 +1106,21 @@ ${labNames.map(n => `<option value="${escapeHtml(n)}" ${s.homeLab === n ? 'selec
 ${tierLabels.map(l => `<option value="${escapeHtml(l)}" ${s.defaultTier === l ? 'selected' : ''}>${escapeHtml(l)}</option>`).join('')}
 </select>
 </div>
-<div>
-<div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:6px">${t('v2SettingsLanguage')}</div>
-<select onchange="App.setLanguage(this.value)" style="${FIELD_INPUT}">
-${languages.map(([code, label]) => `<option value="${code}" ${currentLocale === code ? 'selected' : ''}>${escapeHtml(label)}</option>`).join('')}
-</select>
+</div>`;
+    }
+    const backBtn = s.setupStep > 0 ? `<button type="button" onclick="App.setupGoto(${s.setupStep - 1})" style="flex:1;background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:9px 16px;color:#8b8781;font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2ButtonBack')}</button>` : '';
+    const nextBtn = s.setupStep < SETUP_STEPS.length - 1
+        ? `<button type="button" onclick="App.setupGoto(${s.setupStep + 1})" style="flex:2;background:#1c1512;border:1px solid #5a3a1c;border-radius:5px;padding:9px 16px;color:var(--acc);font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2ButtonNext')}</button>`
+        : `<button type="button" onclick="App.closeSetup()" style="flex:2;background:#1c1512;border:1px solid #5a3a1c;border-radius:5px;padding:9px 16px;color:var(--acc);font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2ButtonDone')}</button>`;
+    return `<div style="position:fixed;inset:0;z-index:70;background:rgba(6,6,7,.74);display:flex;align-items:flex-start;justify-content:center;padding:64px 16px;overflow:auto"><div style="width:100%;max-width:460px;background:linear-gradient(180deg,#151517,#111113);border:1px solid #33333a;border-radius:10px;box-shadow:0 30px 80px -20px #000;padding:18px 20px 20px">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+<div style="${NARROW};font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#eae7e1">${t('v2SetupTitle')}</div>
+<div style="display:flex;align-items:center;gap:5px">${dots}</div>
 </div>
-</div>
-<button type="button" onclick="App.closeSetup()" style="margin-top:18px;width:100%;background:#1c1512;border:1px solid #5a3a1c;border-radius:5px;padding:9px 16px;color:var(--acc);font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2ButtonDone')}</button>
+<p style="margin:0 0 14px;font-size:12px;color:#6d6a64">${t('v2SetupIntro')}</p>
+<div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:8px">${stepTitle}</div>
+${stepBody}
+<div style="display:flex;gap:10px;margin-top:18px">${backBtn}${nextBtn}</div>
 </div></div>`;
 }
 
@@ -1453,8 +1475,9 @@ const App = {
         localStorage.setItem('locale', code);
         render();
     },
-    openSetup() { state.setupOpen = true; render(); },
-    closeSetup() { state.setupOpen = false; localStorage.setItem('setupSeen', '1'); render(); },
+    openSetup() { state.setupOpen = true; state.setupStep = 0; render(); },
+    closeSetup() { state.setupOpen = false; state.setupStep = 0; localStorage.setItem('setupSeen', '1'); render(); },
+    setupGoto(step) { state.setupStep = step; render(); },
     setSetting(key, value) {
         state[key] = value;
         if (key === 'mailRolls') localStorage.setItem('mailBackRollCount', value);
