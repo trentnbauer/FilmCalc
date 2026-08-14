@@ -397,6 +397,830 @@ function pill(label, on, onclick, color) {
 }
 
 
+function renderHeader(s) {
+    const eb = btnTone(s.view === 'expired'), lb = btnTone(s.view === 'library'), sb = btnTone(s.view === 'settings');
+    return `
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 2px 10px;flex-wrap:wrap">
+<button type="button" onclick="App.backHome()" title="Back to Film Lookup" style="display:flex;align-items:center;gap:9px;background:transparent;border:0;padding:0;cursor:pointer">
+<span style="width:22px;height:22px;border-radius:50%;background:linear-gradient(160deg,#2b2b2f,#131315);border:1px solid #3a3a3f;display:flex;align-items:center;justify-content:center">
+<span style="width:8px;height:8px;border-radius:50%;border:2px solid var(--acc)"></span>
+</span>
+<span style="${NARROW};font-weight:700;font-size:13px;letter-spacing:.2em;color:#c9c5bd;text-transform:uppercase">Filmcalc</span>
+</button>
+<div class="top-controls" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+<button type="button" onclick="App.toggleView('expired')" style="background:${eb.bg};border:1px solid ${eb.border};border-radius:5px;padding:6px 10px;color:${eb.color};font-size:10px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2NavExpiredCalc')}</button>
+<button type="button" onclick="App.toggleView('library')" style="background:${lb.bg};border:1px solid ${lb.border};border-radius:5px;padding:6px 10px;color:${lb.color};font-size:10px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2NavLibrary')}</button>
+<a href="https://github.com/trentnbauer/FilmCalc/wiki" target="_blank" rel="noopener noreferrer" title="${t('v2NavWiki')}" style="display:flex;align-items:center;justify-content:center;width:29px;height:29px;background:#141416;border:1px solid #2c2c30;border-radius:5px;color:#8b8781;box-sizing:border-box">
+<svg style="width:15px;height:15px" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.5c-1.5-1.4-3.6-2-5.5-2A5.5 5.5 0 003 5v13a5.5 5.5 0 013.5-1.5c1.9 0 4 .6 5.5 2m0-12c1.5-1.4 3.6-2 5.5-2A5.5 5.5 0 0121 5v13a5.5 5.5 0 00-3.5-1.5c-1.9 0-4 .6-5.5 2m0-12v12"></path></svg>
+</a>
+<button type="button" id="themeToggleNew" onclick="App.toggleDark()" title="${t('v2NavToggleDark')}" style="display:flex;align-items:center;justify-content:center;width:29px;height:29px;background:#141416;border:1px solid #2c2c30;border-radius:5px;color:#ffb020;cursor:pointer;padding:0;box-sizing:border-box">
+<svg style="width:15px;height:15px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"></circle><path stroke-linecap="round" d="M12 2.5v2.25M12 19.25v2.25M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.25M19.25 12h2.25M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"></path></svg>
+</button>
+<button type="button" onclick="App.toggleView('settings')" title="${t('v2NavSettings')}" style="display:flex;align-items:center;justify-content:center;width:29px;height:29px;background:${sb.bg};border:1px solid ${sb.border};border-radius:5px;color:${sb.color};cursor:pointer;padding:0;box-sizing:border-box">
+<svg style="width:15px;height:15px" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+</button>
+</div>
+</div>`;
+}
+
+function renderCalculator(s) {
+    const is120 = s.format === '120', is35 = s.format === '35mm';
+    const frame120Options = Object.keys(FRAME120).map(k => `<option value="${k}" ${s.frame120 === k ? 'selected' : ''}>${k}</option>`).join('');
+    const expShown = is120 ? String(FRAME120[s.frame120] || '') : s.exposures;
+    const rolls = Math.max(1, Math.round(num(s.rolls)) || 1);
+    return `
+<div style="border:1px solid #26262a;border-radius:8px;background:#131315;overflow:hidden">
+<div class="calc-outer" style="display:flex;flex-direction:column;gap:1px;background:#212125">
+
+<div class="calc-field" style="padding:16px;background:#131315;min-width:0">
+<div style="display:flex;align-items:flex-start;gap:28px;flex-wrap:wrap">
+<div>
+<div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:9px">${t('v2LabelBoxSpeed')}</div>
+<div style="display:flex;align-items:center;gap:8px">
+<input value="${escapeHtml(s.boxSpeed)}" oninput="App.setField('boxSpeed',this.value)" data-fkey="boxSpeed" inputmode="numeric" placeholder="400" style="width:78px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:7px 8px;color:#eae7e1;font-size:14px;${MONO}">
+<span style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#5f5c57">${t('v2UnitIso')}</span>
+</div>
+</div>
+<div>
+<div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:9px">${t('v2LabelPushPull')}</div>
+<select onchange="App.setField('pushPull',this.value)" title="${t('v2HelpPushPull')}" style="height:32px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:0 7px;color:#c9c5bd;font-size:12px;${MONO}">${PUSH_PULL_OPTIONS.map(n => `<option value="${n}" ${String(s.pushPull) === String(n) ? 'selected' : ''}>${n > 0 ? '+' + n : n}</option>`).join('')}</select>
+</div>
+${!is120 ? `<div>
+<div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:9px">${t('v2LabelExpCount')}</div>
+<input value="${escapeHtml(expShown)}" oninput="App.setField('exposures',this.value)" data-fkey="exposures" inputmode="numeric" placeholder="36" style="width:56px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:7px 8px;color:#eae7e1;font-size:14px;${MONO}">
+</div>` : ''}
+${!is35 ? `<div>
+<div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:9px">${t('v2LabelCameraType')}</div>
+${is120 ? `<select onchange="App.setField('frame120',this.value)" title="Frame size your camera back shoots — sets exposures per roll" style="height:32px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:0 7px;color:#c9c5bd;font-size:12px;${MONO}">${frame120Options}</select>` : ''}
+</div>` : ''}
+</div>
+</div>
+</div>
+
+<div class="calc-field" style="padding:16px;background:#131315">
+<div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:3px">${t('v2LabelFilmCost')}</div>
+<div style="font-size:10px;color:#5f5c57;margin-bottom:11px">${t('v2LabelPackPostage')}</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+<div style="display:flex;align-items:center;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding-left:8px;height:32px;box-sizing:border-box;width:110px">
+<span style="${MONO};font-size:13px;color:#6d6a64">${CUR()}</span>
+<input value="${escapeHtml(s.packCost)}" oninput="App.setField('packCost',this.value)" data-fkey="packCost" inputmode="decimal" placeholder="50.00" style="width:100%;min-width:0;background:transparent;border:0;padding:0 8px 0 3px;color:#eae7e1;font-size:14px;${MONO}">
+</div>
+<span style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#5f5c57;white-space:nowrap">${t('v2LabelPackOf')}</span>
+<input value="${escapeHtml(s.rolls)}" oninput="App.setField('rolls',this.value)" data-fkey="rolls" inputmode="numeric" placeholder="1" style="width:46px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:7px 8px;color:#eae7e1;font-size:14px;${MONO}">
+<span style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#5f5c57;white-space:nowrap">${t('v2UnitRolls')}</span>
+</div>
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+<span style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#5f5c57;white-space:nowrap">${t('v2LabelPlusPostage')}</span>
+<div style="display:flex;align-items:center;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding-left:8px;height:32px;box-sizing:border-box;width:110px">
+<span style="${MONO};font-size:13px;color:#6d6a64">${CUR()}</span>
+<input value="${escapeHtml(s.postage)}" oninput="App.setField('postage',this.value)" data-fkey="postage" inputmode="decimal" placeholder="3.95" style="width:100%;min-width:0;background:transparent;border:0;padding:0 8px 0 3px;color:#eae7e1;font-size:14px;${MONO}">
+</div>
+</div>
+</div>
+<div style="display:flex;align-items:center;gap:8px;font-size:10px;color:#6d6a64;${MONO};margin-top:9px;height:12px">
+<span>${CUR()}${money(num(s.packCost) / rolls)} per roll · ${rolls} roll${rolls === 1 ? '' : 's'}</span><span style="color:#3d3d45">·</span><span>${CUR()}${money(num(s.postage) / rolls)} per roll postage</span>
+</div>
+</div>
+</div>
+
+${renderPushWarning(s)}
+
+<div style="border-top:1px solid #212125;background:#0f0f11">
+<button type="button" onclick="App.toggleExtras()" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:transparent;border:0;padding:11px 14px;color:#6d6a64;${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;cursor:pointer">
+<span>${t('v2LabelExtraFees')}</span><span style="${MONO}">${s.extrasOpen ? '–' : '+'}</span>
+</button>
+${s.extrasOpen ? `<div style="display:flex;align-items:flex-start;gap:24px;padding:4px 14px 16px;flex-wrap:wrap">
+<div>
+<div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781;margin-bottom:8px">${t('v2LabelOnceOff')}</div>
+<input value="${escapeHtml(s.onceOff)}" oninput="App.setField('onceOff',this.value)" data-fkey="onceOff" inputmode="decimal" placeholder="0.00" style="width:76px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:#eae7e1;font-size:13px;${MONO}">
+</div>
+<div>
+<div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781;margin-bottom:8px">${t('v2LabelPerRoll')}</div>
+<input value="${escapeHtml(s.perRoll)}" oninput="App.setField('perRoll',this.value)" data-fkey="perRoll" inputmode="decimal" placeholder="0.00" style="width:76px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:#eae7e1;font-size:13px;${MONO}">
+</div>
+<div>
+<div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781;margin-bottom:8px">${t('v2LabelMailBack')}</div>
+<button type="button" onclick="App.toggleFlag('fMail')" title="Adds each lab's mail-back fee and hides labs that don't post rolls home" style="width:44px;height:22px;border-radius:11px;border:1px solid #33333a;background:${s.fMail ? 'var(--acc)' : '#1a1a1d'};position:relative;cursor:pointer;padding:0">
+<span style="position:absolute;top:2px;left:${s.fMail ? '24px' : '2px'};width:16px;height:16px;border-radius:50%;background:#eae7e1;transition:left .15s"></span>
+</button>
+</div>
+</div>` : ''}
+</div>
+</div>`;
+}
+
+function renderPushWarning(s) {
+    const stopsSigned = pushPullStops(s);
+    const signed = Math.abs(stopsSigned);
+    const loaded = getAllFilms()[s.loadedFilmKey];
+    const limit = loaded ? (parseFloat(loaded.maxPushPull ?? 1)) : 2;
+    if (signed <= limit) return '';
+    return `<div style="display:flex;align-items:center;gap:9px;padding:9px 12px;border-top:1px solid #212125;background:#17140f">
+<span style="width:6px;height:6px;border-radius:50%;background:var(--acc);flex-shrink:0"></span>
+<span style="font-size:11px;color:#ffa268">${signed} stops of ${stopsSigned > 0 ? 'push' : 'pull'} — ${loaded ? `${escapeHtml(loaded.name)} is rated for ${limit === 0 ? 'no push/pull' : '±' + limit}` : 'most stocks hold ±2'}, so expect heavy grain and contrast shift.</span>
+</div>`;
+}
+
+function fmtTierBadges(t) {
+    const badges = [];
+    if (t.highResScan) badges.push('Hi-res');
+    if (t.tiffScan) badges.push('TIFF');
+    if (t.turnaroundTime === 'next_day') badges.push('Next day');
+    if (t.mailBackCost !== null) badges.push('Mail-back');
+    return badges;
+}
+
+// Hero result card — the hand-off between "what you typed" and "what it
+// costs at your home lab", plus the cheapest alternative for comparison.
+function renderHero(s, ranked, home, cheapest, exp) {
+    if (!home) {
+        return `<div style="margin-top:12px;border:1px solid #33333a;border-radius:8px;background:linear-gradient(180deg,#1a1a1d,#141416);padding:14px;color:#8b8781;font-size:12px">No lab offers every option you ticked — drop one to see prices.</div>`;
+    }
+    const homeLabName = s.homeLab && home.name === s.homeLab ? `${escapeHtml(home.name)} · home` : escapeHtml(home.name);
+    const sheet = s.format === 'sheet';
+    const shotsNote = `${exp} shots per ${sheet ? 'sheet' : 'roll'}`;
+    const pushVisible = home.pick.pushFee > 0;
+    const filmPct = Math.max(6, Math.min(100, (home.filmPerRoll / home.roll) * 100));
+    const badges = fmtTierBadges(home.pick);
+    const savings = cheapest && cheapest.name !== home.name ? (home.cpp - cheapest.cpp) * 100 : 0;
+    const heroNote = !cheapest ? '' : (cheapest.name === home.name
+        ? `This is already the cheapest lab that qualifies. Roll total ${CUR()}${money(home.roll)}.`
+        : `Roll total ${CUR()}${money(home.roll)}. Switching to ${escapeHtml(cheapest.name)} saves ${savings.toFixed(0)}c a frame.`);
+    return `
+<div style="margin-top:12px;border:1px solid #33333a;border-radius:8px;background:linear-gradient(180deg,#1a1a1d,#141416);overflow:hidden">
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:12px 14px;flex-wrap:wrap">
+<div>
+<div style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#5f5c57;margin-bottom:2px">Cost per frame · ${homeLabName}</div>
+<div style="display:flex;align-items:baseline;gap:5px">
+<span style="${MONO};font-size:16px;color:#6d6a64">${CUR()}</span>
+<span style="${MONO};font-size:40px;font-weight:500;line-height:.9;color:#eae7e1;letter-spacing:-.02em">${money(home.cpp)}</span><span style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--acc);white-space:nowrap;text-align:left;width:136px;height:12px">${shotsNote}</span>
+</div>
+<div style="display:flex;align-items:baseline;gap:7px;margin-top:7px">
+<span style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#5f5c57">${t('v2TagCheapest')}</span>
+<span style="${MONO};font-size:14px;color:var(--acc)">${cheapest ? CUR() + money(cheapest.cpp) : '—'}</span>
+<span style="font-size:11px;color:#8b8781">${cheapest ? escapeHtml(cheapest.name) : ''}</span>
+</div>
+</div>
+<div style="display:flex;gap:20px;flex-wrap:wrap">
+<div>
+<div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#5f5c57">Film / roll</div>
+<div style="${MONO};font-size:15px;color:#c9c5bd;margin-top:2px">${CUR()}${money(home.filmPerRoll)}</div>
+</div>
+<div>
+<div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#5f5c57">Dev / roll</div>
+<div style="${MONO};font-size:15px;color:#c9c5bd;margin-top:2px">${CUR()}${money(home.pick.devCost)}</div>
+</div>
+${pushVisible ? `<div>
+<div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#5f5c57">${pushPullStops(s) < 0 ? 'Pull' : 'Push'}/roll</div>
+<div style="${MONO};font-size:15px;color:var(--acc);margin-top:2px">${CUR()}${money(home.pick.pushFee)}</div>
+</div>` : ''}
+<div>
+<div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#5f5c57">Roll total</div>
+<div style="${MONO};font-size:15px;color:#c9c5bd;margin-top:2px">${CUR()}${money(home.roll)}</div>
+</div>
+</div>
+</div>
+<div style="display:flex;align-items:center;gap:8px;padding:0 14px 11px;flex-wrap:wrap">
+<span style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#5f5c57">Service tier</span>
+<span style="font-size:11px;color:#c9c5bd">${escapeHtml(home.pick.label)}</span>
+${badges.map(b => `<span style="display:flex;align-items:center;gap:7px;background:#17140f;border:1px solid #5a3a1c;border-radius:20px;padding:4px 10px"><span style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--acc)">${b}</span></span>`).join('')}
+</div>
+<div style="height:3px;background:#0f0f11;display:flex"><div style="width:${filmPct}%;background:var(--acc)"></div></div>
+<div style="padding:8px 14px;border-top:1px solid #26262a;font-size:11px;color:#8b8781">${heroNote}</div>
+</div>`;
+}
+
+function renderCheaperFilm(cheaper) {
+    const color = cheaper.has ? SECTION_COLORS.films : '#8b8781';
+    const border = cheaper.has ? '#5a3a1c' : '#26262a';
+    const bg = cheaper.has ? '#17140f' : '#131315';
+    return `
+<div style="margin-top:8px;display:flex;align-items:center;gap:12px;padding:9px 12px;border:1px solid ${border};border-radius:8px;background:${bg};flex-wrap:wrap">
+<div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:${color}">${escapeHtml(cheaper.label)}</div>
+<div style="flex:1;min-width:180px;font-size:12px;color:#c9c5bd">${escapeHtml(cheaper.text)}</div>
+${cheaper.has ? `<button type="button" onclick="App.loadCheaperFilm()" style="background:transparent;border:0;padding:0;color:${SECTION_COLORS.films};font-size:10px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Load</button>
+<a href="${escapeHtml(cheaper.url)}" target="_blank" rel="noopener noreferrer" style="color:${SECTION_COLORS.films};font-size:10px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none">Buy ↗</a>` : ''}
+</div>`;
+}
+
+function renderActionRow() {
+    return `
+<div style="display:flex;align-items:center;gap:14px;margin-top:10px;padding:0 2px;flex-wrap:wrap">
+<button type="button" onclick="App.saveToLibrary()" style="background:transparent;border:0;padding:0;color:var(--acc);font-size:10px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2ButtonSaveToLibrary')}</button>
+<div style="width:1px;height:10px;background:#33333a"></div>
+<button type="button" onclick="App.shareLink()" style="background:transparent;border:0;padding:0;color:var(--acc);font-size:10px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2ButtonShareLink')}</button>
+<div style="width:1px;height:10px;background:#33333a"></div>
+<button type="button" onclick="App.clearForm()" style="background:transparent;border:0;padding:0;color:#6d6a64;font-size:10px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2ButtonClear')}</button>
+</div>`;
+}
+
+// The 5 "Requires" filter chips map 1:1 onto tierWhy()'s checks above — a
+// tier only qualifies when it satisfies every filter that's on.
+function requireFilters() {
+    return [
+        { key: 'fHiRes', label: t('v2FilterHiRes') },
+        { key: 'fTiff', label: t('v2FilterTiff') },
+        { key: 'fRush', label: t('v2FilterNextDay') },
+        { key: 'fWeek', label: t('v2FilterSameWeek') },
+        { key: 'fMail', label: t('v2LabelMailBack') }
+    ];
+}
+
+function renderLabSection(s, r) {
+    const total = Object.keys(getAllLabs()).filter(n => !getAllLabs()[n].hidden).length;
+    const shown = r.ranked.length;
+    const filterNote = shown < total ? `${total - shown} labs hidden` : `${shown} lab${shown === 1 ? '' : 's'}`;
+    const filterChips = requireFilters().map(f => pill(f.label, s[f.key], `App.toggleFlag('${f.key}')`, SECTION_COLORS.labs)).join('');
+    const rows = r.ranked.map((l, i) => {
+        const rank = String(i + 1).padStart(2, '0');
+        const cheapest = r.ranked[0];
+        const isHome = s.homeLab === l.name;
+        const open = s.expandedLab === l.name;
+        const rowBg = i === 0 ? '#17140f' : '#131315';
+        const tag = i === 0 ? 'Cheapest' : `+${((l.cpp - cheapest.cpp) * 100).toFixed(0)}c`;
+        const detail = `${escapeHtml(l.pick.label)} · ${CUR()}${money(l.pick.cost)}/roll${l.pick.mailFee > 0 ? ` · incl. ${CUR()}${money(l.pick.mailFee)} mail-back` : ''}`;
+        const tierRows = l.tiers.map(t => {
+            const picked = t === l.pick;
+            const color = picked ? SECTION_COLORS.labs : (t.ok ? '#c9c5bd' : '#55534e');
+            const badges = fmtTierBadges(t).map(b => `<span style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#8b8781;border:1px solid #33333a;border-radius:10px;padding:2px 7px">${b}</span>`).join('');
+            return `<div style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;padding:8px 10px;background:${picked ? '#17140f' : '#131315'}">
+<span style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+<span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:${color}">${escapeHtml(t.label)}</span>
+${badges}
+<span style="font-size:10px;color:#5f5c57;font-style:italic">${t.ok ? 'used here' : escapeHtml(t.why)}</span>
+</span>
+<span style="${MONO};font-size:12px;color:${color}">${CUR()}${money(t.cost)}</span>
+</div>`;
+        }).join('');
+        return `<div style="background:${rowBg}">
+<button type="button" onclick="App.toggleLab('${escapeHtml(l.name)}')" class="list-row" style="width:100%;display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:12px;padding:12px 14px;background:transparent;border:0;cursor:pointer;text-align:left">
+<span style="${MONO};font-size:11px;color:${i === 0 ? SECTION_COLORS.labs : '#5f5c57'}">${rank}</span>
+<span style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
+<span style="font-size:13px;color:#eae7e1">${escapeHtml(l.name)}</span>
+${isHome ? `<span style="font-size:10px;color:${SECTION_COLORS.labs};letter-spacing:.12em;text-transform:uppercase">${t('v2TagHome')}</span>` : ''}
+<span style="font-size:10px;color:#6d6a64;${MONO}">${detail}</span>
+</span>
+<span style="display:flex;align-items:baseline;gap:8px">
+<span style="${MONO};font-size:16px;color:${i === 0 ? SECTION_COLORS.labs : '#c9c5bd'}">${CUR()}${money(l.cpp)}</span>
+<span style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#5f5c57;width:52px;text-align:right">${tag}</span>
+</span>
+</button>
+${open ? `<div style="padding:0 12px 12px 46px">
+<div style="font-size:10px;color:#6d6a64;${MONO};margin-bottom:8px">${l.tiers.length} service tier${l.tiers.length === 1 ? '' : 's'} · ${escapeHtml(l.lab.address || 'address not saved')}</div>
+<div style="display:flex;flex-direction:column;gap:1px;background:#26262a;border:1px solid #26262a;border-radius:6px;overflow:hidden">${tierRows}</div>
+<div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+<button type="button" onclick="App.editLab('${escapeHtml(l.name)}')" style="background:transparent;border:1px solid #33333a;border-radius:4px;padding:5px 9px;color:#8b8781;font-size:9px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2ButtonEditLab')}</button>
+${labDirectionsUrl(l.name) ? `<a href="${labDirectionsUrl(l.name)}" target="_blank" rel="noopener noreferrer" style="background:transparent;border:1px solid #33333a;border-radius:4px;padding:5px 9px;color:${SECTION_COLORS.labs};font-size:9px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none">Directions ↗</a>` : ''}
+</div>
+</div>` : ''}
+</div>`;
+    }).join('');
+    return `
+<div class="section-head" style="display:flex;align-items:center;gap:10px;margin:26px 0 12px;flex-wrap:wrap">
+<div style="width:5px;height:5px;background:${SECTION_COLORS.labs};border-radius:50%"></div>
+<div style="${NARROW};font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:${SECTION_COLORS.labs}">${t('v2SectionSavedLabCosts')}</div>
+<div style="flex:1;height:1px;background:#26262a;min-width:20px"></div>
+<button type="button" onclick="App.newLab()" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:5px 9px;color:#8b8781;font-size:10px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2ButtonNewLab')}</button>
+<div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#5f5c57">${s.format} · ${escapeHtml(procLabel(s.process))} · ${r.stopsAbs} stop ${r.stopsSigned < 0 ? 'pull' : 'push'}</div>
+</div>
+<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap">
+<span style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#5f5c57;margin-right:2px">${t('v2LabelRequires')}</span>
+${filterChips}
+<span style="font-size:10px;color:#5f5c57;${MONO}">${filterNote}</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:1px;border:1px solid #26262a;border-radius:8px;overflow:hidden;background:#212125">
+${rows || `<div style="padding:14px;font-size:12px;color:#5f5c57;background:#131315">No labs saved yet — add one.</div>`}
+</div>`;
+}
+
+function procLabel(v) { return (PROCESS_OPTIONS.find(o => o.value === v) || {}).label || v; }
+function formatLabel(v) { return (FORMAT_OPTIONS.find(o => o.value === v) || {}).label || v; }
+function filmTypeLabel(v) { return (FILM_TYPE_OPTIONS.find(o => o.value === v) || {}).label || v; }
+
+function renderFilmSection(s, rows) {
+    const allFilms = getAllFilms();
+    const shootIso = effectiveShootIso(s) || num(s.boxSpeed);
+    const isoValues = [...new Set(Object.values(allFilms).filter(f => !f.hidden && (f.format || '35mm') === s.format && filmColorType(f) === s.filmColor).map(f => parseFloat(f.boxSpeed) || 0))].sort((a, b) => a - b);
+    const isoOptions = [`<option value="shoot" ${s.isoFilter === 'shoot' ? 'selected' : ''}>Shooting ${shootIso || '—'}</option>`, `<option value="all" ${s.isoFilter === 'all' ? 'selected' : ''}>All</option>`]
+        .concat(isoValues.map(v => `<option value="${v}" ${s.isoFilter === String(v) ? 'selected' : ''}>${v}</option>`)).join('');
+    const filmRows = rows.map(row => {
+        const f = row.f;
+        const key = filmKey(f.name, f.boxSpeed, f.format);
+        const open = s.expandedFilm === key;
+        const meta = `${f.boxSpeed} · ${procLabel(f.process)} · ${row.exposures}exp · ${row.bundles.length} price${row.bundles.length === 1 ? '' : 's'}${row.stopsAbs ? ` · ${row.stopsAbs} stop ${row.dir}` : ''}`;
+        const cheapestPerRoll = rows[0] ? rows[0].perRoll : row.perRoll;
+        const options = row.bundles.slice().sort((a, b) => (a.filmCost / a.rolls) - (b.filmCost / b.rolls)).map(b => `
+<div style="display:flex;align-items:stretch;gap:4px;margin-bottom:4px">
+<button type="button" onclick="App.loadFilmBundle('${escapeHtml(key)}','${escapeHtml(b.storeName)}',${b.rolls},${b.exposures})" style="flex:1;display:grid;grid-template-columns:1fr 78px 78px 74px;align-items:center;gap:12px;padding:7px 10px;background:#0f0f11;border:1px solid #26262a;border-radius:5px;cursor:pointer;text-align:left">
+<span style="font-size:12px;color:#c9c5bd">${escapeHtml(b.storeName || 'Unnamed store')}</span>
+<span style="text-align:right;font-size:11px;color:#6d6a64;${MONO}">${b.rolls}×${b.exposures}</span>
+<span style="text-align:right;font-size:12px;color:#8b8781;${MONO}">${CUR()}${money(b.filmCost)}</span>
+<span style="text-align:right;font-size:12px;color:#c9c5bd;${MONO}">${CUR()}${money(b.filmCost / b.rolls)}</span>
+</button>
+<a href="${sanitizeUrl(b.buyLink)}" target="_blank" rel="noopener noreferrer" title="Open the shop listing" style="display:flex;align-items:center;padding:0 10px;background:#0f0f11;border:1px solid #26262a;border-radius:5px;color:${SECTION_COLORS.films};font-size:9px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none;white-space:nowrap">Buy ↗</a>
+</div>`).join('');
+        return `<div style="background:${open ? '#1a1a1d' : '#131315'}">
+<button type="button" onclick="App.toggleFilm('${escapeHtml(key)}')" class="list-row" style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;padding:12px 14px;background:transparent;border:0;cursor:pointer;text-align:left;width:100%">
+<span><span style="display:block;font-size:13px;color:#eae7e1">${escapeHtml(f.name)}</span>
+<span style="display:block;font-size:10px;color:#6d6a64;${MONO};margin-top:1px">${meta}</span></span>
+<span style="text-align:right;${MONO};font-size:15px;color:${row.perRoll <= cheapestPerRoll + 0.001 ? SECTION_COLORS.films : '#c9c5bd'}">${CUR()}${money(row.perRoll)}</span>
+</button>
+${open ? `<div style="padding:0 12px 10px 12px;display:flex;flex-direction:column;gap:1px;background:transparent">
+<div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#5f5c57;padding:4px 0 6px">Where to buy — cheapest first</div>
+${options}
+</div>` : ''}
+</div>`;
+    }).join('');
+    const note = s.isoFilter === 'shoot'
+        ? 'Per-roll price is the cheapest saved price for each stock, plus the push/pull stops shown to reach your shooting ISO. Open a stock to see all its saved prices.'
+        : 'Per-roll price is the cheapest saved price for each stock. Open a stock to see all its saved prices.';
+    return `
+<div class="section-head" style="display:flex;align-items:center;gap:10px;margin:26px 0 12px;flex-wrap:wrap">
+<div style="width:5px;height:5px;background:${SECTION_COLORS.films};border-radius:50%"></div>
+<div style="${NARROW};font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:${SECTION_COLORS.films}">${t('v2SectionSavedFilmStock')}</div>
+<div style="flex:1;height:1px;background:#26262a;min-width:20px"></div>
+<span style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#5f5c57">ISO</span>
+<select onchange="App.setField('isoFilter',this.value)" style="background:#1a1a1d;border:1px solid #33333a;border-radius:5px;padding:5px 7px;color:#c9c5bd;font-size:11px;${MONO}">${isoOptions}</select>
+</div>
+<div style="display:flex;flex-direction:column;gap:1px;border:1px solid #26262a;border-radius:8px;overflow:hidden;background:#212125">
+<div style="display:grid;grid-template-columns:1fr auto;gap:12px;padding:7px 12px;background:#0f0f11;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#5f5c57">
+<div>Stock — click for prices</div><div style="text-align:right">Per roll</div>
+</div>
+${filmRows || `<div style="padding:14px;font-size:12px;color:#5f5c57;background:#131315">No film stock saved for ${s.format} · ${filmTypeLabel(s.filmColor)} yet.</div>`}
+</div>
+<div style="margin-top:6px;font-size:10px;color:#5f5c57;${MONO}">${note}</div>`;
+}
+
+function renderMainView(s) {
+    const r = rankLabs(s);
+    const cheapest = r.ranked[0] || null;
+    const home = r.ranked.find(l => l.name === s.homeLab) || cheapest;
+    const filmRows = computeFilmRows(s, home);
+    const cheaper = computeCheaperFilm(s, home);
+    return `<div style="padding:20px 22px 22px">
+<div class="section-head" style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+<div style="width:5px;height:5px;background:${SECTION_COLORS.lookup};border-radius:50%"></div>
+<div style="${NARROW};font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:${SECTION_COLORS.lookup}">${t('v2SectionFilmLookup')}</div>
+<div style="flex:1;height:1px;background:#26262a;min-width:20px"></div>
+<select onchange="App.setField('format',this.value)" style="background:#1a1a1d;border:1px solid #33333a;border-radius:5px;padding:5px 7px;color:#c9c5bd;font-size:11px;${MONO}">${FORMAT_OPTIONS.map(o => `<option value="${o.value}" ${s.format === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>
+<select onchange="App.setField('filmColor',this.value)" style="background:#1a1a1d;border:1px solid #33333a;border-radius:5px;padding:5px 7px;color:#c9c5bd;font-size:11px;${MONO}">${FILM_TYPE_OPTIONS.map(o => `<option value="${o.value}" ${s.filmColor === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>
+<select onchange="App.setField('process',this.value)" title="${t('v2HelpDevType')}" style="background:#1a1a1d;border:1px solid #33333a;border-radius:5px;padding:5px 7px;color:#c9c5bd;font-size:11px;${MONO}">${PROCESS_OPTIONS.map(o => `<option value="${o.value}" ${s.process === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>
+</div>
+${renderCalculator(s)}
+${renderHero(s, r, home, cheapest, r.exp)}
+${renderCheaperFilm(cheaper)}
+${renderActionRow()}
+${renderLabSection(s, r)}
+${renderFilmSection(s, filmRows)}
+</div>`;
+}
+
+function renderExpiredModal(s) {
+    const c = computeExpired(s);
+    return `
+<div style="position:fixed;inset:0;z-index:60;background:rgba(6,6,7,.74);display:flex;align-items:flex-start;justify-content:center;padding:48px 16px;overflow:auto"><div style="width:100%;max-width:620px;background:linear-gradient(180deg,#151517,#111113);border:1px solid #33333a;border-radius:10px;box-shadow:0 30px 80px -20px #000;padding:16px 18px 20px">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+<div style="${NARROW};font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">${t('v2ExpiredTitle')}</div>
+<div style="flex:1;height:1px;background:#26262a"></div>
+<button type="button" onclick="App.backHome()" title="Close" style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;background:#1a1a1d;border:1px solid #33333a;border-radius:5px;color:#8b8781;cursor:pointer;padding:0;font-size:14px">×</button>
+</div>
+<p style="margin:0 0 12px;font-size:12px;color:#6d6a64">${t('v2ExpiredIntro')}</p>
+<div style="border:1px solid #26262a;border-radius:8px;background:#131315;overflow:hidden">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#212125">
+<div style="padding:9px 12px;background:#131315">
+<div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:7px">${t('v2LabelBoxSpeed')}</div>
+<input value="${escapeHtml(s.expBox)}" oninput="App.setField('expBox',this.value)" data-fkey="expBox" inputmode="numeric" placeholder="400" style="width:80px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:#eae7e1;font-size:14px;${MONO}">
+</div>
+<div style="padding:9px 12px;background:#131315">
+<div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:7px">${t('v2ExpiredDate')}</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+<select onchange="App.setField('expiryMonth',this.value)" style="width:110px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:#eae7e1;font-size:13px;${MONO}">${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m, i) => `<option value="${i + 1}" ${String(s.expiryMonth) === String(i + 1) ? 'selected' : ''}>${m}</option>`).join('')}</select>
+<input value="${escapeHtml(s.expiryYear)}" oninput="App.setField('expiryYear',this.value)" data-fkey="expiryYear" inputmode="numeric" placeholder="2006" style="width:80px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:#eae7e1;font-size:14px;${MONO}">
+</div>
+<span style="font-size:10px;color:#5f5c57;${MONO}">${c.ageNote}</span>
+</div>
+</div>
+</div>
+<div style="padding:9px 12px;border-top:1px solid #212125;background:#131315">
+<div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:7px">${t('v2ExpiredFilm')}</div>
+<select onchange="App.setField('filmType',this.value)" style="width:160px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:#eae7e1;font-size:13px;${MONO}">
+<option value="c41" ${s.filmType === 'c41' ? 'selected' : ''}>C-41 colour</option>
+<option value="bw" ${s.filmType === 'bw' ? 'selected' : ''}>B&amp;W</option>
+<option value="e6" ${s.filmType === 'e6' ? 'selected' : ''}>E-6 slide</option>
+</select>
+</div>
+<div style="padding:9px 12px;border-top:1px solid #212125;background:#131315">
+<div style="${NARROW};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:7px">${t('v2ExpiredStorage')}</div>
+<select onchange="App.setField('storage',this.value)" style="width:240px;max-width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:6px 8px;color:#eae7e1;font-size:13px;${MONO}">
+<option value="cold" ${s.storage === 'cold' ? 'selected' : ''}>Cold stored</option>
+<option value="controlled" ${s.storage === 'controlled' ? 'selected' : ''}>Climate controlled</option>
+<option value="uncontrolled" ${s.storage === 'uncontrolled' ? 'selected' : ''}>Uncontrolled</option>
+</select>
+<div style="display:flex;flex-direction:column;gap:3px;margin-top:8px">
+<div style="font-size:10px;color:#6d6a64"><span style="color:#8b8781">Cold stored</span> — kept in a fridge or freezer since new; ages slowest.</div>
+<div style="font-size:10px;color:#6d6a64"><span style="color:#8b8781">Climate controlled</span> — indoors at steady room temperature, out of sunlight; the normal rate.</div>
+<div style="font-size:10px;color:#6d6a64"><span style="color:#8b8781">Uncontrolled</span> — shed, garage, roof space or a hot car; ages fastest.</div>
+</div>
+</div>
+<div style="display:flex;align-items:baseline;gap:12px;padding:10px 12px;border-top:1px solid #212125;background:#0f0f11">
+<div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#5f5c57">${t('v2ExpiredRateItAt')}</div>
+<div style="${MONO};font-size:26px;color:var(--acc)">${c.rated}</div>
+<div style="font-size:11px;color:#8b8781">${c.note}</div>
+</div>
+</div>
+</div></div>`;
+}
+
+function renderLibraryView(s) {
+    const allFilms = getAllFilms(), allLabs = getAllLabs();
+    const films = Object.entries(allFilms).filter(([, f]) =>
+        (s.libFormat === 'all' || (f.format || '35mm') === s.libFormat) &&
+        (s.libProcess === 'all' || (f.process || 'C41') === s.libProcess));
+    const labs = Object.entries(allLabs);
+    const filmRows = films.map(([key, f]) => {
+        const bundles = normalizeFilmBundles(f);
+        const cheapest = bundles.slice().sort((a, b) => a.filmCost / a.rolls - b.filmCost / b.rolls)[0];
+        return `<div class="list-row" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px;background:#131315">
+<div><div style="font-size:12px;color:${f.hidden ? '#6d6a64' : '#eae7e1'}">${escapeHtml(f.name)}</div>
+<div style="font-size:10px;color:#6d6a64;${MONO};margin-top:1px">${f.boxSpeed} · ${procLabel(f.process)} · ${cheapest.exposures}exp · ${bundles.length} prices</div></div>
+<div style="display:flex;align-items:center;gap:6px">
+<div style="${MONO};font-size:12px;color:#8b8781">${CUR()}${money(cheapest.filmCost / cheapest.rolls)}</div>
+<button type="button" onclick="App.toggleHidden('film','${escapeHtml(key)}')" title="Keep it saved but out of lookups" style="background:#1a1a1d;border:1px solid #33333a;border-radius:4px;height:24px;padding:0 7px;color:#8b8781;font-size:9px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${f.hidden ? t('v2ButtonShow') : t('v2ButtonHide')}</button>
+<button type="button" onclick="App.editFilm('${escapeHtml(key)}')" title="Edit" style="display:flex;align-items:center;justify-content:center;width:24px;height:24px;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;color:#8b8781;cursor:pointer;padding:0"><svg style="width:12px;height:12px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 4.5l3 3M4 20l4-1 10-10-3-3L5 16l-1 4z"></path></svg></button>
+<button type="button" onclick="App.removeItem('film','${escapeHtml(key)}')" title="Delete" style="display:flex;align-items:center;justify-content:center;width:24px;height:24px;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;color:#8b8781;cursor:pointer;padding:0"><svg style="width:12px;height:12px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 7h14M10 7V5h4v2M6 7l1 13h10l1-13M10 11v6M14 11v6"></path></svg></button>
+</div></div>`;
+    }).join('');
+    const labRows = labs.map(([name, l]) => {
+        const tiers = normalizeLabServices(l);
+        const cheapest = tiers.slice().sort((a, b) => a.devCost - b.devCost)[0];
+        return `<div class="list-row" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px;background:#131315">
+<div><div style="font-size:12px;color:${l.hidden ? '#6d6a64' : '#eae7e1'}">${escapeHtml(name)}</div>
+<div style="font-size:10px;color:#6d6a64;${MONO};margin-top:1px">${tiers.length} tier${tiers.length === 1 ? '' : 's'}</div></div>
+<div style="display:flex;align-items:center;gap:6px">
+<div style="${MONO};font-size:12px;color:#8b8781">${CUR()}${money(cheapest.devCost)}</div>
+<button type="button" onclick="App.toggleHidden('lab','${escapeHtml(name)}')" title="Keep it saved but out of lookups" style="background:#1a1a1d;border:1px solid #33333a;border-radius:4px;height:24px;padding:0 7px;color:#8b8781;font-size:9px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${l.hidden ? t('v2ButtonShow') : t('v2ButtonHide')}</button>
+<button type="button" onclick="App.editLab('${escapeHtml(name)}')" title="Edit" style="display:flex;align-items:center;justify-content:center;width:24px;height:24px;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;color:#8b8781;cursor:pointer;padding:0"><svg style="width:12px;height:12px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 4.5l3 3M4 20l4-1 10-10-3-3L5 16l-1 4z"></path></svg></button>
+<button type="button" onclick="App.removeItem('lab','${escapeHtml(name)}')" title="Delete" style="display:flex;align-items:center;justify-content:center;width:24px;height:24px;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;color:#8b8781;cursor:pointer;padding:0"><svg style="width:12px;height:12px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 7h14M10 7V5h4v2M6 7l1 13h10l1-13M10 11v6M14 11v6"></path></svg></button>
+</div></div>`;
+    }).join('');
+    return `<div style="padding:16px 18px 20px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<div>
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+<div style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#8b8781">${t('v2SectionFilms')}</div>
+<div style="${MONO};font-size:9px;color:#5f5c57">${films.length} of ${Object.keys(allFilms).length}</div>
+<div style="flex:1;height:1px;background:#212125"></div>
+<select onchange="App.setField('libProcess',this.value)" title="Filter by process" style="height:26px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:0 6px;color:#c9c5bd;font-size:11px;${MONO}"><option value="all">${t('v2FilterAllProcesses')}</option>${PROCESS_OPTIONS.map(o => `<option value="${o.value}" ${s.libProcess === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>
+<select onchange="App.setField('libFormat',this.value)" title="Filter by format" style="height:26px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:0 6px;color:#c9c5bd;font-size:11px;${MONO}"><option value="all">${t('v2FilterAllFormats')}</option>${FORMAT_OPTIONS.map(o => `<option value="${o.value}" ${s.libFormat === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>
+<button type="button" onclick="App.newFilm()" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:4px 9px;color:#8b8781;font-size:9px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2ButtonNewFilm')}</button>
+</div>
+<div style="display:flex;flex-direction:column;gap:1px;border:1px solid #26262a;border-radius:8px;overflow:hidden;background:#26262a">${filmRows || `<div style="padding:12px;font-size:11px;color:#5f5c57;background:#131315">Nothing saved yet.</div>`}</div>
+</div>
+<div>
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+<div style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#8b8781">${t('v2SectionLabs')}</div>
+<div style="${MONO};font-size:9px;color:#5f5c57">${labs.length}</div>
+<div style="flex:1;height:1px;background:#212125"></div>
+<button type="button" onclick="App.newLab()" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:4px 9px;color:#8b8781;font-size:9px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2ButtonNewLab')}</button>
+</div>
+<div style="display:flex;flex-direction:column;gap:1px;border:1px solid #26262a;border-radius:8px;overflow:hidden;background:#26262a">${labRows || `<div style="padding:12px;font-size:11px;color:#5f5c57;background:#131315">Nothing saved yet.</div>`}</div>
+</div>
+</div>
+</div>`;
+}
+
+function field(label, inputHtml) {
+    return `<div><div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:5px">${label}</div>${inputHtml}</div>`;
+}
+const FIELD_INPUT = "width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:7px 9px;color:#eae7e1;font-size:13px";
+
+function renderEditFilmModal(s) {
+    const d = s.draft;
+    const bundleLabel = (text) => `<div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#5f5c57;margin-bottom:4px">${text}</div>`;
+    const options = d.bundles.map((b, i) => `
+<div style="border:1px solid #212125;border-radius:6px;background:#131315;padding:9px;margin-bottom:6px">
+<div style="display:flex;align-items:flex-end;gap:8px;margin-bottom:8px">
+<div style="flex:1;min-width:0">${bundleLabel('Store')}<input value="${escapeHtml(b.storeName)}" oninput="App.setBundleField(${i},'storeName',this.value)" data-fkey="bundle-${i}-storeName" placeholder="Store" style="${FIELD_INPUT};font-size:12px"></div>
+<button type="button" onclick="App.removeBundle(${i})" title="Remove" style="flex-shrink:0;width:26px;height:31px;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;color:#8b8781;cursor:pointer">×</button>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<div style="width:64px">${bundleLabel('Rolls')}<input value="${b.rolls}" oninput="App.setBundleField(${i},'rolls',this.value)" data-fkey="bundle-${i}-rolls" inputmode="numeric" placeholder="Rolls" style="${FIELD_INPUT};font-size:12px;${MONO}"></div>
+<div style="width:64px">${bundleLabel('Exp')}<input value="${b.exposures}" oninput="App.setBundleField(${i},'exposures',this.value)" data-fkey="bundle-${i}-exposures" inputmode="numeric" placeholder="Exp" style="${FIELD_INPUT};font-size:12px;${MONO}"></div>
+<div style="width:84px">${bundleLabel('Price')}<input value="${b.filmCost}" oninput="App.setBundleField(${i},'filmCost',this.value)" data-fkey="bundle-${i}-filmCost" inputmode="decimal" placeholder="Price" style="${FIELD_INPUT};font-size:12px;${MONO}"></div>
+<div style="flex:1;min-width:140px">${bundleLabel('Buy link')}<input value="${escapeHtml(b.buyLink)}" oninput="App.setBundleField(${i},'buyLink',this.value)" data-fkey="bundle-${i}-buyLink" placeholder="https://…" style="${FIELD_INPUT};font-size:12px"></div>
+</div>
+</div>`).join('');
+    return `<div style="position:fixed;inset:0;z-index:60;background:rgba(6,6,7,.74);display:flex;align-items:flex-start;justify-content:center;padding:48px 16px;overflow:auto"><div style="width:100%;max-width:660px;background:linear-gradient(180deg,#151517,#111113);border:1px solid #33333a;border-radius:10px;box-shadow:0 30px 80px -20px #000;padding:16px 18px 20px">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+<div style="${NARROW};font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">Edit film stock</div>
+<div style="flex:1;height:1px;background:#26262a"></div>
+<span style="font-size:11px;color:#6d6a64">${escapeHtml(d.name || 'New film')}</span>
+<button type="button" onclick="App.cancelDraft()" title="Close" style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;background:#1a1a1d;border:1px solid #33333a;border-radius:5px;color:#8b8781;cursor:pointer;padding:0;font-size:14px">×</button>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+${field('Name', `<input value="${escapeHtml(d.name)}" oninput="App.setDraftField('name',this.value)" data-fkey="draft-name" style="${FIELD_INPUT}">`)}
+${field('Box speed / ISO', `<input value="${d.boxSpeed}" oninput="App.setDraftField('boxSpeed',this.value)" data-fkey="draft-boxSpeed" inputmode="numeric" style="${FIELD_INPUT};${MONO}">`)}
+${field('Format', `<select onchange="App.setDraftField('format',this.value)" style="${FIELD_INPUT}">${FORMAT_OPTIONS.map(o => `<option value="${o.value}" ${d.format === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>`)}
+${field('Process', `<select onchange="App.setDraftField('process',this.value)" style="${FIELD_INPUT}">${PROCESS_OPTIONS.map(o => `<option value="${o.value}" ${d.process === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>`)}
+${field('Type', `<select onchange="App.setDraftField('colorType',this.value)" title="What the developed image looks like — separate from Process (the development chemistry). Only differs from Process for things like Ilford XP2 Super (B&W image, C-41 chemistry) or a redscale/experimental stock (Speciality)." style="${FIELD_INPUT}">${FILM_TYPE_OPTIONS.map(o => `<option value="${o.value}" ${(d.colorType || filmColorType(d)) === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>`)}
+${field('Max push/pull (stops)', `<input value="${d.maxPushPull}" oninput="App.setDraftField('maxPushPull',this.value)" data-fkey="draft-maxPushPull" inputmode="numeric" placeholder="2" style="${FIELD_INPUT};${MONO}">`)}
+</div>
+<div style="border:1px solid #26262a;border-radius:8px;background:#0f0f11;padding:10px 12px">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+<div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781">Where to buy</div>
+<button type="button" onclick="App.addBundle()" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:4px 9px;color:#8b8781;font-size:9px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">+ Add price</button>
+</div>
+${options}
+</div>
+<div style="display:flex;align-items:center;gap:14px;margin-top:16px">
+<button type="button" onclick="App.saveDraft()" style="background:#1c1512;border:1px solid #5a3a1c;border-radius:5px;padding:8px 16px;color:var(--acc);font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Save film</button>
+<button type="button" onclick="App.cancelDraft()" style="background:transparent;border:0;padding:0;color:#6d6a64;font-size:10px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Cancel</button>
+</div>
+</div></div>`;
+}
+
+const TURNAROUND_OPTIONS = [{ value: 'next_day', label: 'Next day' }, { value: 'same_week', label: 'Same week' }, { value: 'longer', label: 'Longer' }];
+
+function renderEditLabModal(s) {
+    const d = s.draft;
+    const tierLabel = (text) => `<div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#5f5c57;margin-bottom:4px">${text}</div>`;
+    const tiers = d.services.map((t, i) => `
+<div style="border:1px solid #212125;border-radius:6px;background:#131315;padding:10px;margin-bottom:8px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px">
+<div style="font-size:12px;color:#c9c5bd">${escapeHtml(tierDescription(t))}</div>
+<button type="button" onclick="App.removeTier(${i})" title="Remove tier" style="flex-shrink:0;width:24px;height:24px;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;color:#8b8781;cursor:pointer">×</button>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+<div style="width:100px">${tierLabel('Cost/roll')}<div style="display:flex;align-items:center;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding-left:6px"><span style="${MONO};font-size:11px;color:#6d6a64">${CUR()}</span><input value="${t.devCost}" oninput="App.setTierField(${i},'devCost',this.value)" data-fkey="tier-${i}-devCost" inputmode="decimal" style="width:100%;background:transparent;border:0;padding:6px;color:#eae7e1;font-size:12px;${MONO}"></div></div>
+<div style="width:100px">${tierLabel('Mail-back')}<div style="display:flex;align-items:center;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding-left:6px"><span style="${MONO};font-size:11px;color:#6d6a64">${CUR()}</span><input value="${t.mailBackCost ?? ''}" oninput="App.setTierField(${i},'mailBackCost',this.value)" data-fkey="tier-${i}-mailBackCost" inputmode="decimal" placeholder="n/a" style="width:100%;background:transparent;border:0;padding:6px;color:#eae7e1;font-size:12px;${MONO}"></div></div>
+<div style="width:130px">${tierLabel('Turnaround')}<select onchange="App.setTierField(${i},'turnaroundTime',this.value)" style="${FIELD_INPUT};font-size:12px">${TURNAROUND_OPTIONS.map(o => `<option value="${o.value}" ${t.turnaroundTime === o.value ? 'selected' : ''}>${o.label}</option>`).join('')}</select></div>
+<div style="width:120px">${tierLabel('Push/pull fee')}<input value="${t.pushPullCost}" oninput="App.setTierField(${i},'pushPullCost',this.value)" data-fkey="tier-${i}-pushPullCost" inputmode="decimal" style="${FIELD_INPUT};font-size:12px;${MONO}"></div>
+<div style="width:110px">${tierLabel('Charged')}<select onchange="App.setTierField(${i},'pushPullType',this.value)" style="${FIELD_INPUT};font-size:12px"><option value="per_stop" ${t.pushPullType === 'per_stop' ? 'selected' : ''}>Per stop</option><option value="flat" ${t.pushPullType === 'flat' ? 'selected' : ''}>Flat fee</option></select></div>
+</div>
+<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+${pill('Hi-res', t.highResScan, `App.toggleTierFlag(${i},'highResScan')`)}
+${pill('TIFF', t.tiffScan, `App.toggleTierFlag(${i},'tiffScan')`)}
+${pill('No push/pull', t.noPushPull, `App.toggleTierFlag(${i},'noPushPull')`)}
+</div>
+<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+<span style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#5f5c57;margin-right:2px">Processes</span>
+${PROCESS_OPTIONS.map(o => pill(o.label, t.processes.includes(o.value), `App.toggleTierProcess(${i},'${o.value}')`)).join('')}
+</div>
+</div>`).join('');
+    return `<div style="position:fixed;inset:0;z-index:60;background:rgba(6,6,7,.74);display:flex;align-items:flex-start;justify-content:center;padding:48px 16px;overflow:auto"><div style="width:100%;max-width:620px;background:linear-gradient(180deg,#151517,#111113);border:1px solid #33333a;border-radius:10px;box-shadow:0 30px 80px -20px #000;padding:16px 18px 20px">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+<div style="${NARROW};font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">Edit lab</div>
+<div style="flex:1;height:1px;background:#26262a"></div>
+<span style="font-size:11px;color:#6d6a64">${escapeHtml(d.name || 'New lab')}</span>
+<button type="button" onclick="App.cancelDraft()" title="Close" style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;background:#1a1a1d;border:1px solid #33333a;border-radius:5px;color:#8b8781;cursor:pointer;padding:0;font-size:14px">×</button>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+${field('Name', `<input value="${escapeHtml(d.name)}" oninput="App.setDraftField('name',this.value)" data-fkey="draft-name" style="${FIELD_INPUT}">`)}
+${field('Address', `<input value="${escapeHtml(d.address || '')}" oninput="App.setDraftField('address',this.value)" data-fkey="draft-address" placeholder="Street, suburb, state, postcode" style="${FIELD_INPUT}">`)}
+${field('Website', `<input value="${escapeHtml(d.website || '')}" oninput="App.setDraftField('website',this.value)" data-fkey="draft-website" placeholder="https://…" style="${FIELD_INPUT}">`)}
+${field('Phone', `<input value="${escapeHtml(d.phone || '')}" oninput="App.setDraftField('phone',this.value)" data-fkey="draft-phone" style="${FIELD_INPUT}">`)}
+${field('Email', `<input value="${escapeHtml(d.email || '')}" oninput="App.setDraftField('email',this.value)" data-fkey="draft-email" style="${FIELD_INPUT}">`)}
+</div>
+<div style="border:1px solid #26262a;border-radius:8px;background:#0f0f11;padding:10px 12px">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+<div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781">Service tiers — one per price this lab charges</div>
+<button type="button" onclick="App.addTier()" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:4px 9px;color:#8b8781;font-size:9px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">+ Add tier</button>
+</div>
+${tiers}
+<div style="font-size:10px;color:#5f5c57">A film only matches a tier that lists its own process. Lookups pick this lab's cheapest tier that meets your settings.</div>
+</div>
+<div style="display:flex;align-items:center;gap:14px;margin-top:16px">
+<button type="button" onclick="App.saveDraft()" style="background:#1c1512;border:1px solid #5a3a1c;border-radius:5px;padding:8px 16px;color:var(--acc);font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Save lab</button>
+<button type="button" onclick="App.cancelDraft()" style="background:transparent;border:0;padding:0;color:#6d6a64;font-size:10px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Cancel</button>
+</div>
+</div></div>`;
+}
+
+// ---------- Starter presets (films/index.json + labs/index.json) ----------
+// The region YAML files under films/ and labs/ are community-contributed
+// retailer/lab price lists — opt-in reference data, not global defaults,
+// since a Melbourne lab is meaningless to a US visitor. Fetched lazily the
+// first time Settings → Data is opened, cached for the session.
+let presetFilmIndex = null, presetLabIndex = null;
+async function loadPresetIndexes() {
+    if (presetFilmIndex && presetLabIndex) return;
+    try { presetFilmIndex = await (await fetch('films/index.json')).json(); } catch { presetFilmIndex = []; }
+    try { presetLabIndex = await (await fetch('labs/index.json')).json(); } catch { presetLabIndex = []; }
+    render();
+}
+
+const SECTION_STYLE = "border-top:1px solid #212125;background:#131315;padding:12px 14px";
+function settingsSection(title, body) {
+    return `<div style="${SECTION_STYLE}"><div style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#8b8781;margin-bottom:10px">${title}</div>${body}</div>`;
+}
+
+function renderSettingsView(s) {
+    const labNames = Object.keys(getAllLabs());
+    const tierLabels = [...new Set(Object.values(getAllLabs()).flatMap(l => normalizeLabServices(l).map((t, i) => ((Array.isArray(l.services) ? l.services : [l])[i] || {}).label || tierDescription(t))))];
+    const hidden = [
+        ...Object.entries(getAllFilms()).filter(([, f]) => f.hidden).map(([key, f]) => ({ kind: 'film', key, name: f.name })),
+        ...Object.entries(getAllLabs()).filter(([, l]) => l.hidden).map(([key, l]) => ({ kind: 'lab', key, name: l.name }))
+    ];
+    const languages = [
+        ['en', 'English'], ['es', 'Español'], ['ja', '日本語'], ['de', 'Deutsch'], ['pt', 'Português (BR)'],
+        ['fr', 'Français'], ['ko', '한국어'], ['zh', '中文 (简体)'], ['it', 'Italiano'], ['ru', 'Русский']
+    ];
+    return `<div style="padding:16px 18px 20px;display:flex;flex-direction:column;gap:1px;border:1px solid #26262a;border-radius:8px;overflow:hidden">
+${settingsSection(t('v2SettingsLanguage'), `
+<select onchange="App.setLanguage(this.value)" style="${FIELD_INPUT};max-width:280px;margin-bottom:8px">
+${languages.map(([code, label]) => `<option value="${code}" ${currentLocale === code ? 'selected' : ''}>${escapeHtml(label)}</option>`).join('')}
+</select>
+<div style="font-size:10px;color:#5f5c57">${escapeHtml(t('translationDisclaimer'))}</div>
+`)}
+${settingsSection(t('v2SettingsHomeLab'), `
+<select onchange="App.setHomeLab(this.value)" style="${FIELD_INPUT};max-width:280px;margin-bottom:10px">
+<option value="">No home lab set</option>
+${labNames.map(n => `<option value="${escapeHtml(n)}" ${s.homeLab === n ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('')}
+</select>
+<div style="font-size:10px;color:#5f5c57;margin-bottom:8px">The lab whose price is shown as the headline cost per frame on every lookup.</div>
+<div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781;margin-bottom:6px">${t('v2SettingsAlwaysRequire')}</div>
+<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px">${requireFilters().map(f => pill(f.label, s[f.key], `App.toggleFlag('${f.key}')`)).join('')}</div>
+<div style="font-size:10px;color:#5f5c57;margin-bottom:10px">Applied to every lookup — labs that don't offer them are hidden.</div>
+<select onchange="App.setDefaultTier(this.value)" style="${FIELD_INPUT};max-width:280px">
+<option value="">Cheapest that qualifies</option>
+${tierLabels.map(l => `<option value="${escapeHtml(l)}" ${s.defaultTier === l ? 'selected' : ''}>${escapeHtml(l)}</option>`).join('')}
+</select>
+<div style="font-size:10px;color:#5f5c57;margin-top:6px">Preferred service tier — used whenever a lab offers it, otherwise its cheapest qualifying tier.</div>
+`)}
+${settingsSection(t('v2SettingsCalculator'), `
+<div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+<div><div style="font-size:10px;color:#8b8781;margin-bottom:5px">${t('v2SettingsMailRolls')}</div><input value="${s.mailRolls}" oninput="App.setSetting('mailRolls',this.value)" data-fkey="mailRolls" inputmode="numeric" style="${FIELD_INPUT};width:80px;${MONO}"></div>
+<div><div style="font-size:10px;color:#8b8781;margin-bottom:5px">${t('v2SettingsUpgradePct')}</div><input value="${s.upgradePct}" oninput="App.setSetting('upgradePct',this.value)" data-fkey="upgradePct" inputmode="decimal" style="${FIELD_INPUT};width:80px;${MONO}"></div>
+</div>
+`)}
+${settingsSection(t('v2SettingsHiddenPresets'), `
+<div style="font-size:10px;color:#5f5c57;margin-bottom:8px">${hidden.length} hidden</div>
+${hidden.length ? hidden.map(h => `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid #212125">
+<span style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#5f5c57;width:36px">${h.kind === 'film' ? t('v2SectionFilms') : t('v2SectionLabs')}</span>
+<span style="flex:1;font-size:12px;color:#c9c5bd">${escapeHtml(h.name)}</span>
+<button type="button" onclick="App.toggleHidden('${h.kind}','${escapeHtml(h.key)}')" style="background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:4px 9px;color:#8b8781;font-size:9px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonShow')}</button>
+</div>`).join('') : `<div style="font-size:11px;color:#5f5c57">Nothing hidden. Hide a film or lab in the library to keep it out of lookups without deleting it.</div>`}
+`)}
+${settingsSection(t('v2SettingsStarterPresets'), renderPresetImport())}
+${settingsSection(t('v2SettingsData'), `
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+<button type="button" onclick="App.exportBackup()" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#8b8781;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonExportBackup')}</button>
+<label style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#8b8781;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonImportBackup')}<input type="file" accept="application/json" onchange="App.importBackup(this.files[0])" style="display:none"></label>
+<label style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#8b8781;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonImportYaml')}<input type="file" accept=".yaml,.yml,text/yaml" onchange="App.importYamlFile(this.files[0])" style="display:none"></label>
+<button type="button" onclick="App.openSetup()" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#8b8781;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonRerunSetup')}</button>
+<button type="button" onclick="App.deleteAllData()" style="background:transparent;border:1px solid #5a2420;border-radius:5px;padding:6px 11px;color:#e2564a;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonDeleteAllData')}</button>
+</div>
+<div style="font-size:10px;color:#8b8781;min-height:12px">${escapeHtml(s.importNote)}</div>
+<div style="margin-top:10px;font-size:10px;color:#5f5c57">Drag <a href="javascript:void(window.open('https://filmcalc.app/?add='+encodeURIComponent(location.href)))" style="cursor:move">↗ Add to FilmCalc</a> to your bookmarks bar — click it from any shop or lab page to jump back here with that page's link ready to paste in.</div>
+`)}
+</div>`;
+}
+
+// First-run onboarding, also reachable from Settings → Data → "Re-run
+// setup". Kept deliberately small — home lab, preferred tier, language —
+// everything else already has its own home in Settings.
+// Three steps, in this order because each depends on the previous one
+// having happened: presets need to import BEFORE the home-lab step so
+// that dropdown actually has labs in it (it used to sit next to the
+// import controls on one page, so a brand new user always saw it blank —
+// nothing had been imported yet at the point it rendered).
+const SETUP_STEPS = ['language', 'presets', 'homeLab'];
+function renderSetupModal(s) {
+    const step = SETUP_STEPS[s.setupStep] || 'language';
+    const labNames = Object.keys(getAllLabs());
+    const tierLabels = [...new Set(Object.values(getAllLabs()).flatMap(l => normalizeLabServices(l).map((t, i) => ((Array.isArray(l.services) ? l.services : [l])[i] || {}).label || tierDescription(t))))];
+    const languages = [
+        ['en', 'English'], ['es', 'Español'], ['ja', '日本語'], ['de', 'Deutsch'], ['pt', 'Português (BR)'],
+        ['fr', 'Français'], ['ko', '한국어'], ['zh', '中文 (简体)'], ['it', 'Italiano'], ['ru', 'Русский']
+    ];
+    const dots = SETUP_STEPS.map((_, i) => `<span style="width:6px;height:6px;border-radius:50%;background:${i === s.setupStep ? 'var(--acc)' : '#33333a'}"></span>`).join('');
+    let stepTitle, stepBody;
+    if (step === 'language') {
+        stepTitle = t('v2SetupStepLanguage');
+        stepBody = `<select onchange="App.setLanguage(this.value)" style="${FIELD_INPUT}">
+${languages.map(([code, label]) => `<option value="${code}" ${currentLocale === code ? 'selected' : ''}>${escapeHtml(label)}</option>`).join('')}
+</select>`;
+    } else if (step === 'presets') {
+        stepTitle = t('v2SetupStepImport');
+        stepBody = `<div style="border:1px solid #26262a;border-radius:8px;background:#131315;padding:12px">
+${renderPresetImport(false)}
+<div style="margin-top:10px;padding-top:10px;border-top:1px solid #212125">
+<label style="display:inline-flex;align-items:center;background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#8b8781;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonImportYaml')}<input type="file" accept=".yaml,.yml,text/yaml" onchange="App.importYamlFile(this.files[0])" style="display:none"></label>
+</div>
+${s.importNote ? `<div style="margin-top:8px;font-size:10px;color:#8b8781">${escapeHtml(s.importNote)}</div>` : ''}
+</div>`;
+    } else {
+        stepTitle = t('v2SetupStepHomeLab');
+        stepBody = `<div style="display:flex;flex-direction:column;gap:14px">
+<div>
+<div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:6px">${t('v2SettingsHomeLab')}</div>
+<select onchange="App.setHomeLab(this.value)" style="${FIELD_INPUT}">
+<option value="">—</option>
+${labNames.map(n => `<option value="${escapeHtml(n)}" ${s.homeLab === n ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('')}
+</select>
+${!labNames.length ? `<div style="margin-top:6px;font-size:10px;color:#5f5c57">${t('v2SetupNoLabsYet')}</div>` : ''}
+</div>
+<div>
+<div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:6px">${t('v2SetupPreferredTier')}</div>
+<select onchange="App.setDefaultTier(this.value)" style="${FIELD_INPUT}">
+<option value="">Cheapest that qualifies</option>
+${tierLabels.map(l => `<option value="${escapeHtml(l)}" ${s.defaultTier === l ? 'selected' : ''}>${escapeHtml(l)}</option>`).join('')}
+</select>
+</div>
+</div>`;
+    }
+    const backBtn = s.setupStep > 0 ? `<button type="button" onclick="App.setupGoto(${s.setupStep - 1})" style="flex:1;background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:9px 16px;color:#8b8781;font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2ButtonBack')}</button>` : '';
+    // On the presets step, Next both imports whatever's ticked AND
+    // advances — no separate "Import selected" click needed first.
+    const nextAction = step === 'presets' ? 'App.setupNextFromPresets()' : `App.setupGoto(${s.setupStep + 1})`;
+    const nextBtn = s.setupStep < SETUP_STEPS.length - 1
+        ? `<button type="button" onclick="${nextAction}" style="flex:2;background:#1c1512;border:1px solid #5a3a1c;border-radius:5px;padding:9px 16px;color:var(--acc);font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2ButtonNext')}</button>`
+        : `<button type="button" onclick="App.closeSetup()" style="flex:2;background:#1c1512;border:1px solid #5a3a1c;border-radius:5px;padding:9px 16px;color:var(--acc);font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2ButtonDone')}</button>`;
+    return `<div style="position:fixed;inset:0;z-index:70;background:rgba(6,6,7,.74);display:flex;align-items:flex-start;justify-content:center;padding:64px 16px;overflow:auto"><div style="width:100%;max-width:460px;background:linear-gradient(180deg,#151517,#111113);border:1px solid #33333a;border-radius:10px;box-shadow:0 30px 80px -20px #000;padding:18px 20px 20px">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+<div style="${NARROW};font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#eae7e1">${t('v2SetupTitle')}</div>
+<div style="display:flex;align-items:center;gap:5px">${dots}</div>
+</div>
+<p style="margin:0 0 14px;font-size:12px;color:#6d6a64">${t('v2SetupIntro')}</p>
+<div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:8px">${stepTitle}</div>
+${stepBody}
+<div style="display:flex;gap:10px;margin-top:18px">${backBtn}${nextBtn}</div>
+</div></div>`;
+}
+
+// Checkboxes rather than a single-choice <select> — a user setting up
+// FilmCalc for, say, Melbourne wants both the Melbourne AND the
+// Australia-wide retailer files in one go, not one picked-import-repick
+// cycle per file (issue: the old single-select forced exactly one region
+// at a time).
+function presetCheckList(kind, entries) {
+    return entries.map(f => `<label style="display:flex;align-items:center;gap:8px;padding:6px 2px;font-size:12px;color:#c9c5bd;cursor:pointer"><input type="checkbox" class="preset-check" data-kind="${kind}" value="${escapeHtml(f.file)}" style="width:16px;height:16px;accent-color:var(--acc);cursor:pointer">${escapeHtml(f.label)}</label>`).join('');
+}
+// showImportButton: false on the Setup wizard's presets step, where Next
+// itself imports whatever's ticked (see App.setupNextFromPresets) — a
+// separate button there would just be a redundant extra click. Settings'
+// own Starter Presets section has no such Next button, so it keeps one.
+function renderPresetImport(showImportButton = true) {
+    if (!presetFilmIndex || !presetLabIndex) { loadPresetIndexes(); return `<div style="font-size:11px;color:#5f5c57">Loading…</div>`; }
+    // One combined "Import selected" button for both lists, not one per
+    // list — importing re-renders the whole page, which would otherwise
+    // wipe the checked state of whichever list's checkboxes weren't just
+    // submitted (they're plain uncontrolled checkboxes, not tied to
+    // state) — ticking films and labs, then importing once, is the only
+    // way both actually make it in.
+    return `<div style="font-size:10px;color:#5f5c57;margin-bottom:8px">Community-contributed regional film/lab price lists shipped with FilmCalc — tick any that apply to you (more than one is fine) to add real data instead of typing it all by hand.</div>
+<div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781;margin-bottom:4px">Films</div>
+<div style="display:flex;flex-direction:column;max-height:160px;overflow:auto;border:1px solid #26262a;border-radius:6px;padding:4px 8px;margin-bottom:10px">${presetCheckList('films', presetFilmIndex)}</div>
+<div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781;margin-bottom:4px">Labs</div>
+<div style="display:flex;flex-direction:column;max-height:160px;overflow:auto;border:1px solid #26262a;border-radius:6px;padding:4px 8px;margin-bottom:10px">${presetCheckList('labs', presetLabIndex)}</div>
+${showImportButton ? `<button type="button" onclick="App.importPresetSelected()" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#8b8781;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">Import selected</button>` : ''}`;
+}
+
+// ---------- Merge helpers (ported from the old js/modals.js import path —
+// pure data functions, no DOM, safe to duplicate in this presentation-only
+// file rather than pull in the rest of that DOM-coupled module) ----------
+function mergeFilmBundles(existing, incoming) {
+    const keyOf = b => `${b.storeName || ''}|${b.rolls}|${b.exposures}`;
+    const byKey = new Map((existing || []).map(b => [keyOf(b), b]));
+    (incoming || []).forEach(b => byKey.set(keyOf(b), b));
+    return [...byKey.values()];
+}
+function mergeFilmProfiles(saved, incoming) {
+    Object.keys(incoming).forEach(key => {
+        const existing = saved[key];
+        saved[key] = (existing && Array.isArray(existing.bundles) && Array.isArray(incoming[key].bundles))
+            ? { ...incoming[key], bundles: mergeFilmBundles(existing.bundles, incoming[key].bundles) }
+            : incoming[key];
+    });
+    return saved;
+}
+function migrateFilmProfileKeys() {
+    const saved = readJSON('filmProfiles', {});
+    const remapped = {};
+    let changed = false;
+    Object.keys(saved).forEach(oldKey => {
+        const film = saved[oldKey];
+        if (!film || !film.name) return;
+        const newKey = filmKey(film.name, film.boxSpeed, film.format);
+        if (newKey !== oldKey) changed = true;
+        if (remapped[newKey]) {
+            remapped[newKey] = { ...film, bundles: mergeFilmBundles(remapped[newKey].bundles, film.bundles) };
+            changed = true;
+        } else {
+            remapped[newKey] = film;
+        }
+    });
+    if (changed) writeJSON('filmProfiles', remapped);
+}
+
+function renderFooter(s) {
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding:0 2px;flex-wrap:wrap">
+<span style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#4a4844">FilmCalc</span>
+<span style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#4a4844;${MONO}">${formatLabel(s.format)} · ${procLabel(s.process)}</span>
+</div>`;
+}
 // ==================== Top-level render ====================
 // Every state change does a full innerHTML replace (no framework, no
 // virtual DOM) — the simplest thing that works for a form this size, but
