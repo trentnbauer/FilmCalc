@@ -196,7 +196,7 @@ const state = {
     loadedFilmKey: '',
     mailRolls: localStorage.getItem('mailBackRollCount') || '1',
     upgradePct: localStorage.getItem('upgradeThresholdPercent') || '4',
-    libProcess: 'all', libFormat: 'all',
+    libProcess: 'all', libFormat: 'all', libTab: 'films',
     expBox: '400', expiryMonth: String(new Date().getMonth() + 1), expiryYear: '', filmType: 'c41', storage: 'controlled',
     importNote: '',
     // Mobile-shell-only fields (harmless on desktop, which never reads them).
@@ -1950,37 +1950,48 @@ function mLibCard(kind, key, name, meta, price, hidden) {
 
 function renderMobileLibrary(s) {
     const allFilms = getAllFilms(), allLabs = getAllLabs();
-    const filmCards = Object.entries(allFilms).map(([key, f]) => {
-        const bundles = normalizeFilmBundles(f);
-        const cheapest = bundles.slice().sort((a, b) => a.filmCost / a.rolls - b.filmCost / b.rolls)[0];
-        const meta = `${f.boxSpeed} · ${procLabel(f.process)} · ${bundles.length} price${bundles.length === 1 ? '' : 's'}`;
-        return mLibCard('film', key, f.name, meta, `${CUR()}${money(cheapest.filmCost / cheapest.rolls)}`, f.hidden);
-    }).join('');
-    const labCards = Object.entries(allLabs).map(([name, l]) => {
-        const tiers = normalizeLabServices(l);
-        const cheapest = tiers.slice().sort((a, b) => a.devCost - b.devCost)[0];
-        const meta = `${tiers.length} tier${tiers.length === 1 ? '' : 's'}`;
-        return mLibCard('lab', name, name, meta, `${CUR()}${money(cheapest.devCost)}`, l.hidden);
-    }).join('');
-    return `<div style="padding:16px 12px 0;display:flex;flex-direction:column;gap:20px">
-<div>
-<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+    const filmCount = Object.keys(allFilms).length, labCount = Object.keys(allLabs).length;
+    const tab = s.libTab === 'labs' ? 'labs' : 'films';
+    const filmsTone = btnTone(tab === 'films'), labsTone = btnTone(tab === 'labs');
+    const emptyCard = `<div style="padding:14px;font-size:12px;color:#5f5c57;background:#131315;border:1px solid #26262a;border-radius:10px">Nothing saved yet.</div>`;
+
+    const filmSection = () => {
+        const filmCards = Object.entries(allFilms).map(([key, f]) => {
+            const bundles = normalizeFilmBundles(f);
+            const cheapest = bundles.slice().sort((a, b) => a.filmCost / a.rolls - b.filmCost / b.rolls)[0];
+            const meta = `${f.boxSpeed} · ${procLabel(f.process)} · ${bundles.length} price${bundles.length === 1 ? '' : 's'}`;
+            return mLibCard('film', key, f.name, meta, `${CUR()}${money(cheapest.filmCost / cheapest.rolls)}`, f.hidden);
+        }).join('');
+        return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
 <div style="width:6px;height:6px;background:var(--acc);border-radius:50%"></div>
 <div style="${NARROW};font-size:16px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#eae7e1">Films</div>
 <div style="flex:1;height:1px;background:#26262a"></div>
 <button type="button" onclick="App.newFilm()" style="height:36px;background:#141416;border:1px solid #2c2c30;border-radius:8px;padding:0 12px;color:#8b8781;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">New</button>
 </div>
-<div style="display:flex;flex-direction:column;gap:8px">${filmCards || `<div style="padding:14px;font-size:12px;color:#5f5c57;background:#131315;border:1px solid #26262a;border-radius:10px">Nothing saved yet.</div>`}</div>
-</div>
-<div>
-<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+<div class="lib-grid">${filmCards || emptyCard}</div>`;
+    };
+    const labSection = () => {
+        const labCards = Object.entries(allLabs).map(([name, l]) => {
+            const tiers = normalizeLabServices(l);
+            const cheapest = tiers.slice().sort((a, b) => a.devCost - b.devCost)[0];
+            const meta = `${tiers.length} tier${tiers.length === 1 ? '' : 's'}`;
+            return mLibCard('lab', name, name, meta, `${CUR()}${money(cheapest.devCost)}`, l.hidden);
+        }).join('');
+        return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
 <div style="width:6px;height:6px;background:var(--acc);border-radius:50%"></div>
 <div style="${NARROW};font-size:16px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#eae7e1">Labs</div>
 <div style="flex:1;height:1px;background:#26262a"></div>
 <button type="button" onclick="App.newLab()" style="height:36px;background:#141416;border:1px solid #2c2c30;border-radius:8px;padding:0 12px;color:#8b8781;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">New</button>
 </div>
-<div style="display:flex;flex-direction:column;gap:8px">${labCards || `<div style="padding:14px;font-size:12px;color:#5f5c57;background:#131315;border:1px solid #26262a;border-radius:10px">Nothing saved yet.</div>`}</div>
+<div class="lib-grid">${labCards || emptyCard}</div>`;
+    };
+
+    return `<div style="padding:16px 12px 0">
+<div style="display:flex;gap:8px;margin-bottom:20px">
+<button type="button" onclick="App.setField('libTab','films')" style="flex:1;height:44px;background:${filmsTone.bg};border:1px solid ${filmsTone.border};border-radius:8px;color:${filmsTone.color};font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Films (${filmCount})</button>
+<button type="button" onclick="App.setField('libTab','labs')" style="flex:1;height:44px;background:${labsTone.bg};border:1px solid ${labsTone.border};border-radius:8px;color:${labsTone.color};font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Labs (${labCount})</button>
 </div>
+${tab === 'films' ? filmSection() : labSection()}
 </div>`;
 }
 
