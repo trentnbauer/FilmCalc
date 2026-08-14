@@ -36,6 +36,18 @@
         input::placeholder { color: #55534e; }
         input:focus, select:focus { outline: 1px solid var(--acc); outline-offset: 0; }
         button:hover { filter: brightness(1.15); }
+        /* Above this width there's room for a real toolbar and multi-field
+           rows, so the single markup tree (js/app.js's renderMobile()) grows
+           a desktop-style nav and lets its field rows sit side by side
+           instead of one-per-line — same markup, CSS-only rearrangement, so
+           there's no second layout to fall out of sync with this one. */
+        @media (min-width: 720px) {
+            .desktop-nav { display: flex !important; }
+            .hamburger-btn, .mobile-view-label { display: none !important; }
+            .field-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); background: #212125; gap: 1px; }
+            .field-grid > .m-row { background: #131315; border-top: 0 !important; }
+            .field-grid > button, .field-grid > div:not(.m-row) { grid-column: 1 / -1; }
+        }
     </style>
     <!-- js-yaml: parses options.yaml, the self-hosted config.yaml, and the
          films/labs region preset files. -->
