@@ -1040,9 +1040,6 @@ ${settingsSection(t('v2SettingsHomeLab'), `
 ${labNames.map(n => `<option value="${escapeHtml(n)}" ${s.homeLab === n ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('')}
 </select>
 <div style="font-size:10px;color:#5f5c57;margin-bottom:8px">The lab whose price is shown as the headline cost per frame on every lookup.</div>
-<div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781;margin-bottom:6px">${t('v2SettingsAlwaysRequire')}</div>
-<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px">${requireFilters().map(f => pill(f.label, s[f.key], `App.toggleFlag('${f.key}')`)).join('')}</div>
-<div style="font-size:10px;color:#5f5c57;margin-bottom:10px">Applied to every lookup — labs that don't offer them are hidden.</div>
 <select onchange="App.setDefaultTier(this.value)" style="${FIELD_INPUT};max-width:280px">
 <option value="">Cheapest that qualifies</option>
 ${tierLabels.map(l => `<option value="${escapeHtml(l)}" ${s.defaultTier === l ? 'selected' : ''}>${escapeHtml(l)}</option>`).join('')}
@@ -1681,16 +1678,26 @@ ${trailing || ''}
 
 function renderMobileHeader(s) {
     const viewLabel = { library: 'Library', expired: 'Expired', settings: 'Settings' }[s.view] || '';
-    const navItems = [
-        ['main', 'Film lookup'], ['library', 'Library'], ['expired', 'Expired calc'], ['settings', 'Settings']
-    ].map(([view, label]) => pill(label, s.view === view, `App.goView('${view}')`)).join('');
+    const eb = btnTone(s.view === 'expired'), lb = btnTone(s.view === 'library'), sb = btnTone(s.view === 'settings');
+    const desktopNav = `
+<button type="button" onclick="App.goView('expired')" style="background:${eb.bg};border:1px solid ${eb.border};border-radius:5px;padding:6px 10px;color:${eb.color};font-size:10px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2NavExpiredCalc')}</button>
+<button type="button" onclick="App.goView('library')" style="background:${lb.bg};border:1px solid ${lb.border};border-radius:5px;padding:6px 10px;color:${lb.color};font-size:10px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2NavLibrary')}</button>
+<a href="https://github.com/trentnbauer/FilmCalc/wiki" target="_blank" rel="noopener noreferrer" title="${t('v2NavWiki')}" style="display:flex;align-items:center;justify-content:center;width:29px;height:29px;background:#141416;border:1px solid #2c2c30;border-radius:5px;color:#8b8781;box-sizing:border-box">
+<svg style="width:15px;height:15px" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.5c-1.5-1.4-3.6-2-5.5-2A5.5 5.5 0 003 5v13a5.5 5.5 0 013.5-1.5c1.9 0 4 .6 5.5 2m0-12c1.5-1.4 3.6-2 5.5-2A5.5 5.5 0 0121 5v13a5.5 5.5 0 00-3.5-1.5c-1.9 0-4 .6-5.5 2m0-12v12"></path></svg>
+</a>
+<button type="button" onclick="App.toggleDark()" title="${t('v2NavToggleDark')}" style="display:flex;align-items:center;justify-content:center;width:29px;height:29px;background:#141416;border:1px solid #2c2c30;border-radius:5px;color:#ffb020;cursor:pointer;padding:0;box-sizing:border-box">
+<svg style="width:15px;height:15px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"></circle><path stroke-linecap="round" d="M12 2.5v2.25M12 19.25v2.25M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.25M19.25 12h2.25M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"></path></svg>
+</button>
+<button type="button" onclick="App.goView('settings')" title="${t('v2NavSettings')}" style="display:flex;align-items:center;justify-content:center;width:29px;height:29px;background:${sb.bg};border:1px solid ${sb.border};border-radius:5px;color:${sb.color};cursor:pointer;padding:0;box-sizing:border-box">
+<svg style="width:15px;height:15px" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+</button>`;
     return `<div style="position:sticky;top:0;z-index:20;background:#0e0e10;border-bottom:1px solid #26262a">
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px">
 <button type="button" onclick="App.goView('main')" style="display:flex;align-items:center;gap:9px;background:transparent;border:0;padding:0;cursor:pointer">
 <span style="width:26px;height:26px;border-radius:50%;background:linear-gradient(160deg,#2b2b2f,#131315);border:1px solid #3a3a3f;display:flex;align-items:center;justify-content:center"><span style="width:9px;height:9px;border-radius:50%;border:2px solid var(--acc)"></span></span>
 <span style="${NARROW};font-weight:700;font-size:15px;letter-spacing:.2em;color:#c9c5bd;text-transform:uppercase">Filmcalc</span>
 </button>
-<nav class="desktop-nav" style="display:none;align-items:center;gap:8px;flex-wrap:wrap">${navItems}</nav>
+<nav class="desktop-nav" style="display:none;align-items:center;gap:6px;flex-wrap:wrap">${desktopNav}</nav>
 <div style="display:flex;align-items:center;gap:8px">
 <span class="mobile-view-label" style="${MONO};font-size:12px;color:#7a7770">${escapeHtml(viewLabel)}</span>
 <button type="button" class="hamburger-btn" onclick="App.toggleMenu()" aria-label="Menu" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;padding:0;cursor:pointer">
