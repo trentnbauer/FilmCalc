@@ -34,20 +34,6 @@
         a:hover { color: #ffa268; text-decoration: underline; }
         input, select, button { font-family: inherit; }
         input::placeholder { color: #55534e; }
-        @media (max-width: 600px) {
-            /* On a phone the card's border/radius/shadow just eats width
-               without adding anything — drop the "boxed" look and the
-               page's side gutters so the actual UI gets more room. */
-            .page-shell { padding-left: 6px !important; padding-right: 6px !important; }
-            .app-card { border: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: #111113 !important; }
-            /* Rows throughout (lab/film/library list rows, section
-               headers, the top nav cluster) all use tight desktop
-               padding/gaps that read as cramped once everything's
-               stacked into one narrow column — open them up a bit. */
-            .list-row { padding: 13px 14px !important; }
-            .section-head { margin-top: 24px !important; margin-bottom: 12px !important; gap: 12px !important; }
-            .top-controls { gap: 9px !important; row-gap: 12px !important; }
-        }
         input:focus, select:focus { outline: 1px solid var(--acc); outline-offset: 0; }
         button:hover { filter: brightness(1.15); }
     </style>
