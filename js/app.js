@@ -326,20 +326,25 @@ function computeFilmRows(s, home) {
 // The cheapest saved film stock, re-costed at the home lab (+ whatever
 // push/pull it needs) to reach the current shooting ISO — a "you could pay
 // less" nudge. Mirrors js/film-lookup.js's updateCheaperAlternative().
+// Returns up to two options: the cheapest at native box speed, and the
+// cheapest reachable by pushing/pulling (within that stock's own
+// maxPushPull), so a box-speed option doesn't get hidden behind a
+// marginally-cheaper push/pull one or vice versa.
 function computeCheaperFilm(s, home) {
     const target = effectiveShootIso(s) || num(s.boxSpeed);
     const loaded = getAllFilms()[s.loadedFilmKey];
     const curCpp = home ? home.cpp : null;
-    if (!target || !home) return { has: false, label: `Cheapest film at ISO ${target || '—'}`, text: 'Enter a box speed to compare.', url: '', load: null };
+    if (!target || !home) return { has: false, label: `Cheapest film at ISO ${target || '—'}`, text: 'Enter a box speed to compare.', options: [] };
 
     const camOverride = camOverrideExposures(s);
-    let best = null;
+    let bestNative = null, bestPushPull = null;
     Object.values(getAllFilms()).filter(f => !f.hidden && (f.format || '35mm') === s.format && filmColorType(f) === s.filmColor).forEach(f => {
         const boxSpeed = parseFloat(f.boxSpeed) || 0;
         if (!boxSpeed) return;
-        const stopsAbs = Math.abs(Math.round(Math.log2(target / boxSpeed)));
+        const stopsSigned = Math.round(Math.log2(target / boxSpeed));
+        const stopsAbs = Math.abs(stopsSigned);
         const maxPushPull = parseFloat(f.maxPushPull ?? 1);
-        if (stopsAbs > Math.max(maxPushPull, 3)) return;
+        if (stopsAbs > maxPushPull) return;
         let bestBundle = null, bestCpp = null;
         normalizeFilmBundles(f, camOverride).forEach(b => {
             const cpp = computeCostPerPhoto(b.filmCost, b.rolls, b.exposures);
@@ -348,17 +353,22 @@ function computeCheaperFilm(s, home) {
         if (!bestBundle) return;
         const dev = home.pick.devCost + pushFeeFor(home.pick, stopsAbs) + home.pick.mailFee;
         const cpp = (bestBundle.filmCost / bestBundle.rolls + dev) / bestBundle.exposures;
-        if (!best || cpp < best.cpp) best = { f, bundle: bestBundle, stopsAbs, cpp, over: stopsAbs > maxPushPull };
+        const cand = { f, bundle: bestBundle, stopsSigned, stopsAbs, cpp };
+        if (stopsAbs === 0) { if (!bestNative || cpp < bestNative.cpp) bestNative = cand; }
+        else if (!bestPushPull || cpp < bestPushPull.cpp) bestPushPull = cand;
     });
 
-    if (best && curCpp !== null && best.cpp < curCpp - 0.005) {
+    const mk = (key, cand) => {
+        if (!cand || curCpp === null || !(cand.cpp < curCpp - 0.005)) return null;
         return {
-            has: true, label: `Cheaper film at ISO ${target}`,
-            text: `${best.f.name} — ${CUR()}${money(best.cpp)}/frame from ${best.bundle.storeName || 'saved library'}, saves ${((curCpp - best.cpp) * 100).toFixed(0)}c a frame${best.stopsAbs ? ` (${best.stopsAbs} stop ${target > best.f.boxSpeed ? 'push' : 'pull'})` : ''}`,
-            url: sanitizeUrl(best.bundle.buyLink), load: () => App.loadFilm(filmKey(best.f.name, best.f.boxSpeed, best.f.format))
+            key,
+            text: `${cand.f.name} — ${CUR()}${money(cand.cpp)}/frame from ${cand.bundle.storeName || 'saved library'}, saves ${((curCpp - cand.cpp) * 100).toFixed(0)}c a frame${cand.stopsAbs ? ` (${cand.stopsAbs} stop ${cand.stopsSigned > 0 ? 'push' : 'pull'})` : ''}`,
+            url: sanitizeUrl(cand.bundle.buyLink), load: () => App.loadFilm(filmKey(cand.f.name, cand.f.boxSpeed, cand.f.format))
         };
-    }
-    return { has: false, label: `Cheapest film at ISO ${target}`, text: loaded ? 'Nothing in your library beats what you have loaded.' : 'Nothing in your library beats what you have entered.', url: '', load: null };
+    };
+    const options = [mk('native', bestNative), mk('pushPull', bestPushPull)].filter(Boolean);
+    if (options.length) return { has: true, label: `Cheaper film at ISO ${target}`, options };
+    return { has: false, label: `Cheapest film at ISO ${target}`, text: loaded ? 'Nothing in your library beats what you have loaded.' : 'Nothing in your library beats what you have entered.', options: [] };
 }
 
 function computeExpired(s) {
@@ -595,12 +605,16 @@ function renderCheaperFilm(cheaper) {
     const color = cheaper.has ? SECTION_COLORS.films : '#8b8781';
     const border = cheaper.has ? '#5a3a1c' : '#26262a';
     const bg = cheaper.has ? '#17140f' : '#131315';
+    const rows = cheaper.has ? cheaper.options.map(o => `
+<div style="flex:1;min-width:180px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+<span style="font-size:12px;color:#c9c5bd">${escapeHtml(o.text)}</span>
+<button type="button" onclick="App.loadCheaperFilm('${o.key}')" style="background:transparent;border:0;padding:0;color:${SECTION_COLORS.films};font-size:10px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Load</button>
+<a href="${escapeHtml(o.url)}" target="_blank" rel="noopener noreferrer" style="color:${SECTION_COLORS.films};font-size:10px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none">Buy ↗</a>
+</div>`).join('') : `<div style="flex:1;min-width:180px;font-size:12px;color:#c9c5bd">${escapeHtml(cheaper.text)}</div>`;
     return `
-<div style="margin-top:8px;display:flex;align-items:center;gap:12px;padding:9px 12px;border:1px solid ${border};border-radius:8px;background:${bg};flex-wrap:wrap">
+<div style="margin-top:8px;display:flex;flex-direction:column;gap:8px;padding:9px 12px;border:1px solid ${border};border-radius:8px;background:${bg}">
 <div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:${color}">${escapeHtml(cheaper.label)}</div>
-<div style="flex:1;min-width:180px;font-size:12px;color:#c9c5bd">${escapeHtml(cheaper.text)}</div>
-${cheaper.has ? `<button type="button" onclick="App.loadCheaperFilm()" style="background:transparent;border:0;padding:0;color:${SECTION_COLORS.films};font-size:10px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Load</button>
-<a href="${escapeHtml(cheaper.url)}" target="_blank" rel="noopener noreferrer" style="color:${SECTION_COLORS.films};font-size:10px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none">Buy ↗</a>` : ''}
+${rows}
 </div>`;
 }
 
@@ -1328,11 +1342,12 @@ const App = {
         flash('Loaded ' + f.name);
         render();
     },
-    loadCheaperFilm() {
+    loadCheaperFilm(key) {
         const r = rankLabs(state);
         const home = r.ranked.find(l => l.name === state.homeLab) || r.ranked[0];
         const cheaper = computeCheaperFilm(state, home);
-        if (cheaper.load) cheaper.load();
+        const opt = (cheaper.options || []).find(o => o.key === key) || (cheaper.options || [])[0];
+        if (opt) opt.load();
     },
 
     saveToLibrary() {
@@ -1898,11 +1913,14 @@ ${pushWarn ? `<div style="display:flex;align-items:center;gap:9px;margin-top:10p
 </div>` : ''}
 <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;padding:12px 14px;border:1px solid ${cheaper.has ? '#5a3a1c' : '#26262a'};border-radius:10px;background:${cheaper.has ? '#17140f' : '#131315'}">
 <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:${cheaper.has ? SECTION_COLORS.films : '#8b8781'}">${escapeHtml(cheaper.label)}</div>
-<div style="font-size:13px;line-height:1.45;color:#c9c5bd">${escapeHtml(cheaper.text)}</div>
-${cheaper.has ? `<div style="display:flex;gap:10px;margin-top:2px">
-<button type="button" onclick="App.loadCheaperFilm()" style="flex:1;height:40px;background:transparent;border:1px solid #5a3a1c;border-radius:8px;color:${SECTION_COLORS.films};font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Load</button>
-<a href="${escapeHtml(cheaper.url)}" target="_blank" rel="noopener noreferrer" style="flex:1;height:40px;display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid #5a3a1c;border-radius:8px;color:${SECTION_COLORS.films};font-size:12px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none">Buy ↗</a>
-</div>` : ''}
+${cheaper.has ? cheaper.options.map((o, i) => `
+<div style="display:flex;flex-direction:column;gap:6px;${i > 0 ? 'padding-top:8px;border-top:1px solid #26262a' : ''}">
+<div style="font-size:13px;line-height:1.45;color:#c9c5bd">${escapeHtml(o.text)}</div>
+<div style="display:flex;gap:10px">
+<button type="button" onclick="App.loadCheaperFilm('${o.key}')" style="flex:1;height:40px;background:transparent;border:1px solid #5a3a1c;border-radius:8px;color:${SECTION_COLORS.films};font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Load</button>
+<a href="${escapeHtml(o.url)}" target="_blank" rel="noopener noreferrer" style="flex:1;height:40px;display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid #5a3a1c;border-radius:8px;color:${SECTION_COLORS.films};font-size:12px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none">Buy ↗</a>
+</div>
+</div>`).join('') : `<div style="font-size:13px;line-height:1.45;color:#c9c5bd">${escapeHtml(cheaper.text)}</div>`}
 </div>
 <div style="display:flex;align-items:center;gap:10px;margin-top:14px">
 <button type="button" onclick="App.saveToLibrary()" style="flex:1;height:44px;background:#1c1512;border:1px solid #5a3a1c;border-radius:8px;color:var(--acc);font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Save to library</button>
