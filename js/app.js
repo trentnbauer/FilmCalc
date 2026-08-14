@@ -1268,7 +1268,7 @@ function render() {
     const focus = captureFocus(root);
     root.innerHTML = `
 <div style="min-height:100vh;display:flex;justify-content:center;background:#0b0b0c">
-<div style="width:100%;max-width:640px;min-height:100vh;contain:layout">
+<div style="width:100%;max-width:960px;min-height:100vh;contain:layout">
 ${renderMobile(state)}
 </div>
 </div>`;
