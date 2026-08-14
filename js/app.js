@@ -1663,7 +1663,7 @@ const M_ROW = "display:flex;align-items:center;justify-content:space-between;gap
 const M_CARD = "border:1px solid #26262a;border-radius:10px;background:#131315;overflow:hidden";
 
 function mRow(label, controlHtml, first) {
-    return `<div style="${first ? M_ROW.replace(';border-top:1px solid #212125', '') : M_ROW}">
+    return `<div class="m-row" style="${first ? M_ROW.replace(';border-top:1px solid #212125', '') : M_ROW}">
 <label class="narrow" style="${M_LABEL}">${label}</label>
 <div style="display:flex;align-items:center;gap:8px">${controlHtml}</div>
 </div>`;
@@ -1681,15 +1681,19 @@ ${trailing || ''}
 
 function renderMobileHeader(s) {
     const viewLabel = { library: 'Library', expired: 'Expired', settings: 'Settings' }[s.view] || '';
+    const navItems = [
+        ['main', 'Film lookup'], ['library', 'Library'], ['expired', 'Expired calc'], ['settings', 'Settings']
+    ].map(([view, label]) => pill(label, s.view === view, `App.goView('${view}')`)).join('');
     return `<div style="position:sticky;top:0;z-index:20;background:#0e0e10;border-bottom:1px solid #26262a">
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px">
 <button type="button" onclick="App.goView('main')" style="display:flex;align-items:center;gap:9px;background:transparent;border:0;padding:0;cursor:pointer">
 <span style="width:26px;height:26px;border-radius:50%;background:linear-gradient(160deg,#2b2b2f,#131315);border:1px solid #3a3a3f;display:flex;align-items:center;justify-content:center"><span style="width:9px;height:9px;border-radius:50%;border:2px solid var(--acc)"></span></span>
 <span style="${NARROW};font-weight:700;font-size:15px;letter-spacing:.2em;color:#c9c5bd;text-transform:uppercase">Filmcalc</span>
 </button>
+<nav class="desktop-nav" style="display:none;align-items:center;gap:8px;flex-wrap:wrap">${navItems}</nav>
 <div style="display:flex;align-items:center;gap:8px">
-<span style="${MONO};font-size:12px;color:#7a7770">${escapeHtml(viewLabel)}</span>
-<button type="button" onclick="App.toggleMenu()" aria-label="Menu" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;padding:0;cursor:pointer">
+<span class="mobile-view-label" style="${MONO};font-size:12px;color:#7a7770">${escapeHtml(viewLabel)}</span>
+<button type="button" class="hamburger-btn" onclick="App.toggleMenu()" aria-label="Menu" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;padding:0;cursor:pointer">
 <svg style="width:20px;height:20px" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"></path></svg>
 </button>
 </div>
@@ -1866,7 +1870,7 @@ ${bundles}
 <select onchange="App.setField('format',this.value)" style="height:44px;${M_INPUT}">${FORMAT_OPTIONS.map(o => `<option value="${o.value}" ${s.format === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>
 <select onchange="App.setField('filmColor',this.value)" style="height:44px;${M_INPUT}">${FILM_TYPE_OPTIONS.map(o => `<option value="${o.value}" ${s.filmColor === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>
 </div>
-<div style="${M_CARD}">
+<div class="field-grid" style="${M_CARD}">
 ${mRow('Box speed', `<input value="${escapeHtml(s.boxSpeed)}" oninput="App.setField('boxSpeed',this.value)" data-fkey="m-boxSpeed" inputmode="numeric" placeholder="400" style="width:96px;height:44px;text-align:right;${M_INPUT}"><span style="width:26px;font-size:12px;text-transform:uppercase;color:#7a7770">ISO</span>`, true)}
 ${mRow('Push/pull', `<select onchange="App.setField('pushPull',this.value)" style="width:96px;height:44px;text-align:right;${M_INPUT}">${PUSH_PULL_OPTIONS.map(n => `<option value="${n}" ${String(s.pushPull) === String(n) ? 'selected' : ''}>${n > 0 ? '+' + n : n}</option>`).join('')}</select><span style="width:26px;font-size:12px;text-transform:uppercase;color:#7a7770">stop</span>`)}
 ${mRow('Development type', `<select onchange="App.setField('process',this.value)" style="width:96px;height:44px;text-align:right;${M_INPUT}">${PROCESS_OPTIONS.map(o => `<option value="${o.value}" ${s.process === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select><span style="width:26px"></span>`)}
@@ -1993,7 +1997,7 @@ function renderMobileExpired(s) {
 <div style="flex:1;height:1px;background:#26262a"></div>
 </div>
 <p style="margin:0 0 12px;font-size:14px;line-height:1.5;color:#8b8781">Old film loses speed as it ages. Enter the roll's box speed and expiry, and this gives you what to rate it at.</p>
-<div style="${M_CARD}">
+<div class="field-grid" style="${M_CARD}">
 ${mRow('Box speed', `<input value="${escapeHtml(s.expBox)}" oninput="App.setField('expBox',this.value)" data-fkey="m-expBox" inputmode="numeric" style="width:120px;height:44px;text-align:right;${M_INPUT}">`, true)}
 ${mRow('Expiry', `<select onchange="App.setField('expiryMonth',this.value)" style="width:88px;height:44px;${M_INPUT};font-size:15px">${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => `<option value="${i + 1}" ${String(s.expiryMonth) === String(i + 1) ? 'selected' : ''}>${m}</option>`).join('')}</select><input value="${escapeHtml(s.expiryYear)}" oninput="App.setField('expiryYear',this.value)" data-fkey="m-expiryYear" inputmode="numeric" placeholder="2006" style="width:96px;height:44px;text-align:right;${M_INPUT}">`)}
 ${mRow('Film type', `<select onchange="App.setField('filmType',this.value)" style="width:180px;height:44px;${M_INPUT};font-size:15px"><option value="c41" ${s.filmType === 'c41' ? 'selected' : ''}>C-41 colour</option><option value="bw" ${s.filmType === 'bw' ? 'selected' : ''}>B&amp;W</option><option value="e6" ${s.filmType === 'e6' ? 'selected' : ''}>E-6 slide</option></select>`)}
