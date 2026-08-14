@@ -1040,9 +1040,6 @@ ${settingsSection(t('v2SettingsHomeLab'), `
 ${labNames.map(n => `<option value="${escapeHtml(n)}" ${s.homeLab === n ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('')}
 </select>
 <div style="font-size:10px;color:#5f5c57;margin-bottom:8px">The lab whose price is shown as the headline cost per frame on every lookup.</div>
-<div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781;margin-bottom:6px">${t('v2SettingsAlwaysRequire')}</div>
-<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px">${requireFilters().map(f => pill(f.label, s[f.key], `App.toggleFlag('${f.key}')`)).join('')}</div>
-<div style="font-size:10px;color:#5f5c57;margin-bottom:10px">Applied to every lookup — labs that don't offer them are hidden.</div>
 <select onchange="App.setDefaultTier(this.value)" style="${FIELD_INPUT};max-width:280px">
 <option value="">Cheapest that qualifies</option>
 ${tierLabels.map(l => `<option value="${escapeHtml(l)}" ${s.defaultTier === l ? 'selected' : ''}>${escapeHtml(l)}</option>`).join('')}
