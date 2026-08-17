@@ -6,8 +6,8 @@ the browser and isn't meant for production.
 
 It's regenerated automatically on every deploy by
 `.github/workflows/build-github-page.yml`. The checked-in copy here is only
-the fallback for offline/local Docker builds, which have no Node available to
-rebuild it — after adding or removing Tailwind utility classes in
+the fallback for anyone running this from a local checkout without Node
+available to rebuild it — after adding or removing Tailwind utility classes in
 `index.html` **or any `js/*.js` file** (see `tailwind.config.js`'s
 `content` — issue #87 was a class used only in a `js/*.js` file getting
 silently purged because the config only scanned `index.html`), regenerate

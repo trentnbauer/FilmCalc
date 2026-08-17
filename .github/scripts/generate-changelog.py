@@ -11,9 +11,7 @@ Fetches merged PRs and each PR's changed files in a single paginated GraphQL
 query (2-4 requests for up to 200 PRs) rather than one `gh pr view` call per
 PR, which used to mean ~200 sequential API round trips (issue #164).
 
-Shared by the Pages deploy and Docker build workflows so the generator only
-ever needs to be fixed in one place (issue #165). Requires the `gh` CLI to
-be authenticated (GH_TOKEN env var).
+Requires the `gh` CLI to be authenticated (GH_TOKEN env var).
 """
 import argparse
 import json

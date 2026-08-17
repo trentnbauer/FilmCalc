@@ -86,7 +86,7 @@ body:
       label: How are you running FilmCalc?
       options:
         - GitHub Pages (the public site)
-        - Self-hosted Docker
+        - Self-hosted (cloned the repo)
         - Opened the HTML file directly
         - Not sure
     validations:

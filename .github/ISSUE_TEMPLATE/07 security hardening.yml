@@ -23,7 +23,6 @@ body:
         - A missing or weak security header / Content Security Policy
         - An outdated or unpinned CDN dependency (Tailwind, js-yaml)
         - Over-broad permissions in a GitHub Actions workflow
-        - A Dockerfile or nginx config that could be tightened
         - A general "this pattern is risky" observation, with no working exploit
 
         Please read [SECURITY.md](https://github.com/trentnbauer/FilmCalc/blob/main/.github/SECURITY.md)
@@ -46,7 +45,6 @@ body:
         - Missing / weak security header or CSP
         - Outdated or unpinned dependency
         - GitHub Actions workflow permissions or injection risk
-        - Dockerfile / nginx configuration
         - Risky code pattern (no working exploit)
         - Something else
     validations:
@@ -65,7 +63,7 @@ body:
     attributes:
       label: Where is it?
       description: File, and function or line if you can.
-      placeholder: "e.g. index.html — sanitizeUrl(), or dockerfile, or .github/workflows/deploy.yml"
+      placeholder: "e.g. index.html — sanitizeUrl(), or .github/workflows/deploy.yml"
     validations:
       required: true
 
@@ -95,7 +93,7 @@ body:
       multiple: true
       options:
         - GitHub Pages (the public site)
-        - Self-hosted Docker image
+        - Self-hosted (cloned the repo)
         - The GitHub Actions workflows
         - The source itself (applies everywhere)
     validations:

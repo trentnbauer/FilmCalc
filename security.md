@@ -24,8 +24,8 @@ The more of this you can provide, the faster it can be confirmed and fixed:
 - **What an attacker could achieve** — reading another user's data, executing script, defacing the
   page, exfiltrating something.
 - **A screenshot or short recording**, if it helps demonstrate the impact.
-- **Where you saw it** — the public GitHub Pages site, a self-hosted Docker deployment, or the raw
-  HTML file opened locally.
+- **Where you saw it** — the public GitHub Pages site, a self-hosted deployment, or the raw HTML
+  file opened locally.
 
 ## Scope
 
@@ -35,14 +35,14 @@ database** — all data lives in the browser's `localStorage` on the user's own 
 Things that are **in scope** and genuinely worth reporting:
 
 - **Cross-site scripting (XSS)** — particularly via imported YAML. Film names, lab names, store names,
-  buy links, and theme values all come from user-supplied or imported files and are rendered into the
-  DOM. A crafted `config.yaml` that executes script when imported is the highest-value bug in this app.
+  and buy links all come from user-supplied or imported files and are rendered into the DOM. A crafted
+  `config.yaml` that executes script when imported is the highest-value bug in this app.
 - **Malicious URL injection** — a `buyLink` or directions link that produces a `javascript:` URL or
   otherwise escapes the URL sanitiser.
 - **Prototype pollution** or similar via imported YAML/JSON parsing.
 - **Supply-chain issues** — a compromised or typosquatted CDN dependency (Tailwind, js-yaml).
-- **Vulnerabilities in the Docker image or its base image**, or in the GitHub Actions workflows
-  (e.g. injection into a workflow, over-broad token permissions).
+- **Vulnerabilities in the GitHub Actions workflows** (e.g. injection into a workflow, over-broad
+  token permissions).
 - **Content Security Policy** weaknesses that make the above meaningfully easier.
 
 Things that are **out of scope**:
@@ -52,7 +52,7 @@ Things that are **out of scope**:
 - The fact that data is stored unencrypted in `localStorage`. This is by design for a local-first,
   no-account app, and the data is film prices — not credentials.
 - Missing security headers on a **self-hosted** deployment. That's a configuration choice for whoever
-  deployed it. (Weak headers in the *shipped* nginx config or Dockerfile **are** in scope.)
+  deployed it.
 - Social engineering, or "a user could import a config.yaml with wrong prices in it". Bad *data* isn't
   a vulnerability; bad data that *executes* is.
 - Denial of service by importing an enormous file into your own browser.
