@@ -246,16 +246,17 @@ jobs:
                reorder keys relative to `en`.
             2. Add a `language<Name>` display-name key (e.g. `languageGerman: 'German'`) to **every**
                existing locale's `STRINGS` block, including the new one describing itself, and to `en`.
-            3. In `index.html`, add an `<option>` for the new locale to both `#languageSelect`
-               (Settings > Appearance) and `#languageWelcomeSelect` (the first-run welcome popup),
-               matching the existing `<option>` pattern for `es`/`ja`.
-            4. In `js/modals.js`, add an entry for the new code to `WELCOME_CONTINUE_LABELS` (the
-               popup's "Continue" button label, translated).
-            5. Run `node .github/scripts/verify-i18n-parity.js` — it must print `OK` with zero exit
+            3. In `js/app.js`, add a `[code, native-name]` entry to the `LANGUAGE_OPTIONS` constant —
+               it's the one list both the Settings language picker and the first-run Setup wizard's
+               language step read from, matching the existing entries' pattern (e.g. `['de',
+               'Deutsch']`). There's no separate "Continue" button label to translate elsewhere — the
+               Setup wizard's Next/Continue button already reads `v2ButtonNext` from `STRINGS`, covered
+               by step 1.
+            4. Run `node .github/scripts/verify-i18n-parity.js` — it must print `OK` with zero exit
                code before you go any further. Fix any key/placeholder mismatch it reports; don't open
                a PR with a failing verification.
-            6. Run `node --check js/i18n.js` and `node --check js/modals.js`, and confirm `index.html`
-               is still well-formed (same check as the auto-merge confidence bar above). Run
+            5. Run `node --check js/i18n.js` and `node --check js/app.js`, and confirm `index.html` is
+               still well-formed (same check as the auto-merge confidence bar above). Run
                `node --test tests/` too, even though it won't exercise i18n directly — it must still
                pass.
 
