@@ -193,6 +193,13 @@ const state = {
     view: 'main', // main | expired | library | settings
     draft: null, draftKind: null, draftKey: null,
     setupOpen: false, setupStep: 0, // 0=language, 1=import presets, 2=home lab
+    // Which starter-preset checkboxes are ticked, keyed "kind:file" (e.g.
+    // "films:melbourne-retailers.yaml") — controlled, unlike most of this
+    // screen's markup, specifically so a geo-matched pre-check (see
+    // detectUserLocation()) survives a re-render triggered by something
+    // else on the same Settings page instead of snapping back on every
+    // unrelated keystroke.
+    presetChecked: new Set(),
     extrasOpen: false, expandedLab: null, expandedFilm: null,
     format: localStorage.getItem('globalFormat') || '35mm',
     process: localStorage.getItem('globalProcess') || 'C41',
@@ -449,15 +456,132 @@ const TURNAROUND_OPTIONS = [{ value: 'next_day', label: 'Next day' }, { value: '
 
 // ---------- Starter presets (films/index.json + labs/index.json) ----------
 // The region YAML files under films/ and labs/ are community-contributed
-// retailer/lab price lists — opt-in reference data, not global defaults,
-// since a Melbourne lab is meaningless to a US visitor. Fetched lazily the
-// first time Settings → Data is opened, cached for the session.
+// retailer/lab price lists — still nothing imports without an explicit
+// Next/"Import selected" click, but the checkboxes that look like they
+// match the visitor's own region start pre-ticked (see detectUserLocation
+// below) instead of making everyone hunt a flat list of filenames for
+// their own city. Fetched lazily the first time Settings → Data is
+// opened, cached for the session.
 let presetFilmIndex = null, presetLabIndex = null;
 async function loadPresetIndexes() {
     if (presetFilmIndex && presetLabIndex) return;
     try { presetFilmIndex = await (await fetch('films/index.json')).json(); } catch { presetFilmIndex = []; }
     try { presetLabIndex = await (await fetch('labs/index.json')).json(); } catch { presetLabIndex = []; }
     render();
+}
+
+// ---------- Geo-based preset defaults ----------
+// Detection never leaves the device: the Geolocation API's lat/long (when
+// granted) is matched against a small built-in table of the handful of
+// countries/cities the shipped presets actually cover, entirely locally —
+// no reverse-geocoding service, no IP-lookup API, no network request of
+// any kind. Falls back to the browser's IANA timezone (also fully local)
+// if geolocation is denied, unsupported, or times out. Either way this
+// only ever *pre-ticks* checkboxes in presetCheckList() below — it's
+// still the user's call what actually gets imported.
+const GEO_COUNTRY_BOUNDS = [
+    { country: 'Australia', minLat: -44, maxLat: -10, minLon: 112, maxLon: 154 },
+    { country: 'Germany', minLat: 47, maxLat: 55.5, minLon: 5.5, maxLon: 15.5 },
+    { country: 'Japan', minLat: 24, maxLat: 46, minLon: 122, maxLon: 146 },
+    { country: 'United Kingdom', minLat: 49.8, maxLat: 61, minLon: -8.7, maxLon: 1.9 },
+    // Contiguous US only — a visitor in Alaska/Hawaii just falls through
+    // to their timezone guess below instead of matching here.
+    { country: 'United States', minLat: 24.5, maxLat: 49.5, minLon: -125, maxLon: -66.9 },
+];
+// Only the cities the shipped films/labs presets actually have entries
+// for. Matched by nearest-city within a ~275km cutoff, not a fixed
+// per-city radius, so it's never worse than the country-level match above.
+const GEO_CITIES = [
+    { city: 'Adelaide', lat: -34.9285, lon: 138.6007 },
+    { city: 'Brisbane', lat: -27.4698, lon: 153.0251 },
+    { city: 'Canberra', lat: -35.2809, lon: 149.1300 },
+    { city: 'Melbourne', lat: -37.8136, lon: 144.9631 },
+    { city: 'Perth', lat: -31.9505, lon: 115.8605 },
+    { city: 'Sydney', lat: -33.8688, lon: 151.2093 },
+];
+function guessLocationFromCoords(lat, lon) {
+    const country = GEO_COUNTRY_BOUNDS.find(b => lat >= b.minLat && lat <= b.maxLat && lon >= b.minLon && lon <= b.maxLon);
+    if (!country) return null;
+    let nearestCity = null, nearestDist = Infinity;
+    GEO_CITIES.forEach(c => {
+        const dist = (lat - c.lat) ** 2 + (lon - c.lon) ** 2;
+        if (dist < nearestDist) { nearestDist = dist; nearestCity = c.city; }
+    });
+    // ~2.5 degrees squared ≈ 275km at the equator — comfortably wider than
+    // the gap between any two cities above, so this only fires for a
+    // genuinely nearby match, not "whichever city happens to be least far".
+    return { country: country.country, city: nearestDist <= 6.25 ? nearestCity : null };
+}
+// IANA zone -> {country, city}. Not exhaustive — just the zones plausible
+// for the countries the shipped presets cover; any other zone (or a
+// browser that won't report one) simply skips the pre-check, same as if
+// geolocation had found nothing either.
+const GEO_TIMEZONE_MAP = {
+    'Australia/Adelaide': { country: 'Australia', city: 'Adelaide' },
+    'Australia/Brisbane': { country: 'Australia', city: 'Brisbane' },
+    'Australia/Melbourne': { country: 'Australia', city: 'Melbourne' },
+    'Australia/Perth': { country: 'Australia', city: 'Perth' },
+    'Australia/Sydney': { country: 'Australia', city: 'Sydney' },
+    'Australia/Broken_Hill': { country: 'Australia' }, 'Australia/Darwin': { country: 'Australia' },
+    'Australia/Eucla': { country: 'Australia' }, 'Australia/Hobart': { country: 'Australia' },
+    'Australia/Lindeman': { country: 'Australia' }, 'Australia/Lord_Howe': { country: 'Australia' },
+    'Europe/Berlin': { country: 'Germany' }, 'Europe/Busingen': { country: 'Germany' },
+    'Asia/Tokyo': { country: 'Japan' },
+    'Europe/London': { country: 'United Kingdom' },
+    'America/New_York': { country: 'United States' }, 'America/Detroit': { country: 'United States' },
+    'America/Chicago': { country: 'United States' }, 'America/Denver': { country: 'United States' },
+    'America/Phoenix': { country: 'United States' }, 'America/Los_Angeles': { country: 'United States' },
+    'America/Anchorage': { country: 'United States' }, 'Pacific/Honolulu': { country: 'United States' },
+    'America/Boise': { country: 'United States' }, 'America/Indiana/Indianapolis': { country: 'United States' },
+};
+function guessLocationFromTimezone() {
+    try { return GEO_TIMEZONE_MAP[Intl.DateTimeFormat().resolvedOptions().timeZone] || null; }
+    catch { return null; }
+}
+// undefined = not attempted yet; null = attempted, matched nothing.
+// Resolved at most once per page load — geoGuess's own presence is the
+// cache, so a second call while one's already in flight (or already
+// resolved) just returns the same promise/value instead of re-prompting.
+let geoGuess = undefined;
+let geoDetectPromise = null;
+function detectUserLocation() {
+    if (geoGuess !== undefined) return Promise.resolve(geoGuess);
+    if (geoDetectPromise) return geoDetectPromise;
+    const finish = (g) => {
+        geoGuess = g;
+        if (g) {
+            // One-time seed, not a live binding — from here on,
+            // state.presetChecked only changes via the user's own clicks
+            // (App.togglePresetCheck), so a manual uncheck sticks even
+            // though geoGuess itself never changes for the rest of the
+            // session.
+            [...presetFilmIndex, ...presetLabIndex].forEach(f => {
+                // A country-wide catch-all (no city of its own, e.g.
+                // "Australian-Retailers") matches on country alone; a
+                // file scoped to a specific city (e.g. "Adelaide
+                // Retailers") needs that exact city, not just the same
+                // country — otherwise every Australian file would match
+                // an Australian visitor regardless of which city.
+                const matches = f.city ? f.city === g.city : f.country === g.country;
+                if (matches) {
+                    const kind = presetFilmIndex.includes(f) ? 'films' : 'labs';
+                    state.presetChecked.add(`${kind}:${f.file}`);
+                }
+            });
+        }
+        render();
+        return g;
+    };
+    geoDetectPromise = !navigator.geolocation
+        ? Promise.resolve(finish(guessLocationFromTimezone()))
+        : new Promise(resolve => {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => resolve(finish(guessLocationFromCoords(pos.coords.latitude, pos.coords.longitude) || guessLocationFromTimezone())),
+                () => resolve(finish(guessLocationFromTimezone())),
+                { timeout: 5000, maximumAge: 3600000 }
+            );
+        });
+    return geoDetectPromise;
 }
 
 const SECTION_STYLE = "border-top:1px solid #212125;background:#131315;padding:12px 14px";
@@ -592,9 +716,15 @@ ${stepBody}
 // FilmCalc for, say, Melbourne wants both the Melbourne AND the
 // Australia-wide retailer files in one go, not one picked-import-repick
 // cycle per file (issue: the old single-select forced exactly one region
-// at a time).
+// at a time). Checked state lives in state.presetChecked (not a plain
+// uncontrolled checkbox) so a geo-matched pre-check, or the user's own
+// tick/untick, survives a re-render triggered by anything else on the
+// same Settings page.
 function presetCheckList(kind, entries) {
-    return entries.map(f => `<label style="display:flex;align-items:center;gap:8px;padding:6px 2px;font-size:12px;color:#c9c5bd;cursor:pointer"><input type="checkbox" class="preset-check" data-kind="${kind}" value="${escapeHtml(f.file)}" style="width:16px;height:16px;accent-color:var(--acc);cursor:pointer">${escapeHtml(f.label)}</label>`).join('');
+    return entries.map(f => {
+        const key = `${kind}:${f.file}`;
+        return `<label style="display:flex;align-items:center;gap:8px;padding:6px 2px;font-size:12px;color:#c9c5bd;cursor:pointer"><input type="checkbox" class="preset-check" data-kind="${kind}" value="${escapeHtml(f.file)}" onchange="App.togglePresetCheck('${kind}','${jsAttr(f.file)}',this.checked)" ${state.presetChecked.has(key) ? 'checked' : ''} style="width:16px;height:16px;accent-color:var(--acc);cursor:pointer">${escapeHtml(f.label)}</label>`;
+    }).join('');
 }
 // showImportButton: false on the Setup wizard's presets step, where Next
 // itself imports whatever's ticked (see App.setupNextFromPresets) — a
@@ -602,13 +732,11 @@ function presetCheckList(kind, entries) {
 // own Starter Presets section has no such Next button, so it keeps one.
 function renderPresetImport(showImportButton = true) {
     if (!presetFilmIndex || !presetLabIndex) { loadPresetIndexes(); return `<div style="font-size:11px;color:#5f5c57">Loading…</div>`; }
-    // One combined "Import selected" button for both lists, not one per
-    // list — importing re-renders the whole page, which would otherwise
-    // wipe the checked state of whichever list's checkboxes weren't just
-    // submitted (they're plain uncontrolled checkboxes, not tied to
-    // state) — ticking films and labs, then importing once, is the only
-    // way both actually make it in.
-    return `<div style="font-size:10px;color:#5f5c57;margin-bottom:8px">Community-contributed regional film/lab price lists shipped with FilmCalc — tick any that apply to you (more than one is fine) to add real data instead of typing it all by hand.</div>
+    if (geoGuess === undefined) detectUserLocation();
+    const geoNote = geoGuess
+        ? `Pre-ticked below: whatever looks like it covers ${escapeHtml(geoGuess.city || geoGuess.country)}, guessed from your device's location or timezone — that guess never leaves this device. Tick or untick anything; only what's ticked when you import actually gets added.`
+        : `Community-contributed regional film/lab price lists shipped with FilmCalc — tick any that apply to you (more than one is fine) to add real data instead of typing it all by hand.`;
+    return `<div style="font-size:10px;color:#5f5c57;margin-bottom:8px">${geoNote}</div>
 <div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781;margin-bottom:4px">Films</div>
 <div style="display:flex;flex-direction:column;max-height:160px;overflow:auto;border:1px solid #26262a;border-radius:6px;padding:4px 8px;margin-bottom:10px">${presetCheckList('films', presetFilmIndex)}</div>
 <div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781;margin-bottom:4px">Labs</div>
@@ -988,12 +1116,15 @@ const App = {
         state.importNote = 'All saved data deleted.';
         render();
     },
+    togglePresetCheck(kind, file, checked) {
+        const key = `${kind}:${file}`;
+        if (checked) state.presetChecked.add(key); else state.presetChecked.delete(key);
+    },
     // Imports every checked region file — films AND labs together in one
-    // pass, not one button per kind, since importing triggers a
-    // full re-render that would otherwise wipe the checked state of
-    // whichever list wasn't just submitted (plain uncontrolled
-    // checkboxes, not tied to state). Fetched in parallel, merged one
-    // after another so a film/lab shared across two chosen files (e.g. a
+    // pass, not one button per kind, since importing triggers a full
+    // re-render (state.presetChecked, not the checkboxes' own DOM state,
+    // is what survives that). Fetched in parallel, merged one after
+    // another so a film/lab shared across two chosen files (e.g. a
     // national + a city retailer file) combines instead of the second
     // overwriting the first.
     importPresetSelected() {
