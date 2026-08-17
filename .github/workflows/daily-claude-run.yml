@@ -51,12 +51,12 @@ jobs:
           gh label create "price-audit" \
             --repo ${{ github.repository }} \
             --color "0e8a16" \
-            --description "Monthly film/lab price audit checklist for one data file. Worked through by daily-claude-run.yml Tier 5." \
+            --description "Monthly price audit checklist for one film/lab data file. Worked through by the nightly Tier 5 run." \
             --force
           gh label create "price-audit-flag" \
             --repo ${{ github.repository }} \
             --color "d93f0b" \
-            --description "A price-audit entry Claude couldn't confidently verify. Reply with the correct value and mention @claude to apply it." \
+            --description "A price-audit entry Claude could not verify. Reply with the correct value and mention @claude." \
             --force
 
       - name: Prepare Tier 1 security-alert data
