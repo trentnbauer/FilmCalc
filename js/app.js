@@ -31,6 +31,19 @@
 function escapeHtml(str) {
     return String(str ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
+// For a value embedded as a single-quoted JS-string argument inside an
+// onclick="..." attribute (e.g. onclick="App.editFilm('${jsAttr(key)}')").
+// escapeHtml() alone isn't enough there: the browser HTML-decodes the
+// attribute (turning &#39; back into ') before handing it to the JS
+// engine as the handler body, so a name/key containing a literal quote
+// closes the string early — and a name like `x'); alert(1); //` becomes
+// live, executing JS in the page. Backslash-escape quotes/backslashes for
+// the JS-string layer first, then HTML-escape the result for the
+// attribute layer, so both the browser's HTML parser and the JS parser
+// see the value as inert data.
+function jsAttr(str) {
+    return escapeHtml(String(str ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, '\\n'));
+}
 function sanitizeUrl(url) {
     if (!url) return '';
     try {
@@ -489,7 +502,7 @@ ${settingsSection(t('v2SettingsHiddenPresets'), `
 ${hidden.length ? hidden.map(h => `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid #212125">
 <span style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#5f5c57;width:36px">${h.kind === 'film' ? t('v2SectionFilms') : t('v2SectionLabs')}</span>
 <span style="flex:1;font-size:12px;color:#c9c5bd">${escapeHtml(h.name)}</span>
-<button type="button" onclick="App.toggleHidden('${h.kind}','${escapeHtml(h.key)}')" style="background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:4px 9px;color:#8b8781;font-size:9px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonShow')}</button>
+<button type="button" onclick="App.toggleHidden('${h.kind}','${jsAttr(h.key)}')" style="background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:4px 9px;color:#8b8781;font-size:9px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonShow')}</button>
 </div>`).join('') : `<div style="font-size:11px;color:#5f5c57">Nothing hidden. Hide a film or lab in the library to keep it out of lookups without deleting it.</div>`}
 `)}
 ${settingsSection(t('v2SettingsStarterPresets'), renderPresetImport())}
@@ -1268,7 +1281,7 @@ function renderMobileLookup(s) {
 </div>`;
         }).join('');
         return `<div style="border-radius:10px;overflow:hidden;border:1px solid ${cardBorder};background:${cardBg}">
-<button type="button" onclick="App.toggleLab('${escapeHtml(l.name)}')" style="width:100%;background:transparent;border:0;padding:14px;text-align:left;cursor:pointer">
+<button type="button" onclick="App.toggleLab('${jsAttr(l.name)}')" style="width:100%;background:transparent;border:0;padding:14px;text-align:left;cursor:pointer">
 <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
 <span style="font-size:16px;color:#eae7e1">${escapeHtml(l.name)}</span>
 <span style="${MONO};font-size:20px;color:${priceColor}">${CUR()}${money(l.cpp)}</span>
@@ -1282,7 +1295,7 @@ ${open ? `<div style="padding:0 14px 14px">
 <div style="${MONO};font-size:12px;color:#7a7770;margin-bottom:8px">${escapeHtml(l.lab.address || 'address not saved')}</div>
 <div style="display:flex;flex-direction:column;gap:6px">${tierRows}</div>
 <div style="display:flex;gap:8px;margin-top:10px">
-<button type="button" onclick="App.editLab('${escapeHtml(l.name)}')" style="flex:1;height:44px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Edit lab</button>
+<button type="button" onclick="App.editLab('${jsAttr(l.name)}')" style="flex:1;height:44px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Edit lab</button>
 ${labDirectionsUrl(l.name) ? `<a href="${labDirectionsUrl(l.name)}" target="_blank" rel="noopener noreferrer" style="flex:1;height:44px;display:flex;align-items:center;justify-content:center;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:${SECTION_COLORS.labs};font-size:12px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none">Directions ↗</a>` : ''}
 </div>
 </div>` : ''}
@@ -1300,11 +1313,11 @@ ${labDirectionsUrl(l.name) ? `<a href="${labDirectionsUrl(l.name)}" target="_bla
         const meta = `${f.boxSpeed} · ${procLabel(f.process)} · ${row.exposures}exp${row.stopsAbs ? ` · ${row.stopsAbs} stop ${row.dir}` : ''}`;
         const bundles = row.bundles.slice().sort((a, b) => a.filmCost / a.rolls - b.filmCost / b.rolls).map(b => `
 <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;background:#0f0f11;border:1px solid #26262a;border-radius:8px">
-<button type="button" onclick="App.loadFilmBundle('${escapeHtml(key)}','${escapeHtml(b.storeName)}',${b.rolls},${b.exposures})" style="flex:1;min-width:0;background:transparent;border:0;padding:0;text-align:left;cursor:pointer"><span style="display:block;font-size:14px;color:#c9c5bd">${escapeHtml(b.storeName || 'Unnamed store')}</span><span style="${MONO};display:block;font-size:12px;color:#7a7770;margin-top:3px">${b.rolls}×${b.exposures} · ${CUR()}${money(b.filmCost)} · ${CUR()}${money(b.filmCost / b.rolls)}/roll</span></button>
+<button type="button" onclick="App.loadFilmBundle('${jsAttr(key)}','${jsAttr(b.storeName)}',${b.rolls},${b.exposures})" style="flex:1;min-width:0;background:transparent;border:0;padding:0;text-align:left;cursor:pointer"><span style="display:block;font-size:14px;color:#c9c5bd">${escapeHtml(b.storeName || 'Unnamed store')}</span><span style="${MONO};display:block;font-size:12px;color:#7a7770;margin-top:3px">${b.rolls}×${b.exposures} · ${CUR()}${money(b.filmCost)} · ${CUR()}${money(b.filmCost / b.rolls)}/roll</span></button>
 <a href="${sanitizeUrl(b.buyLink)}" target="_blank" rel="noopener noreferrer" style="height:40px;display:flex;align-items:center;padding:0 14px;background:#1c1512;border:1px solid #5a3a1c;border-radius:8px;color:${SECTION_COLORS.films};font-size:12px;letter-spacing:.14em;text-transform:uppercase">Buy ↗</a>
 </div>`).join('');
         return `<div style="border-radius:10px;overflow:hidden;border:1px solid ${cheap ? '#5a3a1c' : '#26262a'};background:${cheap ? '#17140f' : '#131315'}">
-<button type="button" onclick="App.toggleFilm('${escapeHtml(key)}')" style="width:100%;background:transparent;border:0;padding:14px;text-align:left;cursor:pointer">
+<button type="button" onclick="App.toggleFilm('${jsAttr(key)}')" style="width:100%;background:transparent;border:0;padding:14px;text-align:left;cursor:pointer">
 <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
 <span><span style="display:block;font-size:16px;color:#eae7e1">${escapeHtml(f.name)}</span><span style="${MONO};display:block;font-size:12px;color:#7a7770;margin-top:4px">${meta}</span></span>
 <span style="${MONO};font-size:20px;color:${cheap ? SECTION_COLORS.films : '#c9c5bd'}">${CUR()}${money(row.perRoll)}</span>
@@ -1313,7 +1326,7 @@ ${labDirectionsUrl(l.name) ? `<a href="${labDirectionsUrl(l.name)}" target="_bla
 ${open ? `<div style="padding:0 14px 14px;display:flex;flex-direction:column;gap:6px">
 <div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#7a7770">Where to buy</div>
 ${bundles}
-<button type="button" onclick="App.editFilm('${escapeHtml(key)}')" style="height:44px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Edit film</button>
+<button type="button" onclick="App.editFilm('${jsAttr(key)}')" style="height:44px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Edit film</button>
 </div>` : ''}
 </div>`;
     }).join('');
@@ -1398,9 +1411,9 @@ function mLibCard(kind, key, name, meta, price, hidden) {
 <span style="${MONO};font-size:17px;color:#c9c5bd">${price}</span>
 </div>
 <div style="display:flex;gap:8px;margin-top:12px">
-<button type="button" onclick="App.toggleHidden('${kind}','${escapeHtml(key)}')" style="flex:1;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#8b8781;font-size:12px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${hidden ? t('v2ButtonShow') : t('v2ButtonHide')}</button>
-<button type="button" onclick="App.${kind === 'film' ? 'editFilm' : 'editLab'}('${escapeHtml(key)}')" style="flex:1;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#8b8781;font-size:12px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">Edit</button>
-<button type="button" onclick="App.removeItem('${kind}','${escapeHtml(key)}')" style="width:52px;height:44px;display:flex;align-items:center;justify-content:center;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#8b8781;cursor:pointer;padding:0"><svg style="width:16px;height:16px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 7h14M10 7V5h4v2M6 7l1 13h10l1-13M10 11v6M14 11v6"></path></svg></button>
+<button type="button" onclick="App.toggleHidden('${kind}','${jsAttr(key)}')" style="flex:1;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#8b8781;font-size:12px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${hidden ? t('v2ButtonShow') : t('v2ButtonHide')}</button>
+<button type="button" onclick="App.${kind === 'film' ? 'editFilm' : 'editLab'}('${jsAttr(key)}')" style="flex:1;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#8b8781;font-size:12px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">Edit</button>
+<button type="button" onclick="App.removeItem('${kind}','${jsAttr(key)}')" style="width:52px;height:44px;display:flex;align-items:center;justify-content:center;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#8b8781;cursor:pointer;padding:0"><svg style="width:16px;height:16px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 7h14M10 7V5h4v2M6 7l1 13h10l1-13M10 11v6M14 11v6"></path></svg></button>
 </div>
 </div>`;
 }
