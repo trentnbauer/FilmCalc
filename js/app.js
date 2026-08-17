@@ -196,7 +196,8 @@ const state = {
     loadedFilmKey: '',
     mailRolls: localStorage.getItem('mailBackRollCount') || '1',
     upgradePct: localStorage.getItem('upgradeThresholdPercent') || '4',
-    libProcess: 'all', libFormat: 'all', libTab: 'films',
+    libProcess: 'all', libFormat: 'all', libTab: 'films', libSearch: '',
+    dark: localStorage.getItem('lightMode') !== '1',
     expBox: '400', expiryMonth: String(new Date().getMonth() + 1), expiryYear: '', filmType: 'c41', storage: 'controlled',
     importNote: '',
     // Mobile-shell-only fields (harmless on desktop, which never reads them).
@@ -1277,6 +1278,11 @@ function render() {
     const root = document.getElementById('app');
     if (!root) return;
     const focus = captureFocus(root);
+    // Light mode isn't a real second palette (every colour in this file is a
+    // literal hex, not a CSS variable) — invert+hue-rotate the whole app
+    // instead of re-deriving 350+ colours by hand. Filter lives on #app
+    // itself (outside innerHTML) so it survives the re-render below.
+    root.style.filter = state.dark ? '' : 'invert(1) hue-rotate(180deg)';
     root.innerHTML = `
 <div style="min-height:100vh;display:flex;justify-content:center;background:#0b0b0c">
 <div style="width:100%;max-width:960px;min-height:100vh;contain:layout">
@@ -1288,7 +1294,7 @@ ${renderMobile(state)}
 
 // ==================== Controller ====================
 const App = {
-    toggleDark() { state.dark = state.dark === false ? true : false; render(); },
+    toggleDark() { state.dark = !state.dark; localStorage.setItem('lightMode', state.dark ? '0' : '1'); render(); },
 
     setField(key, value) {
         state[key] = value;
@@ -1729,7 +1735,19 @@ function renderMobileSummary(s) {
     const r = rankLabs(s);
     const cheapest = r.ranked[0] || null;
     const home = r.ranked.find(l => l.name === s.homeLab) || cheapest;
-    if (!home) return '';
+    const formatLabel = FORMAT_OPTIONS.find(o => o.value === s.format)?.label || s.format;
+    const colorLabel = FILM_TYPE_OPTIONS.find(o => o.value === s.filmColor)?.label || '';
+    const loadedFilm = getAllFilms()[s.loadedFilmKey];
+    const filmLine = `${loadedFilm ? escapeHtml(loadedFilm.name) + ' · ' : ''}${escapeHtml(formatLabel)} · ${escapeHtml(colorLabel)}`;
+    if (!home) {
+        return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px 11px;border-top:1px solid #1c1c20;background:#131315">
+<div>
+<div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#7a7770">${filmLine}</div>
+<div style="${MONO};font-size:13px;color:#5f5c57;margin-top:4px">No lab or film stock data for this process</div>
+</div>
+<div style="${MONO};font-size:14px;color:#5f5c57">N/A</div>
+</div>`;
+    }
     const homeLine = home.name === s.homeLab ? `${escapeHtml(home.name)} · home` : escapeHtml(home.name);
     const filmPct = Math.max(6, Math.min(100, (home.filmPerRoll / home.roll) * 100));
     const pushText = home.pick.pushFee > 0
@@ -1738,6 +1756,7 @@ function renderMobileSummary(s) {
     return `<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:9px 12px 11px;border-top:1px solid #1c1c20;background:#131315">
 <div>
 <div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#7a7770">${homeLine}</div>
+<div style="font-size:10px;color:#5f5c57;margin-top:1px">${filmLine}</div>
 <div style="display:flex;align-items:baseline;gap:3px;margin-top:2px"><span style="${MONO};font-size:14px;color:#6d6a64">${CUR()}</span><span style="${MONO};font-size:26px;line-height:1;color:#eae7e1">${money(home.cpp)}</span><span style="font-size:12px;color:#7a7770">/frame</span></div>
 <div style="${MONO};display:flex;flex-direction:column;gap:2px;margin-top:6px;font-size:12px;color:#8b8781">
 <span>Roll <span style="color:#c9c5bd">${CUR()}${money(home.filmPerRoll)}</span></span>
@@ -1973,42 +1992,48 @@ function renderMobileLibrary(s) {
     const filmsTone = btnTone(tab === 'films'), labsTone = btnTone(tab === 'labs');
     const emptyCard = `<div style="padding:14px;font-size:12px;color:#5f5c57;background:#131315;border:1px solid #26262a;border-radius:10px">Nothing saved yet.</div>`;
 
+    const search = s.libSearch.trim().toLowerCase();
     const filmSection = () => {
-        const filmCards = Object.entries(allFilms).map(([key, f]) => {
+        const entries = Object.entries(allFilms).filter(([, f]) => !search || f.name.toLowerCase().includes(search));
+        const filmCards = entries.map(([key, f]) => {
             const bundles = normalizeFilmBundles(f);
             const cheapest = bundles.slice().sort((a, b) => a.filmCost / a.rolls - b.filmCost / b.rolls)[0];
             const meta = `${f.boxSpeed} · ${procLabel(f.process)} · ${bundles.length} price${bundles.length === 1 ? '' : 's'}`;
             return mLibCard('film', key, f.name, meta, `${CUR()}${money(cheapest.filmCost / cheapest.rolls)}`, f.hidden);
         }).join('');
+        const empty = search ? `<div style="padding:14px;font-size:12px;color:#5f5c57;background:#131315;border:1px solid #26262a;border-radius:10px">No film stock matches "${escapeHtml(s.libSearch.trim())}".</div>` : emptyCard;
         return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
 <div style="width:6px;height:6px;background:var(--acc);border-radius:50%"></div>
 <div style="${NARROW};font-size:16px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#eae7e1">Films</div>
 <div style="flex:1;height:1px;background:#26262a"></div>
 <button type="button" onclick="App.newFilm()" style="height:36px;background:#141416;border:1px solid #2c2c30;border-radius:8px;padding:0 12px;color:#8b8781;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">New</button>
 </div>
-<div class="lib-grid">${filmCards || emptyCard}</div>`;
+<div class="lib-grid">${filmCards || empty}</div>`;
     };
     const labSection = () => {
-        const labCards = Object.entries(allLabs).map(([name, l]) => {
+        const entries = Object.entries(allLabs).filter(([name]) => !search || name.toLowerCase().includes(search));
+        const labCards = entries.map(([name, l]) => {
             const tiers = normalizeLabServices(l);
             const cheapest = tiers.slice().sort((a, b) => a.devCost - b.devCost)[0];
             const meta = `${tiers.length} tier${tiers.length === 1 ? '' : 's'}`;
             return mLibCard('lab', name, name, meta, `${CUR()}${money(cheapest.devCost)}`, l.hidden);
         }).join('');
+        const empty = search ? `<div style="padding:14px;font-size:12px;color:#5f5c57;background:#131315;border:1px solid #26262a;border-radius:10px">No lab matches "${escapeHtml(s.libSearch.trim())}".</div>` : emptyCard;
         return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
 <div style="width:6px;height:6px;background:var(--acc);border-radius:50%"></div>
 <div style="${NARROW};font-size:16px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#eae7e1">Labs</div>
 <div style="flex:1;height:1px;background:#26262a"></div>
 <button type="button" onclick="App.newLab()" style="height:36px;background:#141416;border:1px solid #2c2c30;border-radius:8px;padding:0 12px;color:#8b8781;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">New</button>
 </div>
-<div class="lib-grid">${labCards || emptyCard}</div>`;
+<div class="lib-grid">${labCards || empty}</div>`;
     };
 
     return `<div style="padding:16px 12px 0">
-<div style="display:flex;gap:8px;margin-bottom:20px">
+<div style="display:flex;gap:8px;margin-bottom:14px">
 <button type="button" onclick="App.setField('libTab','films')" style="flex:1;height:44px;background:${filmsTone.bg};border:1px solid ${filmsTone.border};border-radius:8px;color:${filmsTone.color};font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Films (${filmCount})</button>
 <button type="button" onclick="App.setField('libTab','labs')" style="flex:1;height:44px;background:${labsTone.bg};border:1px solid ${labsTone.border};border-radius:8px;color:${labsTone.color};font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Labs (${labCount})</button>
 </div>
+<input value="${escapeHtml(s.libSearch)}" oninput="App.setField('libSearch',this.value)" data-fkey="m-libSearch" placeholder="Search by name…" style="width:100%;box-sizing:border-box;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 12px;color:#eae7e1;font-size:15px;margin-bottom:20px">
 ${tab === 'films' ? filmSection() : labSection()}
 </div>`;
 }
@@ -2058,18 +2083,19 @@ const M_FIELD_INPUT = "width:100%;box-sizing:border-box;height:48px;background:#
 
 function renderMobileEditFilm(s) {
     const d = s.draft;
+    const bundleLabel = (text) => `<div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#5f5c57;margin-bottom:4px">${text}</div>`;
     const bundles = d.bundles.map((b, i) => `
 <div style="border:1px solid #26262a;border-radius:10px;background:#131315;padding:14px;display:flex;flex-direction:column;gap:10px">
-<div style="display:flex;align-items:center;gap:10px">
-<input value="${escapeHtml(b.storeName)}" oninput="App.setBundleField(${i},'storeName',this.value)" data-fkey="m-bundle-${i}-storeName" placeholder="Store" style="flex:1;${M_FIELD_INPUT}">
-<button type="button" onclick="App.removeBundle(${i})" style="width:44px;height:48px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#8b8781;font-size:16px;cursor:pointer;padding:0">×</button>
+<div style="display:flex;align-items:flex-end;gap:10px">
+<div style="flex:1">${bundleLabel('Store')}<input value="${escapeHtml(b.storeName)}" oninput="App.setBundleField(${i},'storeName',this.value)" data-fkey="m-bundle-${i}-storeName" placeholder="Store" style="${M_FIELD_INPUT}"></div>
+<button type="button" onclick="App.removeBundle(${i})" title="Remove" style="flex-shrink:0;width:44px;height:48px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#8b8781;font-size:16px;cursor:pointer;padding:0">×</button>
 </div>
 <div style="display:flex;gap:10px">
-<input value="${b.rolls}" oninput="App.setBundleField(${i},'rolls',this.value)" data-fkey="m-bundle-${i}-rolls" inputmode="numeric" placeholder="Rolls" style="flex:1;min-width:0;${M_FIELD_INPUT};${MONO}">
-<input value="${b.exposures}" oninput="App.setBundleField(${i},'exposures',this.value)" data-fkey="m-bundle-${i}-exposures" inputmode="numeric" placeholder="Exp" style="flex:1;min-width:0;${M_FIELD_INPUT};${MONO}">
-<input value="${b.filmCost}" oninput="App.setBundleField(${i},'filmCost',this.value)" data-fkey="m-bundle-${i}-filmCost" inputmode="decimal" placeholder="Price" style="flex:1;min-width:0;${M_FIELD_INPUT};${MONO}">
+<div style="flex:1;min-width:0">${bundleLabel('Rolls')}<input value="${b.rolls}" oninput="App.setBundleField(${i},'rolls',this.value)" data-fkey="m-bundle-${i}-rolls" inputmode="numeric" placeholder="Rolls" style="width:100%;${M_FIELD_INPUT};${MONO}"></div>
+<div style="flex:1;min-width:0">${bundleLabel('Exposures')}<input value="${b.exposures}" oninput="App.setBundleField(${i},'exposures',this.value)" data-fkey="m-bundle-${i}-exposures" inputmode="numeric" placeholder="Exp" style="width:100%;${M_FIELD_INPUT};${MONO}"></div>
+<div style="flex:1;min-width:0">${bundleLabel('Price')}<input value="${b.filmCost}" oninput="App.setBundleField(${i},'filmCost',this.value)" data-fkey="m-bundle-${i}-filmCost" inputmode="decimal" placeholder="Price" style="width:100%;${M_FIELD_INPUT};${MONO}"></div>
 </div>
-<input value="${escapeHtml(b.buyLink)}" oninput="App.setBundleField(${i},'buyLink',this.value)" data-fkey="m-bundle-${i}-buyLink" inputmode="url" placeholder="https://… buy link" style="${M_FIELD_INPUT}">
+${bundleLabel('Buy link')}<input value="${escapeHtml(b.buyLink)}" oninput="App.setBundleField(${i},'buyLink',this.value)" data-fkey="m-bundle-${i}-buyLink" inputmode="url" placeholder="https://… buy link" style="${M_FIELD_INPUT}">
 </div>`).join('');
     return `<div style="position:fixed;inset:0;z-index:50;background:#0b0b0c;display:flex;flex-direction:column">
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border-bottom:1px solid #26262a;background:#0e0e10">
