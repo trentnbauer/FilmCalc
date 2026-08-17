@@ -105,15 +105,6 @@ jobs:
       - name: Stamp build version into index.html
         run: sed -i "s/%%FILMCALC_VERSION%%/$(git rev-parse --short HEAD)/" index.html
 
-      - name: Generate preset manifests
-        # Keep films/index.json, labs/index.json and themes/index.json in sync
-        # with whatever *.yaml files exist, so the Docker image's Import list
-        # matches the folder. Runs before the build so the COPY films/labs
-        # step picks up fresh manifests. See
-        # .github/scripts/generate-manifests.py for the generator itself,
-        # shared with build-github-page.yml (issue #165).
-        run: python3 .github/scripts/generate-manifests.py films labs themes
-
       - name: Generate changelog.json
         # Footer "What's new" popup (issue #53) reads this at runtime. Runs
         # before the build so the Dockerfile's COPY changelog.json step picks

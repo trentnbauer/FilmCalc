@@ -19,7 +19,6 @@ COPY default.conf /etc/nginx/conf.d/default.conf
 # be served alongside the app, not just live in the git repo.
 COPY films /usr/share/nginx/html/films
 COPY labs /usr/share/nginx/html/labs
-COPY themes /usr/share/nginx/html/themes
 
 # index.html's own calculation engine (issue #61), loaded via <script src>
 # — also needs to be served alongside the app, not just live in the repo.
