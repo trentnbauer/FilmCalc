@@ -106,17 +106,21 @@ Then carry on from **[step 3](#3️⃣-check-the-prices-️)**.
 </details>
 
 <details>
-<summary><b>🎞️ Let the FilmCalc app write it (if you already use the app)</b></summary>
+<summary><b>🎞️ Start from the app's own export (if you already use it)</b></summary>
 
 <br>
 
-The app can generate the YAML for you — no AI needed.
+The app's own field values are the same shape [DATA_SPEC.md](https://github.com/trentnbauer/FilmCalc/blob/main/DATA_SPEC.md)
+wants — no AI needed, just some manual reformatting.
 
-1. In FilmCalc, go to the **Library** tab and add your film stock (or lab) exactly as you want it.
-2. Go to **Settings → Export Data** → **Export Films Only** (or **Export Labs Only**).
-3. Give it a preset name. A `.yaml` file downloads.
-4. Open it in any text editor and copy **only your entry** — not the whole file, which contains every
-   film you have saved:
+1. In FilmCalc, go to the **Film and lab library** page and add your film stock (or lab) exactly as
+   you want it.
+2. Go to **Settings → Export backup (JSON)**. A `filmcalc-backup.json` file downloads with every film
+   and lab you've saved.
+3. Open it in any text editor and find **only your entry** under `"films"` (or `"labs"`) — not the
+   whole file, which contains everything you have saved.
+4. Reshape that one entry into a YAML list item matching the format below (JSON keys map straight
+   across; you're converting syntax, not values):
 
 ```yaml
 - name: Kodak Gold
