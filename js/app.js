@@ -859,6 +859,7 @@ const App = {
     toggleFlag(key) {
         state[key] = !state[key];
         if (key.startsWith('f')) persistFilters();
+        if (key === 'fMail' && state.fMail) state.extrasOpen = true;
         render();
     },
     toggleLab(name) { state.expandedLab = state.expandedLab === name ? null : name; render(); },
