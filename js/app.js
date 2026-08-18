@@ -386,8 +386,11 @@ function computeCheaperFilm(s, home) {
         else if (!bestPushPull || cpp < bestPushPull.cpp) bestPushPull = cand;
     });
 
+    const minSavingsPct = Math.max(0, num(s.upgradePct) || 0);
     const mk = (key, cand) => {
-        if (!cand || curCpp === null || !(cand.cpp < curCpp - 0.005)) return null;
+        if (!cand || curCpp === null || curCpp <= 0) return null;
+        const savingsPct = (1 - cand.cpp / curCpp) * 100;
+        if (!(savingsPct > minSavingsPct + 1e-9)) return null;
         return {
             key,
             text: `${cand.f.name} — ${CUR()}${money(cand.cpp)}/frame from ${cand.bundle.storeName || 'saved library'}, saves ${((curCpp - cand.cpp) * 100).toFixed(0)}c a frame${cand.stopsAbs ? ` (${cand.stopsAbs} stop ${cand.stopsSigned > 0 ? 'push' : 'pull'})` : ''}`,
