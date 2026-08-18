@@ -36,7 +36,8 @@ Things that are **in scope** and genuinely worth reporting:
 
 - **Cross-site scripting (XSS)** — particularly via imported YAML. Film names, lab names, store names,
   and buy links all come from user-supplied or imported files and are rendered into the DOM. A crafted
-  `config.yaml` that executes script when imported is the highest-value bug in this app.
+  YAML file that executes script when imported (via Settings → Import YAML file) is the highest-value
+  bug in this app.
 - **Malicious URL injection** — a `buyLink` or directions link that produces a `javascript:` URL or
   otherwise escapes the URL sanitiser.
 - **Prototype pollution** or similar via imported YAML/JSON parsing.
@@ -53,7 +54,7 @@ Things that are **out of scope**:
   no-account app, and the data is film prices — not credentials.
 - Missing security headers on a **self-hosted** deployment. That's a configuration choice for whoever
   deployed it.
-- Social engineering, or "a user could import a config.yaml with wrong prices in it". Bad *data* isn't
+- Social engineering, or "a user could import a YAML file with wrong prices in it". Bad *data* isn't
   a vulnerability; bad data that *executes* is.
 - Denial of service by importing an enormous file into your own browser.
 

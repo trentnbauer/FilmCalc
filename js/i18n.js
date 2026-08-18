@@ -300,7 +300,6 @@ const STRINGS = {
         exportCsvButton: '⬇ Export CSV',
         exportCsvTitle: 'Export the rows currently shown in this view as a CSV file',
         exportDataHeading: 'Export Data',
-        exportEverythingButton: 'Export Everything (config.yaml)',
         exportFilmsOnlyButton: 'Export Films Only',
         exportLabsOnlyButton: 'Export Labs Only',
         exposuresPerRollLabel: 'Exposures per Roll',
@@ -503,11 +502,7 @@ const STRINGS = {
         namePresetPromptMessage: 'Name this {kind} preset (shown in the Import list):',
         exportFilmsDefaultName: 'My Films',
         exportLabsDefaultName: 'My Labs',
-        confirmOverwriteConfigMessage: 'This will overwrite config.yaml on the server with your current saved films, labs, and settings. Continue?',
         overwriteButtonLabel: 'Overwrite',
-        configUpdatedOnServerMessage: 'config.yaml updated on the server.',
-        couldNotWriteConfigStatusMessage: 'Could not write config.yaml (server responded with {status}).',
-        couldNotWriteConfigNetworkMessage: 'Could not write config.yaml — check your network settings.',
 
         // ---- v2 redesigned UI (2026) ----
         v2NavExpiredCalc: 'Expired Calc',
@@ -875,7 +870,6 @@ const STRINGS = {
         exportCsvButton: '⬇ Exportar CSV',
         exportCsvTitle: 'Exporta las filas mostradas actualmente en esta vista como un archivo CSV',
         exportDataHeading: 'Exportar Datos',
-        exportEverythingButton: 'Exportar Todo (config.yaml)',
         exportFilmsOnlyButton: 'Exportar Solo Películas',
         exportLabsOnlyButton: 'Exportar Solo Laboratorios',
         exposuresPerRollLabel: 'Exposiciones por Rollo',
@@ -1078,11 +1072,7 @@ const STRINGS = {
         namePresetPromptMessage: 'Nombra este ajuste predeterminado de {kind} (se muestra en la lista de Importar):',
         exportFilmsDefaultName: 'Mis Películas',
         exportLabsDefaultName: 'Mis Laboratorios',
-        confirmOverwriteConfigMessage: 'Esto sobrescribirá config.yaml en el servidor con tus películas, laboratorios y ajustes guardados actuales. ¿Continuar?',
         overwriteButtonLabel: 'Sobrescribir',
-        configUpdatedOnServerMessage: 'config.yaml actualizado en el servidor.',
-        couldNotWriteConfigStatusMessage: 'No se pudo escribir config.yaml (el servidor respondió con {status}).',
-        couldNotWriteConfigNetworkMessage: 'No se pudo escribir config.yaml — revisa tu configuración de red.',
 
         // ---- v2 redesigned UI (2026) ----
         v2NavExpiredCalc: 'Película caducada',
@@ -1446,7 +1436,6 @@ const STRINGS = {
         exportCsvButton: '⬇ CSVをエクスポート',
         exportCsvTitle: 'このビューに現在表示されている行をCSVファイルとしてエクスポートします',
         exportDataHeading: 'データのエクスポート',
-        exportEverythingButton: 'すべてエクスポート（config.yaml）',
         exportFilmsOnlyButton: 'フィルムのみエクスポート',
         exportLabsOnlyButton: 'ラボのみエクスポート',
         exposuresPerRollLabel: '1本あたりの撮影枚数',
@@ -1649,11 +1638,7 @@ const STRINGS = {
         namePresetPromptMessage: 'この{kind}プリセットの名前を入力してください（インポートリストに表示されます）：',
         exportFilmsDefaultName: 'マイフィルム',
         exportLabsDefaultName: 'マイラボ',
-        confirmOverwriteConfigMessage: 'サーバー上のconfig.yamlを現在保存中のフィルム、ラボ、設定で上書きします。続行しますか？',
         overwriteButtonLabel: '上書き',
-        configUpdatedOnServerMessage: 'サーバー上のconfig.yamlを更新しました。',
-        couldNotWriteConfigStatusMessage: 'config.yamlを書き込めませんでした（サーバー応答：{status}）。',
-        couldNotWriteConfigNetworkMessage: 'config.yamlを書き込めませんでした — ネットワーク設定を確認してください。',
 
         // ---- v2 redesigned UI (2026) ----
         v2NavExpiredCalc: '期限切れ計算',
@@ -2021,7 +2006,6 @@ const STRINGS = {
         exportCsvButton: '⬇ CSV exportieren',
         exportCsvTitle: 'Die in dieser Ansicht angezeigten Zeilen als CSV-Datei exportieren',
         exportDataHeading: 'Daten exportieren',
-        exportEverythingButton: 'Alles exportieren (config.yaml)',
         exportFilmsOnlyButton: 'Nur Filme exportieren',
         exportLabsOnlyButton: 'Nur Labore exportieren',
         exposuresPerRollLabel: 'Aufnahmen pro Rolle',
@@ -2224,11 +2208,7 @@ const STRINGS = {
         namePresetPromptMessage: 'Benenne diese {kind}-Vorlage (wird in der Importliste angezeigt):',
         exportFilmsDefaultName: 'Meine Filme',
         exportLabsDefaultName: 'Meine Labore',
-        confirmOverwriteConfigMessage: 'Dies überschreibt config.yaml auf dem Server mit deinen aktuell gespeicherten Filmen, Laboren und Einstellungen. Fortfahren?',
         overwriteButtonLabel: 'Überschreiben',
-        configUpdatedOnServerMessage: 'config.yaml auf dem Server aktualisiert.',
-        couldNotWriteConfigStatusMessage: 'config.yaml konnte nicht geschrieben werden (Server antwortete mit {status}).',
-        couldNotWriteConfigNetworkMessage: 'config.yaml konnte nicht geschrieben werden — Netzwerkeinstellungen prüfen.',
 
         // ---- v2 redesigned UI (2026) ----
         v2NavExpiredCalc: 'Abgelaufener Film',
@@ -2596,7 +2576,6 @@ const STRINGS = {
         exportCsvButton: '⬇ Exportar CSV',
         exportCsvTitle: 'Exportar as linhas mostradas nesta visualização como um arquivo CSV',
         exportDataHeading: 'Exportar Dados',
-        exportEverythingButton: 'Exportar Tudo (config.yaml)',
         exportFilmsOnlyButton: 'Exportar Apenas Filmes',
         exportLabsOnlyButton: 'Exportar Apenas Laboratórios',
         exposuresPerRollLabel: 'Poses por Rolo',
@@ -2799,11 +2778,7 @@ const STRINGS = {
         namePresetPromptMessage: 'Nomeie esta predefinição de {kind} (mostrada na lista de importação):',
         exportFilmsDefaultName: 'Meus Filmes',
         exportLabsDefaultName: 'Meus Laboratórios',
-        confirmOverwriteConfigMessage: 'Isso sobrescreverá o config.yaml no servidor com seus filmes, laboratórios e configurações salvos atualmente. Continuar?',
         overwriteButtonLabel: 'Sobrescrever',
-        configUpdatedOnServerMessage: 'config.yaml atualizado no servidor.',
-        couldNotWriteConfigStatusMessage: 'Não foi possível gravar o config.yaml (o servidor respondeu com {status}).',
-        couldNotWriteConfigNetworkMessage: 'Não foi possível gravar o config.yaml — verifique suas configurações de rede.',
 
         // ---- v2 redesigned UI (2026) ----
         v2NavExpiredCalc: 'Filme vencido',
@@ -3171,7 +3146,6 @@ const STRINGS = {
         exportCsvButton: '⬇ Exporter en CSV',
         exportCsvTitle: 'Exporter les lignes actuellement affichées dans cette vue en fichier CSV',
         exportDataHeading: 'Exporter les Données',
-        exportEverythingButton: 'Tout Exporter (config.yaml)',
         exportFilmsOnlyButton: 'Exporter les Films Uniquement',
         exportLabsOnlyButton: 'Exporter les Labos Uniquement',
         exposuresPerRollLabel: 'Poses par Pellicule',
@@ -3374,11 +3348,7 @@ const STRINGS = {
         namePresetPromptMessage: 'Nommez ce modèle de {kind} (affiché dans la liste d\'import) :',
         exportFilmsDefaultName: 'Mes Films',
         exportLabsDefaultName: 'Mes Labos',
-        confirmOverwriteConfigMessage: 'Ceci écrasera le config.yaml sur le serveur avec vos films, labos et paramètres actuellement enregistrés. Continuer ?',
         overwriteButtonLabel: 'Écraser',
-        configUpdatedOnServerMessage: 'config.yaml mis à jour sur le serveur.',
-        couldNotWriteConfigStatusMessage: 'Impossible d\'écrire config.yaml (le serveur a répondu {status}).',
-        couldNotWriteConfigNetworkMessage: 'Impossible d\'écrire config.yaml — vérifiez vos paramètres réseau.',
 
         // ---- v2 redesigned UI (2026) ----
         v2NavExpiredCalc: 'Film périmé',
@@ -3746,7 +3716,6 @@ const STRINGS = {
         exportCsvButton: '⬇ CSV 내보내기',
         exportCsvTitle: '현재 이 보기에 표시된 행을 CSV 파일로 내보내기',
         exportDataHeading: '데이터 내보내기',
-        exportEverythingButton: '전체 내보내기 (config.yaml)',
         exportFilmsOnlyButton: '필름만 내보내기',
         exportLabsOnlyButton: '랩만 내보내기',
         exposuresPerRollLabel: '롤당 촬영 매수',
@@ -3949,11 +3918,7 @@ const STRINGS = {
         namePresetPromptMessage: '이 {kind} 프리셋의 이름을 입력하세요 (가져오기 목록에 표시됩니다):',
         exportFilmsDefaultName: '내 필름',
         exportLabsDefaultName: '내 랩',
-        confirmOverwriteConfigMessage: '서버의 config.yaml을 현재 저장된 필름, 랩, 설정으로 덮어씁니다. 계속하시겠습니까?',
         overwriteButtonLabel: '덮어쓰기',
-        configUpdatedOnServerMessage: '서버의 config.yaml이 업데이트되었습니다.',
-        couldNotWriteConfigStatusMessage: 'config.yaml을 쓸 수 없습니다 (서버 응답: {status}).',
-        couldNotWriteConfigNetworkMessage: 'config.yaml을 쓸 수 없습니다 — 네트워크 설정을 확인하세요.',
 
         // ---- v2 redesigned UI (2026) ----
         v2NavExpiredCalc: '유통기한 계산',
@@ -4321,7 +4286,6 @@ const STRINGS = {
         exportCsvButton: '⬇ 导出 CSV',
         exportCsvTitle: '将当前视图中显示的行导出为 CSV 文件',
         exportDataHeading: '导出数据',
-        exportEverythingButton: '导出全部（config.yaml）',
         exportFilmsOnlyButton: '仅导出胶卷',
         exportLabsOnlyButton: '仅导出冲印店',
         exposuresPerRollLabel: '每卷张数',
@@ -4524,11 +4488,7 @@ const STRINGS = {
         namePresetPromptMessage: '为此{kind}预设命名（将显示在导入列表中）：',
         exportFilmsDefaultName: '我的胶卷',
         exportLabsDefaultName: '我的冲印店',
-        confirmOverwriteConfigMessage: '这将使用当前保存的胶卷、冲印店和设置覆盖服务器上的 config.yaml。是否继续？',
         overwriteButtonLabel: '覆盖',
-        configUpdatedOnServerMessage: '服务器上的 config.yaml 已更新。',
-        couldNotWriteConfigStatusMessage: '无法写入 config.yaml（服务器返回状态 {status}）。',
-        couldNotWriteConfigNetworkMessage: '无法写入 config.yaml —— 请检查您的网络设置。',
 
         // ---- v2 redesigned UI (2026) ----
         v2NavExpiredCalc: '过期胶卷计算',
@@ -4896,7 +4856,6 @@ const STRINGS = {
         exportCsvButton: '⬇ Esporta CSV',
         exportCsvTitle: 'Esporta le righe attualmente mostrate in questa vista come file CSV',
         exportDataHeading: 'Esporta Dati',
-        exportEverythingButton: 'Esporta Tutto (config.yaml)',
         exportFilmsOnlyButton: 'Esporta Solo le Pellicole',
         exportLabsOnlyButton: 'Esporta Solo i Laboratori',
         exposuresPerRollLabel: 'Esposizioni per Rullino',
@@ -5099,11 +5058,7 @@ const STRINGS = {
         namePresetPromptMessage: 'Dai un nome a questo preset di {kind} (mostrato nell\'elenco di importazione):',
         exportFilmsDefaultName: 'Le Mie Pellicole',
         exportLabsDefaultName: 'I Miei Laboratori',
-        confirmOverwriteConfigMessage: 'Questo sovrascriverà config.yaml sul server con le pellicole, i laboratori e le impostazioni attualmente salvati. Continuare?',
         overwriteButtonLabel: 'Sovrascrivi',
-        configUpdatedOnServerMessage: 'config.yaml aggiornato sul server.',
-        couldNotWriteConfigStatusMessage: 'Impossibile scrivere config.yaml (il server ha risposto con {status}).',
-        couldNotWriteConfigNetworkMessage: 'Impossibile scrivere config.yaml — controlla le impostazioni di rete.',
 
         // ---- v2 redesigned UI (2026) ----
         v2NavExpiredCalc: 'Pellicola scaduta',
@@ -5471,7 +5426,6 @@ const STRINGS = {
         exportCsvButton: '⬇ Экспорт в CSV',
         exportCsvTitle: 'Экспортировать строки, отображаемые в этом представлении, в файл CSV',
         exportDataHeading: 'Экспорт данных',
-        exportEverythingButton: 'Экспортировать всё (config.yaml)',
         exportFilmsOnlyButton: 'Экспортировать только плёнки',
         exportLabsOnlyButton: 'Экспортировать только лаборатории',
         exposuresPerRollLabel: 'Кадров на плёнку',
@@ -5674,11 +5628,7 @@ const STRINGS = {
         namePresetPromptMessage: 'Назовите этот пресет {kind} (отображается в списке импорта):',
         exportFilmsDefaultName: 'Мои плёнки',
         exportLabsDefaultName: 'Мои лаборатории',
-        confirmOverwriteConfigMessage: 'Это перезапишет config.yaml на сервере вашими текущими сохранёнными плёнками, лабораториями и настройками. Продолжить?',
         overwriteButtonLabel: 'Перезаписать',
-        configUpdatedOnServerMessage: 'config.yaml на сервере обновлён.',
-        couldNotWriteConfigStatusMessage: 'Не удалось записать config.yaml (сервер ответил {status}).',
-        couldNotWriteConfigNetworkMessage: 'Не удалось записать config.yaml — проверьте настройки сети.',
 
         // ---- v2 redesigned UI (2026) ----
         v2NavExpiredCalc: 'Просроченная плёнка',
