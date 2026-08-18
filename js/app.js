@@ -599,7 +599,6 @@ ${tierLabels.map(l => `<option value="${escapeHtml(l)}" ${s.defaultTier === l ? 
 `)}
 ${settingsSection(t('v2SettingsCalculator'), `
 <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
-<div><div style="font-size:10px;color:#8b8781;margin-bottom:5px">${t('v2SettingsMailRolls')}</div><input value="${s.mailRolls}" oninput="App.setSetting('mailRolls',this.value)" data-fkey="mailRolls" inputmode="numeric" style="${FIELD_INPUT};width:80px;${MONO}"></div>
 <div><div style="font-size:10px;color:#8b8781;margin-bottom:5px">${t('v2SettingsUpgradePct')}</div><input value="${s.upgradePct}" oninput="App.setSetting('upgradePct',this.value)" data-fkey="upgradePct" inputmode="decimal" style="${FIELD_INPUT};width:80px;${MONO}"></div>
 </div>
 `)}
@@ -1468,6 +1467,7 @@ ${mRow('Postage', `<div style="display:flex;align-items:center;width:96px;height
 <button type="button" onclick="App.toggleExtras()" style="width:100%;height:48px;display:flex;align-items:center;justify-content:space-between;background:#0f0f11;border:0;border-top:1px solid #212125;padding:0 14px;color:#8b8781;font-size:12px;letter-spacing:.16em;text-transform:uppercase;cursor:pointer"><span>Extra fees / Advanced</span><span style="${MONO};font-size:16px">${s.extrasOpen ? '–' : '+'}</span></button>
 ${s.extrasOpen ? `<div style="background:#0f0f11;border-top:1px solid #212125">
 ${mRow('Mail-back', `<button type="button" onclick="App.toggleFlag('fMail')" style="width:56px;height:32px;border-radius:16px;border:1px solid #33333a;position:relative;cursor:pointer;padding:0;background:${s.fMail ? 'var(--acc)' : '#1a1a1d'}"><span style="position:absolute;top:3px;width:24px;height:24px;border-radius:50%;background:#eae7e1;transition:left .15s;left:${s.fMail ? '29px' : '3px'}"></span></button><span style="width:26px"></span>`, true)}
+${s.fMail ? mRow(t('v2SettingsMailRolls'), `<input value="${escapeHtml(s.mailRolls)}" oninput="App.setSetting('mailRolls',this.value)" data-fkey="mailRolls" inputmode="numeric" style="width:96px;height:44px;text-align:right;${M_INPUT}"><span style="width:26px"></span>`) : ''}
 </div>` : ''}
 </div>
 <div style="${MONO};margin-top:8px;font-size:12px;color:#7a7770;line-height:1.5">${CUR()}${money(num(s.packCost) / rolls)} per roll · ${rolls} roll${rolls === 1 ? '' : 's'} · ${CUR()}${money(num(s.postage) / rolls)} postage · ${r.exp} shots</div>
