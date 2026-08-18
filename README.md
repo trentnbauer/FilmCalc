@@ -12,7 +12,6 @@ A lightweight, responsive, mobile-friendly web app for analog photographers to w
 - **[Comparing film stocks and labs](https://github.com/trentnbauer/FilmCalc/wiki/Comparing-Film-Stocks)**
 - **[Building your library](https://github.com/trentnbauer/FilmCalc/wiki/Building-Your-Library)**
 - **[Personalizing FilmCalc](https://github.com/trentnbauer/FilmCalc/wiki/Personalizing-FilmCalc)**
-- **[Self-Hosting](https://github.com/trentnbauer/FilmCalc/wiki/Self-Hosting)** — seeding default profiles via `config.yaml`
 - **[Wiki home](https://github.com/trentnbauer/FilmCalc/wiki)** — everything else
 
 ## Contributing a film stock or lab

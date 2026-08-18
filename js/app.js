@@ -24,8 +24,7 @@
 // Still preserved, just re-implemented against this file's own state
 // instead of the old DOM: JSON backup export/import, region-file preset
 // import (films/labs index.json + per-region YAML), hide/edit/delete for
-// saved films and labs, home lab + preferred tier + mail-back settings,
-// and self-hosted config.yaml auto-load.
+// saved films and labs, home lab + preferred tier + mail-back settings.
 
 // ---------- Small shared helpers (moved from the old index.html) ----------
 function escapeHtml(str) {
@@ -61,28 +60,8 @@ function writeJSON(key, value) { localStorage.setItem(key, JSON.stringify(value)
 
 function CUR() { return escapeHtml(localStorage.getItem('currencySymbol') || '$'); }
 
-// ---------- Built-in defaults (self-hosted config.yaml — empty on GitHub Pages) ----------
-let defaultFilms = {};
-let defaultLabs = {};
-let configSettings = {};
-function getAllFilms() { return { ...defaultFilms, ...readJSON('filmProfiles', {}) }; }
-function getAllLabs() { return { ...defaultLabs, ...readJSON('labProfiles', {}) }; }
-
-async function loadDefaults() {
-    try {
-        const res = await fetch('config.yaml');
-        if (res.ok) {
-            const parsed = jsyaml.load(await res.text()) || {};
-            (parsed.films || []).forEach(f => { defaultFilms[filmKey(f.name, f.boxSpeed, f.format)] = f; });
-            (parsed.labs || []).forEach(l => { defaultLabs[l.name] = l; });
-            configSettings = parsed.settings || {};
-        }
-    } catch (e) { console.error('Error loading config.yaml', e); }
-    if (localStorage.getItem('upgradeThresholdPercent') === null && configSettings.upgradeThresholdPercent !== undefined) {
-        localStorage.setItem('upgradeThresholdPercent', configSettings.upgradeThresholdPercent);
-    }
-    render();
-}
+function getAllFilms() { return readJSON('filmProfiles', {}); }
+function getAllLabs() { return readJSON('labProfiles', {}); }
 
 // ---------- Format / process option lists (options.yaml, with a fallback) ----------
 let FORMAT_OPTIONS = [
@@ -1787,7 +1766,6 @@ async function initApp() {
         state.setupOpen = true;
     }
     render();
-    loadDefaults();
 }
 
 document.addEventListener('DOMContentLoaded', initApp);
