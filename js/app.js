@@ -1858,7 +1858,7 @@ ${bundleLabel('Store')}<input value="${escapeHtml(b.storeName)}" oninput="App.se
 </div>
 ${bundleLabel('Buy link')}<input value="${escapeHtml(b.buyLink)}" oninput="App.setBundleField(${i},'buyLink',this.value)" data-fkey="m-bundle-${i}-buyLink" inputmode="url" placeholder="https://… buy link" style="${M_FIELD_INPUT}">
 ${bundleLabel('Availability')}<select onchange="App.setBundleField(${i},'availability',this.value)" title="Whether this price is achievable anywhere in the country without paying postage (National), or only near the store's own state/city." style="${M_FIELD_INPUT}">
-<option value="national" ${(b.availability || 'national') === 'national' ? 'selected' : ''}>National — no postage anywhere</option>
+<option value="national" ${(b.availability || 'national') === 'national' ? 'selected' : ''}>National</option>
 <option value="state" ${b.availability === 'state' ? 'selected' : ''}>State-only</option>
 <option value="city" ${b.availability === 'city' ? 'selected' : ''}>City-only</option>
 </select>
