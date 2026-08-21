@@ -1238,13 +1238,24 @@ const App = {
         // practical length ceiling well below what a large library can
         // produce — fall back to clipboard + a bare (still country-
         // prefilled) form rather than silently truncating someone's data.
-        if (url.length > 6000 && navigator.clipboard) {
+        // A blocking alert() (not a toast) is deliberate here: a toast on
+        // the page behind the new tab that's about to steal focus is easy
+        // to miss entirely — a submitted issue with silently-empty Films/
+        // Labs boxes was exactly how this shipped broken the first time.
+        if (url.length > 6000) {
             const combined = [filmsYaml && `# films-yaml\n${filmsYaml}`, labsYaml && `# labs-yaml\n${labsYaml}`].filter(Boolean).join('\n\n');
-            navigator.clipboard.writeText(combined).then(() => {
-                flash('Library too big for a prefilled link — copied the YAML, paste it into the form');
-                const shortQs = Object.entries({ template: '09 submit my library.yml', country }).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
-                window.open(`${base}?${shortQs}`, '_blank', 'noopener');
-            }).catch(() => window.open(url, '_blank', 'noopener'));
+            const shortQs = Object.entries({ template: '09 submit my library.yml', country }).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
+            const openBareForm = () => window.open(`${base}?${shortQs}`, '_blank', 'noopener');
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(combined).then(() => {
+                    alert('Your saved library is too big to fit in a prefilled link.\n\nThe YAML has been copied to your clipboard — paste it into the Films and Labs boxes on the page that opens next, BEFORE submitting.');
+                    openBareForm();
+                }).catch(() => {
+                    alert('Your saved library is too big to fit in a prefilled link, and the automatic clipboard copy failed.\n\nCancel this, then use Settings → Export to get your data another way.');
+                });
+            } else {
+                alert('Your saved library is too big to fit in a prefilled link, and this browser doesn\'t support copying it to the clipboard automatically.\n\nUse Settings → Export to get your data another way.');
+            }
         } else {
             window.open(url, '_blank', 'noopener');
         }
