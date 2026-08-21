@@ -463,6 +463,25 @@ async function loadPresetIndexes() {
     render();
 }
 
+// State/city suggestions for the purchase-link editor's Availability
+// fields — pooled from the preset index (every state/city the shipped
+// presets actually cover) plus whatever the user has already typed into
+// their own saved bundles, so a returning value autocompletes even before
+// (or without) the preset index having loaded. Recomputed on every call
+// rather than cached: cheap (a few hundred entries at most), and always
+// reflects the latest saved bundle a keystroke ago.
+function knownStatesAndCities() {
+    const states = new Set(), cities = new Set();
+    const addFrom = (entries) => (entries || []).forEach(e => {
+        if (e.state) states.add(e.state);
+        if (e.city) cities.add(e.city);
+    });
+    addFrom(presetFilmIndex);
+    addFrom(presetLabIndex);
+    Object.values(getAllFilms()).forEach(f => addFrom(normalizeFilmBundles(f)));
+    return { states: [...states].sort(), cities: [...cities].sort() };
+}
+
 // ---------- Geo-based preset defaults ----------
 // Detection never leaves the device: the Geolocation API's lat/long (when
 // granted) is matched against a small built-in table of the handful of
@@ -1076,7 +1095,11 @@ const App = {
         }
         render();
     },
-    editBundle(i) { state.subEditIndex = i; render(); },
+    editBundle(i) {
+        state.subEditIndex = i;
+        if (!presetFilmIndex || !presetLabIndex) loadPresetIndexes(); // seeds the State/City suggestion list
+        render();
+    },
     closeBundleEditor() { state.subEditIndex = null; render(); },
     addBundle() {
         state.draft.bundles.push({ storeName: '', rolls: 1, exposures: parseInt(state.draft.bundles[0]?.exposures) || 36, filmCost: 0, buyLink: '', availability: 'national', state: '', city: '' });
@@ -1975,10 +1998,16 @@ ${bundleLabel('Availability')}<select onchange="App.setBundleField(${i},'availab
 <option value="state" ${b.availability === 'state' ? 'selected' : ''}>State-only</option>
 <option value="city" ${b.availability === 'city' ? 'selected' : ''}>City-only</option>
 </select>
-${(b.availability === 'state' || b.availability === 'city') ? `<div style="display:flex;gap:10px">
-<div style="flex:1;min-width:0">${bundleLabel('State')}<input value="${escapeHtml(b.state || '')}" oninput="App.setBundleField(${i},'state',this.value)" data-fkey="m-bundle-${i}-state" placeholder="Victoria" style="width:100%;${M_FIELD_INPUT}"></div>
-${b.availability === 'city' ? `<div style="flex:1;min-width:0">${bundleLabel('City')}<input value="${escapeHtml(b.city || '')}" oninput="App.setBundleField(${i},'city',this.value)" data-fkey="m-bundle-${i}-city" placeholder="Melbourne" style="width:100%;${M_FIELD_INPUT}"></div>` : ''}
-</div>` : ''}
+${(b.availability === 'state' || b.availability === 'city') ? (() => {
+    const { states, cities } = knownStatesAndCities();
+    const dataOptions = (values) => values.map(v => `<option value="${escapeHtml(v)}">`).join('');
+    return `<div style="display:flex;gap:10px">
+<div style="flex:1;min-width:0">${bundleLabel('State')}<input value="${escapeHtml(b.state || '')}" oninput="App.setBundleField(${i},'state',this.value)" data-fkey="m-bundle-${i}-state" placeholder="Victoria" list="bundle-state-options" style="width:100%;${M_FIELD_INPUT}"></div>
+${b.availability === 'city' ? `<div style="flex:1;min-width:0">${bundleLabel('City')}<input value="${escapeHtml(b.city || '')}" oninput="App.setBundleField(${i},'city',this.value)" data-fkey="m-bundle-${i}-city" placeholder="Melbourne" list="bundle-city-options" style="width:100%;${M_FIELD_INPUT}"></div>` : ''}
+</div>
+<datalist id="bundle-state-options">${dataOptions(states)}</datalist>
+<datalist id="bundle-city-options">${dataOptions(cities)}</datalist>`;
+})() : ''}
 </div>
 <div style="display:flex;gap:10px;padding:12px;border-top:1px solid #26262a;background:#0e0e10">
 <button type="button" onclick="App.closeBundleEditor()" style="flex:1;height:50px;background:#1c1512;border:1px solid #5a3a1c;border-radius:8px;color:var(--acc);font-size:13px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Done</button>
