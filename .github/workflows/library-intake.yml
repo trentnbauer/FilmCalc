@@ -16,7 +16,11 @@ name: Library Bulk Intake
 # auto-merge.
 on:
   issues:
-    types: [opened]
+    # "reopened" lets a maintainer retry a specific issue (close it, remove
+    # the "claude-attempted" label, reopen it) instead of only being able to
+    # retry via a brand new issue — "opened" alone never fires again for one
+    # that already exists.
+    types: [opened, reopened]
 
 concurrency:
   group: library-intake-${{ github.event.issue.number }}
@@ -24,16 +28,18 @@ concurrency:
 
 jobs:
   intake:
-    # The "data"+"enhancement"+"bulk" label triple is unique to this template
-    # (see .github/ISSUE_TEMPLATE/09 submit my library.yml) — the two
-    # single-item Add templates only carry "data"+"enhancement", so this
-    # can't double-fire alongside film-lab-intake.yml for the same issue.
-    # The title-prefix check is a second, independent guard in case labels
-    # are ever edited before this runs.
+    # Deliberately does NOT also require a "bulk" label alongside
+    # "data"+"enhancement", even though the template (see
+    # .github/ISSUE_TEMPLATE/09 submit my library.yml) declares one —
+    # GitHub silently drops any label from an issue form's `labels:` list
+    # that doesn't already exist in the repo at submission time, and a
+    # label that can silently fail to attach is not safe to gate a trigger
+    # on. The title-prefix check alone already cleanly separates this from
+    # film-lab-intake.yml, whose own condition requires the title to start
+    # with "[Add" instead — "[Submit Library]" never matches that.
     if: |
       contains(github.event.issue.labels.*.name, 'data') &&
       contains(github.event.issue.labels.*.name, 'enhancement') &&
-      contains(github.event.issue.labels.*.name, 'bulk') &&
       startsWith(github.event.issue.title, '[Submit Library]')
     runs-on: ubuntu-latest
     permissions:
