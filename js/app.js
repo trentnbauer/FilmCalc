@@ -872,6 +872,83 @@ ${renderMobile(state)}
     restoreFocus(root, focus);
 }
 
+// ==================== Bulk library YAML export ====================
+// Serializes saved films/labs into DATA_SPEC.md-shaped YAML list entries
+// (no file-level label/country/state/city wrapper — App.submitLibrary()
+// below hands these to library-intake.yml, which places each entry in the
+// right file the same way film-lab-intake.yml already does for a single
+// submission). Hand-rolled rather than pulling in a YAML library: every
+// scalar is either a known-safe bare number/boolean or run through
+// yamlScalar(), which is conservative enough to always produce valid YAML
+// regardless of what a user typed into a store name or address.
+function yamlScalar(v) {
+    if (v === null || v === undefined || v === '') return "''";
+    if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+    const s = String(v);
+    // Bare (unquoted) only when nothing in it could be misread as YAML
+    // syntax — a leading indicator char, a ": "/" #" sequence, a
+    // bool/null-lookalike keyword, a bare number, or edge whitespace.
+    const unsafe = /^[\s\-?:,\[\]{}#&*!|>'"%@`]/.test(s) || /:\s|\s#/.test(s) ||
+        /^(true|false|null|~|yes|no|on|off)$/i.test(s) || /^-?\d+(\.\d+)?$/.test(s) || s !== s.trim();
+    return unsafe ? `'${s.replace(/'/g, "''")}'` : s;
+}
+
+function serializeFilmEntryYaml(f) {
+    const lines = [
+        `- name: ${yamlScalar(f.name)}`,
+        `  boxSpeed: ${parseFloat(f.boxSpeed) || 0}`,
+        `  maxPushPull: ${parseFloat(f.maxPushPull) || 0}`,
+        `  process: ${yamlScalar(f.process)}`
+    ];
+    // Every locally-saved film carries an explicit colorType (the editor
+    // always writes one, never leaves it unset) — only worth a line in the
+    // export when it says something the process alone wouldn't already
+    // imply, matching DATA_SPEC.md's "omit it and the app infers" idiom.
+    const impliedColorType = f.process === 'BW' ? 'bw' : 'color';
+    if (f.colorType && f.colorType !== impliedColorType) lines.push(`  colorType: ${yamlScalar(f.colorType)}`);
+    lines.push(`  format: ${yamlScalar(f.format || '35mm')}`, `  hidden: false`, `  bundles:`);
+    normalizeFilmBundles(f).forEach(b => {
+        lines.push(
+            `  - rolls: ${parseInt(b.rolls) || 1}`,
+            `    exposures: ${parseInt(b.exposures) || 36}`,
+            `    filmCost: ${parseFloat(b.filmCost) || 0}`,
+            `    storeName: ${yamlScalar(b.storeName)}`,
+            `    buyLink: ${yamlScalar(b.buyLink)}`
+        );
+        const availability = b.availability || 'national';
+        if (availability !== 'national') {
+            lines.push(`    availability: ${yamlScalar(availability)}`);
+            if (b.state) lines.push(`    state: ${yamlScalar(b.state)}`);
+            if (b.city) lines.push(`    city: ${yamlScalar(b.city)}`);
+        }
+    });
+    return lines.join('\n');
+}
+
+function serializeLabEntryYaml(l) {
+    const lines = [`- name: ${yamlScalar(l.name)}`, `  hidden: false`, `  address: ${yamlScalar(l.address || '')}`];
+    if (l.phone) lines.push(`  phone: ${yamlScalar(l.phone)}`);
+    if (l.email) lines.push(`  email: ${yamlScalar(l.email)}`);
+    lines.push(`  website: ${yamlScalar(l.website || '')}`, `  services:`);
+    normalizeLabServices(l).forEach(sv => {
+        lines.push(
+            `  - devCost: ${parseFloat(sv.devCost) || 0}`,
+            `    pushPullCost: ${parseFloat(sv.pushPullCost) || 0}`,
+            `    pushPullType: ${yamlScalar(sv.pushPullType || 'per_stop')}`,
+            `    turnaroundTime: ${yamlScalar(sv.turnaroundTime || 'same_week')}`,
+            `    highResScan: ${!!sv.highResScan}`,
+            `    tiffScan: ${!!sv.tiffScan}`,
+            `    noPushPull: ${!!sv.noPushPull}`
+        );
+        if (sv.mailBackCost !== null && sv.mailBackCost !== undefined && sv.mailBackCost !== '') {
+            lines.push(`    mailBackCost: ${parseFloat(sv.mailBackCost) || 0}`);
+        }
+        lines.push(`    processes:`);
+        (sv.processes && sv.processes.length ? sv.processes : ['C41']).forEach(p => lines.push(`    - ${yamlScalar(p)}`));
+    });
+    return lines.join('\n');
+}
+
 // ==================== Controller ====================
 const App = {
     toggleDark() { state.dark = !state.dark; localStorage.setItem('lightMode', state.dark ? '0' : '1'); render(); },
@@ -1113,6 +1190,41 @@ const App = {
         // Claude-prompt links already use for this GitHub issue form.
         const qs = Object.entries({ template, ...params }).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
         window.open(`${base}?${qs}`, '_blank', 'noopener');
+    },
+
+    // Same trick as suggestToPresets() above, but for the whole saved
+    // library in one go instead of one draft: opens the "Submit my
+    // library" issue form (see .github/ISSUE_TEMPLATE/09 submit my
+    // library.yml) prefilled with every non-hidden film/lab serialized as
+    // DATA_SPEC.md-shaped YAML — library-intake.yml then splits those
+    // entries across the right films/*.yaml and labs/*.yaml files and
+    // opens a PR, the bulk counterpart of what film-lab-intake.yml already
+    // does per single-item issue.
+    submitLibrary() {
+        const films = Object.values(getAllFilms()).filter(f => !f.hidden && f.name && f.name.trim() && (f.bundles || []).some(b => (b.storeName || '').trim() || (b.buyLink || '').trim()));
+        const labs = Object.values(getAllLabs()).filter(l => !l.hidden && l.name && l.name.trim());
+        if (!films.length && !labs.length) { flash('Nothing worth submitting yet — add a store/buy link first'); return; }
+        const filmsYaml = films.map(serializeFilmEntryYaml).join('\n');
+        const labsYaml = labs.map(serializeLabEntryYaml).join('\n');
+        const country = (guessLocationFromTimezone() || {}).country || '';
+        const base = 'https://github.com/trentnbauer/FilmCalc/issues/new';
+        const params = { template: '09 submit my library.yml', country, 'films-yaml': filmsYaml, 'labs-yaml': labsYaml };
+        const qs = Object.entries(params).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
+        const url = `${base}?${qs}`;
+        // GitHub's issue-form prefill rides the query string, which has a
+        // practical length ceiling well below what a large library can
+        // produce — fall back to clipboard + a bare (still country-
+        // prefilled) form rather than silently truncating someone's data.
+        if (url.length > 6000 && navigator.clipboard) {
+            const combined = [filmsYaml && `# films-yaml\n${filmsYaml}`, labsYaml && `# labs-yaml\n${labsYaml}`].filter(Boolean).join('\n\n');
+            navigator.clipboard.writeText(combined).then(() => {
+                flash('Library too big for a prefilled link — copied the YAML, paste it into the form');
+                const shortQs = Object.entries({ template: '09 submit my library.yml', country }).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
+                window.open(`${base}?${shortQs}`, '_blank', 'noopener');
+            }).catch(() => window.open(url, '_blank', 'noopener'));
+        } else {
+            window.open(url, '_blank', 'noopener');
+        }
     },
 
     toggleHidden(kind, key) {
@@ -1728,6 +1840,7 @@ function renderMobileLibrary(s) {
 <button type="button" onclick="App.setField('libTab','films')" style="flex:1;height:44px;background:${filmsTone.bg};border:1px solid ${filmsTone.border};border-radius:8px;color:${filmsTone.color};font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Films (${filmCount})</button>
 <button type="button" onclick="App.setField('libTab','labs')" style="flex:1;height:44px;background:${labsTone.bg};border:1px solid ${labsTone.border};border-radius:8px;color:${labsTone.color};font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Labs (${labCount})</button>
 </div>
+${filmCount || labCount ? `<button type="button" onclick="App.submitLibrary()" title="Opens a prefilled GitHub issue with your saved films/labs, for a maintainer to review and add as shared presets" style="width:100%;box-sizing:border-box;height:40px;background:transparent;border:1px dashed #33333a;border-radius:8px;color:#8b8781;font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;margin-bottom:14px">Submit my library for the shared presets ↗</button>` : ''}
 <input value="${escapeHtml(s.libSearch)}" oninput="App.setField('libSearch',this.value)" data-fkey="m-libSearch" placeholder="Search by name…" style="width:100%;box-sizing:border-box;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 12px;color:#eae7e1;font-size:15px;margin-bottom:20px">
 ${tab === 'films' ? filmSection() : labSection()}
 </div>`;

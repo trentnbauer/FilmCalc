@@ -1,0 +1,59 @@
+name: "📚 Submit my saved library"
+description: Send everything you've saved in the app's Library tab, in one go
+title: "[Submit Library] "
+labels: ["data", "enhancement", "bulk"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is the bulk counterpart of the **Add a film stock**/**Add a lab** forms — instead of one
+        entry, it's your whole saved library at once. You normally get here by tapping **"Submit my
+        library for the shared presets"** in the app's Library tab, which fills in the boxes below for
+        you; you shouldn't need to type YAML by hand.
+
+        Once submitted, an automated check reads this form and opens a pull request for a maintainer to
+        review — nothing is added straight to the shared presets. The same "mainstream, reliably
+        available" bar from the single-item forms still applies, so a rare/limited-run/novelty entry
+        may get dropped rather than included.
+
+  - type: input
+    id: country
+    attributes:
+      label: Country
+      description: |
+        Applies to every entry below that doesn't already specify its own state/city (i.e. every
+        national-availability film bundle, and every lab — a lab is always tied to one place). If your
+        library genuinely spans more than one country, submit it in separate issues, one per country.
+      placeholder: "e.g. Australia"
+    validations:
+      required: true
+
+  - type: textarea
+    id: films-yaml
+    attributes:
+      label: Films
+      description: >-
+        Pre-filled by the app. Each entry already carries its own `availability`/`state`/`city` where
+        it applies — leave that as-is.
+      render: yaml
+    validations:
+      required: false
+
+  - type: textarea
+    id: labs-yaml
+    attributes:
+      label: Labs
+      description: Pre-filled by the app.
+      render: yaml
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirmations
+      options:
+        - label: These are entries I saved and priced myself, not copied from somewhere else
+          required: true
+        - label: I understand a maintainer reviews this before anything is merged, and some entries may be left out
+          required: true
