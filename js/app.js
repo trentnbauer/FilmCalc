@@ -3,17 +3,16 @@
 // pattern as the rest of js/*.js: shares index.html's global scope via
 // <script src>. Wholly replaces the old tab-based UI (index.html's own
 // inline script, js/film-lookup.js, js/dev-cost-ui.js, js/modals.js,
-// js/themes.js, js/select-filter.js, js/i18n.js) with a single
-// view-switching shell whose visual design and state machine come from
-// that mockup. Reuses js/dev-cost-calc.js's pure calculation engine
-// unchanged — this file is presentation + state only, no duplicated math.
+// js/themes.js, js/select-filter.js) with a single view-switching shell
+// whose visual design and state machine come from that mockup. Reuses
+// js/dev-cost-calc.js's pure calculation engine unchanged — this file is
+// presentation + state only, no duplicated math. Still uses js/i18n.js's
+// t() for strings.
 //
 // Deliberately dropped from the old app (none of these are depicted in
 // the redesign mockup, and re-threading them through 1600+ lines of
 // Tailwind-classed, DOM-ID-coupled modal markup would mean building a
 // second, hidden UI behind this one just to host them):
-//   - The 10-locale i18n system (js/i18n.js) — every string here is a
-//     plain literal, matching the mockup, which is English-only itself.
 //   - The 11 accessibility/colour theme YAML files (js/themes.js) — this
 //     UI has one dark palette, fixed (no user-configurable accent picker;
 //     each section heading gets its own fixed colour instead — see
@@ -174,7 +173,7 @@ const state = {
     // Index into draft.bundles (film) or draft.services (lab) currently open
     // in the full-screen sub-editor, or null when showing the list view.
     subEditIndex: null,
-    setupOpen: false, setupStep: 0, // 0=language, 1=import presets, 2=home lab
+    setupOpen: false, setupStep: 0, setupBusy: false, // 0=language, 1=import presets, 2=home lab
     // Which starter-preset checkboxes are ticked, keyed "kind:file" (e.g.
     // "films:melbourne-retailers.yaml") — controlled, unlike most of this
     // screen's markup, specifically so a geo-matched pre-check (see
@@ -209,6 +208,15 @@ const state = {
     dark: localStorage.getItem('lightMode') !== '1',
     expBox: '400', expiryMonth: String(new Date().getMonth() + 1), expiryYear: '', filmType: 'c41', storage: 'controlled',
     importNote: '',
+    // Set by App.importYamlFile() once a custom-uploaded file parses and
+    // validates, holding what WOULD be imported so the user can see and
+    // confirm it before anything touches localStorage — see
+    // App.confirmImport()/cancelImport(). null when no import is pending.
+    pendingImport: null,
+    // Snapshot of filmProfiles/labProfiles taken right before the most
+    // recent import was written, so App.undoLastImport() can put it back.
+    // Session-only (not persisted) — deliberately simple, one level of undo.
+    lastImportSnapshot: null,
     // Mobile-shell-only fields (harmless on desktop, which never reads them).
     menuOpen: false, toast: '', allowPushPull: true
 };
@@ -622,7 +630,8 @@ ${settingsSection(t('v2SettingsData'), `
 <button type="button" onclick="App.openSetup()" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#8b8781;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonRerunSetup')}</button>
 <button type="button" onclick="App.deleteAllData()" style="background:transparent;border:1px solid #5a2420;border-radius:5px;padding:6px 11px;color:#e2564a;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonDeleteAllData')}</button>
 </div>
-<div style="font-size:10px;color:#8b8781;min-height:12px">${escapeHtml(s.importNote)}</div>
+${renderImportPreview(s)}
+<div style="font-size:10px;color:#8b8781;min-height:12px">${escapeHtml(s.importNote)}${s.lastImportSnapshot ? ` <a href="javascript:void(0)" onclick="App.undoLastImport()" style="color:var(--acc);cursor:pointer">Undo</a>` : ''}</div>
 <div style="margin-top:10px;font-size:10px;color:#5f5c57">Drag <a href="javascript:void(window.open('https://filmcalc.app/?add='+encodeURIComponent(location.href)))" style="cursor:move">↗ Add to FilmCalc</a> to your bookmarks bar — click it from any shop or lab page to jump back here with that page's link ready to paste in.</div>
 `)}
 </div>`;
@@ -655,6 +664,7 @@ ${renderPresetImport(false)}
 <div style="margin-top:10px;padding-top:10px;border-top:1px solid #212125">
 <label style="display:inline-flex;align-items:center;background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#8b8781;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonImportYaml')}<input type="file" accept=".yaml,.yml,text/yaml" onchange="App.importYamlFile(this.files[0])" style="display:none"></label>
 </div>
+${renderImportPreview(s)}
 ${s.importNote ? `<div style="margin-top:8px;font-size:10px;color:#8b8781">${escapeHtml(s.importNote)}</div>` : ''}
 </div>`;
     } else {
@@ -677,12 +687,16 @@ ${tierLabels.map(l => `<option value="${escapeHtml(l)}" ${s.defaultTier === l ? 
 </div>
 </div>`;
     }
-    const backBtn = s.setupStep > 0 ? `<button type="button" onclick="App.setupGoto(${s.setupStep - 1})" style="flex:1;background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:9px 16px;color:#8b8781;font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2ButtonBack')}</button>` : '';
+    const backBtn = s.setupStep > 0 ? `<button type="button" ${s.setupBusy ? 'disabled' : ''} onclick="App.setupGoto(${s.setupStep - 1})" style="flex:1;background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:9px 16px;color:#8b8781;font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;${s.setupBusy ? 'opacity:.5;cursor:default' : ''}">${t('v2ButtonBack')}</button>` : '';
     // On the presets step, Next both imports whatever's ticked AND
-    // advances — no separate "Import selected" click needed first.
-    const nextAction = step === 'presets' ? 'App.setupNextFromPresets()' : `App.setupGoto(${s.setupStep + 1})`;
+    // advances — no separate "Import selected" click needed first. Target
+    // step is baked into the onclick at render time (like every other
+    // setup nav button) so a stale in-flight import can't clobber a step
+    // the user has since navigated to; setupBusy also disables Back and
+    // blocks re-entry so a double-click can't start a second import.
+    const nextAction = step === 'presets' ? `App.setupNextFromPresets(${s.setupStep + 1})` : `App.setupGoto(${s.setupStep + 1})`;
     const nextBtn = s.setupStep < SETUP_STEPS.length - 1
-        ? `<button type="button" onclick="${nextAction}" style="flex:2;background:#1c1512;border:1px solid #5a3a1c;border-radius:5px;padding:9px 16px;color:var(--acc);font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2ButtonNext')}</button>`
+        ? `<button type="button" ${s.setupBusy ? 'disabled' : ''} onclick="${nextAction}" style="flex:2;background:#1c1512;border:1px solid #5a3a1c;border-radius:5px;padding:9px 16px;color:var(--acc);font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;${s.setupBusy ? 'opacity:.5;cursor:default' : ''}">${t('v2ButtonNext')}</button>`
         : `<button type="button" onclick="App.closeSetup()" style="flex:2;background:#1c1512;border:1px solid #5a3a1c;border-radius:5px;padding:9px 16px;color:var(--acc);font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2ButtonDone')}</button>`;
     return `<div style="position:fixed;inset:0;z-index:70;background:rgba(6,6,7,.74);display:flex;align-items:flex-start;justify-content:center;padding:64px 16px;overflow:auto"><div style="width:100%;max-width:460px;background:linear-gradient(180deg,#151517,#111113);border:1px solid #33333a;border-radius:10px;box-shadow:0 30px 80px -20px #000;padding:18px 20px 20px">
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
@@ -709,6 +723,27 @@ function presetCheckList(kind, entries) {
         const key = `${kind}:${f.file}`;
         return `<label style="display:flex;align-items:center;gap:8px;padding:6px 2px;font-size:12px;color:#c9c5bd;cursor:pointer"><input type="checkbox" class="preset-check" data-kind="${kind}" value="${escapeHtml(f.file)}" onchange="App.togglePresetCheck('${kind}','${jsAttr(f.file)}',this.checked)" ${state.presetChecked.has(key) ? 'checked' : ''} style="width:16px;height:16px;accent-color:var(--acc);cursor:pointer">${escapeHtml(f.label)}</label>`;
     }).join('');
+}
+// Shows what a custom-uploaded YAML file (App.importYamlFile) WOULD do to
+// the library, with nothing written to localStorage yet — the user reviews
+// counts/names/errors and either confirms (App.confirmImport) or cancels.
+// Renders nothing when there's no pending import.
+function renderImportPreview(s) {
+    const p = s.pendingImport;
+    if (!p) return '';
+    const rowsFor = (entries, label) => !entries.length ? '' : `<div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781;margin:8px 0 4px">${label} (${entries.length})</div>
+<div style="display:flex;flex-direction:column;gap:2px;max-height:120px;overflow:auto">${entries.map(e => `<div style="font-size:11px;color:#c9c5bd;display:flex;justify-content:space-between;gap:8px"><span>${escapeHtml(e.name)}</span>${e.exists ? '<span style="color:#8b8781;font-size:9px;letter-spacing:.08em;text-transform:uppercase">updates existing</span>' : ''}</div>`).join('')}</div>`;
+    const hasErrors = p.errors.length > 0;
+    return `<div style="margin-top:10px;border:1px solid ${hasErrors ? '#5a2420' : '#26262a'};border-radius:8px;background:#131315;padding:12px">
+<div style="font-size:11px;color:#c9c5bd;margin-bottom:2px">Reviewing <strong>${escapeHtml(p.fileName)}</strong> — nothing saved yet.</div>
+${rowsFor(p.filmEntries, 'Films')}
+${rowsFor(p.labEntries, 'Labs')}
+${hasErrors ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid #33221f"><div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#e2564a;margin-bottom:4px">Can't import — fix these and re-upload</div><div style="display:flex;flex-direction:column;gap:2px;max-height:120px;overflow:auto">${p.errors.map(e => `<div style="font-size:11px;color:#e2564a">${escapeHtml(e)}</div>`).join('')}</div></div>` : ''}
+<div style="display:flex;gap:8px;margin-top:12px">
+${hasErrors ? '' : `<button type="button" onclick="App.confirmImport()" style="flex:1;background:#1c1512;border:1px solid #5a3a1c;border-radius:5px;padding:7px 11px;color:var(--acc);font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">Confirm import</button>`}
+<button type="button" onclick="App.cancelImport()" style="${hasErrors ? 'flex:1' : ''};background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:7px 11px;color:#8b8781;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">Cancel</button>
+</div>
+</div>`;
 }
 // showImportButton: false on the Setup wizard's presets step, where Next
 // itself imports whatever's ticked (see App.setupNextFromPresets) — a
@@ -1032,6 +1067,54 @@ const App = {
     },
     cancelDraft() { state.draft = null; state.draftKind = null; state.draftKey = null; state.subEditIndex = null; render(); },
 
+    // Opens GitHub's "Add a film stock"/"Add a lab" issue form (see
+    // .github/ISSUE_TEMPLATE/) in a new tab, prefilled from the current
+    // draft — same trick contributing.md's own Claude-prompt links use
+    // (GitHub issue forms read field values straight out of the query
+    // string by each field's `id`). Submitting there needs no git, no YAML,
+    // and no manual file upload: film-lab-intake.yml turns it into a PR
+    // for a maintainer to review automatically. This is genuinely easier
+    // than generating a YAML snippet in-app for the user to paste
+    // themselves, since the structured form is what that workflow expects.
+    suggestToPresets() {
+        const d = state.draft;
+        if (!d || !d.name || !d.name.trim()) { flash('Add a name first'); return; }
+        const base = 'https://github.com/trentnbauer/FilmCalc/issues/new';
+        let template, params;
+        if (state.draftKind === 'film') {
+            const b = (d.bundles && d.bundles[0]) || {};
+            const details = [
+                `- Format (35mm / 120 / 110 / …): ${d.format || ''}`,
+                `- Box speed (ISO): ${d.boxSpeed || ''}`,
+                `- Process (C41 / BW / E6 / ECN-2): ${d.process || ''}`,
+                `- Exposures per roll: ${b.exposures || ''}`,
+                `- Push/pull limit in stops (maxPushPull): ${d.maxPushPull || ''}`,
+                `- Regular price (not sale price): ${b.filmCost || ''}`,
+                `- Where to buy (link): ${b.buyLink || ''}`
+            ].join('\n');
+            template = '01 add a film stock.yml';
+            params = { name: d.name.trim(), 'film-details': details, source: b.buyLink || '' };
+        } else {
+            const details = (d.services || []).map(t => [
+                `- Address: ${d.address || ''}`,
+                `- Website: ${d.website || ''}`,
+                `- Service tier: ${t.label || tierDescription(t)}`,
+                `  - Development cost per roll: ${t.devCost || ''}`,
+                `  - Push/pull fee (and whether it's per-stop or flat): ${t.pushPullCost || ''} (${t.pushPullType || ''})`,
+                `  - Turnaround (next day / same week / longer): ${t.turnaroundTime || ''}`,
+                `  - Hi-res scan? (yes/no): ${t.highResScan ? 'yes' : 'no'}`,
+                `  - Processes handled (C41 / BW / E6 / ECN-2): ${(t.processes || []).join(', ')}`
+            ].join('\n')).join('\n');
+            template = '02 add a lab.yml';
+            params = { name: d.name.trim(), 'lab-details': details, source: d.website || '' };
+        }
+        // encodeURIComponent (not URLSearchParams, which encodes spaces as
+        // "+") to match the %20-style encoding contributing.md's own
+        // Claude-prompt links already use for this GitHub issue form.
+        const qs = Object.entries({ template, ...params }).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
+        window.open(`${base}?${qs}`, '_blank', 'noopener');
+    },
+
     toggleHidden(kind, key) {
         if (kind === 'film') {
             const saved = readJSON('filmProfiles', {});
@@ -1069,19 +1152,22 @@ const App = {
         localStorage.setItem('locale', code);
         render();
     },
-    openSetup() { state.setupOpen = true; state.setupStep = 0; render(); },
-    closeSetup() { state.setupOpen = false; state.setupStep = 0; localStorage.setItem('setupSeen', '1'); render(); },
+    openSetup() { state.setupOpen = true; state.setupStep = 0; state.setupBusy = false; render(); },
+    closeSetup() { state.setupOpen = false; state.setupStep = 0; state.setupBusy = false; localStorage.setItem('setupSeen', '1'); render(); },
     setupGoto(step) { state.setupStep = step; render(); },
     // Next on the presets step used to require a separate "Import
     // selected" click first. Now Next itself imports whatever's ticked
     // (if anything) and only then advances, so there's one action instead
     // of two. Nothing ticked just advances immediately — presets are
     // optional, so Next shouldn't block on an empty selection.
-    setupNextFromPresets() {
+    setupNextFromPresets(targetStep) {
+        if (state.setupBusy) return;
         const hasChecked = document.querySelectorAll('.preset-check:checked').length > 0;
-        if (!hasChecked) { state.setupStep += 1; render(); return; }
-        Promise.resolve(App.importPresetSelected()).then(() => {
-            state.setupStep += 1;
+        if (!hasChecked) { state.setupStep = targetStep; render(); return; }
+        state.setupBusy = true;
+        App.importPresetSelected().then(() => {
+            state.setupBusy = false;
+            state.setupStep = targetStep;
             render();
         });
     },
@@ -1144,6 +1230,7 @@ const App = {
         if (!filmFiles.length && !labFiles.length) { state.importNote = 'Tick at least one region first.'; render(); return; }
         const fetchAll = (kind, files) => Promise.all(files.map(file => fetch(`${kind}/${file}`).then(r => r.text()).then(text => ({ file, parsed: jsyaml.load(text) || {} })).catch(() => ({ file, parsed: null }))));
         return Promise.all([fetchAll('films', filmFiles), fetchAll('labs', labFiles)]).then(([filmResults, labResults]) => {
+            state.lastImportSnapshot = { filmProfiles: readJSON('filmProfiles', {}), labProfiles: readJSON('labProfiles', {}) };
             let filmCount = 0, labCount = 0;
             const failed = [];
             filmResults.forEach(({ file, parsed }) => {
@@ -1172,37 +1259,69 @@ const App = {
     // Restores the generic "drop a config.yaml / films.yaml / labs.yaml"
     // import path — accepts any of the three shapes: a combined config.yaml
     // ({ films, labs, settings }) or a standalone films.yaml/labs.yaml
-    // (a bare films: [...] or labs: [...] list).
+    // (a bare films: [...] or labs: [...] list). Unlike the bundled presets
+    // (already schema-checked in CI before they ever reach main), a custom
+    // file is untrusted input — this only PARSES and VALIDATES it into
+    // state.pendingImport for review; nothing touches localStorage until
+    // the user reviews the preview and hits Confirm (App.confirmImport()).
     importYamlFile(file) {
         if (!file) return;
         const reader = new FileReader();
         reader.onload = () => {
-            let filmCount = 0, labCount = 0;
-            try {
-                const parsed = jsyaml.load(reader.result) || {};
-                if (Array.isArray(parsed.films)) {
-                    const incoming = buildFilmProfilesFromEntries(parsed.films);
-                    filmCount = parsed.films.length;
-                    writeJSON('filmProfiles', mergeFilmProfiles(readJSON('filmProfiles', {}), incoming));
+            loadDataSchema().then(() => {
+                let parsed;
+                try { parsed = jsyaml.load(reader.result) || {}; }
+                catch { state.importNote = `${file.name} isn't valid YAML.`; render(); return; }
+                if (!Array.isArray(parsed.films) && !Array.isArray(parsed.labs)) {
+                    state.importNote = `${file.name} had no films or labs to import.`;
+                    render();
+                    return;
                 }
-                if (Array.isArray(parsed.labs)) {
-                    const saved = readJSON('labProfiles', {});
-                    parsed.labs.forEach(l => { if (l.name) saved[l.name] = l; });
-                    labCount = parsed.labs.length;
-                    writeJSON('labProfiles', saved);
-                }
-                if (parsed.settings && typeof parsed.settings === 'object') {
-                    if (parsed.settings.homeLab) setHomeLab(parsed.settings.homeLab);
-                    if (parsed.settings.upgradeThresholdPercent !== undefined) localStorage.setItem('upgradeThresholdPercent', parsed.settings.upgradeThresholdPercent);
-                    state.homeLab = getHomeLab();
-                }
-                state.importNote = (filmCount || labCount) ? `Imported ${filmCount} film entr${filmCount === 1 ? 'y' : 'ies'} and ${labCount} lab${labCount === 1 ? '' : 's'} from ${file.name}.` : `${file.name} had no films or labs to import.`;
-            } catch {
-                state.importNote = `${file.name} isn't valid YAML.`;
-            }
-            render();
+                const preview = buildImportPreview(parsed, readJSON('filmProfiles', {}), readJSON('labProfiles', {}));
+                state.pendingImport = { fileName: file.name, parsed, ...preview };
+                state.importNote = '';
+                render();
+            });
         };
         reader.readAsText(file);
+    },
+
+    // Writes state.pendingImport (already reviewed by the user) into
+    // localStorage, snapshotting what was there first so App.undoLastImport()
+    // can put it back.
+    confirmImport() {
+        const p = state.pendingImport;
+        if (!p) return;
+        state.lastImportSnapshot = { filmProfiles: readJSON('filmProfiles', {}), labProfiles: readJSON('labProfiles', {}) };
+        let filmCount = 0, labCount = 0;
+        if (Array.isArray(p.parsed.films)) {
+            writeJSON('filmProfiles', mergeFilmProfiles(readJSON('filmProfiles', {}), buildFilmProfilesFromEntries(p.parsed.films)));
+            filmCount = p.parsed.films.length;
+        }
+        if (Array.isArray(p.parsed.labs)) {
+            const saved = readJSON('labProfiles', {});
+            p.parsed.labs.forEach(l => { if (l.name) saved[l.name] = l; });
+            writeJSON('labProfiles', saved);
+            labCount = p.parsed.labs.length;
+        }
+        if (p.parsed.settings && typeof p.parsed.settings === 'object') {
+            if (p.parsed.settings.homeLab) setHomeLab(p.parsed.settings.homeLab);
+            if (p.parsed.settings.upgradeThresholdPercent !== undefined) localStorage.setItem('upgradeThresholdPercent', p.parsed.settings.upgradeThresholdPercent);
+            state.homeLab = getHomeLab();
+        }
+        state.importNote = `Imported ${filmCount} film entr${filmCount === 1 ? 'y' : 'ies'} and ${labCount} lab${labCount === 1 ? '' : 's'} from ${p.fileName}.`;
+        state.pendingImport = null;
+        render();
+    },
+    cancelImport() { state.pendingImport = null; render(); },
+    undoLastImport() {
+        if (!state.lastImportSnapshot) return;
+        writeJSON('filmProfiles', state.lastImportSnapshot.filmProfiles);
+        writeJSON('labProfiles', state.lastImportSnapshot.labProfiles);
+        state.lastImportSnapshot = null;
+        state.homeLab = getHomeLab();
+        state.importNote = 'Import undone.';
+        render();
     }
 };
 // buildFilmProfilesFromEntries: bridges the current { bundles: [...] }
@@ -1707,6 +1826,7 @@ ${mField('Type', `<select onchange="App.setDraftField('colorType',this.value)" s
 <button type="button" onclick="App.addBundle()" style="align-self:flex-start;height:36px;background:#141416;border:1px solid #2c2c30;border-radius:8px;padding:0 14px;color:#8b8781;font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;white-space:nowrap">+ Add price</button>
 </div>
 ${bundles || `<div style="${MONO};font-size:12px;color:#5f5c57;padding:4px 2px">No purchase links yet.</div>`}
+<a href="javascript:void(0)" onclick="App.suggestToPresets()" style="align-self:flex-start;margin-top:4px;font-size:11px;color:#8b8781;cursor:pointer">Suggest this for the shared presets ↗</a>
 </div>
 <div style="display:flex;gap:10px;padding:12px;border-top:1px solid #26262a;background:#0e0e10">
 <button type="button" onclick="App.saveDraft()" style="flex:1;height:50px;background:#1c1512;border:1px solid #5a3a1c;border-radius:8px;color:var(--acc);font-size:13px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Save film</button>
@@ -1776,6 +1896,7 @@ ${mField('Email', `<input value="${escapeHtml(d.email || '')}" oninput="App.setD
 <button type="button" onclick="App.addTier()" style="align-self:flex-start;height:36px;background:#141416;border:1px solid #2c2c30;border-radius:8px;padding:0 14px;color:#8b8781;font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;white-space:nowrap">+ Add tier</button>
 </div>
 ${tiers || `<div style="${MONO};font-size:12px;color:#5f5c57;padding:4px 2px">No service tiers yet.</div>`}
+<a href="javascript:void(0)" onclick="App.suggestToPresets()" style="align-self:flex-start;margin-top:4px;font-size:11px;color:#8b8781;cursor:pointer">Suggest this for the shared presets ↗</a>
 </div>
 <div style="display:flex;gap:10px;padding:12px;border-top:1px solid #26262a;background:#0e0e10">
 <button type="button" onclick="App.saveDraft()" style="flex:1;height:50px;background:#1c1512;border:1px solid #5a3a1c;border-radius:8px;color:var(--acc);font-size:13px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Save lab</button>

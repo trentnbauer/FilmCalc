@@ -1,0 +1,24 @@
+{
+  "$comment": "Single source of truth for film/lab YAML shape, read by both the CI validator (.github/workflows/validate data.yml) and the in-app importer (js/data-validate.js), so the two never drift apart. Mirrors DATA_SPEC.md — update that doc too if you change this.",
+  "film": {
+    "requiredTopLevelFields": ["country"],
+    "requiredFields": ["name", "boxSpeed", "process", "bundles"],
+    "requiredBundleFields": ["rolls", "exposures", "filmCost"],
+    "enums": {
+      "process": ["C41", "BW", "E6", "ECN2"],
+      "colorType": ["color", "bw", "speciality"],
+      "format": ["35mm", "120", "110", "127", "220", "sheet"],
+      "availability": ["national", "state", "city"]
+    }
+  },
+  "lab": {
+    "requiredTopLevelFields": ["country", "state", "city"],
+    "requiredFields": ["name"],
+    "requiredServiceFields": ["devCost"],
+    "enums": {
+      "turnaroundTime": ["next_day", "same_week", "longer"],
+      "pushPullType": ["per_stop", "flat"],
+      "processes": ["C41", "BW", "E6", "ECN2"]
+    }
+  }
+}
