@@ -3,17 +3,16 @@
 // pattern as the rest of js/*.js: shares index.html's global scope via
 // <script src>. Wholly replaces the old tab-based UI (index.html's own
 // inline script, js/film-lookup.js, js/dev-cost-ui.js, js/modals.js,
-// js/themes.js, js/select-filter.js, js/i18n.js) with a single
-// view-switching shell whose visual design and state machine come from
-// that mockup. Reuses js/dev-cost-calc.js's pure calculation engine
-// unchanged — this file is presentation + state only, no duplicated math.
+// js/themes.js, js/select-filter.js) with a single view-switching shell
+// whose visual design and state machine come from that mockup. Reuses
+// js/dev-cost-calc.js's pure calculation engine unchanged — this file is
+// presentation + state only, no duplicated math. Still uses js/i18n.js's
+// t() for strings.
 //
 // Deliberately dropped from the old app (none of these are depicted in
 // the redesign mockup, and re-threading them through 1600+ lines of
 // Tailwind-classed, DOM-ID-coupled modal markup would mean building a
 // second, hidden UI behind this one just to host them):
-//   - The 10-locale i18n system (js/i18n.js) — every string here is a
-//     plain literal, matching the mockup, which is English-only itself.
 //   - The 11 accessibility/colour theme YAML files (js/themes.js) — this
 //     UI has one dark palette, fixed (no user-configurable accent picker;
 //     each section heading gets its own fixed colour instead — see
@@ -171,7 +170,7 @@ function migrateLegacyDefaultLabPref() {
 const state = {
     view: 'main', // main | expired | library | settings
     draft: null, draftKind: null, draftKey: null,
-    setupOpen: false, setupStep: 0, // 0=language, 1=import presets, 2=home lab
+    setupOpen: false, setupStep: 0, setupBusy: false, // 0=language, 1=import presets, 2=home lab
     // Which starter-preset checkboxes are ticked, keyed "kind:file" (e.g.
     // "films:melbourne-retailers.yaml") — controlled, unlike most of this
     // screen's markup, specifically so a geo-matched pre-check (see
@@ -674,12 +673,16 @@ ${tierLabels.map(l => `<option value="${escapeHtml(l)}" ${s.defaultTier === l ? 
 </div>
 </div>`;
     }
-    const backBtn = s.setupStep > 0 ? `<button type="button" onclick="App.setupGoto(${s.setupStep - 1})" style="flex:1;background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:9px 16px;color:#8b8781;font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2ButtonBack')}</button>` : '';
+    const backBtn = s.setupStep > 0 ? `<button type="button" ${s.setupBusy ? 'disabled' : ''} onclick="App.setupGoto(${s.setupStep - 1})" style="flex:1;background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:9px 16px;color:#8b8781;font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;${s.setupBusy ? 'opacity:.5;cursor:default' : ''}">${t('v2ButtonBack')}</button>` : '';
     // On the presets step, Next both imports whatever's ticked AND
-    // advances — no separate "Import selected" click needed first.
-    const nextAction = step === 'presets' ? 'App.setupNextFromPresets()' : `App.setupGoto(${s.setupStep + 1})`;
+    // advances — no separate "Import selected" click needed first. Target
+    // step is baked into the onclick at render time (like every other
+    // setup nav button) so a stale in-flight import can't clobber a step
+    // the user has since navigated to; setupBusy also disables Back and
+    // blocks re-entry so a double-click can't start a second import.
+    const nextAction = step === 'presets' ? `App.setupNextFromPresets(${s.setupStep + 1})` : `App.setupGoto(${s.setupStep + 1})`;
     const nextBtn = s.setupStep < SETUP_STEPS.length - 1
-        ? `<button type="button" onclick="${nextAction}" style="flex:2;background:#1c1512;border:1px solid #5a3a1c;border-radius:5px;padding:9px 16px;color:var(--acc);font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2ButtonNext')}</button>`
+        ? `<button type="button" ${s.setupBusy ? 'disabled' : ''} onclick="${nextAction}" style="flex:2;background:#1c1512;border:1px solid #5a3a1c;border-radius:5px;padding:9px 16px;color:var(--acc);font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;${s.setupBusy ? 'opacity:.5;cursor:default' : ''}">${t('v2ButtonNext')}</button>`
         : `<button type="button" onclick="App.closeSetup()" style="flex:2;background:#1c1512;border:1px solid #5a3a1c;border-radius:5px;padding:9px 16px;color:var(--acc);font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2ButtonDone')}</button>`;
     return `<div style="position:fixed;inset:0;z-index:70;background:rgba(6,6,7,.74);display:flex;align-items:flex-start;justify-content:center;padding:64px 16px;overflow:auto"><div style="width:100%;max-width:460px;background:linear-gradient(180deg,#151517,#111113);border:1px solid #33333a;border-radius:10px;box-shadow:0 30px 80px -20px #000;padding:18px 20px 20px">
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
@@ -1040,19 +1043,22 @@ const App = {
         localStorage.setItem('locale', code);
         render();
     },
-    openSetup() { state.setupOpen = true; state.setupStep = 0; render(); },
-    closeSetup() { state.setupOpen = false; state.setupStep = 0; localStorage.setItem('setupSeen', '1'); render(); },
+    openSetup() { state.setupOpen = true; state.setupStep = 0; state.setupBusy = false; render(); },
+    closeSetup() { state.setupOpen = false; state.setupStep = 0; state.setupBusy = false; localStorage.setItem('setupSeen', '1'); render(); },
     setupGoto(step) { state.setupStep = step; render(); },
     // Next on the presets step used to require a separate "Import
     // selected" click first. Now Next itself imports whatever's ticked
     // (if anything) and only then advances, so there's one action instead
     // of two. Nothing ticked just advances immediately — presets are
     // optional, so Next shouldn't block on an empty selection.
-    setupNextFromPresets() {
+    setupNextFromPresets(targetStep) {
+        if (state.setupBusy) return;
         const hasChecked = document.querySelectorAll('.preset-check:checked').length > 0;
-        if (!hasChecked) { state.setupStep += 1; render(); return; }
-        Promise.resolve(App.importPresetSelected()).then(() => {
-            state.setupStep += 1;
+        if (!hasChecked) { state.setupStep = targetStep; render(); return; }
+        state.setupBusy = true;
+        App.importPresetSelected().then(() => {
+            state.setupBusy = false;
+            state.setupStep = targetStep;
             render();
         });
     },
