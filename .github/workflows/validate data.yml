@@ -28,15 +28,21 @@ jobs:
       - name: Check the YAML is valid and complete
         run: |
           python3 - <<'PY'
-          import glob, re, sys, yaml
+          import glob, json, re, sys, yaml
           from collections import defaultdict
 
-          VALID_PROCESSES = {"C41", "BW", "E6", "ECN2"}
-          VALID_COLOR_TYPES = {"color", "bw", "speciality"}
-          VALID_FORMATS = {"35mm", "120", "110", "127", "220", "sheet"}
-          VALID_TURNAROUND = {"next_day", "same_week", "longer"}
-          VALID_PUSHPULL_TYPE = {"per_stop", "flat"}
-          VALID_AVAILABILITY = {"national", "state", "city"}
+          # Required fields and enums live in schema/film-lab-schema.json, shared
+          # with the in-app importer (js/data-validate.js) so the two can't drift
+          # apart — this script just reads it rather than hardcoding its own copy.
+          SCHEMA = json.load(open("schema/film-lab-schema.json"))
+          FILM_SCHEMA, LAB_SCHEMA = SCHEMA["film"], SCHEMA["lab"]
+
+          VALID_PROCESSES = set(FILM_SCHEMA["enums"]["process"])
+          VALID_COLOR_TYPES = set(FILM_SCHEMA["enums"]["colorType"])
+          VALID_FORMATS = set(FILM_SCHEMA["enums"]["format"])
+          VALID_AVAILABILITY = set(FILM_SCHEMA["enums"]["availability"])
+          VALID_TURNAROUND = set(LAB_SCHEMA["enums"]["turnaroundTime"])
+          VALID_PUSHPULL_TYPE = set(LAB_SCHEMA["enums"]["pushPullType"])
 
           errors = []
 
@@ -62,11 +68,12 @@ jobs:
               if not isinstance(doc, dict) or "films" not in doc:
                   err(path, "expected a top-level 'films:' list")
                   continue
-              if not doc.get("country"):
-                  err(path, "missing top-level 'country' — films/index.json is generated from this")
+              for key in FILM_SCHEMA["requiredTopLevelFields"]:
+                  if not doc.get(key):
+                      err(path, f"missing top-level '{key}' — films/index.json is generated from this")
               for i, film in enumerate(doc["films"] or []):
                   where = f"film #{i+1} ({film.get('name', 'unnamed')})"
-                  for key in ("name", "boxSpeed", "process", "bundles"):
+                  for key in FILM_SCHEMA["requiredFields"]:
                       if key not in film:
                           err(path, f"{where}: missing required field '{key}'")
                   if film.get("name"):
@@ -85,7 +92,7 @@ jobs:
                       err(path, f"{where}: boxSpeed must be a plain number (no quotes)")
                   for j, b in enumerate(film.get("bundles") or []):
                       bw = f"{where}, bundle #{j+1}"
-                      for key in ("rolls", "exposures", "filmCost"):
+                      for key in FILM_SCHEMA["requiredBundleFields"]:
                           if key not in b:
                               err(path, f"{bw}: missing required field '{key}'")
                       if isinstance(b.get("filmCost"), str):
@@ -122,19 +129,21 @@ jobs:
               if not isinstance(doc, dict) or "labs" not in doc:
                   err(path, "expected a top-level 'labs:' list")
                   continue
-              for key in ("country", "state", "city"):
+              for key in LAB_SCHEMA["requiredTopLevelFields"]:
                   if not doc.get(key):
                       err(path, f"missing top-level '{key}' — labs/index.json is generated from this")
               for i, lab in enumerate(doc["labs"] or []):
                   where = f"lab #{i+1} ({lab.get('name', 'unnamed')})"
-                  if "name" not in lab:
-                      err(path, f"{where}: missing required field 'name'")
+                  for key in LAB_SCHEMA["requiredFields"]:
+                      if key not in lab:
+                          err(path, f"{where}: missing required field '{key}'")
                   if not lab.get("services"):
                       err(path, f"{where}: needs at least one entry under 'services:'")
                   for j, s in enumerate(lab.get("services") or []):
                       sw = f"{where}, service #{j+1}"
-                      if "devCost" not in s:
-                          err(path, f"{sw}: missing required field 'devCost'")
+                      for key in LAB_SCHEMA["requiredServiceFields"]:
+                          if key not in s:
+                              err(path, f"{sw}: missing required field '{key}'")
                       if isinstance(s.get("devCost"), str):
                           err(path, f"{sw}: devCost must be a number, not text (write 17, not '$17')")
                       if isinstance(s.get("mailBackCost"), str):

@@ -88,11 +88,12 @@ jobs:
         # issue #181 follow-up) is Pages-only monetization, same as the
         # AdSense script itself — irrelevant to anyone self-hosting.
         # Docs and packaging files (README, CONTRIBUTING) still don't
-        # belong here.
+        # belong here. schema/ (film-lab-schema.json) is fetched at runtime
+        # by js/data-validate.js, same reason films/labs need to be live.
         run: |
           mkdir -p _site
           cp index.html favicon.ico icon.ico icon.svg apple-touch-icon.png options.yaml changelog.json ads.txt _site/
-          cp -r films labs js css _site/
+          cp -r films labs schema js css _site/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

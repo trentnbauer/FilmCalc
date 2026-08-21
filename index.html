@@ -66,6 +66,10 @@
          these directly rather than duplicating the maths. See
          tests/dev-cost-calc.test.js. -->
     <script src="js/dev-cost-calc.js"></script>
+    <!-- Import validation: checks custom-uploaded film/lab YAML against
+         schema/film-lab-schema.json before it's merged into localStorage.
+         Must load before js/app.js, which calls its functions directly. -->
+    <script src="js/data-validate.js"></script>
     <!-- App shell: state, rendering, and every event handler, built for
          the "FilmCalc Redesign" mockup. See the file's own header comment
          for what carried over from the previous UI and what didn't. -->

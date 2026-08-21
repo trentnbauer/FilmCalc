@@ -2,6 +2,11 @@
 
 **No git. No installing anything. Two clicks and a paste.**
 
+> **Already added it to your own library in the app?** Open it in Library → Edit, then click
+> **"Suggest this for the shared presets ↗"** at the bottom of the form — it opens a prefilled
+> GitHub issue with your details already in it. No YAML, no file upload; the steps below are for
+> starting from a shop/lab page instead.
+
 ---
 
 ## 🎬 Start here
