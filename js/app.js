@@ -170,6 +170,9 @@ function migrateLegacyDefaultLabPref() {
 const state = {
     view: 'main', // main | expired | library | settings
     draft: null, draftKind: null, draftKey: null,
+    // Index into draft.bundles (film) or draft.services (lab) currently open
+    // in the full-screen sub-editor, or null when showing the list view.
+    subEditIndex: null,
     setupOpen: false, setupStep: 0, setupBusy: false, // 0=language, 1=import presets, 2=home lab
     // Which starter-preset checkboxes are ticked, keyed "kind:file" (e.g.
     // "films:melbourne-retailers.yaml") — controlled, unlike most of this
@@ -960,20 +963,20 @@ const App = {
     },
 
     newFilm() {
-        state.draft = { name: '', boxSpeed: '', process: state.process, colorType: state.filmColor, format: state.format, maxPushPull: '2', hidden: false, bundles: [{ storeName: '', rolls: 1, exposures: 36, filmCost: 0, buyLink: '' }] };
-        state.draftKind = 'film'; state.draftKey = null;
+        state.draft = { name: '', boxSpeed: '', process: state.process, colorType: state.filmColor, format: state.format, maxPushPull: '2', hidden: false, bundles: [{ storeName: '', rolls: 1, exposures: 36, filmCost: 0, buyLink: '', availability: 'national', state: '', city: '' }] };
+        state.draftKind = 'film'; state.draftKey = null; state.subEditIndex = null;
         render();
     },
     newLab() {
         state.draft = { name: '', address: '', website: '', phone: '', email: '', hidden: false, services: [{ devCost: '', pushPullCost: '', pushPullType: 'per_stop', turnaroundTime: 'same_week', highResScan: false, tiffScan: false, noPushPull: false, mailBackCost: null, processes: ['C41'] }] };
-        state.draftKind = 'lab'; state.draftKey = null;
+        state.draftKind = 'lab'; state.draftKey = null; state.subEditIndex = null;
         render();
     },
     editFilm(key) {
         const f = getAllFilms()[key];
         if (!f) return;
         state.draft = { ...f, bundles: normalizeFilmBundles(f).map(b => ({ ...b })), maxPushPull: String(f.maxPushPull ?? 1) };
-        state.draftKind = 'film'; state.draftKey = key;
+        state.draftKind = 'film'; state.draftKey = key; state.subEditIndex = null;
         render();
     },
     editLab(name) {
@@ -981,17 +984,29 @@ const App = {
         if (!l) return;
         const rawTiers = Array.isArray(l.services) && l.services.length ? l.services : [l];
         state.draft = { ...l, name, services: normalizeLabServices(l).map((t, i) => ({ ...t, label: (rawTiers[i] && rawTiers[i].label) || tierDescription(t) })) };
-        state.draftKind = 'lab'; state.draftKey = name;
+        state.draftKind = 'lab'; state.draftKey = name; state.subEditIndex = null;
         render();
     },
     setDraftField(field, value) { state.draft[field] = value; render(); },
     setBundleField(i, field, value) {
         const b = state.draft.bundles[i];
-        b[field] = (field === 'rolls' || field === 'exposures') ? parseInt(value) || 0 : (field === 'filmCost' ? value : value);
+        b[field] = (field === 'rolls' || field === 'exposures') ? parseInt(value) || 0 : value;
+        // Scope narrows to national/state/city: drop the now-irrelevant locality
+        // fields rather than leaving stale text hidden behind the selector.
+        if (field === 'availability') {
+            if (value === 'national') { b.state = ''; b.city = ''; }
+            else if (value === 'state') { b.city = ''; }
+        }
         render();
     },
-    addBundle() { state.draft.bundles.push({ storeName: '', rolls: 1, exposures: parseInt(state.draft.bundles[0]?.exposures) || 36, filmCost: 0, buyLink: '' }); render(); },
-    removeBundle(i) { state.draft.bundles.splice(i, 1); render(); },
+    editBundle(i) { state.subEditIndex = i; render(); },
+    closeBundleEditor() { state.subEditIndex = null; render(); },
+    addBundle() {
+        state.draft.bundles.push({ storeName: '', rolls: 1, exposures: parseInt(state.draft.bundles[0]?.exposures) || 36, filmCost: 0, buyLink: '', availability: 'national', state: '', city: '' });
+        state.subEditIndex = state.draft.bundles.length - 1;
+        render();
+    },
+    removeBundle(i) { state.draft.bundles.splice(i, 1); state.subEditIndex = null; render(); },
     setTierField(i, field, value) { state.draft.services[i][field] = value; render(); },
     toggleTierFlag(i, flag) { state.draft.services[i][flag] = !state.draft.services[i][flag]; render(); },
     toggleTierProcess(i, proc) {
@@ -999,8 +1014,14 @@ const App = {
         t.processes = t.processes.includes(proc) ? t.processes.filter(p => p !== proc) : [...t.processes, proc];
         render();
     },
-    addTier() { state.draft.services.push({ label: '', devCost: '', pushPullCost: '', pushPullType: 'per_stop', turnaroundTime: 'same_week', highResScan: false, tiffScan: false, noPushPull: false, mailBackCost: null, processes: ['C41'] }); render(); },
-    removeTier(i) { state.draft.services.splice(i, 1); render(); },
+    editTier(i) { state.subEditIndex = i; render(); },
+    closeTierEditor() { state.subEditIndex = null; render(); },
+    addTier() {
+        state.draft.services.push({ label: '', devCost: '', pushPullCost: '', pushPullType: 'per_stop', turnaroundTime: 'same_week', highResScan: false, tiffScan: false, noPushPull: false, mailBackCost: null, processes: ['C41'] });
+        state.subEditIndex = state.draft.services.length - 1;
+        render();
+    },
+    removeTier(i) { state.draft.services.splice(i, 1); state.subEditIndex = null; render(); },
 
     saveDraft() {
         const d = state.draft;
@@ -1012,7 +1033,15 @@ const App = {
             saved[newKey] = {
                 name: d.name.trim(), boxSpeed: parseFloat(d.boxSpeed) || 0, process: d.process, colorType: d.colorType, format: d.format,
                 maxPushPull: parseFloat(d.maxPushPull), hidden: !!d.hidden,
-                bundles: d.bundles.map(b => ({ storeName: b.storeName || '', rolls: parseInt(b.rolls) || 1, exposures: parseInt(b.exposures) || 36, filmCost: parseFloat(b.filmCost) || 0, buyLink: b.buyLink || '' }))
+                bundles: d.bundles.map(b => {
+                    const availability = b.availability || 'national';
+                    return {
+                        storeName: b.storeName || '', rolls: parseInt(b.rolls) || 1, exposures: parseInt(b.exposures) || 36, filmCost: parseFloat(b.filmCost) || 0, buyLink: b.buyLink || '',
+                        availability,
+                        state: availability !== 'national' ? (b.state || '') : '',
+                        city: availability === 'city' ? (b.city || '') : ''
+                    };
+                })
             };
             writeJSON('filmProfiles', saved);
             state.loadedFilmKey = newKey;
@@ -1032,11 +1061,11 @@ const App = {
             writeJSON('labProfiles', saved);
             if (state.draftKey && state.homeLab === state.draftKey) state.homeLab = d.name.trim();
         }
-        state.draft = null; state.draftKind = null; state.draftKey = null;
+        state.draft = null; state.draftKind = null; state.draftKey = null; state.subEditIndex = null;
         flash('Saved');
         render();
     },
-    cancelDraft() { state.draft = null; state.draftKind = null; state.draftKey = null; render(); },
+    cancelDraft() { state.draft = null; state.draftKind = null; state.draftKey = null; state.subEditIndex = null; render(); },
 
     // Opens GitHub's "Add a film stock"/"Add a lab" issue form (see
     // .github/ISSUE_TEMPLATE/) in a new tab, prefilled from the current
@@ -1747,22 +1776,35 @@ function mField(label, inputHtml) {
 }
 const M_FIELD_INPUT = "width:100%;box-sizing:border-box;height:48px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 12px;color:#eae7e1;font-size:16px";
 
+// Small pencil glyph used on every list row that opens a full-screen sub-editor.
+const EDIT_ICON = `<svg style="width:14px;height:14px;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 4.5l3 3M4 20l4-1 10-10-3-3L5 16l-1 4z"></path></svg>`;
+
+function bundleLocalityLabel(b) {
+    if (b.availability === 'city') return b.city ? `${b.city}-only` : 'City-only';
+    if (b.availability === 'state') return b.state ? `${b.state}-only` : 'State-only';
+    return 'National';
+}
+
+// Compact tap-to-edit row shared by the film "Where to buy" list and the lab
+// "Service tiers" list — full field editing lives in the full-screen
+// sub-editor (renderBundleEditModal / renderTierEditModal), not here.
+function editRow(title, meta, onclick) {
+    return `<button type="button" onclick="${onclick}" style="width:100%;text-align:left;display:flex;align-items:center;gap:10px;padding:12px;background:#131315;border:1px solid #26262a;border-radius:10px;color:inherit;cursor:pointer">
+<div style="flex:1;min-width:0">
+<div style="font-size:14px;color:#c9c5bd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${title}</div>
+<div style="${MONO};font-size:12px;color:#7a7770;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${meta}</div>
+</div>
+${EDIT_ICON}
+</button>`;
+}
+
 function renderMobileEditFilm(s) {
     const d = s.draft;
-    const bundleLabel = (text) => `<div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#5f5c57;margin-bottom:4px">${text}</div>`;
-    const bundles = d.bundles.map((b, i) => `
-<div style="border:1px solid #26262a;border-radius:10px;background:#131315;padding:14px;display:flex;flex-direction:column;gap:10px">
-<div style="display:flex;align-items:flex-end;gap:10px">
-<div style="flex:1">${bundleLabel('Store')}<input value="${escapeHtml(b.storeName)}" oninput="App.setBundleField(${i},'storeName',this.value)" data-fkey="m-bundle-${i}-storeName" placeholder="Store" style="${M_FIELD_INPUT}"></div>
-<button type="button" onclick="App.removeBundle(${i})" title="Remove" style="flex-shrink:0;width:44px;height:48px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#8b8781;font-size:16px;cursor:pointer;padding:0">×</button>
-</div>
-<div style="display:flex;gap:10px">
-<div style="flex:1;min-width:0">${bundleLabel('Rolls')}<input value="${b.rolls}" oninput="App.setBundleField(${i},'rolls',this.value)" data-fkey="m-bundle-${i}-rolls" inputmode="numeric" placeholder="Rolls" style="width:100%;${M_FIELD_INPUT};${MONO}"></div>
-<div style="flex:1;min-width:0">${bundleLabel('Exposures')}<input value="${b.exposures}" oninput="App.setBundleField(${i},'exposures',this.value)" data-fkey="m-bundle-${i}-exposures" inputmode="numeric" placeholder="Exp" style="width:100%;${M_FIELD_INPUT};${MONO}"></div>
-<div style="flex:1;min-width:0">${bundleLabel('Price')}<input value="${b.filmCost}" oninput="App.setBundleField(${i},'filmCost',this.value)" data-fkey="m-bundle-${i}-filmCost" inputmode="decimal" placeholder="Price" style="width:100%;${M_FIELD_INPUT};${MONO}"></div>
-</div>
-${bundleLabel('Buy link')}<input value="${escapeHtml(b.buyLink)}" oninput="App.setBundleField(${i},'buyLink',this.value)" data-fkey="m-bundle-${i}-buyLink" inputmode="url" placeholder="https://… buy link" style="${M_FIELD_INPUT}">
-</div>`).join('');
+    const bundles = d.bundles.map((b, i) => editRow(
+        escapeHtml(b.storeName || 'Unnamed store'),
+        `${b.rolls}×${b.exposures} · ${CUR()}${(parseFloat(b.filmCost) || 0).toFixed(2)} · ${escapeHtml(bundleLocalityLabel(b))}`,
+        `App.editBundle(${i})`
+    )).join('');
     return `<div style="position:fixed;inset:0;z-index:50;background:#0b0b0c;display:flex;flex-direction:column">
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border-bottom:1px solid #26262a;background:#0e0e10">
 <span style="${NARROW};font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">Edit film stock</span>
@@ -1779,9 +1821,11 @@ ${mField('Name', `<input value="${escapeHtml(d.name)}" oninput="App.setDraftFiel
 <div style="flex:1">${mField('Process', `<select onchange="App.setDraftField('process',this.value)" style="${M_FIELD_INPUT}">${PROCESS_OPTIONS.map(o => `<option value="${o.value}" ${d.process === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>`)}</div>
 </div>
 ${mField('Type', `<select onchange="App.setDraftField('colorType',this.value)" style="${M_FIELD_INPUT}">${FILM_TYPE_OPTIONS.map(o => `<option value="${o.value}" ${(d.colorType || filmColorType(d)) === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>`)}
-<div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-top:6px">Where to buy</div>
-<button type="button" onclick="App.addBundle()" style="height:48px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">+ Add price</button>
-${bundles}
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px">
+<div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781">Where to buy</div>
+<button type="button" onclick="App.addBundle()" style="align-self:flex-start;height:36px;background:#141416;border:1px solid #2c2c30;border-radius:8px;padding:0 14px;color:#8b8781;font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;white-space:nowrap">+ Add price</button>
+</div>
+${bundles || `<div style="${MONO};font-size:12px;color:#5f5c57;padding:4px 2px">No purchase links yet.</div>`}
 <a href="javascript:void(0)" onclick="App.suggestToPresets()" style="align-self:flex-start;margin-top:4px;font-size:11px;color:#8b8781;cursor:pointer">Suggest this for the shared presets ↗</a>
 </div>
 <div style="display:flex;gap:10px;padding:12px;border-top:1px solid #26262a;background:#0e0e10">
@@ -1791,14 +1835,90 @@ ${bundles}
 </div>`;
 }
 
+// Full-screen sub-editor for one purchase link, opened from the "Where to
+// buy" list row in renderMobileEditFilm (App.editBundle) rather than editing
+// inline — keeps the film form itself scannable when there are several
+// prices, and gives the national/state/city locality fields room to breathe.
+function renderBundleEditModal(s) {
+    const i = s.subEditIndex;
+    const b = s.draft.bundles[i];
+    const bundleLabel = (text) => `<div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#5f5c57;margin-bottom:4px">${text}</div>`;
+    return `<div style="position:fixed;inset:0;z-index:55;background:#0b0b0c;display:flex;flex-direction:column">
+<div style="display:flex;align-items:center;gap:10px;padding:12px;border-bottom:1px solid #26262a;background:#0e0e10">
+<button type="button" onclick="App.closeBundleEditor()" title="Back" style="flex-shrink:0;width:44px;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#8b8781;font-size:18px;cursor:pointer;padding:0">‹</button>
+<span style="${NARROW};flex:1;font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">Purchase link</span>
+<button type="button" onclick="App.removeBundle(${i})" title="Delete" style="flex-shrink:0;width:44px;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#c0554a;font-size:16px;cursor:pointer;padding:0">×</button>
+</div>
+<div style="flex:1;overflow:auto;padding:14px 12px;display:flex;flex-direction:column;gap:10px">
+${bundleLabel('Store')}<input value="${escapeHtml(b.storeName)}" oninput="App.setBundleField(${i},'storeName',this.value)" data-fkey="m-bundle-${i}-storeName" placeholder="Store" style="${M_FIELD_INPUT}">
+<div style="display:flex;gap:10px">
+<div style="flex:1;min-width:0">${bundleLabel('Rolls')}<input value="${b.rolls}" oninput="App.setBundleField(${i},'rolls',this.value)" data-fkey="m-bundle-${i}-rolls" inputmode="numeric" placeholder="Rolls" style="width:100%;${M_FIELD_INPUT};${MONO}"></div>
+<div style="flex:1;min-width:0">${bundleLabel('Exposures')}<input value="${b.exposures}" oninput="App.setBundleField(${i},'exposures',this.value)" data-fkey="m-bundle-${i}-exposures" inputmode="numeric" placeholder="Exp" style="width:100%;${M_FIELD_INPUT};${MONO}"></div>
+<div style="flex:1;min-width:0">${bundleLabel('Price')}<input value="${b.filmCost}" oninput="App.setBundleField(${i},'filmCost',this.value)" data-fkey="m-bundle-${i}-filmCost" inputmode="decimal" placeholder="Price" style="width:100%;${M_FIELD_INPUT};${MONO}"></div>
+</div>
+${bundleLabel('Buy link')}<input value="${escapeHtml(b.buyLink)}" oninput="App.setBundleField(${i},'buyLink',this.value)" data-fkey="m-bundle-${i}-buyLink" inputmode="url" placeholder="https://… buy link" style="${M_FIELD_INPUT}">
+${bundleLabel('Availability')}<select onchange="App.setBundleField(${i},'availability',this.value)" title="Whether this price is achievable anywhere in the country without paying postage (National), or only near the store's own state/city." style="${M_FIELD_INPUT}">
+<option value="national" ${(b.availability || 'national') === 'national' ? 'selected' : ''}>National — no postage anywhere</option>
+<option value="state" ${b.availability === 'state' ? 'selected' : ''}>State-only</option>
+<option value="city" ${b.availability === 'city' ? 'selected' : ''}>City-only</option>
+</select>
+${(b.availability === 'state' || b.availability === 'city') ? `<div style="display:flex;gap:10px">
+<div style="flex:1;min-width:0">${bundleLabel('State')}<input value="${escapeHtml(b.state || '')}" oninput="App.setBundleField(${i},'state',this.value)" data-fkey="m-bundle-${i}-state" placeholder="Victoria" style="width:100%;${M_FIELD_INPUT}"></div>
+${b.availability === 'city' ? `<div style="flex:1;min-width:0">${bundleLabel('City')}<input value="${escapeHtml(b.city || '')}" oninput="App.setBundleField(${i},'city',this.value)" data-fkey="m-bundle-${i}-city" placeholder="Melbourne" style="width:100%;${M_FIELD_INPUT}"></div>` : ''}
+</div>` : ''}
+</div>
+<div style="display:flex;gap:10px;padding:12px;border-top:1px solid #26262a;background:#0e0e10">
+<button type="button" onclick="App.closeBundleEditor()" style="flex:1;height:50px;background:#1c1512;border:1px solid #5a3a1c;border-radius:8px;color:var(--acc);font-size:13px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Done</button>
+</div>
+</div>`;
+}
+
 function renderMobileEditLab(s) {
     const d = s.draft;
-    const tiers = d.services.map((t, i) => `
-<div style="border:1px solid #26262a;border-radius:10px;background:#131315;padding:14px">
-<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px">
-<span style="font-size:15px;color:#c9c5bd">${escapeHtml(tierDescription(t))}</span>
-<button type="button" onclick="App.removeTier(${i})" style="width:40px;height:40px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#8b8781;font-size:16px;cursor:pointer;padding:0">×</button>
+    const tiers = d.services.map((t, i) => editRow(
+        escapeHtml(tierDescription(t)),
+        `${CUR()}${(parseFloat(t.devCost) || 0).toFixed(2)}/roll${t.pushPullCost ? ` · ${CUR()}${(parseFloat(t.pushPullCost) || 0).toFixed(2)} push/pull` : ''}`,
+        `App.editTier(${i})`
+    )).join('');
+    return `<div style="position:fixed;inset:0;z-index:50;background:#0b0b0c;display:flex;flex-direction:column">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border-bottom:1px solid #26262a;background:#0e0e10">
+<span style="${NARROW};font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">Edit lab</span>
+<button type="button" onclick="App.cancelDraft()" style="width:44px;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#8b8781;font-size:18px;cursor:pointer;padding:0">×</button>
 </div>
+<div style="flex:1;overflow:auto;padding:14px 12px;display:flex;flex-direction:column;gap:10px">
+${mField('Name', `<input value="${escapeHtml(d.name)}" oninput="App.setDraftField('name',this.value)" data-fkey="m-draft-name" style="${M_FIELD_INPUT}">`)}
+${mField('Address', `<input value="${escapeHtml(d.address || '')}" oninput="App.setDraftField('address',this.value)" data-fkey="m-draft-address" placeholder="Street, suburb, state" style="${M_FIELD_INPUT}">`)}
+${mField('Website', `<input value="${escapeHtml(d.website || '')}" oninput="App.setDraftField('website',this.value)" data-fkey="m-draft-website" placeholder="https://…" style="${M_FIELD_INPUT}">`)}
+${mField('Phone', `<input value="${escapeHtml(d.phone || '')}" oninput="App.setDraftField('phone',this.value)" data-fkey="m-draft-phone" style="${M_FIELD_INPUT}">`)}
+${mField('Email', `<input value="${escapeHtml(d.email || '')}" oninput="App.setDraftField('email',this.value)" data-fkey="m-draft-email" style="${M_FIELD_INPUT}">`)}
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px">
+<div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781">Service tiers</div>
+<button type="button" onclick="App.addTier()" style="align-self:flex-start;height:36px;background:#141416;border:1px solid #2c2c30;border-radius:8px;padding:0 14px;color:#8b8781;font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;white-space:nowrap">+ Add tier</button>
+</div>
+${tiers || `<div style="${MONO};font-size:12px;color:#5f5c57;padding:4px 2px">No service tiers yet.</div>`}
+<a href="javascript:void(0)" onclick="App.suggestToPresets()" style="align-self:flex-start;margin-top:4px;font-size:11px;color:#8b8781;cursor:pointer">Suggest this for the shared presets ↗</a>
+</div>
+<div style="display:flex;gap:10px;padding:12px;border-top:1px solid #26262a;background:#0e0e10">
+<button type="button" onclick="App.saveDraft()" style="flex:1;height:50px;background:#1c1512;border:1px solid #5a3a1c;border-radius:8px;color:var(--acc);font-size:13px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Save lab</button>
+<button type="button" onclick="App.cancelDraft()" style="width:110px;height:50px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;font-size:13px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Cancel</button>
+</div>
+</div>`;
+}
+
+// Full-screen sub-editor for one service tier, opened from the "Service
+// tiers" list row in renderMobileEditLab (App.editTier) — same rationale as
+// renderBundleEditModal above: keeps the lab form scannable when a lab has
+// several price tiers.
+function renderTierEditModal(s) {
+    const i = s.subEditIndex;
+    const t = s.draft.services[i];
+    return `<div style="position:fixed;inset:0;z-index:55;background:#0b0b0c;display:flex;flex-direction:column">
+<div style="display:flex;align-items:center;gap:10px;padding:12px;border-bottom:1px solid #26262a;background:#0e0e10">
+<button type="button" onclick="App.closeTierEditor()" title="Back" style="flex-shrink:0;width:44px;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#8b8781;font-size:18px;cursor:pointer;padding:0">‹</button>
+<span style="${NARROW};flex:1;font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">Service tier</span>
+<button type="button" onclick="App.removeTier(${i})" title="Delete" style="flex-shrink:0;width:44px;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#c0554a;font-size:16px;cursor:pointer;padding:0">×</button>
+</div>
+<div style="flex:1;overflow:auto;padding:14px 12px">
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0">
 <label style="font-size:14px;color:#a9a59e">Cost / roll</label>
 <div style="display:flex;align-items:center;width:120px;height:44px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px"><span style="${MONO};font-size:15px;color:#6d6a64">${CUR()}</span><input value="${t.devCost}" oninput="App.setTierField(${i},'devCost',this.value)" data-fkey="m-tier-${i}-devCost" inputmode="decimal" style="width:100%;min-width:0;text-align:right;background:transparent;border:0;color:#eae7e1;font-size:16px;${MONO}"></div>
@@ -1827,26 +1947,9 @@ ${pill('No push/pull', t.noPushPull, `App.toggleTierFlag(${i},'noPushPull')`)}
 <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-top:10px">
 ${PROCESS_OPTIONS.map(o => pill(o.label, t.processes.includes(o.value), `App.toggleTierProcess(${i},'${o.value}')`)).join('')}
 </div>
-</div>`).join('');
-    return `<div style="position:fixed;inset:0;z-index:50;background:#0b0b0c;display:flex;flex-direction:column">
-<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border-bottom:1px solid #26262a;background:#0e0e10">
-<span style="${NARROW};font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">Edit lab</span>
-<button type="button" onclick="App.cancelDraft()" style="width:44px;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#8b8781;font-size:18px;cursor:pointer;padding:0">×</button>
-</div>
-<div style="flex:1;overflow:auto;padding:14px 12px;display:flex;flex-direction:column;gap:10px">
-${mField('Name', `<input value="${escapeHtml(d.name)}" oninput="App.setDraftField('name',this.value)" data-fkey="m-draft-name" style="${M_FIELD_INPUT}">`)}
-${mField('Address', `<input value="${escapeHtml(d.address || '')}" oninput="App.setDraftField('address',this.value)" data-fkey="m-draft-address" placeholder="Street, suburb, state" style="${M_FIELD_INPUT}">`)}
-${mField('Website', `<input value="${escapeHtml(d.website || '')}" oninput="App.setDraftField('website',this.value)" data-fkey="m-draft-website" placeholder="https://…" style="${M_FIELD_INPUT}">`)}
-${mField('Phone', `<input value="${escapeHtml(d.phone || '')}" oninput="App.setDraftField('phone',this.value)" data-fkey="m-draft-phone" style="${M_FIELD_INPUT}">`)}
-${mField('Email', `<input value="${escapeHtml(d.email || '')}" oninput="App.setDraftField('email',this.value)" data-fkey="m-draft-email" style="${M_FIELD_INPUT}">`)}
-<div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-top:6px">Service tiers</div>
-<button type="button" onclick="App.addTier()" style="height:48px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">+ Add tier</button>
-${tiers}
-<a href="javascript:void(0)" onclick="App.suggestToPresets()" style="align-self:flex-start;margin-top:4px;font-size:11px;color:#8b8781;cursor:pointer">Suggest this for the shared presets ↗</a>
 </div>
 <div style="display:flex;gap:10px;padding:12px;border-top:1px solid #26262a;background:#0e0e10">
-<button type="button" onclick="App.saveDraft()" style="flex:1;height:50px;background:#1c1512;border:1px solid #5a3a1c;border-radius:8px;color:var(--acc);font-size:13px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Save lab</button>
-<button type="button" onclick="App.cancelDraft()" style="width:110px;height:50px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;font-size:13px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Cancel</button>
+<button type="button" onclick="App.closeTierEditor()" style="flex:1;height:50px;background:#1c1512;border:1px solid #5a3a1c;border-radius:8px;color:var(--acc);font-size:13px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Done</button>
 </div>
 </div>`;
 }
@@ -1857,6 +1960,9 @@ ${tiers}
 function renderMobile(s) {
     let body;
     if (s.draft !== null) {
+        if (s.subEditIndex !== null) {
+            return (s.draftKind === 'film' ? renderBundleEditModal(s) : renderTierEditModal(s)) + renderMobileToast(s);
+        }
         return (s.draftKind === 'film' ? renderMobileEditFilm(s) : renderMobileEditLab(s)) + renderMobileToast(s);
     }
     if (s.view === 'library') body = renderMobileLibrary(s);
