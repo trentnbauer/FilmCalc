@@ -9,8 +9,9 @@ name: Library Bulk Intake
 # no screenshot/source-link verification step here, just splitting already
 # DATA_SPEC-shaped entries across the right files. Same security posture as
 # film-lab-intake.yml: this runs for ANY issue author (nothing gates that the
-# form's textareas actually came from the app rather than someone typing
-# into them by hand), the issue body is untrusted input, the agent's tools
+# form's Library field actually came from the app's clipboard copy rather
+# than someone typing into it by hand), the issue body is untrusted input,
+# the agent's tools
 # are kept tight (no arbitrary Bash, no merging, no touching anything outside
 # films/labs/), and every result is a PR for a human to review, never an
 # auto-merge.
@@ -103,14 +104,17 @@ jobs:
             the app's own importer both read, so treat it as ground truth for what's required vs
             optional).
 
-            The issue form has three fields: "Country" (a single value covering every entry that doesn't
-            specify its own state/city), "Films" (a YAML list of film entries, each already shaped like
-            DATA_SPEC.md's per-film schema — name/boxSpeed/maxPushPull/process/format/hidden/bundles,
-            each bundle already carrying its own availability/state/city where relevant), and "Labs"
-            (a YAML list of lab entries — name/hidden/address/phone/email/website/services). Either list
-            may be empty. Parse them with care: they're user-typed-through-a-form data, not guaranteed to
-            be valid YAML or to match the schema — validate structurally as you go rather than assuming
-            they're already correct, and treat anything that doesn't parse or doesn't fit the schema as
+            The issue form has two fields: "Country" (a single value covering every entry that doesn't
+            specify its own state/city) and "Library" (one pasted block covering both films and labs,
+            each section introduced by its own "# films-yaml" / "# labs-yaml" line — either section can
+            be empty or missing entirely if the submitter's library only has one kind). Under
+            "# films-yaml" is a YAML list of film entries already shaped like DATA_SPEC.md's per-film
+            schema — name/boxSpeed/maxPushPull/process/format/hidden/bundles, each bundle already
+            carrying its own availability/state/city where relevant. Under "# labs-yaml" is a YAML list
+            of lab entries — name/hidden/address/phone/email/website/services. Parse the "Library" field
+            with care: it's pasted-by-hand data, not guaranteed to have both section headers present, be
+            in that order, or be valid YAML at all — validate structurally as you go rather than assuming
+            it's already correct, and treat anything that doesn't parse or doesn't fit the schema as
             "needs clarification" (see below) rather than guessing a fix.
 
             **Unlike film-lab-intake.yml, there is no screenshot or source link to verify prices

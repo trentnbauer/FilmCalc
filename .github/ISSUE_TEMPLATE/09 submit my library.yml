@@ -8,8 +8,8 @@ body:
       value: |
         This is the bulk counterpart of the **Add a film stock**/**Add a lab** forms — instead of one
         entry, it's your whole saved library at once. You normally get here by tapping **"Submit my
-        library for the shared presets"** in the app's Library tab, which fills in the boxes below for
-        you; you shouldn't need to type YAML by hand.
+        library for the shared presets"** in the app's Library tab, which copies everything to your
+        clipboard and opens this page — paste into the box below, don't type YAML by hand.
 
         Once submitted, an automated check reads this form and opens a pull request for a maintainer to
         review — nothing is added straight to the shared presets. The same "mainstream, reliably
@@ -29,24 +29,24 @@ body:
       required: true
 
   - type: textarea
-    id: films-yaml
+    id: library-yaml
     attributes:
-      label: Films
+      label: Library
       description: >-
-        Pre-filled by the app. Each entry already carries its own `availability`/`state`/`city` where
-        it applies — leave that as-is.
-      render: yaml
-    validations:
-      required: false
+        Paste what the app copied to your clipboard here — one block covering both films and labs,
+        each section under its own "# films-yaml" / "# labs-yaml" line. Either section can be empty
+        (or missing) if your library only has one kind.
+      placeholder: |
+        # films-yaml
+        - name: Kodak Portra 400
+          ...
 
-  - type: textarea
-    id: labs-yaml
-    attributes:
-      label: Labs
-      description: Pre-filled by the app.
+        # labs-yaml
+        - name: Example Photo Lab
+          ...
       render: yaml
     validations:
-      required: false
+      required: true
 
   - type: checkboxes
     id: confirm

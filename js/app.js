@@ -1215,49 +1215,45 @@ const App = {
         window.open(`${base}?${qs}`, '_blank', 'noopener');
     },
 
-    // Same trick as suggestToPresets() above, but for the whole saved
-    // library in one go instead of one draft: opens the "Submit my
+    // Bulk counterpart of suggestToPresets() above — for the whole saved
+    // library instead of one draft. Deliberately copy-paste rather than
+    // URL-prefilled: an earlier version tried to prefill the "Submit my
     // library" issue form (see .github/ISSUE_TEMPLATE/09 submit my
-    // library.yml) prefilled with every non-hidden film/lab serialized as
-    // DATA_SPEC.md-shaped YAML — library-intake.yml then splits those
-    // entries across the right films/*.yaml and labs/*.yaml files and
-    // opens a PR, the bulk counterpart of what film-lab-intake.yml already
-    // does per single-item issue.
+    // library.yml) via the query string, which has a length ceiling well
+    // below what a real library produces — the fallback for that (copy to
+    // clipboard, alert the user to paste it) was itself the whole
+    // mechanism in disguise, just conditionally skipped for small
+    // libraries. Always doing it removes an entire class of "worked in my
+    // small test, broke on a real library" bug, and it's one fewer thing
+    // for a contributor to get right vs "click three fields into place."
+    // library-intake.yml reads the single pasted block (marked with
+    // "# films-yaml"/"# labs-yaml" section headers) and splits it across
+    // the right films/*.yaml and labs/*.yaml files, same as
+    // film-lab-intake.yml already does per single-item issue.
     submitLibrary() {
         const films = Object.values(getAllFilms()).filter(f => !f.hidden && f.name && f.name.trim() && (f.bundles || []).some(b => (b.storeName || '').trim() || (b.buyLink || '').trim()));
         const labs = Object.values(getAllLabs()).filter(l => !l.hidden && l.name && l.name.trim());
         if (!films.length && !labs.length) { flash('Nothing worth submitting yet — add a store/buy link first'); return; }
         const filmsYaml = films.map(serializeFilmEntryYaml).join('\n');
         const labsYaml = labs.map(serializeLabEntryYaml).join('\n');
+        const combined = [filmsYaml && `# films-yaml\n${filmsYaml}`, labsYaml && `# labs-yaml\n${labsYaml}`].filter(Boolean).join('\n\n');
         const country = (guessLocationFromTimezone() || {}).country || '';
         const base = 'https://github.com/trentnbauer/FilmCalc/issues/new';
-        const params = { template: '09 submit my library.yml', country, 'films-yaml': filmsYaml, 'labs-yaml': labsYaml };
-        const qs = Object.entries(params).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
-        const url = `${base}?${qs}`;
-        // GitHub's issue-form prefill rides the query string, which has a
-        // practical length ceiling well below what a large library can
-        // produce — fall back to clipboard + a bare (still country-
-        // prefilled) form rather than silently truncating someone's data.
-        // A blocking alert() (not a toast) is deliberate here: a toast on
-        // the page behind the new tab that's about to steal focus is easy
-        // to miss entirely — a submitted issue with silently-empty Films/
-        // Labs boxes was exactly how this shipped broken the first time.
-        if (url.length > 6000) {
-            const combined = [filmsYaml && `# films-yaml\n${filmsYaml}`, labsYaml && `# labs-yaml\n${labsYaml}`].filter(Boolean).join('\n\n');
-            const shortQs = Object.entries({ template: '09 submit my library.yml', country }).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
-            const openBareForm = () => window.open(`${base}?${shortQs}`, '_blank', 'noopener');
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(combined).then(() => {
-                    alert('Your saved library is too big to fit in a prefilled link.\n\nThe YAML has been copied to your clipboard — paste it into the Films and Labs boxes on the page that opens next, BEFORE submitting.');
-                    openBareForm();
-                }).catch(() => {
-                    alert('Your saved library is too big to fit in a prefilled link, and the automatic clipboard copy failed.\n\nCancel this, then use Settings → Export to get your data another way.');
-                });
-            } else {
-                alert('Your saved library is too big to fit in a prefilled link, and this browser doesn\'t support copying it to the clipboard automatically.\n\nUse Settings → Export to get your data another way.');
-            }
+        const qs = Object.entries({ template: '09 submit my library.yml', country }).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
+        const openForm = () => window.open(`${base}?${qs}`, '_blank', 'noopener');
+        // A blocking alert() (not a toast) is deliberate: a toast on the
+        // page behind the new tab that's about to steal focus is easy to
+        // miss entirely — a submitted issue with a silently-empty library
+        // box is exactly how this shipped broken the first time.
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(combined).then(() => {
+                alert('Your saved library has been copied to your clipboard.\n\nPaste it into the box on the page that opens next, BEFORE submitting.');
+                openForm();
+            }).catch(() => {
+                alert('Copying to your clipboard failed.\n\nUse Settings → Export to get your data another way.');
+            });
         } else {
-            window.open(url, '_blank', 'noopener');
+            alert('This browser doesn\'t support copying to the clipboard automatically.\n\nUse Settings → Export to get your data another way.');
         }
     },
 
@@ -1874,7 +1870,7 @@ function renderMobileLibrary(s) {
 <button type="button" onclick="App.setField('libTab','films')" style="flex:1;height:44px;background:${filmsTone.bg};border:1px solid ${filmsTone.border};border-radius:8px;color:${filmsTone.color};font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Films (${filmCount})</button>
 <button type="button" onclick="App.setField('libTab','labs')" style="flex:1;height:44px;background:${labsTone.bg};border:1px solid ${labsTone.border};border-radius:8px;color:${labsTone.color};font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Labs (${labCount})</button>
 </div>
-${filmCount || labCount ? `<button type="button" onclick="App.submitLibrary()" title="Opens a prefilled GitHub issue with your saved films/labs, for a maintainer to review and add as shared presets" style="width:100%;box-sizing:border-box;height:40px;background:transparent;border:1px dashed #33333a;border-radius:8px;color:#8b8781;font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;margin-bottom:14px">Submit my library for the shared presets ↗</button>` : ''}
+${filmCount || labCount ? `<button type="button" onclick="App.submitLibrary()" title="Copies your saved films/labs to the clipboard and opens a GitHub issue to paste them into, for a maintainer to review and add as shared presets" style="width:100%;box-sizing:border-box;height:40px;background:transparent;border:1px dashed #33333a;border-radius:8px;color:#8b8781;font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;margin-bottom:14px">Submit my library for the shared presets ↗</button>` : ''}
 <input value="${escapeHtml(s.libSearch)}" oninput="App.setField('libSearch',this.value)" data-fkey="m-libSearch" placeholder="Search by name…" style="width:100%;box-sizing:border-box;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 12px;color:#eae7e1;font-size:15px;margin-bottom:20px">
 ${tab === 'films' ? filmSection() : labSection()}
 </div>`;
