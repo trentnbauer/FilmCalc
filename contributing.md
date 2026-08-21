@@ -171,6 +171,9 @@ Completely fine — and genuinely useful.
 **[Open an issue](https://github.com/trentnbauer/FilmCalc/issues/new/choose)**, pick *"Add a film
 stock"* or *"Add a lab"*, and paste the shop link with the details.
 
+Already got several saved in the app? The Library tab's **"Submit my library for the shared
+presets"** button sends everything you've saved in one go, instead of one issue per entry.
+
 </details>
 
 ---
