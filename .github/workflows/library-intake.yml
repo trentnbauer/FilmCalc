@@ -66,8 +66,112 @@ jobs:
             --description "Claude already handled this issue (PR opened, or skipped as too ambiguous). Remove to retry." \
             --force
 
+      # Cheap, non-LLM gate: this workflow runs for ANY issue matching the
+      # label+title check — nothing verifies a submission actually came from
+      # the app rather than a spam/garbage/empty issue typed by hand — so an
+      # obviously-unusable submission would otherwise still burn a full
+      # Claude Code invocation before anything notices.
+      # Structural validity only — NOT the "mainstream, reliably available"
+      # judgment call or duplicate-checking, both of which stay Claude's job
+      # below; this step only catches what plain YAML parsing already
+      # proves is hopeless.
+      - name: Cheap structural pre-check
+        id: precheck
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import os, re, subprocess, yaml
+
+          issue_number = "${{ github.event.issue.number }}"
+          body = subprocess.run(
+              ["gh", "issue", "view", issue_number, "--json", "body", "-q", ".body"],
+              capture_output=True, text=True, check=True
+          ).stdout
+
+          def section(heading, text):
+              m = re.search(rf"### {heading}\s*\n+```(?:yaml)?\n(.*?)\n```", text, re.S)
+              if m:
+                  return m.group(1)
+              m = re.search(rf"### {heading}\s*\n+([^\n#]+)", text)
+              return m.group(1).strip() if m else ""
+
+          country = section("Country", body)
+          library_yaml = section("Library", body)
+
+          reasons = []
+          if not country.strip():
+              reasons.append("the Country field is empty")
+
+          if not library_yaml.strip():
+              reasons.append("the Library field is empty — no film or lab entries were pasted in")
+          elif "# films-yaml" not in library_yaml and "# labs-yaml" not in library_yaml:
+              reasons.append('the Library field has no "# films-yaml" or "# labs-yaml" section header, so nothing in it can be placed')
+          else:
+              def extract(marker, text):
+                  idx = text.find(marker)
+                  if idx == -1:
+                      return None
+                  rest = text[idx + len(marker):]
+                  for other in ("# films-yaml", "# labs-yaml"):
+                      if other != marker:
+                          oidx = rest.find(other)
+                          if oidx != -1:
+                              rest = rest[:oidx]
+                  return rest.strip()
+
+              total_entries = 0
+              for label in ("films", "labs"):
+                  text = extract(f"# {label}-yaml", library_yaml)
+                  if not text:
+                      continue
+                  try:
+                      parsed = yaml.safe_load(text)
+                  except yaml.YAMLError as e:
+                      reasons.append(f"the {label} section isn't valid YAML ({e.__class__.__name__}) — check for a stray character introduced while copying")
+                      continue
+                  if parsed is None:
+                      continue
+                  if not isinstance(parsed, list):
+                      reasons.append(f"the {label} section should be a YAML list of entries, not a {type(parsed).__name__}")
+                  else:
+                      total_entries += len(parsed)
+
+              if not reasons and total_entries == 0:
+                  reasons.append("both the films and labs sections are empty — nothing to review")
+
+          usable = "false" if reasons else "true"
+          print(f"usable={usable}")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"usable={usable}\n")
+              if reasons:
+                  msg_lines = ["Thanks for the submission, but there's nothing usable here yet:", ""]
+                  msg_lines += [f"- {r}" for r in reasons]
+                  msg_lines += [
+                      "",
+                      'If this was a mistake, resubmit via the "Submit my library for the shared presets" '
+                      "button in the app's Library tab, which copies your library to the clipboard for you "
+                      "to paste in — no hand-typed YAML needed."
+                  ]
+                  msg = "\n".join(msg_lines)
+                  delim = "PRECHECK_MSG_EOF"
+                  f.write(f"reject_message<<{delim}\n{msg}\n{delim}\n")
+          PY
+
+      - name: Post rejection comment
+        if: steps.precheck.outputs.usable == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue comment ${{ github.event.issue.number }} \
+            --body "${{ steps.precheck.outputs.reject_message }}
+
+          cc @${{ github.event.issue.user.login }}"
+          gh issue edit ${{ github.event.issue.number }} --add-label "claude-attempted"
+
       - name: Run Claude Code
         id: claude
+        if: steps.precheck.outputs.usable == 'true'
         uses: anthropics/claude-code-action@v1
         env:
           GH_TOKEN: ${{ github.token }}
