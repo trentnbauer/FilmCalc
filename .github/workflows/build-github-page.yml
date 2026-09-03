@@ -74,7 +74,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python3 .github/scripts/generate-changelog.py --repo "${{ github.repository }}"
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
       - name: Stage site files
         # The actual static app, plus films/ and labs/ — the Settings →
         # Import modal fetches films/index.json and labs/index.json (and
