@@ -32,12 +32,12 @@ jobs:
           gh label create "price-audit" \
             --repo ${{ github.repository }} \
             --color "0e8a16" \
-            --description "Monthly film/lab price audit checklist for one data file. Worked through by daily-claude-run.yml Tier 5." \
+            --description "Monthly film/lab price audit checklist for one data file (Tier 5 of daily-claude-run.yml)." \
             --force
           gh label create "price-audit-flag" \
             --repo ${{ github.repository }} \
             --color "d93f0b" \
-            --description "A price-audit entry Claude couldn't confidently verify. Reply with the correct value and mention @claude to apply it." \
+            --description "A price-audit entry Claude couldn't verify. Reply with the correct value and mention @claude." \
             --force
 
       - name: Skip if last month's audit isn't finished yet
