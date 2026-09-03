@@ -1,26 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- AdSense site verification — Google requires this exact snippet in
-         every page's <head>. The build-github-page.yml workflow
-         sed-replaces %%ADSENSE_CLIENT_ID%% from a repo secret; a
-         self-hosted build never runs that step, so the token stays
-         literal here and this bails out before requesting anything from
-         Google — no ad script for self-hosted users. -->
-    <script>
-        (function () {
-            var client = "%%ADSENSE_CLIENT_ID%%";
-            if (!client || client.indexOf('%%') === 0) return;
-            var loader = document.createElement('script');
-            loader.async = true;
-            loader.crossOrigin = 'anonymous';
-            loader.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + encodeURIComponent(client);
-            document.head.appendChild(loader);
-        })();
-    </script>
+    <!-- AdSense site verification — see js/adsense-loader.js for what this
+         does and why it's an external file rather than inline. -->
+    <script src="js/adsense-loader.js"></script>
+    <!-- Content-Security-Policy: script-src/frame-src/connect-src carry the
+         AdSense/Google ad-tech domains (script-src also needs them because
+         adsbygoogle.js itself, running in this document, issues the ad
+         request before any iframe exists) — those wildcards are Google's
+         own documented CSP requirement for AdSense, not a general
+         allowance. Everything else is locked to 'self' plus the two CDNs
+         this page actually loads from (cdnjs for js-yaml, Google Fonts).
+         script-src also needs 'unsafe-inline': js/app.js renders the whole
+         UI as onclick/oninput/onchange attribute strings (no framework, no
+         addEventListener wiring — see app.js's own header comment), so
+         blocking inline handlers would break every control in the app.
+         That means script-src can't fully stop injected script from
+         *running* the way default-src normally would; what it still buys
+         is real: connect-src/frame-src/img-src keep injected script from
+         *exfiltrating* to an arbitrary attacker origin (only these ad
+         domains and 'self' are reachable), and object-src/base-uri/
+         form-action close the plugin/<base>-hijack/form-exfil escape
+         hatches. The primary defense against the DOM XSS this app is
+         actually exposed to (imported YAML, see security.md) stays
+         output encoding — escapeHtml()/sanitizeUrl() in app.js — this
+         header is defense in depth on top of that, not a replacement.
+         GitHub Pages (the only hosting this app has, since #315 dropped
+         Docker self-hosting) serves no custom headers, so a <meta> tag is
+         the only way to deliver this at all — frame-ancestors/report-uri/
+         X-Frame-Options aren't available in either form here. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://www.googletagservices.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.googlesyndication.com https://*.google.com https://*.doubleclick.net; frame-src https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com; object-src 'none'; base-uri 'self'; form-action 'self'">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="icon" type="image/svg+xml" href="/icon.svg">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#0b0b0c">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">

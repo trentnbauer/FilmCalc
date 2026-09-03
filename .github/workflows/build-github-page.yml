@@ -31,26 +31,31 @@ jobs:
         uses: actions/checkout@v4
       - name: Stamp build version into index.html
         run: sed -i "s/%%FILMCALC_VERSION%%/$(git rev-parse --short HEAD)/" index.html
-      - name: Stamp AdSense IDs into index.html and ads.txt
-        # Pages-only monetization (see index.html's adSlot comment). ADSENSE_CLIENT_ID/
-        # ADSENSE_SLOT_ID are repo secrets (Settings → Secrets and variables → Actions)
-        # from the AdSense dashboard — not sensitive, just kept out of the committed
-        # source so a self-hosted build (which never runs this step) can't pick
-        # them up. Unset secrets substitute to an empty string, which the
-        # index.html guard script also treats as "no ad" — safe default until both
-        # secrets are added. -g is a no-op today (each token appears once per line)
-        # but keeps this correct if the token ever shows up twice on one line.
+      - name: Stamp AdSense IDs into js/adsense-loader.js and ads.txt
+        # Pages-only monetization. ADSENSE_CLIENT_ID/ADSENSE_SLOT_ID are repo
+        # secrets (Settings → Secrets and variables → Actions) from the
+        # AdSense dashboard — not sensitive, just kept out of the committed
+        # source so a self-hosted build (which never runs this step) can't
+        # pick them up. Unset secrets substitute to an empty string, which
+        # js/adsense-loader.js's guard also treats as "no ad" — safe default
+        # until both secrets are added. -g is a no-op today (each token
+        # appears once per line) but keeps this correct if the token ever
+        # shows up twice on one line.
+        # The client id lives in js/adsense-loader.js rather than inline in
+        # index.html so the page's CSP can use a plain script-src allowlist
+        # instead of an inline-script hash that would differ before/after
+        # this substitution (see index.html's CSP <meta> comment).
         # ads.txt is Pages-only monetization, same as the AdSense script itself —
         # self-hosted deployments have no reason to serve it at all, so it doesn't
-        # need the same "stays literal" guard index.html relies on. ads.txt
+        # need the same "stays literal" guard the loader script relies on. ads.txt
         # then has its ca- prefix stripped: ADSENSE_CLIENT_ID is the ca-pub-...
         # form the adsbygoogle script/data-ad-client need, but Google's ads.txt spec
         # wants the bare pub-... form (see Google's own ads.txt setup instructions) -
         # using the same secret verbatim there produces a line the AdSense crawler
         # won't match, which silently breaks site verification.
         run: |
-          sed -i "s/%%ADSENSE_CLIENT_ID%%/${{ secrets.ADSENSE_CLIENT_ID }}/g" index.html
-          sed -i "s/%%ADSENSE_SLOT_ID%%/${{ secrets.ADSENSE_SLOT_ID }}/g" index.html
+          sed -i "s/%%ADSENSE_CLIENT_ID%%/${{ secrets.ADSENSE_CLIENT_ID }}/g" js/adsense-loader.js
+          sed -i "s/%%ADSENSE_SLOT_ID%%/${{ secrets.ADSENSE_SLOT_ID }}/g" js/adsense-loader.js
           sed -i "s/%%ADSENSE_CLIENT_ID%%/${{ secrets.ADSENSE_CLIENT_ID }}/g" ads.txt
           sed -i 's/, ca-pub-/, pub-/' ads.txt
       - name: Build Tailwind CSS
@@ -90,9 +95,11 @@ jobs:
         # Docs and packaging files (README, CONTRIBUTING) still don't
         # belong here. schema/ (film-lab-schema.json) is fetched at runtime
         # by js/data-validate.js, same reason films/labs need to be live.
+        # manifest.json (PWA installability) is linked from index.html's
+        # <head>, so it needs to be live at the same path too.
         run: |
           mkdir -p _site
-          cp index.html favicon.ico icon.ico icon.svg apple-touch-icon.png options.yaml changelog.json ads.txt _site/
+          cp index.html favicon.ico icon.ico icon.svg apple-touch-icon.png manifest.json options.yaml changelog.json ads.txt _site/
           cp -r films labs schema js css _site/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
