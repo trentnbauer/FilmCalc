@@ -1,0 +1,14 @@
+{
+    "name": "FilmCalc — Film Cost Calculator",
+    "short_name": "FilmCalc",
+    "description": "Work out the true cost per photo of shooting film, and which lab is actually cheapest for a given roll.",
+    "start_url": "/",
+    "scope": "/",
+    "display": "standalone",
+    "background_color": "#0b0b0c",
+    "theme_color": "#0b0b0c",
+    "icons": [
+        { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+        { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+    ]
+}

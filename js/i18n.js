@@ -5709,9 +5709,16 @@ const STRINGS = {
 let currentLocale = localStorage.getItem('locale') && STRINGS[localStorage.getItem('locale')]
     ? localStorage.getItem('locale')
     : 'en';
+document.documentElement.lang = currentLocale;
 
+// Keeps <html lang> in sync with the active locale so screen readers use
+// the right pronunciation/voice instead of always reading content as
+// English (the static lang="en" in index.html only covers the default).
 function setLocale(locale) {
-    if (STRINGS[locale]) currentLocale = locale;
+    if (STRINGS[locale]) {
+        currentLocale = locale;
+        document.documentElement.lang = locale;
+    }
 }
 
 // t('key', { n: 2 }) substitutes {n} placeholders in the dictionary string.
