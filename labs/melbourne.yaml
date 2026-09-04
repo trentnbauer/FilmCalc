@@ -156,7 +156,7 @@ labs:
     email: contact@walkens.com.au
     website: https://walkens.com.au
     services:
-      - devCost: 16
+      - devCost: 18
         pushPullCost: 0
         pushPullType: flat
         turnaroundTime: same_week
@@ -166,7 +166,7 @@ labs:
         mailBackCost: 11
         processes:
           - C41
-      - devCost: 22
+      - devCost: 24
         pushPullCost: 0
         pushPullType: flat
         turnaroundTime: same_week
@@ -176,7 +176,7 @@ labs:
         mailBackCost: 11
         processes:
           - C41
-      - devCost: 23
+      - devCost: 25
         pushPullCost: 0
         pushPullType: flat
         turnaroundTime: same_week
@@ -186,7 +186,7 @@ labs:
         mailBackCost: 11
         processes:
           - C41
-      - devCost: 29
+      - devCost: 31
         pushPullCost: 0
         pushPullType: flat
         turnaroundTime: same_week
@@ -196,7 +196,7 @@ labs:
         mailBackCost: 11
         processes:
           - C41
-      - devCost: 26
+      - devCost: 28
         pushPullCost: 0
         pushPullType: flat
         turnaroundTime: next_day
@@ -206,7 +206,7 @@ labs:
         mailBackCost: 11
         processes:
           - C41
-      - devCost: 32
+      - devCost: 34
         pushPullCost: 0
         pushPullType: flat
         turnaroundTime: next_day
@@ -216,7 +216,7 @@ labs:
         mailBackCost: 11
         processes:
           - C41
-      - devCost: 33
+      - devCost: 35
         pushPullCost: 0
         pushPullType: flat
         turnaroundTime: next_day
@@ -226,7 +226,7 @@ labs:
         mailBackCost: 11
         processes:
           - C41
-      - devCost: 39
+      - devCost: 41
         pushPullCost: 0
         pushPullType: flat
         turnaroundTime: next_day
@@ -316,7 +316,7 @@ labs:
         mailBackCost: 11
         processes:
           - BW
-      - devCost: 23
+      - devCost: 26
         pushPullCost: 10
         pushPullType: flat
         turnaroundTime: same_week
@@ -326,7 +326,7 @@ labs:
         mailBackCost: 11
         processes:
           - E6
-      - devCost: 29
+      - devCost: 32
         pushPullCost: 10
         pushPullType: flat
         turnaroundTime: same_week
@@ -336,7 +336,7 @@ labs:
         mailBackCost: 11
         processes:
           - E6
-      - devCost: 30
+      - devCost: 33
         pushPullCost: 10
         pushPullType: flat
         turnaroundTime: same_week
@@ -346,7 +346,7 @@ labs:
         mailBackCost: 11
         processes:
           - E6
-      - devCost: 36
+      - devCost: 39
         pushPullCost: 10
         pushPullType: flat
         turnaroundTime: same_week
