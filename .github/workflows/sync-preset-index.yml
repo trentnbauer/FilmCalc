@@ -35,7 +35,7 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Regenerate films/index.json and labs/index.json from the YAML files
         run: |
