@@ -39,7 +39,7 @@ jobs:
             echo "relevant=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         if: github.event_name != 'pull_request' || steps.filter.outputs.relevant == 'true'
         with:
           node-version: 20
