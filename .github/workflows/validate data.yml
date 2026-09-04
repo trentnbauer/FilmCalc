@@ -49,6 +49,26 @@ jobs:
           def err(f, msg):
               errors.append(f"{f}: {msg}")
 
+          def is_valid_url(u):
+              return u.startswith("http://") or u.startswith("https://")
+
+          # DATA_SPEC.md rule #1 promises "an automated check rejects any file
+          # still containing UNKNOWN" — this is that check. Recurses into every
+          # string value in the parsed document; the AI-assisted contribution
+          # flow (DATA_SPEC.md's whole reason for existing) writes this exact
+          # literal for a field it couldn't determine, so an exact match (not
+          # a substring) is deliberate — it shouldn't flag a store genuinely
+          # named something containing "unknown".
+          def find_unknown(v, path, found):
+              if isinstance(v, dict):
+                  for k, vv in v.items():
+                      find_unknown(vv, f"{path}.{k}", found)
+              elif isinstance(v, list):
+                  for i, vv in enumerate(v):
+                      find_unknown(vv, f"{path}[{i}]", found)
+              elif isinstance(v, str) and v.strip() == "UNKNOWN":
+                  found.append(path)
+
           # ---- films ----
           # Tracks every spelling seen for each (name, boxSpeed, format) once
           # normalised (trimmed + lowercased) — the app merges film entries
@@ -68,6 +88,10 @@ jobs:
               if not isinstance(doc, dict) or "films" not in doc:
                   err(path, "expected a top-level 'films:' list")
                   continue
+              unknown_hits = []
+              find_unknown(doc, "films", unknown_hits)
+              for hit in unknown_hits:
+                  err(path, f"{hit}: still has 'UNKNOWN' as a value — DATA_SPEC.md says to fill in every field before submitting")
               for key in FILM_SCHEMA["requiredTopLevelFields"]:
                   if not doc.get(key):
                       err(path, f"missing top-level '{key}' — films/index.json is generated from this")
@@ -90,6 +114,9 @@ jobs:
                       err(path, f"{where}: format '{fmt}' must be one of {sorted(VALID_FORMATS)}")
                   if not isinstance(film.get("boxSpeed"), int):
                       err(path, f"{where}: boxSpeed must be a plain number (no quotes)")
+                  if "maxPushPull" in film and not isinstance(film["maxPushPull"], (int, float)):
+                      err(path, f"{where}: maxPushPull must be a plain number (no quotes)")
+                  bundle_keys = defaultdict(int)
                   for j, b in enumerate(film.get("bundles") or []):
                       bw = f"{where}, bundle #{j+1}"
                       for key in FILM_SCHEMA["requiredBundleFields"]:
@@ -97,6 +124,8 @@ jobs:
                               err(path, f"{bw}: missing required field '{key}'")
                       if isinstance(b.get("filmCost"), str):
                           err(path, f"{bw}: filmCost must be a number, not text (write 24.95, not '$24.95')")
+                      elif isinstance(b.get("filmCost"), (int, float)) and b["filmCost"] < 0:
+                          err(path, f"{bw}: filmCost can't be negative")
                       if b.get("rolls") == 0 or b.get("exposures") == 0:
                           err(path, f"{bw}: rolls and exposures must be greater than 0")
                       avail = b.get("availability", "national")
@@ -106,6 +135,12 @@ jobs:
                           err(path, f"{bw}: availability '{avail}' needs a 'state'")
                       if avail == "city" and not b.get("city"):
                           err(path, f"{bw}: availability 'city' needs a 'city'")
+                      if b.get("buyLink") and not is_valid_url(b["buyLink"]):
+                          err(path, f"{bw}: buyLink '{b['buyLink']}' doesn't look like a URL — use '' if there genuinely isn't one, per DATA_SPEC.md")
+                      bundle_keys[(b.get("storeName"), b.get("rolls"), b.get("exposures"))] += 1
+                  for (store, rolls, exposures), count in bundle_keys.items():
+                      if count > 1:
+                          err(path, f"{where}: {count} bundles all have storeName={store!r}, rolls={rolls!r}, exposures={exposures!r} — the app merges bundles by that combination, so these will collapse into one on import. Likely a leftover duplicate.")
 
           for norm_key, spellings in film_name_spellings.items():
               if len(spellings) > 1:
@@ -120,6 +155,15 @@ jobs:
                   )
 
           # ---- labs ----
+          # Same spelling-variant tracking as films above, plus an exact-name
+          # check films don't need: the app merges/keys labs by raw name only
+          # (no name+boxSpeed+format composite, no normalisation — see
+          # importPresetSelected() in js/app.js), so two labs sharing the
+          # exact same name across different city files silently overwrite
+          # each other for anyone who imports both, with no merge at all.
+          lab_name_spellings = defaultdict(set)
+          lab_name_locations = defaultdict(list)
+          lab_exact_names = defaultdict(list)
           for path in sorted(glob.glob("labs/*.yaml") + glob.glob("labs/*.yml")):
               try:
                   doc = yaml.safe_load(open(path))
@@ -129,6 +173,10 @@ jobs:
               if not isinstance(doc, dict) or "labs" not in doc:
                   err(path, "expected a top-level 'labs:' list")
                   continue
+              unknown_hits = []
+              find_unknown(doc, "labs", unknown_hits)
+              for hit in unknown_hits:
+                  err(path, f"{hit}: still has 'UNKNOWN' as a value — DATA_SPEC.md says to fill in every field before submitting")
               for key in LAB_SCHEMA["requiredTopLevelFields"]:
                   if not doc.get(key):
                       err(path, f"missing top-level '{key}' — labs/index.json is generated from this")
@@ -137,6 +185,13 @@ jobs:
                   for key in LAB_SCHEMA["requiredFields"]:
                       if key not in lab:
                           err(path, f"{where}: missing required field '{key}'")
+                  if lab.get("name"):
+                      lab_exact_names[lab["name"]].append(path)
+                      norm_name = re.sub(r"\s+", " ", lab["name"].strip()).lower()
+                      lab_name_spellings[norm_name].add(lab["name"])
+                      lab_name_locations[norm_name].append(path)
+                  if lab.get("website") and not is_valid_url(lab["website"]):
+                      err(path, f"{where}: website '{lab['website']}' doesn't look like a URL")
                   if not lab.get("services"):
                       err(path, f"{where}: needs at least one entry under 'services:'")
                   for j, s in enumerate(lab.get("services") or []):
@@ -146,8 +201,12 @@ jobs:
                               err(path, f"{sw}: missing required field '{key}'")
                       if isinstance(s.get("devCost"), str):
                           err(path, f"{sw}: devCost must be a number, not text (write 17, not '$17')")
+                      elif isinstance(s.get("devCost"), (int, float)) and s["devCost"] < 0:
+                          err(path, f"{sw}: devCost can't be negative")
                       if isinstance(s.get("mailBackCost"), str):
                           err(path, f"{sw}: mailBackCost must be a number, not text (write 5, not '$5')")
+                      elif isinstance(s.get("mailBackCost"), (int, float)) and s["mailBackCost"] < 0:
+                          err(path, f"{sw}: mailBackCost can't be negative")
                       t = s.get("turnaroundTime")
                       if t and t not in VALID_TURNAROUND:
                           err(path, f"{sw}: turnaroundTime '{t}' must be one of {sorted(VALID_TURNAROUND)}")
@@ -157,6 +216,15 @@ jobs:
                       for p in (s.get("processes") or []):
                           if p not in VALID_PROCESSES:
                               err(path, f"{sw}: process '{p}' must be one of {sorted(VALID_PROCESSES)}")
+
+          for name, paths in lab_exact_names.items():
+              if len(paths) > 1:
+                  err(", ".join(sorted(set(paths))), f"lab named '{name}' appears in more than one file — labs are keyed by exact name with no merge logic, so whichever imports last silently overwrites the other for anyone who imports both regions")
+
+          for norm_name, spellings in lab_name_spellings.items():
+              if len(spellings) > 1:
+                  files = ", ".join(sorted(set(lab_name_locations[norm_name])))
+                  err(files, f"'{norm_name}' is spelled {sorted(spellings)} across these files — if these are the same lab, use the exact same spelling everywhere; if they're genuinely different labs that happen to share a name, ignore this")
 
           # ---- options ----
           try:
@@ -217,9 +285,9 @@ jobs:
             This PR changed film and/or lab data files. Read "DATA_SPEC.md" in the repo root — it is
             the authoritative rules a film/lab entry must follow. Then review ONLY the added/changed
             lines in this PR (gh pr diff ${{ github.event.pull_request.number }}) against those rules,
-            specifically the things the schema validator that already ran in this workflow can't check:
+            specifically the things the schema validator that already ran in this workflow can't check
+            (it already hard-rejects `UNKNOWN` values, so you don't need to look for those):
 
-            - No `UNKNOWN` values left in.
             - Price is the regular price, not a sale/discount price (watch for wording suggesting a sale).
             - Films: a mainstream, reliably available stock — not rare/limited-run/novelty editions,
               not usually out of stock, not an expired-stock-only listing.
