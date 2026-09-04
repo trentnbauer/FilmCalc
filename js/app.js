@@ -25,6 +25,16 @@
 // import (films/labs index.json + per-region YAML), hide/edit/delete for
 // saved films and labs, home lab + preferred tier + mail-back settings.
 
+// The muted-gray text tiers (#928e88/#9c9994/#a6a4a0/#b0aeac/#b9b8b6, plus
+// the two error/link reds #e5675c/#d2857d) were bumped from their original,
+// slightly darker values to clear WCAG AA's 4.5:1 text-contrast floor
+// against every background color in this file — the originals ranged from
+// borderline (~4.2:1) to nearly invisible (~1.9:1) against the lighter
+// panel backgrounds (#26262a is the worst case). Keeping five distinct
+// tiers on a near-black palette compresses them closer together than
+// they'd otherwise be — that's the tradeoff of AA compliance here, not
+// an oversight — but their relative brightness order (and which tier
+// each call site uses) is unchanged.
 // ---------- Small shared helpers (moved from the old index.html) ----------
 function escapeHtml(str) {
     return String(str ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -421,7 +431,7 @@ const NARROW = "font-family:'Archivo Narrow',Archivo,sans-serif";
 // which section you're in stays legible while scrolling past one long
 // page — a companion to making the headings themselves bigger.
 const SECTION_COLORS = { lookup: '#ff7a2f', labs: '#5fa8d3', films: '#8fbf6a' };
-function btnTone(on, color) { return on ? { bg: '#1c1512', border: '#5a3a1c', color: color || 'var(--acc)' } : { bg: '#141416', border: '#2c2c30', color: '#8b8781' }; }
+function btnTone(on, color) { return on ? { bg: '#1c1512', border: '#5a3a1c', color: color || 'var(--acc)' } : { bg: '#141416', border: '#2c2c30', color: '#928e88' }; }
 function pill(label, on, onclick, color) {
     const b = btnTone(on, color);
     return `<button type="button" onclick="${onclick}" style="background:${b.bg};border:1px solid ${b.border};border-radius:20px;padding:5px 11px;color:${b.color};font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${escapeHtml(label)}</button>`;
@@ -598,7 +608,7 @@ function detectUserLocation() {
 
 const SECTION_STYLE = "border-top:1px solid #212125;background:#131315;padding:12px 14px";
 function settingsSection(title, body) {
-    return `<div style="${SECTION_STYLE}"><div style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#8b8781;margin-bottom:10px">${title}</div>${body}</div>`;
+    return `<div style="${SECTION_STYLE}"><div style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#928e88;margin-bottom:10px">${title}</div>${body}</div>`;
 }
 
 function renderSettingsView(s) {
@@ -610,48 +620,48 @@ function renderSettingsView(s) {
     ];
     return `<div style="padding:16px 18px 20px;display:flex;flex-direction:column;gap:1px;border:1px solid #26262a;border-radius:8px;overflow:hidden">
 ${settingsSection(t('v2SettingsLanguage'), `
-<select onchange="App.setLanguage(this.value)" style="${FIELD_INPUT};max-width:280px;margin-bottom:8px">
+<select onchange="App.setLanguage(this.value)" aria-label="${escapeHtml(t('v2SettingsLanguage'))}" style="${FIELD_INPUT};max-width:280px;margin-bottom:8px">
 ${LANGUAGE_OPTIONS.map(([code, label]) => `<option value="${code}" ${currentLocale === code ? 'selected' : ''}>${escapeHtml(label)}</option>`).join('')}
 </select>
-<div style="font-size:10px;color:#5f5c57">${escapeHtml(t('translationDisclaimer'))}</div>
+<div style="font-size:10px;color:#b0aeac">${escapeHtml(t('translationDisclaimer'))}</div>
 `)}
 ${settingsSection(t('v2SettingsHomeLab'), `
-<select onchange="App.setHomeLab(this.value)" style="${FIELD_INPUT};max-width:280px;margin-bottom:10px">
+<select onchange="App.setHomeLab(this.value)" aria-label="${escapeHtml(t('v2SettingsHomeLab'))}" style="${FIELD_INPUT};max-width:280px;margin-bottom:10px">
 <option value="">No home lab set</option>
 ${labNames.map(n => `<option value="${escapeHtml(n)}" ${s.homeLab === n ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('')}
 </select>
-<div style="font-size:10px;color:#5f5c57;margin-bottom:8px">The lab whose price is shown as the headline cost per frame on every lookup.</div>
-<select onchange="App.setDefaultTier(this.value)" style="${FIELD_INPUT};max-width:280px">
+<div style="font-size:10px;color:#b0aeac;margin-bottom:8px">The lab whose price is shown as the headline cost per frame on every lookup.</div>
+<select onchange="App.setDefaultTier(this.value)" aria-label="Default tier" style="${FIELD_INPUT};max-width:280px">
 <option value="">Cheapest that qualifies</option>
 ${tierLabels.map(l => `<option value="${escapeHtml(l)}" ${s.defaultTier === l ? 'selected' : ''}>${escapeHtml(l)}</option>`).join('')}
 </select>
-<div style="font-size:10px;color:#5f5c57;margin-top:6px">Preferred service tier — used whenever a lab offers it, otherwise its cheapest qualifying tier.</div>
+<div style="font-size:10px;color:#b0aeac;margin-top:6px">Preferred service tier — used whenever a lab offers it, otherwise its cheapest qualifying tier.</div>
 `)}
 ${settingsSection(t('v2SettingsCalculator'), `
 <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
-<div><div style="font-size:10px;color:#8b8781;margin-bottom:5px">${t('v2SettingsUpgradePct')}</div><input value="${s.upgradePct}" oninput="App.setSetting('upgradePct',this.value)" data-fkey="upgradePct" inputmode="decimal" style="${FIELD_INPUT};width:80px;${MONO}"></div>
+<label style="display:block"><div style="font-size:10px;color:#928e88;margin-bottom:5px">${t('v2SettingsUpgradePct')}</div><input value="${s.upgradePct}" oninput="App.setSetting('upgradePct',this.value)" data-fkey="upgradePct" inputmode="decimal" style="${FIELD_INPUT};width:80px;${MONO}"></label>
 </div>
 `)}
 ${settingsSection(t('v2SettingsHiddenPresets'), `
-<div style="font-size:10px;color:#5f5c57;margin-bottom:8px">${hidden.length} hidden</div>
+<div style="font-size:10px;color:#b0aeac;margin-bottom:8px">${hidden.length} hidden</div>
 ${hidden.length ? hidden.map(h => `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid #212125">
-<span style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#5f5c57;width:36px">${h.kind === 'film' ? t('v2SectionFilms') : t('v2SectionLabs')}</span>
+<span style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#b0aeac;width:36px">${h.kind === 'film' ? t('v2SectionFilms') : t('v2SectionLabs')}</span>
 <span style="flex:1;font-size:12px;color:#c9c5bd">${escapeHtml(h.name)}</span>
-<button type="button" onclick="App.toggleHidden('${h.kind}','${jsAttr(h.key)}')" style="background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:4px 9px;color:#8b8781;font-size:9px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonShow')}</button>
-</div>`).join('') : `<div style="font-size:11px;color:#5f5c57">Nothing hidden. Hide a film or lab in the library to keep it out of lookups without deleting it.</div>`}
+<button type="button" onclick="App.toggleHidden('${h.kind}','${jsAttr(h.key)}')" style="background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:4px 9px;color:#928e88;font-size:9px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonShow')}</button>
+</div>`).join('') : `<div style="font-size:11px;color:#b0aeac">Nothing hidden. Hide a film or lab in the library to keep it out of lookups without deleting it.</div>`}
 `)}
 ${settingsSection(t('v2SettingsStarterPresets'), renderPresetImport())}
 ${settingsSection(t('v2SettingsData'), `
 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-<button type="button" onclick="App.exportBackup()" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#8b8781;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonExportBackup')}</button>
-<label style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#8b8781;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonImportBackup')}<input type="file" accept="application/json" onchange="App.importBackup(this.files[0])" style="display:none"></label>
-<label style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#8b8781;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonImportYaml')}<input type="file" accept=".yaml,.yml,text/yaml" onchange="App.importYamlFile(this.files[0])" style="display:none"></label>
-<button type="button" onclick="App.openSetup()" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#8b8781;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonRerunSetup')}</button>
-<button type="button" onclick="App.deleteAllData()" style="background:transparent;border:1px solid #5a2420;border-radius:5px;padding:6px 11px;color:#e2564a;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonDeleteAllData')}</button>
+<button type="button" onclick="App.exportBackup()" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonExportBackup')}</button>
+<label style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonImportBackup')}<input type="file" accept="application/json" onchange="App.importBackup(this.files[0])" style="display:none"></label>
+<label style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonImportYaml')}<input type="file" accept=".yaml,.yml,text/yaml" onchange="App.importYamlFile(this.files[0])" style="display:none"></label>
+<button type="button" onclick="App.openSetup()" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonRerunSetup')}</button>
+<button type="button" onclick="App.deleteAllData()" style="background:transparent;border:1px solid #5a2420;border-radius:5px;padding:6px 11px;color:#e5675c;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonDeleteAllData')}</button>
 </div>
 ${renderImportPreview(s)}
-<div style="font-size:10px;color:#8b8781;min-height:12px">${escapeHtml(s.importNote)}${s.lastImportSnapshot ? ` <a href="javascript:void(0)" onclick="App.undoLastImport()" style="color:var(--acc);cursor:pointer">Undo</a>` : ''}</div>
-<div style="margin-top:10px;font-size:10px;color:#5f5c57">Drag <a href="javascript:void(window.open('https://filmcalc.app/?add='+encodeURIComponent(location.href)))" style="cursor:move">↗ Add to FilmCalc</a> to your bookmarks bar — click it from any shop or lab page to jump back here with that page's link ready to paste in.</div>
+<div style="font-size:10px;color:#928e88;min-height:12px">${escapeHtml(s.importNote)}${s.lastImportSnapshot ? ` <a href="javascript:void(0)" onclick="App.undoLastImport()" style="color:var(--acc);text-decoration:underline;cursor:pointer">Undo</a>` : ''}</div>
+<div style="margin-top:10px;font-size:10px;color:#b0aeac">Drag <a href="javascript:void(window.open('https://filmcalc.app/?add='+encodeURIComponent(location.href)))" style="text-decoration:underline;cursor:move">↗ Add to FilmCalc</a> to your bookmarks bar — click it from any shop or lab page to jump back here with that page's link ready to paste in.</div>
 `)}
 </div>`;
 }
@@ -673,7 +683,7 @@ function renderSetupModal(s) {
     let stepTitle, stepBody;
     if (step === 'language') {
         stepTitle = t('v2SetupStepLanguage');
-        stepBody = `<select onchange="App.setLanguage(this.value)" style="${FIELD_INPUT}">
+        stepBody = `<select onchange="App.setLanguage(this.value)" aria-label="${escapeHtml(t('v2SettingsLanguage'))}" style="${FIELD_INPUT}">
 ${LANGUAGE_OPTIONS.map(([code, label]) => `<option value="${code}" ${currentLocale === code ? 'selected' : ''}>${escapeHtml(label)}</option>`).join('')}
 </select>`;
     } else if (step === 'presets') {
@@ -681,32 +691,32 @@ ${LANGUAGE_OPTIONS.map(([code, label]) => `<option value="${code}" ${currentLoca
         stepBody = `<div style="border:1px solid #26262a;border-radius:8px;background:#131315;padding:12px">
 ${renderPresetImport(false)}
 <div style="margin-top:10px;padding-top:10px;border-top:1px solid #212125">
-<label style="display:inline-flex;align-items:center;background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#8b8781;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonImportYaml')}<input type="file" accept=".yaml,.yml,text/yaml" onchange="App.importYamlFile(this.files[0])" style="display:none"></label>
+<label style="display:inline-flex;align-items:center;background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonImportYaml')}<input type="file" accept=".yaml,.yml,text/yaml" onchange="App.importYamlFile(this.files[0])" style="display:none"></label>
 </div>
 ${renderImportPreview(s)}
-${s.importNote ? `<div style="margin-top:8px;font-size:10px;color:#8b8781">${escapeHtml(s.importNote)}</div>` : ''}
+${s.importNote ? `<div style="margin-top:8px;font-size:10px;color:#928e88">${escapeHtml(s.importNote)}</div>` : ''}
 </div>`;
     } else {
         stepTitle = t('v2SetupStepHomeLab');
         stepBody = `<div style="display:flex;flex-direction:column;gap:14px">
 <div>
-<div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:6px">${t('v2SettingsHomeLab')}</div>
-<select onchange="App.setHomeLab(this.value)" style="${FIELD_INPUT}">
+<div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#928e88;margin-bottom:6px">${t('v2SettingsHomeLab')}</div>
+<select onchange="App.setHomeLab(this.value)" aria-label="${escapeHtml(t('v2SettingsHomeLab'))}" style="${FIELD_INPUT}">
 <option value="">—</option>
 ${labNames.map(n => `<option value="${escapeHtml(n)}" ${s.homeLab === n ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('')}
 </select>
-${!labNames.length ? `<div style="margin-top:6px;font-size:10px;color:#5f5c57">${t('v2SetupNoLabsYet')}</div>` : ''}
+${!labNames.length ? `<div style="margin-top:6px;font-size:10px;color:#b0aeac">${t('v2SetupNoLabsYet')}</div>` : ''}
 </div>
 <div>
-<div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:6px">${t('v2SetupPreferredTier')}</div>
-<select onchange="App.setDefaultTier(this.value)" style="${FIELD_INPUT}">
+<div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#928e88;margin-bottom:6px">${t('v2SetupPreferredTier')}</div>
+<select onchange="App.setDefaultTier(this.value)" aria-label="${escapeHtml(t('v2SetupPreferredTier'))}" style="${FIELD_INPUT}">
 <option value="">Cheapest that qualifies</option>
 ${tierLabels.map(l => `<option value="${escapeHtml(l)}" ${s.defaultTier === l ? 'selected' : ''}>${escapeHtml(l)}</option>`).join('')}
 </select>
 </div>
 </div>`;
     }
-    const backBtn = s.setupStep > 0 ? `<button type="button" ${s.setupBusy ? 'disabled' : ''} onclick="App.setupGoto(${s.setupStep - 1})" style="flex:1;background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:9px 16px;color:#8b8781;font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;${s.setupBusy ? 'opacity:.5;cursor:default' : ''}">${t('v2ButtonBack')}</button>` : '';
+    const backBtn = s.setupStep > 0 ? `<button type="button" ${s.setupBusy ? 'disabled' : ''} onclick="App.setupGoto(${s.setupStep - 1})" style="flex:1;background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:9px 16px;color:#928e88;font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;${s.setupBusy ? 'opacity:.5;cursor:default' : ''}">${t('v2ButtonBack')}</button>` : '';
     // On the presets step, Next both imports whatever's ticked AND
     // advances — no separate "Import selected" click needed first. Target
     // step is baked into the onclick at render time (like every other
@@ -722,8 +732,8 @@ ${tierLabels.map(l => `<option value="${escapeHtml(l)}" ${s.defaultTier === l ? 
 <div style="${NARROW};font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#eae7e1">${t('v2SetupTitle')}</div>
 <div style="display:flex;align-items:center;gap:5px">${dots}</div>
 </div>
-<p style="margin:0 0 14px;font-size:12px;color:#6d6a64">${t('v2SetupIntro')}</p>
-<div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:8px">${stepTitle}</div>
+<p style="margin:0 0 14px;font-size:12px;color:#a6a4a0">${t('v2SetupIntro')}</p>
+<div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#928e88;margin-bottom:8px">${stepTitle}</div>
 ${stepBody}
 <div style="display:flex;gap:10px;margin-top:18px">${backBtn}${nextBtn}</div>
 </div></div>`;
@@ -750,17 +760,17 @@ function presetCheckList(kind, entries) {
 function renderImportPreview(s) {
     const p = s.pendingImport;
     if (!p) return '';
-    const rowsFor = (entries, label) => !entries.length ? '' : `<div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781;margin:8px 0 4px">${label} (${entries.length})</div>
-<div style="display:flex;flex-direction:column;gap:2px;max-height:120px;overflow:auto">${entries.map(e => `<div style="font-size:11px;color:#c9c5bd;display:flex;justify-content:space-between;gap:8px"><span>${escapeHtml(e.name)}</span>${e.exists ? '<span style="color:#8b8781;font-size:9px;letter-spacing:.08em;text-transform:uppercase">updates existing</span>' : ''}</div>`).join('')}</div>`;
+    const rowsFor = (entries, label) => !entries.length ? '' : `<div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#928e88;margin:8px 0 4px">${label} (${entries.length})</div>
+<div style="display:flex;flex-direction:column;gap:2px;max-height:120px;overflow:auto">${entries.map(e => `<div style="font-size:11px;color:#c9c5bd;display:flex;justify-content:space-between;gap:8px"><span>${escapeHtml(e.name)}</span>${e.exists ? '<span style="color:#928e88;font-size:9px;letter-spacing:.08em;text-transform:uppercase">updates existing</span>' : ''}</div>`).join('')}</div>`;
     const hasErrors = p.errors.length > 0;
     return `<div style="margin-top:10px;border:1px solid ${hasErrors ? '#5a2420' : '#26262a'};border-radius:8px;background:#131315;padding:12px">
 <div style="font-size:11px;color:#c9c5bd;margin-bottom:2px">Reviewing <strong>${escapeHtml(p.fileName)}</strong> — nothing saved yet.</div>
 ${rowsFor(p.filmEntries, 'Films')}
 ${rowsFor(p.labEntries, 'Labs')}
-${hasErrors ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid #33221f"><div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#e2564a;margin-bottom:4px">Can't import — fix these and re-upload</div><div style="display:flex;flex-direction:column;gap:2px;max-height:120px;overflow:auto">${p.errors.map(e => `<div style="font-size:11px;color:#e2564a">${escapeHtml(e)}</div>`).join('')}</div></div>` : ''}
+${hasErrors ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid #33221f"><div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#e5675c;margin-bottom:4px">Can't import — fix these and re-upload</div><div style="display:flex;flex-direction:column;gap:2px;max-height:120px;overflow:auto">${p.errors.map(e => `<div style="font-size:11px;color:#e5675c">${escapeHtml(e)}</div>`).join('')}</div></div>` : ''}
 <div style="display:flex;gap:8px;margin-top:12px">
 ${hasErrors ? '' : `<button type="button" onclick="App.confirmImport()" style="flex:1;background:#1c1512;border:1px solid #5a3a1c;border-radius:5px;padding:7px 11px;color:var(--acc);font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">Confirm import</button>`}
-<button type="button" onclick="App.cancelImport()" style="${hasErrors ? 'flex:1' : ''};background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:7px 11px;color:#8b8781;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">Cancel</button>
+<button type="button" onclick="App.cancelImport()" style="${hasErrors ? 'flex:1' : ''};background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:7px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">Cancel</button>
 </div>
 </div>`;
 }
@@ -769,17 +779,17 @@ ${hasErrors ? '' : `<button type="button" onclick="App.confirmImport()" style="f
 // separate button there would just be a redundant extra click. Settings'
 // own Starter Presets section has no such Next button, so it keeps one.
 function renderPresetImport(showImportButton = true) {
-    if (!presetFilmIndex || !presetLabIndex) { loadPresetIndexes(); return `<div style="font-size:11px;color:#5f5c57">Loading…</div>`; }
+    if (!presetFilmIndex || !presetLabIndex) { loadPresetIndexes(); return `<div style="font-size:11px;color:#b0aeac">Loading…</div>`; }
     if (geoGuess === undefined) detectUserLocation();
     const geoNote = geoGuess
         ? `Pre-ticked below: whatever looks like it covers ${escapeHtml(geoGuess.city || geoGuess.country)}, guessed from your device's location or timezone — that guess never leaves this device. Tick or untick anything; only what's ticked when you import actually gets added.`
         : `Community-contributed regional film/lab price lists shipped with FilmCalc — tick any that apply to you (more than one is fine) to add real data instead of typing it all by hand.`;
-    return `<div style="font-size:10px;color:#5f5c57;margin-bottom:8px">${geoNote}</div>
-<div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781;margin-bottom:4px">Films</div>
+    return `<div style="font-size:10px;color:#b0aeac;margin-bottom:8px">${geoNote}</div>
+<div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#928e88;margin-bottom:4px">Films</div>
 <div style="display:flex;flex-direction:column;max-height:160px;overflow:auto;border:1px solid #26262a;border-radius:6px;padding:4px 8px;margin-bottom:10px">${presetCheckList('films', presetFilmIndex)}</div>
-<div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#8b8781;margin-bottom:4px">Labs</div>
+<div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#928e88;margin-bottom:4px">Labs</div>
 <div style="display:flex;flex-direction:column;max-height:160px;overflow:auto;border:1px solid #26262a;border-radius:6px;padding:4px 8px;margin-bottom:10px">${presetCheckList('labs', presetLabIndex)}</div>
-${showImportButton ? `<button type="button" onclick="App.importPresetSelected()" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#8b8781;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">Import selected</button>` : ''}`;
+${showImportButton ? `<button type="button" onclick="App.importPresetSelected()" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">Import selected</button>` : ''}`;
 }
 
 // ---------- Merge helpers (ported from the old js/modals.js import path —
@@ -821,8 +831,8 @@ function migrateFilmProfileKeys() {
 
 function renderFooter(s) {
     return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding:0 2px;flex-wrap:wrap">
-<span style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#4a4844">FilmCalc</span>
-<span style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#4a4844;${MONO}">${formatLabel(s.format)} · ${procLabel(s.process)}</span>
+<span style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#b9b8b6">FilmCalc</span>
+<span style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#b9b8b6;${MONO}">${formatLabel(s.format)} · ${procLabel(s.process)}</span>
 </div>`;
 }
 // ==================== Top-level render ====================
@@ -1515,11 +1525,16 @@ const M_INPUT = "box-sizing:border-box;background:#1a1a1d;border:1px solid #3333
 const M_ROW = "display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 14px;border-top:1px solid #212125";
 const M_CARD = "border:1px solid #26262a;border-radius:10px;background:#131315;overflow:hidden";
 
+// <label> (not <div>) so the row's control(s) get an accessible name from
+// the visible label text for free — no matching id/for pair needed, and it
+// still covers rows built from >1 control (e.g. a select + its unit
+// <span>, or a select + an adjoining input) since implicit label
+// association isn't limited to a single descendant the way for/id is.
 function mRow(label, controlHtml, first, wide) {
-    return `<div class="m-row${wide ? ' m-row-wide' : ''}" style="${first ? M_ROW.replace(';border-top:1px solid #212125', '') : M_ROW}">
-<label class="narrow" style="${M_LABEL}">${label}</label>
+    return `<label class="m-row${wide ? ' m-row-wide' : ''}" style="${first ? M_ROW.replace(';border-top:1px solid #212125', '') : M_ROW}">
+<span class="narrow" style="${M_LABEL}">${label}</span>
 <div style="display:flex;align-items:center;gap:8px">${controlHtml}</div>
-</div>`;
+</label>`;
 }
 
 function mSectionHead(label, trailing, color) {
@@ -1538,7 +1553,7 @@ function renderMobileHeader(s) {
     const desktopNav = `
 <button type="button" onclick="App.goView('expired')" style="background:${eb.bg};border:1px solid ${eb.border};border-radius:5px;padding:6px 10px;color:${eb.color};font-size:10px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2NavExpiredCalc')}</button>
 <button type="button" onclick="App.goView('library')" style="background:${lb.bg};border:1px solid ${lb.border};border-radius:5px;padding:6px 10px;color:${lb.color};font-size:10px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2NavLibrary')}</button>
-<a href="https://github.com/trentnbauer/FilmCalc/wiki" target="_blank" rel="noopener noreferrer" title="${t('v2NavWiki')}" style="display:flex;align-items:center;justify-content:center;width:29px;height:29px;background:#141416;border:1px solid #2c2c30;border-radius:5px;color:#8b8781;box-sizing:border-box">
+<a href="https://github.com/trentnbauer/FilmCalc/wiki" target="_blank" rel="noopener noreferrer" title="${t('v2NavWiki')}" style="display:flex;align-items:center;justify-content:center;width:29px;height:29px;background:#141416;border:1px solid #2c2c30;border-radius:5px;color:#928e88;box-sizing:border-box">
 <svg style="width:15px;height:15px" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.5c-1.5-1.4-3.6-2-5.5-2A5.5 5.5 0 003 5v13a5.5 5.5 0 013.5-1.5c1.9 0 4 .6 5.5 2m0-12c1.5-1.4 3.6-2 5.5-2A5.5 5.5 0 0121 5v13a5.5 5.5 0 00-3.5-1.5c-1.9 0-4 .6-5.5 2m0-12v12"></path></svg>
 </a>
 <button type="button" onclick="App.toggleDark()" title="${t('v2NavToggleDark')}" aria-label="${escapeHtml(t('v2NavToggleDark'))}" style="display:flex;align-items:center;justify-content:center;width:29px;height:29px;background:#141416;border:1px solid #2c2c30;border-radius:5px;color:#ffb020;cursor:pointer;padding:0;box-sizing:border-box">
@@ -1555,8 +1570,8 @@ function renderMobileHeader(s) {
 </button>
 <nav class="desktop-nav" style="display:none;align-items:center;gap:6px;flex-wrap:wrap">${desktopNav}</nav>
 <div style="display:flex;align-items:center;gap:8px">
-<span class="mobile-view-label" style="${MONO};font-size:12px;color:#7a7770">${escapeHtml(viewLabel)}</span>
-<button type="button" class="hamburger-btn" onclick="App.toggleMenu()" aria-label="Menu" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;padding:0;cursor:pointer">
+<span class="mobile-view-label" style="${MONO};font-size:12px;color:#9c9994">${escapeHtml(viewLabel)}</span>
+<button type="button" class="hamburger-btn" onclick="App.toggleMenu()" aria-label="Menu" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#928e88;padding:0;cursor:pointer">
 <svg style="width:20px;height:20px" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"></path></svg>
 </button>
 </div>
@@ -1577,10 +1592,10 @@ function renderMobileSummary(s) {
     if (!home) {
         return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px 11px;border-top:1px solid #1c1c20;background:#131315">
 <div>
-<div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#7a7770">${filmLine}</div>
-<div style="${MONO};font-size:13px;color:#5f5c57;margin-top:4px">No lab or film stock data for this process</div>
+<div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9c9994">${filmLine}</div>
+<div style="${MONO};font-size:13px;color:#b0aeac;margin-top:4px">No lab or film stock data for this process</div>
 </div>
-<div style="${MONO};font-size:14px;color:#5f5c57">N/A</div>
+<div style="${MONO};font-size:14px;color:#b0aeac">N/A</div>
 </div>`;
     }
     const homeLine = home.name === s.homeLab ? `${escapeHtml(home.name)} · home` : escapeHtml(home.name);
@@ -1590,19 +1605,19 @@ function renderMobileSummary(s) {
         : (home.pick.mailFee > 0 ? `+ ${CUR()}${money(home.pick.mailFee)} mail` : '');
     return `<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:9px 12px 11px;border-top:1px solid #1c1c20;background:#131315">
 <div>
-<div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#7a7770">${homeLine}</div>
-<div style="font-size:10px;color:#5f5c57;margin-top:1px">${filmLine}</div>
-<div style="display:flex;align-items:baseline;gap:3px;margin-top:2px"><span style="${MONO};font-size:14px;color:#6d6a64">${CUR()}</span><span style="${MONO};font-size:26px;line-height:1;color:#eae7e1">${money(home.cpp)}</span><span style="font-size:12px;color:#7a7770">/frame</span></div>
-<div style="${MONO};display:flex;flex-direction:column;gap:2px;margin-top:6px;font-size:12px;color:#8b8781">
+<div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9c9994">${homeLine}</div>
+<div style="font-size:10px;color:#b0aeac;margin-top:1px">${filmLine}</div>
+<div style="display:flex;align-items:baseline;gap:3px;margin-top:2px"><span style="${MONO};font-size:14px;color:#a6a4a0">${CUR()}</span><span style="${MONO};font-size:26px;line-height:1;color:#eae7e1">${money(home.cpp)}</span><span style="font-size:12px;color:#9c9994">/frame</span></div>
+<div style="${MONO};display:flex;flex-direction:column;gap:2px;margin-top:6px;font-size:12px;color:#928e88">
 <span>Roll <span style="color:#c9c5bd">${CUR()}${money(home.filmPerRoll)}</span></span>
 <span>Dev <span style="color:#c9c5bd">${CUR()}${money(home.pick.devCost)}</span> <span style="color:var(--acc)">${pushText}</span></span>
 </div>
 </div>
 <div style="text-align:right">
-<div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#7a7770">Cheapest</div>
+<div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9c9994">Cheapest</div>
 <div style="display:flex;align-items:baseline;gap:6px;justify-content:flex-end;margin-top:2px"><span style="${MONO};font-size:18px;color:var(--acc)">${CUR()}${money(cheapest.cpp)}</span></div>
-<div style="font-size:12px;color:#8b8781;margin-top:2px">${escapeHtml(cheapest.name)}</div>
-<div style="${MONO};margin-top:6px;font-size:12px;color:#7a7770">Roll total<br><span style="color:#c9c5bd;font-size:14px">${CUR()}${money(home.roll)}</span></div>
+<div style="font-size:12px;color:#928e88;margin-top:2px">${escapeHtml(cheapest.name)}</div>
+<div style="${MONO};margin-top:6px;font-size:12px;color:#9c9994">Roll total<br><span style="color:#c9c5bd;font-size:14px">${CUR()}${money(home.roll)}</span></div>
 </div>
 </div>
 <div style="height:3px;background:#0f0f11;display:flex"><div style="background:var(--acc);width:${filmPct}%"></div></div>`;
@@ -1618,7 +1633,7 @@ function renderMobileMenu(s) {
     }).join('');
     return `<div onclick="App.closeMenu()" style="position:fixed;top:0;left:50%;transform:translateX(-50%);width:min(960px,100%);height:100%;z-index:40;background:rgba(6,6,7,.66);display:flex;justify-content:flex-end">
 <div onclick="event.stopPropagation()" style="width:264px;height:100%;background:#131315;border-left:1px solid #2c2c30;padding:14px 12px;display:flex;flex-direction:column;gap:8px;box-sizing:border-box">
-<div style="${NARROW};font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#7a7770;padding:4px 8px 8px">Menu</div>
+<div style="${NARROW};font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#9c9994;padding:4px 8px 8px">Menu</div>
 ${items}
 <a href="https://github.com/trentnbauer/FilmCalc/wiki" target="_blank" rel="noopener noreferrer" style="height:52px;display:flex;align-items:center;padding:0 14px;background:#1a1a1d;border:1px solid #2c2c30;border-radius:8px;color:#c9c5bd;font-size:15px;letter-spacing:.08em;text-transform:uppercase">Wiki ↗</a>
 </div>
@@ -1632,8 +1647,8 @@ function renderMobileToast(s) {
 
 function renderMobileFooter(s) {
     return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:20px;padding:0 14px">
-<span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#4a4844">FilmCalc</span>
-<span style="${MONO};font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#4a4844">${formatLabel(s.format)} · ${procLabel(s.process)}</span>
+<span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#b9b8b6">FilmCalc</span>
+<span style="${MONO};font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#b9b8b6">${formatLabel(s.format)} · ${procLabel(s.process)}</span>
 </div>`;
 }
 
@@ -1657,7 +1672,7 @@ function renderMobileLookup(s) {
     // Requires chips
     const chips = requireFilters().map(f => {
         const on = s[f.key];
-        return `<button type="button" onclick="App.toggleFlag('${f.key}')" aria-pressed="${on ? 'true' : 'false'}" style="flex:none;height:36px;border-radius:20px;padding:0 14px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;${on ? `background:#1c1512;border:1px solid #5a3a1c;color:${SECTION_COLORS.labs}` : 'background:#141416;border:1px solid #2c2c30;color:#8b8781'}">${f.label}</button>`;
+        return `<button type="button" onclick="App.toggleFlag('${f.key}')" aria-pressed="${on ? 'true' : 'false'}" style="flex:none;height:36px;border-radius:20px;padding:0 14px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;${on ? `background:#1c1512;border:1px solid #5a3a1c;color:${SECTION_COLORS.labs}` : 'background:#141416;border:1px solid #2c2c30;color:#928e88'}">${f.label}</button>`;
     }).join('');
     const totalLabs = Object.keys(getAllLabs()).filter(n => !getAllLabs()[n].hidden).length;
     const filterNote = r.ranked.length < totalLabs
@@ -1671,7 +1686,7 @@ function renderMobileLookup(s) {
         const tag = i === 0 ? 'Cheapest' : `+${((l.cpp - cheapest.cpp) * 100).toFixed(0)}c`;
         const cardBorder = i === 0 ? '#5a3a1c' : '#26262a', cardBg = i === 0 ? '#17140f' : '#131315';
         const priceColor = i === 0 ? SECTION_COLORS.labs : '#c9c5bd';
-        const tagColor = (i === 0 || isHome) ? SECTION_COLORS.labs : '#7a7770';
+        const tagColor = (i === 0 || isHome) ? SECTION_COLORS.labs : '#9c9994';
         const detail = `${escapeHtml(l.pick.label)} · ${CUR()}${money(l.pick.devCost)}` +
             (l.pick.pushFee ? ` + ${CUR()}${money(l.pick.pushFee)} ${r.stopsSigned < 0 ? 'pull' : 'push'}` : '') +
             (l.pick.mailFee ? ` + ${CUR()}${money(l.pick.mailFee)} mail` : '');
@@ -1679,7 +1694,7 @@ function renderMobileLookup(s) {
             const picked = t === l.pick;
             const color = picked ? SECTION_COLORS.labs : (t.ok ? '#c9c5bd' : '#55534e');
             return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px;border:1px solid #26262a;border-radius:8px;background:#0f0f11">
-<span><span style="display:block;font-size:14px;color:${color}">${escapeHtml(t.label)}</span><span style="${MONO};display:block;font-size:12px;color:#7a7770;margin-top:3px">${t.ok ? (picked ? 'used here' : 'qualifies') : escapeHtml(t.why)}</span></span>
+<span><span style="display:block;font-size:14px;color:${color}">${escapeHtml(t.label)}</span><span style="${MONO};display:block;font-size:12px;color:#9c9994;margin-top:3px">${t.ok ? (picked ? 'used here' : 'qualifies') : escapeHtml(t.why)}</span></span>
 <span style="${MONO};font-size:15px;color:${color}">${CUR()}${money(t.cost)}</span>
 </div>`;
         }).join('');
@@ -1690,15 +1705,15 @@ function renderMobileLookup(s) {
 <span style="${MONO};font-size:20px;color:${priceColor}">${CUR()}${money(l.cpp)}</span>
 </div>
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:6px">
-<span style="${MONO};font-size:12px;color:#8b8781">${detail}</span>
+<span style="${MONO};font-size:12px;color:#928e88">${detail}</span>
 <span style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:${tagColor}">${tag}</span>
 </div>
 </button>
 ${open ? `<div style="padding:0 14px 14px">
-<div style="${MONO};font-size:12px;color:#7a7770;margin-bottom:8px">${escapeHtml(l.lab.address || 'address not saved')}</div>
+<div style="${MONO};font-size:12px;color:#9c9994;margin-bottom:8px">${escapeHtml(l.lab.address || 'address not saved')}</div>
 <div style="display:flex;flex-direction:column;gap:6px">${tierRows}</div>
 <div style="display:flex;gap:8px;margin-top:10px">
-<button type="button" onclick="App.editLab('${jsAttr(l.name)}')" style="flex:1;height:44px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Edit lab</button>
+<button type="button" onclick="App.editLab('${jsAttr(l.name)}')" style="flex:1;height:44px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#928e88;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Edit lab</button>
 ${labDirectionsUrl(l.name) ? `<a href="${labDirectionsUrl(l.name)}" target="_blank" rel="noopener noreferrer" style="flex:1;height:44px;display:flex;align-items:center;justify-content:center;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:${SECTION_COLORS.labs};font-size:12px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none">Directions ↗</a>` : ''}
 </div>
 </div>` : ''}
@@ -1716,20 +1731,20 @@ ${labDirectionsUrl(l.name) ? `<a href="${labDirectionsUrl(l.name)}" target="_bla
         const meta = `${f.boxSpeed} · ${procLabel(f.process)} · ${row.exposures}exp${row.stopsAbs ? ` · ${row.stopsAbs} stop ${row.dir}` : ''}`;
         const bundles = row.bundles.slice().sort((a, b) => a.filmCost / a.rolls - b.filmCost / b.rolls).map(b => `
 <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;background:#0f0f11;border:1px solid #26262a;border-radius:8px">
-<button type="button" onclick="App.loadFilmBundle('${jsAttr(key)}','${jsAttr(b.storeName)}',${b.rolls},${b.exposures})" style="flex:1;min-width:0;background:transparent;border:0;padding:0;text-align:left;cursor:pointer"><span style="display:block;font-size:14px;color:#c9c5bd">${escapeHtml(b.storeName || 'Unnamed store')}</span><span style="${MONO};display:block;font-size:12px;color:#7a7770;margin-top:3px">${b.rolls}×${b.exposures} · ${CUR()}${money(b.filmCost)} · ${CUR()}${money(b.filmCost / b.rolls)}/roll</span></button>
+<button type="button" onclick="App.loadFilmBundle('${jsAttr(key)}','${jsAttr(b.storeName)}',${b.rolls},${b.exposures})" style="flex:1;min-width:0;background:transparent;border:0;padding:0;text-align:left;cursor:pointer"><span style="display:block;font-size:14px;color:#c9c5bd">${escapeHtml(b.storeName || 'Unnamed store')}</span><span style="${MONO};display:block;font-size:12px;color:#9c9994;margin-top:3px">${b.rolls}×${b.exposures} · ${CUR()}${money(b.filmCost)} · ${CUR()}${money(b.filmCost / b.rolls)}/roll</span></button>
 <a href="${sanitizeUrl(b.buyLink)}" target="_blank" rel="noopener noreferrer" style="height:40px;display:flex;align-items:center;padding:0 14px;background:#1c1512;border:1px solid #5a3a1c;border-radius:8px;color:${SECTION_COLORS.films};font-size:12px;letter-spacing:.14em;text-transform:uppercase">Buy ↗</a>
 </div>`).join('');
         return `<div style="border-radius:10px;overflow:hidden;border:1px solid ${cheap ? '#5a3a1c' : '#26262a'};background:${cheap ? '#17140f' : '#131315'}">
 <button type="button" onclick="App.toggleFilm('${jsAttr(key)}')" style="width:100%;background:transparent;border:0;padding:14px;text-align:left;cursor:pointer">
 <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
-<span><span style="display:block;font-size:16px;color:#eae7e1">${escapeHtml(f.name)}</span><span style="${MONO};display:block;font-size:12px;color:#7a7770;margin-top:4px">${meta}</span></span>
+<span><span style="display:block;font-size:16px;color:#eae7e1">${escapeHtml(f.name)}</span><span style="${MONO};display:block;font-size:12px;color:#9c9994;margin-top:4px">${meta}</span></span>
 <span style="${MONO};font-size:20px;color:${cheap ? SECTION_COLORS.films : '#c9c5bd'}">${CUR()}${money(row.perRoll)}</span>
 </div>
 </button>
 ${open ? `<div style="padding:0 14px 14px;display:flex;flex-direction:column;gap:6px">
-<div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#7a7770">Where to buy</div>
+<div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9c9994">Where to buy</div>
 ${bundles}
-<button type="button" onclick="App.editFilm('${jsAttr(key)}')" style="height:44px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Edit film</button>
+<button type="button" onclick="App.editFilm('${jsAttr(key)}')" style="height:44px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#928e88;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Edit film</button>
 </div>` : ''}
 </div>`;
     }).join('');
@@ -1743,31 +1758,31 @@ ${bundles}
 <div style="flex:1;height:1px;background:#26262a"></div>
 </div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-<select onchange="App.setField('format',this.value)" style="height:44px;${M_INPUT}">${FORMAT_OPTIONS.map(o => `<option value="${o.value}" ${s.format === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>
-<select onchange="App.setField('filmColor',this.value)" style="height:44px;${M_INPUT}">${FILM_TYPE_OPTIONS.map(o => `<option value="${o.value}" ${s.filmColor === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>
+<select onchange="App.setField('format',this.value)" aria-label="Format" style="height:44px;${M_INPUT}">${FORMAT_OPTIONS.map(o => `<option value="${o.value}" ${s.format === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>
+<select onchange="App.setField('filmColor',this.value)" aria-label="Type" style="height:44px;${M_INPUT}">${FILM_TYPE_OPTIONS.map(o => `<option value="${o.value}" ${s.filmColor === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>
 </div>
 <div class="field-grid" style="${M_CARD}">
-${mRow('Box speed', `<input value="${escapeHtml(s.boxSpeed)}" oninput="App.setField('boxSpeed',this.value)" data-fkey="m-boxSpeed" inputmode="numeric" placeholder="400" style="width:96px;height:44px;text-align:right;${M_INPUT}"><span style="width:26px;font-size:12px;text-transform:uppercase;color:#7a7770">ISO</span>`, true)}
-${mRow('Push/pull', `<select onchange="App.setField('pushPull',this.value)" style="width:96px;height:44px;text-align:right;${M_INPUT}">${PUSH_PULL_OPTIONS.map(n => `<option value="${n}" ${String(s.pushPull) === String(n) ? 'selected' : ''}>${n > 0 ? '+' + n : n}</option>`).join('')}</select><span style="width:26px;font-size:12px;text-transform:uppercase;color:#7a7770">stop</span>`)}
+${mRow('Box speed', `<input value="${escapeHtml(s.boxSpeed)}" oninput="App.setField('boxSpeed',this.value)" data-fkey="m-boxSpeed" inputmode="numeric" placeholder="400" style="width:96px;height:44px;text-align:right;${M_INPUT}"><span style="width:26px;font-size:12px;text-transform:uppercase;color:#9c9994">ISO</span>`, true)}
+${mRow('Push/pull', `<select onchange="App.setField('pushPull',this.value)" style="width:96px;height:44px;text-align:right;${M_INPUT}">${PUSH_PULL_OPTIONS.map(n => `<option value="${n}" ${String(s.pushPull) === String(n) ? 'selected' : ''}>${n > 0 ? '+' + n : n}</option>`).join('')}</select><span style="width:26px;font-size:12px;text-transform:uppercase;color:#9c9994">stop</span>`)}
 ${mRow('Development type', `<select onchange="App.setField('process',this.value)" style="width:96px;height:44px;text-align:right;${M_INPUT}">${PROCESS_OPTIONS.map(o => `<option value="${o.value}" ${s.process === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select><span style="width:26px"></span>`)}
 ${!is120 ? mRow('Exposures', `<input value="${escapeHtml(expShown)}" oninput="App.setField('exposures',this.value)" data-fkey="m-exposures" inputmode="numeric" placeholder="36" style="width:96px;height:44px;text-align:right;${M_INPUT}"><span style="width:26px"></span>`) : ''}
 ${!is35 ? mRow('Camera', cameraControl) : ''}
-${mRow('Pack price', `<div style="display:flex;align-items:center;width:96px;height:44px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px"><span style="${MONO};font-size:15px;color:#6d6a64">${CUR()}</span><input value="${escapeHtml(s.packCost)}" oninput="App.setField('packCost',this.value)" data-fkey="m-packCost" inputmode="decimal" placeholder="50.00" style="width:100%;min-width:0;text-align:right;background:transparent;border:0;color:#eae7e1;font-size:16px;${MONO}"></div><span style="width:26px"></span>`)}
-${mRow('Pack of', `<input value="${escapeHtml(s.rolls)}" oninput="App.setField('rolls',this.value)" data-fkey="m-rolls" inputmode="numeric" placeholder="1" style="width:96px;height:44px;text-align:right;${M_INPUT}"><span style="width:26px;font-size:12px;text-transform:uppercase;color:#7a7770">Rl</span>`)}
-${mRow('Postage', `<div style="display:flex;align-items:center;width:96px;height:44px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px"><span style="${MONO};font-size:15px;color:#6d6a64">${CUR()}</span><input value="${escapeHtml(s.postage)}" oninput="App.setField('postage',this.value)" data-fkey="m-postage" inputmode="decimal" placeholder="3.95" style="width:100%;min-width:0;text-align:right;background:transparent;border:0;color:#eae7e1;font-size:16px;${MONO}"></div><span style="width:26px"></span>`)}
-<button type="button" onclick="App.toggleExtras()" aria-expanded="${s.extrasOpen ? 'true' : 'false'}" style="width:100%;height:48px;display:flex;align-items:center;justify-content:space-between;background:#0f0f11;border:0;border-top:1px solid #212125;padding:0 14px;color:#8b8781;font-size:12px;letter-spacing:.16em;text-transform:uppercase;cursor:pointer"><span>Extra fees / Advanced</span><span style="${MONO};font-size:16px">${s.extrasOpen ? '–' : '+'}</span></button>
+${mRow('Pack price', `<div style="display:flex;align-items:center;width:96px;height:44px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px"><span style="${MONO};font-size:15px;color:#a6a4a0">${CUR()}</span><input value="${escapeHtml(s.packCost)}" oninput="App.setField('packCost',this.value)" data-fkey="m-packCost" inputmode="decimal" placeholder="50.00" style="width:100%;min-width:0;text-align:right;background:transparent;border:0;color:#eae7e1;font-size:16px;${MONO}"></div><span style="width:26px"></span>`)}
+${mRow('Pack of', `<input value="${escapeHtml(s.rolls)}" oninput="App.setField('rolls',this.value)" data-fkey="m-rolls" inputmode="numeric" placeholder="1" style="width:96px;height:44px;text-align:right;${M_INPUT}"><span style="width:26px;font-size:12px;text-transform:uppercase;color:#9c9994">Rl</span>`)}
+${mRow('Postage', `<div style="display:flex;align-items:center;width:96px;height:44px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px"><span style="${MONO};font-size:15px;color:#a6a4a0">${CUR()}</span><input value="${escapeHtml(s.postage)}" oninput="App.setField('postage',this.value)" data-fkey="m-postage" inputmode="decimal" placeholder="3.95" style="width:100%;min-width:0;text-align:right;background:transparent;border:0;color:#eae7e1;font-size:16px;${MONO}"></div><span style="width:26px"></span>`)}
+<button type="button" onclick="App.toggleExtras()" aria-expanded="${s.extrasOpen ? 'true' : 'false'}" style="width:100%;height:48px;display:flex;align-items:center;justify-content:space-between;background:#0f0f11;border:0;border-top:1px solid #212125;padding:0 14px;color:#928e88;font-size:12px;letter-spacing:.16em;text-transform:uppercase;cursor:pointer"><span>Extra fees / Advanced</span><span style="${MONO};font-size:16px">${s.extrasOpen ? '–' : '+'}</span></button>
 ${s.extrasOpen ? `<div style="background:#0f0f11;border-top:1px solid #212125">
 ${mRow('Mail-back', `<button type="button" onclick="App.toggleFlag('fMail')" role="switch" aria-checked="${s.fMail ? 'true' : 'false'}" aria-label="Mail-back" style="width:56px;height:32px;border-radius:16px;border:1px solid #33333a;position:relative;cursor:pointer;padding:0;background:${s.fMail ? 'var(--acc)' : '#1a1a1d'}"><span style="position:absolute;top:3px;width:24px;height:24px;border-radius:50%;background:#eae7e1;transition:left .15s;left:${s.fMail ? '29px' : '3px'}"></span></button><span style="width:26px"></span>`, true)}
 ${s.fMail ? mRow(t('v2SettingsMailRolls'), `<input value="${escapeHtml(s.mailRolls)}" oninput="App.setSetting('mailRolls',this.value)" data-fkey="mailRolls" inputmode="numeric" style="width:96px;height:44px;text-align:right;${M_INPUT}"><span style="width:26px"></span>`) : ''}
 </div>` : ''}
 </div>
-<div style="${MONO};margin-top:8px;font-size:12px;color:#7a7770;line-height:1.5">${CUR()}${money(num(s.packCost) / rolls)} per roll · ${rolls} roll${rolls === 1 ? '' : 's'} · ${CUR()}${money(num(s.postage) / rolls)} postage · ${r.exp} shots</div>
+<div style="${MONO};margin-top:8px;font-size:12px;color:#9c9994;line-height:1.5">${CUR()}${money(num(s.packCost) / rolls)} per roll · ${rolls} roll${rolls === 1 ? '' : 's'} · ${CUR()}${money(num(s.postage) / rolls)} postage · ${r.exp} shots</div>
 ${pushWarn ? `<div style="display:flex;align-items:center;gap:9px;margin-top:10px;padding:12px 14px;border:1px solid #5a3a1c;border-radius:10px;background:#17140f">
 <span style="width:7px;height:7px;border-radius:50%;background:var(--acc);flex-shrink:0"></span>
 <span style="font-size:13px;line-height:1.45;color:#ffa268">${stopsAbs} stops of ${r.stopsSigned > 0 ? 'push' : 'pull'} — ${loaded ? `${escapeHtml(loaded.name)} is rated for ${limit === 0 ? 'no push/pull' : '±' + limit}` : 'most stocks hold ±2'}, so expect heavy grain and contrast shift.</span>
 </div>` : ''}
 <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;padding:12px 14px;border:1px solid ${cheaper.has ? '#5a3a1c' : '#26262a'};border-radius:10px;background:${cheaper.has ? '#17140f' : '#131315'}">
-<div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:${cheaper.has ? SECTION_COLORS.films : '#8b8781'}">${escapeHtml(cheaper.label)}</div>
+<div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:${cheaper.has ? SECTION_COLORS.films : '#928e88'}">${escapeHtml(cheaper.label)}</div>
 ${cheaper.has ? cheaper.options.map((o, i) => `
 <div style="display:flex;flex-direction:column;gap:6px;${i > 0 ? 'padding-top:8px;border-top:1px solid #26262a' : ''}">
 <div style="font-size:13px;line-height:1.45;color:#c9c5bd">${escapeHtml(o.text)}</div>
@@ -1779,45 +1794,45 @@ ${cheaper.has ? cheaper.options.map((o, i) => `
 </div>
 <div style="display:flex;align-items:center;gap:10px;margin-top:14px">
 <button type="button" onclick="App.saveToLibrary()" style="flex:1;height:44px;background:#1c1512;border:1px solid #5a3a1c;border-radius:8px;color:var(--acc);font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Save to library</button>
-<button type="button" onclick="App.shareLink()" title="Copy a link that reopens this lookup with the same values" style="flex:1;height:44px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Share</button>
-<button type="button" onclick="App.clearForm()" style="flex:1;height:44px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Clear</button>
+<button type="button" onclick="App.shareLink()" title="Copy a link that reopens this lookup with the same values" style="flex:1;height:44px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#928e88;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Share</button>
+<button type="button" onclick="App.clearForm()" style="flex:1;height:44px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#928e88;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Clear</button>
 </div>
 
-${mSectionHead('Saved lab costs', `<span style="${MONO};font-size:12px;color:#7a7770">${r.ranked.length} of ${totalLabs}</span>`, SECTION_COLORS.labs)}
+${mSectionHead('Saved lab costs', `<span style="${MONO};font-size:12px;color:#9c9994">${r.ranked.length} of ${totalLabs}</span>`, SECTION_COLORS.labs)}
 <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-<span style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#7a7770;white-space:nowrap">Requires</span>
+<span style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#9c9994;white-space:nowrap">Requires</span>
 ${chips}
 </div>
-<div style="${MONO};margin:-2px 0 10px;font-size:12px;color:#7a7770">${filterNote}</div>
-<div style="display:flex;flex-direction:column;gap:8px">${labRows || `<div style="padding:14px;font-size:12px;color:#5f5c57;background:#131315;border:1px solid #26262a;border-radius:10px">No labs saved yet — add one.</div>`}</div>
+<div style="${MONO};margin:-2px 0 10px;font-size:12px;color:#9c9994">${filterNote}</div>
+<div style="display:flex;flex-direction:column;gap:8px">${labRows || `<div style="padding:14px;font-size:12px;color:#b0aeac;background:#131315;border:1px solid #26262a;border-radius:10px">No labs saved yet — add one.</div>`}</div>
 
 ${mSectionHead('Saved film stock', null, SECTION_COLORS.films)}
 <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-<select onchange="App.setField('isoFilter',this.value)" style="height:36px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 8px;color:#c9c5bd;font-size:13px;${MONO}">
+<select onchange="App.setField('isoFilter',this.value)" aria-label="Filter saved film stock by ISO" style="height:36px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 8px;color:#c9c5bd;font-size:13px;${MONO}">
 <option value="shoot" ${s.isoFilter === 'shoot' ? 'selected' : ''}>Shooting ${shootIso || '—'}</option>
 <option value="all" ${s.isoFilter === 'all' ? 'selected' : ''}>All</option>
 ${isoValues.map(v => `<option value="${v}" ${s.isoFilter === String(v) ? 'selected' : ''}>${v}</option>`).join('')}
 </select>
 </div>
-<button type="button" onclick="App.togglePushPull()" style="display:flex;align-items:center;gap:10px;width:100%;height:44px;padding:0 12px;margin-bottom:10px;border-radius:8px;cursor:pointer;text-align:left;${s.allowPushPull ? `background:#17140f;border:1px solid #5a3a1c;color:${SECTION_COLORS.films}` : 'background:#141416;border:1px solid #2c2c30;color:#8b8781'}">
+<button type="button" onclick="App.togglePushPull()" style="display:flex;align-items:center;gap:10px;width:100%;height:44px;padding:0 12px;margin-bottom:10px;border-radius:8px;cursor:pointer;text-align:left;${s.allowPushPull ? `background:#17140f;border:1px solid #5a3a1c;color:${SECTION_COLORS.films}` : 'background:#141416;border:1px solid #2c2c30;color:#928e88'}">
 <span style="display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:4px;font-size:13px;${s.allowPushPull ? `background:${SECTION_COLORS.films};border:1px solid ${SECTION_COLORS.films};color:#131315` : 'background:#1a1a1d;border:1px solid #33333a;color:transparent'}">✓</span>
 <span style="font-size:13px;letter-spacing:.08em;text-transform:uppercase">Include push/pull stocks</span>
 </button>
-<div style="display:flex;flex-direction:column;gap:8px">${filmCards || `<div style="padding:14px;font-size:12px;color:#5f5c57;background:#131315;border:1px solid #26262a;border-radius:10px">No film stock saved for ${formatLabel(s.format)} · ${filmTypeLabel(s.filmColor)} yet.</div>`}</div>
-<div style="${MONO};margin-top:10px;font-size:12px;line-height:1.5;color:#5f5c57">Per-roll price is the cheapest saved price for each stock, plus the push/pull stops needed to reach your shooting ISO.</div>
+<div style="display:flex;flex-direction:column;gap:8px">${filmCards || `<div style="padding:14px;font-size:12px;color:#b0aeac;background:#131315;border:1px solid #26262a;border-radius:10px">No film stock saved for ${formatLabel(s.format)} · ${filmTypeLabel(s.filmColor)} yet.</div>`}</div>
+<div style="${MONO};margin-top:10px;font-size:12px;line-height:1.5;color:#b0aeac">Per-roll price is the cheapest saved price for each stock, plus the push/pull stops needed to reach your shooting ISO.</div>
 </div>`;
 }
 
 function mLibCard(kind, key, name, meta, price, hidden) {
     return `<div style="border:1px solid #26262a;border-radius:10px;background:#131315;padding:14px">
 <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
-<span><span style="display:block;font-size:16px;color:${hidden ? '#6d6a64' : '#eae7e1'}">${escapeHtml(name)}</span><span style="${MONO};display:block;font-size:12px;color:#7a7770;margin-top:4px">${meta}</span></span>
+<span><span style="display:block;font-size:16px;color:${hidden ? '#a6a4a0' : '#eae7e1'}">${escapeHtml(name)}</span><span style="${MONO};display:block;font-size:12px;color:#9c9994;margin-top:4px">${meta}</span></span>
 <span style="${MONO};font-size:17px;color:#c9c5bd">${price}</span>
 </div>
 <div style="display:flex;gap:8px;margin-top:12px">
-<button type="button" onclick="App.toggleHidden('${kind}','${jsAttr(key)}')" style="flex:1;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#8b8781;font-size:12px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${hidden ? t('v2ButtonShow') : t('v2ButtonHide')}</button>
-<button type="button" onclick="App.${kind === 'film' ? 'editFilm' : 'editLab'}('${jsAttr(key)}')" style="flex:1;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#8b8781;font-size:12px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">Edit</button>
-<button type="button" onclick="App.removeItem('${kind}','${jsAttr(key)}')" style="width:52px;height:44px;display:flex;align-items:center;justify-content:center;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#8b8781;cursor:pointer;padding:0"><svg style="width:16px;height:16px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 7h14M10 7V5h4v2M6 7l1 13h10l1-13M10 11v6M14 11v6"></path></svg></button>
+<button type="button" onclick="App.toggleHidden('${kind}','${jsAttr(key)}')" style="flex:1;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#928e88;font-size:12px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${hidden ? t('v2ButtonShow') : t('v2ButtonHide')}</button>
+<button type="button" onclick="App.${kind === 'film' ? 'editFilm' : 'editLab'}('${jsAttr(key)}')" style="flex:1;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#928e88;font-size:12px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">Edit</button>
+<button type="button" onclick="App.removeItem('${kind}','${jsAttr(key)}')" style="width:52px;height:44px;display:flex;align-items:center;justify-content:center;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#928e88;cursor:pointer;padding:0"><svg style="width:16px;height:16px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 7h14M10 7V5h4v2M6 7l1 13h10l1-13M10 11v6M14 11v6"></path></svg></button>
 </div>
 </div>`;
 }
@@ -1827,7 +1842,7 @@ function renderMobileLibrary(s) {
     const filmCount = Object.keys(allFilms).length, labCount = Object.keys(allLabs).length;
     const tab = s.libTab === 'labs' ? 'labs' : 'films';
     const filmsTone = btnTone(tab === 'films'), labsTone = btnTone(tab === 'labs');
-    const emptyCard = `<div style="padding:14px;font-size:12px;color:#5f5c57;background:#131315;border:1px solid #26262a;border-radius:10px">Nothing saved yet.</div>`;
+    const emptyCard = `<div style="padding:14px;font-size:12px;color:#b0aeac;background:#131315;border:1px solid #26262a;border-radius:10px">Nothing saved yet.</div>`;
 
     const search = s.libSearch.trim().toLowerCase();
     const filmSection = () => {
@@ -1838,12 +1853,12 @@ function renderMobileLibrary(s) {
             const meta = `${f.boxSpeed} · ${procLabel(f.process)} · ${bundles.length} price${bundles.length === 1 ? '' : 's'}`;
             return mLibCard('film', key, f.name, meta, `${CUR()}${money(cheapest.filmCost / cheapest.rolls)}`, f.hidden);
         }).join('');
-        const empty = search ? `<div style="padding:14px;font-size:12px;color:#5f5c57;background:#131315;border:1px solid #26262a;border-radius:10px">No film stock matches "${escapeHtml(s.libSearch.trim())}".</div>` : emptyCard;
+        const empty = search ? `<div style="padding:14px;font-size:12px;color:#b0aeac;background:#131315;border:1px solid #26262a;border-radius:10px">No film stock matches "${escapeHtml(s.libSearch.trim())}".</div>` : emptyCard;
         return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
 <div style="width:6px;height:6px;background:var(--acc);border-radius:50%"></div>
 <div style="${NARROW};font-size:16px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#eae7e1">Films</div>
 <div style="flex:1;height:1px;background:#26262a"></div>
-<button type="button" onclick="App.newFilm()" style="height:36px;background:#141416;border:1px solid #2c2c30;border-radius:8px;padding:0 12px;color:#8b8781;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">New</button>
+<button type="button" onclick="App.newFilm()" style="height:36px;background:#141416;border:1px solid #2c2c30;border-radius:8px;padding:0 12px;color:#928e88;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">New</button>
 </div>
 <div class="lib-grid">${filmCards || empty}</div>`;
     };
@@ -1855,12 +1870,12 @@ function renderMobileLibrary(s) {
             const meta = `${tiers.length} tier${tiers.length === 1 ? '' : 's'}`;
             return mLibCard('lab', name, name, meta, `${CUR()}${money(cheapest.devCost)}`, l.hidden);
         }).join('');
-        const empty = search ? `<div style="padding:14px;font-size:12px;color:#5f5c57;background:#131315;border:1px solid #26262a;border-radius:10px">No lab matches "${escapeHtml(s.libSearch.trim())}".</div>` : emptyCard;
+        const empty = search ? `<div style="padding:14px;font-size:12px;color:#b0aeac;background:#131315;border:1px solid #26262a;border-radius:10px">No lab matches "${escapeHtml(s.libSearch.trim())}".</div>` : emptyCard;
         return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
 <div style="width:6px;height:6px;background:var(--acc);border-radius:50%"></div>
 <div style="${NARROW};font-size:16px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#eae7e1">Labs</div>
 <div style="flex:1;height:1px;background:#26262a"></div>
-<button type="button" onclick="App.newLab()" style="height:36px;background:#141416;border:1px solid #2c2c30;border-radius:8px;padding:0 12px;color:#8b8781;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">New</button>
+<button type="button" onclick="App.newLab()" style="height:36px;background:#141416;border:1px solid #2c2c30;border-radius:8px;padding:0 12px;color:#928e88;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">New</button>
 </div>
 <div class="lib-grid">${labCards || empty}</div>`;
     };
@@ -1870,7 +1885,7 @@ function renderMobileLibrary(s) {
 <button type="button" onclick="App.setField('libTab','films')" style="flex:1;height:44px;background:${filmsTone.bg};border:1px solid ${filmsTone.border};border-radius:8px;color:${filmsTone.color};font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Films (${filmCount})</button>
 <button type="button" onclick="App.setField('libTab','labs')" style="flex:1;height:44px;background:${labsTone.bg};border:1px solid ${labsTone.border};border-radius:8px;color:${labsTone.color};font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Labs (${labCount})</button>
 </div>
-${filmCount || labCount ? `<button type="button" onclick="App.submitLibrary()" title="Copies your saved films/labs to the clipboard and opens a GitHub issue to paste them into, for a maintainer to review and add as shared presets" style="width:100%;box-sizing:border-box;height:40px;background:transparent;border:1px dashed #33333a;border-radius:8px;color:#8b8781;font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;margin-bottom:14px">Submit my library for the shared presets ↗</button>` : ''}
+${filmCount || labCount ? `<button type="button" onclick="App.submitLibrary()" title="Copies your saved films/labs to the clipboard and opens a GitHub issue to paste them into, for a maintainer to review and add as shared presets" style="width:100%;box-sizing:border-box;height:40px;background:transparent;border:1px dashed #33333a;border-radius:8px;color:#928e88;font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;margin-bottom:14px">Submit my library for the shared presets ↗</button>` : ''}
 <input value="${escapeHtml(s.libSearch)}" oninput="App.setField('libSearch',this.value)" data-fkey="m-libSearch" placeholder="Search by name…" style="width:100%;box-sizing:border-box;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 12px;color:#eae7e1;font-size:15px;margin-bottom:20px">
 ${tab === 'films' ? filmSection() : labSection()}
 </div>`;
@@ -1886,7 +1901,7 @@ function renderMobileExpired(s) {
         const on = s.storage === key;
         return `<button type="button" onclick="App.setField('storage','${key}')" style="display:block;width:100%;text-align:left;border-radius:8px;padding:12px;cursor:pointer;${on ? 'background:#17140f;border:1px solid #5a3a1c' : 'background:#1a1a1d;border:1px solid #33333a'}">
 <span style="display:block;font-size:15px;color:${on ? 'var(--acc)' : '#c9c5bd'}">${label}</span>
-<span style="display:block;font-size:12px;line-height:1.45;color:#7a7770;margin-top:4px">${help}</span>
+<span style="display:block;font-size:12px;line-height:1.45;color:#9c9994;margin-top:4px">${help}</span>
 </button>`;
     }).join('');
     return `<div style="padding:16px 12px 0">
@@ -1895,7 +1910,7 @@ function renderMobileExpired(s) {
 <div style="${NARROW};font-size:16px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#eae7e1">Expired film</div>
 <div style="flex:1;height:1px;background:#26262a"></div>
 </div>
-<p style="margin:0 0 12px;font-size:14px;line-height:1.5;color:#8b8781">Old film loses speed as it ages. Enter the roll's box speed and expiry, and this gives you what to rate it at.</p>
+<p style="margin:0 0 12px;font-size:14px;line-height:1.5;color:#928e88">Old film loses speed as it ages. Enter the roll's box speed and expiry, and this gives you what to rate it at.</p>
 <div class="field-grid" style="${M_CARD}">
 ${mRow('Expiry', `<select onchange="App.setField('expiryMonth',this.value)" style="width:88px;height:44px;${M_INPUT};font-size:15px">${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => `<option value="${i + 1}" ${String(s.expiryMonth) === String(i + 1) ? 'selected' : ''}>${m}</option>`).join('')}</select><input value="${escapeHtml(s.expiryYear)}" oninput="App.setField('expiryYear',this.value)" data-fkey="m-expiryYear" inputmode="numeric" placeholder="2006" style="width:96px;height:44px;text-align:right;${M_INPUT}">`, true, true)}
 ${mRow('Box speed', `<input value="${escapeHtml(s.expBox)}" oninput="App.setField('expBox',this.value)" data-fkey="m-expBox" inputmode="numeric" style="width:120px;height:44px;text-align:right;${M_INPUT}">`)}
@@ -1905,17 +1920,20 @@ ${mRow('Development', `<select onchange="App.setField('filmType',this.value)" st
 <div style="display:flex;flex-direction:column;gap:6px">${storageOptions}</div>
 </div>
 <div style="display:flex;align-items:baseline;gap:12px;padding:14px;border-top:1px solid #212125;background:#0f0f11;flex-wrap:wrap">
-<div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#7a7770">Rate it at</div>
+<div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9c9994">Rate it at</div>
 <div style="${MONO};font-size:30px;color:var(--acc)">${c.rated}</div>
 <div style="font-size:13px;color:#a9a59e">${c.note}</div>
 </div>
 </div>
-<div style="${MONO};margin-top:10px;font-size:12px;color:#7a7770">${c.ageNote}</div>
+<div style="${MONO};margin-top:10px;font-size:12px;color:#9c9994">${c.ageNote}</div>
 </div>`;
 }
 
+// <label> (not <div>) for the same accessible-name-for-free reason as
+// mRow above — display:block keeps the original div's block layout since
+// <label> defaults to inline.
 function mField(label, inputHtml) {
-    return `<div><div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781;margin-bottom:6px">${label}</div>${inputHtml}</div>`;
+    return `<label style="display:block"><div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#928e88;margin-bottom:6px">${label}</div>${inputHtml}</label>`;
 }
 const M_FIELD_INPUT = "width:100%;box-sizing:border-box;height:48px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 12px;color:#eae7e1;font-size:16px";
 
@@ -1935,7 +1953,7 @@ function editRow(title, meta, onclick) {
     return `<button type="button" onclick="${onclick}" style="width:100%;text-align:left;display:flex;align-items:center;gap:10px;padding:12px;background:#131315;border:1px solid #26262a;border-radius:10px;color:inherit;cursor:pointer">
 <div style="flex:1;min-width:0">
 <div style="font-size:14px;color:#c9c5bd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${title}</div>
-<div style="${MONO};font-size:12px;color:#7a7770;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${meta}</div>
+<div style="${MONO};font-size:12px;color:#9c9994;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${meta}</div>
 </div>
 ${EDIT_ICON}
 </button>`;
@@ -1951,7 +1969,7 @@ function renderMobileEditFilm(s) {
     return `<div style="position:fixed;inset:0;z-index:50;background:#0b0b0c;display:flex;flex-direction:column">
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border-bottom:1px solid #26262a;background:#0e0e10">
 <span style="${NARROW};font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">Edit film stock</span>
-<button type="button" onclick="App.cancelDraft()" style="width:44px;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#8b8781;font-size:18px;cursor:pointer;padding:0">×</button>
+<button type="button" onclick="App.cancelDraft()" style="width:44px;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#928e88;font-size:18px;cursor:pointer;padding:0">×</button>
 </div>
 <div style="flex:1;overflow:auto;padding:14px 12px;display:flex;flex-direction:column;gap:10px">
 ${mField('Name', `<input value="${escapeHtml(d.name)}" oninput="App.setDraftField('name',this.value)" data-fkey="m-draft-name" style="${M_FIELD_INPUT}">`)}
@@ -1965,15 +1983,15 @@ ${mField('Name', `<input value="${escapeHtml(d.name)}" oninput="App.setDraftFiel
 </div>
 ${mField('Type', `<select onchange="App.setDraftField('colorType',this.value)" style="${M_FIELD_INPUT}">${FILM_TYPE_OPTIONS.map(o => `<option value="${o.value}" ${(d.colorType || filmColorType(d)) === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>`)}
 <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px">
-<div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781">Where to buy</div>
-<button type="button" onclick="App.addBundle()" style="align-self:flex-start;height:36px;background:#141416;border:1px solid #2c2c30;border-radius:8px;padding:0 14px;color:#8b8781;font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;white-space:nowrap">+ Add price</button>
+<div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#928e88">Where to buy</div>
+<button type="button" onclick="App.addBundle()" style="align-self:flex-start;height:36px;background:#141416;border:1px solid #2c2c30;border-radius:8px;padding:0 14px;color:#928e88;font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;white-space:nowrap">+ Add price</button>
 </div>
-${bundles || `<div style="${MONO};font-size:12px;color:#5f5c57;padding:4px 2px">No purchase links yet.</div>`}
-<a href="javascript:void(0)" onclick="App.suggestToPresets()" style="align-self:flex-start;margin-top:4px;font-size:11px;color:#8b8781;cursor:pointer">Suggest this for the shared presets ↗</a>
+${bundles || `<div style="${MONO};font-size:12px;color:#b0aeac;padding:4px 2px">No purchase links yet.</div>`}
+<a href="javascript:void(0)" onclick="App.suggestToPresets()" style="align-self:flex-start;margin-top:4px;font-size:11px;color:#928e88;cursor:pointer">Suggest this for the shared presets ↗</a>
 </div>
 <div style="display:flex;gap:10px;padding:12px;border-top:1px solid #26262a;background:#0e0e10">
 <button type="button" onclick="App.saveDraft()" style="flex:1;height:50px;background:#1c1512;border:1px solid #5a3a1c;border-radius:8px;color:var(--acc);font-size:13px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Save film</button>
-<button type="button" onclick="App.cancelDraft()" style="width:110px;height:50px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;font-size:13px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Cancel</button>
+<button type="button" onclick="App.cancelDraft()" style="width:110px;height:50px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#928e88;font-size:13px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Cancel</button>
 </div>
 </div>`;
 }
@@ -1985,32 +2003,34 @@ ${bundles || `<div style="${MONO};font-size:12px;color:#5f5c57;padding:4px 2px">
 function renderBundleEditModal(s) {
     const i = s.subEditIndex;
     const b = s.draft.bundles[i];
-    const bundleLabel = (text) => `<div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#5f5c57;margin-bottom:4px">${text}</div>`;
+    // <label> wrapper (not a bare <div>) so the field gets an accessible
+    // name from its visible text, same reasoning as mRow/mField above.
+    const bundleLabel = (text, controlHtml) => `<label style="display:block"><div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#b0aeac;margin-bottom:4px">${text}</div>${controlHtml}</label>`;
     return `<div style="position:fixed;inset:0;z-index:55;background:#0b0b0c;display:flex;flex-direction:column">
 <div style="display:flex;align-items:center;gap:10px;padding:12px;border-bottom:1px solid #26262a;background:#0e0e10">
-<button type="button" onclick="App.closeBundleEditor()" title="Back" style="flex-shrink:0;width:44px;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#8b8781;font-size:18px;cursor:pointer;padding:0">‹</button>
+<button type="button" onclick="App.closeBundleEditor()" title="Back" style="flex-shrink:0;width:44px;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#928e88;font-size:18px;cursor:pointer;padding:0">‹</button>
 <span style="${NARROW};flex:1;font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">Purchase link</span>
-<button type="button" onclick="App.removeBundle(${i})" title="Delete" style="flex-shrink:0;width:44px;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#c0554a;font-size:16px;cursor:pointer;padding:0">×</button>
+<button type="button" onclick="App.removeBundle(${i})" title="Delete" style="flex-shrink:0;width:44px;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#d2857d;font-size:16px;cursor:pointer;padding:0">×</button>
 </div>
 <div style="flex:1;overflow:auto;padding:14px 12px;display:flex;flex-direction:column;gap:10px">
-${bundleLabel('Store')}<input value="${escapeHtml(b.storeName)}" oninput="App.setBundleField(${i},'storeName',this.value)" data-fkey="m-bundle-${i}-storeName" placeholder="Store" style="${M_FIELD_INPUT}">
+${bundleLabel('Store', `<input value="${escapeHtml(b.storeName)}" oninput="App.setBundleField(${i},'storeName',this.value)" data-fkey="m-bundle-${i}-storeName" placeholder="Store" style="${M_FIELD_INPUT}">`)}
 <div style="display:flex;gap:10px">
-<div style="flex:1;min-width:0">${bundleLabel('Rolls')}<input value="${b.rolls}" oninput="App.setBundleField(${i},'rolls',this.value)" data-fkey="m-bundle-${i}-rolls" inputmode="numeric" placeholder="Rolls" style="width:100%;${M_FIELD_INPUT};${MONO}"></div>
-<div style="flex:1;min-width:0">${bundleLabel('Exposures')}<input value="${b.exposures}" oninput="App.setBundleField(${i},'exposures',this.value)" data-fkey="m-bundle-${i}-exposures" inputmode="numeric" placeholder="Exp" style="width:100%;${M_FIELD_INPUT};${MONO}"></div>
-<div style="flex:1;min-width:0">${bundleLabel('Price')}<input value="${b.filmCost}" oninput="App.setBundleField(${i},'filmCost',this.value)" data-fkey="m-bundle-${i}-filmCost" inputmode="decimal" placeholder="Price" style="width:100%;${M_FIELD_INPUT};${MONO}"></div>
+<div style="flex:1;min-width:0">${bundleLabel('Rolls', `<input value="${b.rolls}" oninput="App.setBundleField(${i},'rolls',this.value)" data-fkey="m-bundle-${i}-rolls" inputmode="numeric" placeholder="Rolls" style="width:100%;${M_FIELD_INPUT};${MONO}">`)}</div>
+<div style="flex:1;min-width:0">${bundleLabel('Exposures', `<input value="${b.exposures}" oninput="App.setBundleField(${i},'exposures',this.value)" data-fkey="m-bundle-${i}-exposures" inputmode="numeric" placeholder="Exp" style="width:100%;${M_FIELD_INPUT};${MONO}">`)}</div>
+<div style="flex:1;min-width:0">${bundleLabel('Price', `<input value="${b.filmCost}" oninput="App.setBundleField(${i},'filmCost',this.value)" data-fkey="m-bundle-${i}-filmCost" inputmode="decimal" placeholder="Price" style="width:100%;${M_FIELD_INPUT};${MONO}">`)}</div>
 </div>
-${bundleLabel('Buy link')}<input value="${escapeHtml(b.buyLink)}" oninput="App.setBundleField(${i},'buyLink',this.value)" data-fkey="m-bundle-${i}-buyLink" inputmode="url" placeholder="https://… buy link" style="${M_FIELD_INPUT}">
-${bundleLabel('Availability')}<select onchange="App.setBundleField(${i},'availability',this.value)" title="Whether this price is achievable anywhere in the country without paying postage (National), or only near the store's own state/city." style="${M_FIELD_INPUT}">
+${bundleLabel('Buy link', `<input value="${escapeHtml(b.buyLink)}" oninput="App.setBundleField(${i},'buyLink',this.value)" data-fkey="m-bundle-${i}-buyLink" inputmode="url" placeholder="https://… buy link" style="${M_FIELD_INPUT}">`)}
+${bundleLabel('Availability', `<select onchange="App.setBundleField(${i},'availability',this.value)" title="Whether this price is achievable anywhere in the country without paying postage (National), or only near the store's own state/city." style="${M_FIELD_INPUT}">
 <option value="national" ${(b.availability || 'national') === 'national' ? 'selected' : ''}>National</option>
 <option value="state" ${b.availability === 'state' ? 'selected' : ''}>State-only</option>
 <option value="city" ${b.availability === 'city' ? 'selected' : ''}>City-only</option>
-</select>
+</select>`)}
 ${(b.availability === 'state' || b.availability === 'city') ? (() => {
     const { states, cities } = knownStatesAndCities();
     const dataOptions = (values) => values.map(v => `<option value="${escapeHtml(v)}">`).join('');
     return `<div style="display:flex;gap:10px">
-<div style="flex:1;min-width:0">${bundleLabel('State')}<input value="${escapeHtml(b.state || '')}" oninput="App.setBundleField(${i},'state',this.value)" data-fkey="m-bundle-${i}-state" placeholder="Victoria" list="bundle-state-options" style="width:100%;${M_FIELD_INPUT}"></div>
-${b.availability === 'city' ? `<div style="flex:1;min-width:0">${bundleLabel('City')}<input value="${escapeHtml(b.city || '')}" oninput="App.setBundleField(${i},'city',this.value)" data-fkey="m-bundle-${i}-city" placeholder="Melbourne" list="bundle-city-options" style="width:100%;${M_FIELD_INPUT}"></div>` : ''}
+<div style="flex:1;min-width:0">${bundleLabel('State', `<input value="${escapeHtml(b.state || '')}" oninput="App.setBundleField(${i},'state',this.value)" data-fkey="m-bundle-${i}-state" placeholder="Victoria" list="bundle-state-options" style="width:100%;${M_FIELD_INPUT}">`)}</div>
+${b.availability === 'city' ? `<div style="flex:1;min-width:0">${bundleLabel('City', `<input value="${escapeHtml(b.city || '')}" oninput="App.setBundleField(${i},'city',this.value)" data-fkey="m-bundle-${i}-city" placeholder="Melbourne" list="bundle-city-options" style="width:100%;${M_FIELD_INPUT}">`)}</div>` : ''}
 </div>
 <datalist id="bundle-state-options">${dataOptions(states)}</datalist>
 <datalist id="bundle-city-options">${dataOptions(cities)}</datalist>`;
@@ -2032,7 +2052,7 @@ function renderMobileEditLab(s) {
     return `<div style="position:fixed;inset:0;z-index:50;background:#0b0b0c;display:flex;flex-direction:column">
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border-bottom:1px solid #26262a;background:#0e0e10">
 <span style="${NARROW};font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">Edit lab</span>
-<button type="button" onclick="App.cancelDraft()" style="width:44px;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#8b8781;font-size:18px;cursor:pointer;padding:0">×</button>
+<button type="button" onclick="App.cancelDraft()" style="width:44px;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#928e88;font-size:18px;cursor:pointer;padding:0">×</button>
 </div>
 <div style="flex:1;overflow:auto;padding:14px 12px;display:flex;flex-direction:column;gap:10px">
 ${mField('Name', `<input value="${escapeHtml(d.name)}" oninput="App.setDraftField('name',this.value)" data-fkey="m-draft-name" style="${M_FIELD_INPUT}">`)}
@@ -2041,15 +2061,15 @@ ${mField('Website', `<input value="${escapeHtml(d.website || '')}" oninput="App.
 ${mField('Phone', `<input value="${escapeHtml(d.phone || '')}" oninput="App.setDraftField('phone',this.value)" data-fkey="m-draft-phone" style="${M_FIELD_INPUT}">`)}
 ${mField('Email', `<input value="${escapeHtml(d.email || '')}" oninput="App.setDraftField('email',this.value)" data-fkey="m-draft-email" style="${M_FIELD_INPUT}">`)}
 <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px">
-<div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8b8781">Service tiers</div>
-<button type="button" onclick="App.addTier()" style="align-self:flex-start;height:36px;background:#141416;border:1px solid #2c2c30;border-radius:8px;padding:0 14px;color:#8b8781;font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;white-space:nowrap">+ Add tier</button>
+<div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#928e88">Service tiers</div>
+<button type="button" onclick="App.addTier()" style="align-self:flex-start;height:36px;background:#141416;border:1px solid #2c2c30;border-radius:8px;padding:0 14px;color:#928e88;font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;white-space:nowrap">+ Add tier</button>
 </div>
-${tiers || `<div style="${MONO};font-size:12px;color:#5f5c57;padding:4px 2px">No service tiers yet.</div>`}
-<a href="javascript:void(0)" onclick="App.suggestToPresets()" style="align-self:flex-start;margin-top:4px;font-size:11px;color:#8b8781;cursor:pointer">Suggest this for the shared presets ↗</a>
+${tiers || `<div style="${MONO};font-size:12px;color:#b0aeac;padding:4px 2px">No service tiers yet.</div>`}
+<a href="javascript:void(0)" onclick="App.suggestToPresets()" style="align-self:flex-start;margin-top:4px;font-size:11px;color:#928e88;cursor:pointer">Suggest this for the shared presets ↗</a>
 </div>
 <div style="display:flex;gap:10px;padding:12px;border-top:1px solid #26262a;background:#0e0e10">
 <button type="button" onclick="App.saveDraft()" style="flex:1;height:50px;background:#1c1512;border:1px solid #5a3a1c;border-radius:8px;color:var(--acc);font-size:13px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Save lab</button>
-<button type="button" onclick="App.cancelDraft()" style="width:110px;height:50px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#8b8781;font-size:13px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Cancel</button>
+<button type="button" onclick="App.cancelDraft()" style="width:110px;height:50px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#928e88;font-size:13px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Cancel</button>
 </div>
 </div>`;
 }
@@ -2063,31 +2083,31 @@ function renderTierEditModal(s) {
     const t = s.draft.services[i];
     return `<div style="position:fixed;inset:0;z-index:55;background:#0b0b0c;display:flex;flex-direction:column">
 <div style="display:flex;align-items:center;gap:10px;padding:12px;border-bottom:1px solid #26262a;background:#0e0e10">
-<button type="button" onclick="App.closeTierEditor()" title="Back" style="flex-shrink:0;width:44px;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#8b8781;font-size:18px;cursor:pointer;padding:0">‹</button>
+<button type="button" onclick="App.closeTierEditor()" title="Back" style="flex-shrink:0;width:44px;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#928e88;font-size:18px;cursor:pointer;padding:0">‹</button>
 <span style="${NARROW};flex:1;font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">Service tier</span>
-<button type="button" onclick="App.removeTier(${i})" title="Delete" style="flex-shrink:0;width:44px;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#c0554a;font-size:16px;cursor:pointer;padding:0">×</button>
+<button type="button" onclick="App.removeTier(${i})" title="Delete" style="flex-shrink:0;width:44px;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#d2857d;font-size:16px;cursor:pointer;padding:0">×</button>
 </div>
 <div style="flex:1;overflow:auto;padding:14px 12px">
-<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0">
-<label style="font-size:14px;color:#a9a59e">Cost / roll</label>
-<div style="display:flex;align-items:center;width:120px;height:44px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px"><span style="${MONO};font-size:15px;color:#6d6a64">${CUR()}</span><input value="${t.devCost}" oninput="App.setTierField(${i},'devCost',this.value)" data-fkey="m-tier-${i}-devCost" inputmode="decimal" style="width:100%;min-width:0;text-align:right;background:transparent;border:0;color:#eae7e1;font-size:16px;${MONO}"></div>
-</div>
-<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid #212125">
-<label style="font-size:14px;color:#a9a59e">Mail-back</label>
-<div style="display:flex;align-items:center;width:120px;height:44px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px"><span style="${MONO};font-size:15px;color:#6d6a64">${CUR()}</span><input value="${t.mailBackCost ?? ''}" oninput="App.setTierField(${i},'mailBackCost',this.value)" data-fkey="m-tier-${i}-mailBackCost" inputmode="decimal" placeholder="n/a" style="width:100%;min-width:0;text-align:right;background:transparent;border:0;color:#eae7e1;font-size:16px;${MONO}"></div>
-</div>
-<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid #212125">
-<label style="font-size:14px;color:#a9a59e">Push/pull fee</label>
-<div style="display:flex;align-items:center;width:120px;height:44px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px"><span style="${MONO};font-size:15px;color:#6d6a64">${CUR()}</span><input value="${t.pushPullCost}" oninput="App.setTierField(${i},'pushPullCost',this.value)" data-fkey="m-tier-${i}-pushPullCost" inputmode="decimal" style="width:100%;min-width:0;text-align:right;background:transparent;border:0;color:#eae7e1;font-size:16px;${MONO}"></div>
-</div>
-<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid #212125">
-<label style="font-size:14px;color:#a9a59e">Charged</label>
+<label style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0">
+<span style="font-size:14px;color:#a9a59e">Cost / roll</span>
+<div style="display:flex;align-items:center;width:120px;height:44px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px"><span style="${MONO};font-size:15px;color:#a6a4a0">${CUR()}</span><input value="${t.devCost}" oninput="App.setTierField(${i},'devCost',this.value)" data-fkey="m-tier-${i}-devCost" inputmode="decimal" style="width:100%;min-width:0;text-align:right;background:transparent;border:0;color:#eae7e1;font-size:16px;${MONO}"></div>
+</label>
+<label style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid #212125">
+<span style="font-size:14px;color:#a9a59e">Mail-back</span>
+<div style="display:flex;align-items:center;width:120px;height:44px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px"><span style="${MONO};font-size:15px;color:#a6a4a0">${CUR()}</span><input value="${t.mailBackCost ?? ''}" oninput="App.setTierField(${i},'mailBackCost',this.value)" data-fkey="m-tier-${i}-mailBackCost" inputmode="decimal" placeholder="n/a" style="width:100%;min-width:0;text-align:right;background:transparent;border:0;color:#eae7e1;font-size:16px;${MONO}"></div>
+</label>
+<label style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid #212125">
+<span style="font-size:14px;color:#a9a59e">Push/pull fee</span>
+<div style="display:flex;align-items:center;width:120px;height:44px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px"><span style="${MONO};font-size:15px;color:#a6a4a0">${CUR()}</span><input value="${t.pushPullCost}" oninput="App.setTierField(${i},'pushPullCost',this.value)" data-fkey="m-tier-${i}-pushPullCost" inputmode="decimal" style="width:100%;min-width:0;text-align:right;background:transparent;border:0;color:#eae7e1;font-size:16px;${MONO}"></div>
+</label>
+<label style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid #212125">
+<span style="font-size:14px;color:#a9a59e">Charged</span>
 <select onchange="App.setTierField(${i},'pushPullType',this.value)" style="width:150px;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px;color:#eae7e1;font-size:15px"><option value="per_stop" ${t.pushPullType === 'per_stop' ? 'selected' : ''}>Per stop</option><option value="flat" ${t.pushPullType === 'flat' ? 'selected' : ''}>Flat fee</option></select>
-</div>
-<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid #212125">
-<label style="font-size:14px;color:#a9a59e">Turnaround</label>
+</label>
+<label style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid #212125">
+<span style="font-size:14px;color:#a9a59e">Turnaround</span>
 <select onchange="App.setTierField(${i},'turnaroundTime',this.value)" style="width:150px;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px;color:#eae7e1;font-size:15px">${TURNAROUND_OPTIONS.map(o => `<option value="${o.value}" ${t.turnaroundTime === o.value ? 'selected' : ''}>${o.label}</option>`).join('')}</select>
-</div>
+</label>
 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-top:12px;border-top:1px solid #212125">
 ${pill('Hi-res', t.highResScan, `App.toggleTierFlag(${i},'highResScan')`)}
 ${pill('TIFF', t.tiffScan, `App.toggleTierFlag(${i},'tiffScan')`)}

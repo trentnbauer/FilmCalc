@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- FilmCalc is a single-page app - one crawlable URL. No <lastmod> since
+     this file is checked in as-is (not regenerated per deploy, unlike
+     changelog.json) and a stale date would be worse than none. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+        <loc>https://filmcalc.app/</loc>
+        <changefreq>weekly</changefreq>
+        <priority>1.0</priority>
+    </url>
+</urlset>
