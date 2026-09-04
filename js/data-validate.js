@@ -3,6 +3,11 @@
 // Runs against a custom-uploaded film/lab YAML BEFORE it's merged into localStorage,
 // so a malformed file gets a specific field-level error instead of silently writing
 // broken data the calculator then trips over later.
+//
+// A few rules (availability requiring state/city, rolls/exposures > 0) aren't in
+// the shared schema — they're conditional logic, not field lists — so they're
+// hand-duplicated here to match the Python version in "validate data.yml". If you
+// add a rule like that to one, add it to the other too.
 let dataSchema = null;
 async function loadDataSchema() {
     if (dataSchema) return dataSchema;
@@ -29,6 +34,11 @@ function validateFilmEntries(entries, schema) {
                 if (!(key in b)) errors.push(`${bw}: missing '${key}'`);
             });
             if (typeof b.filmCost === 'string') errors.push(`${bw}: filmCost must be a number, not text`);
+            if (b.rolls === 0 || b.exposures === 0) errors.push(`${bw}: rolls and exposures must be greater than 0`);
+            const avail = b.availability || 'national';
+            if (s && !s.enums.availability.includes(avail)) errors.push(`${bw}: availability '${avail}' must be one of ${s.enums.availability.join(', ')}`);
+            if ((avail === 'state' || avail === 'city') && !b.state) errors.push(`${bw}: availability '${avail}' needs a 'state'`);
+            if (avail === 'city' && !b.city) errors.push(`${bw}: availability 'city' needs a 'city'`);
         });
     });
     return errors;
