@@ -111,7 +111,7 @@ jobs:
           cp index.html sw.js favicon.ico icon.ico icon.svg icon-192.png icon-512.png apple-touch-icon.png manifest.json options.yaml changelog.json ads.txt robots.txt sitemap.xml _site/
           cp -r films labs schema js _site/
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: '_site'
       - name: Deploy to GitHub Pages
