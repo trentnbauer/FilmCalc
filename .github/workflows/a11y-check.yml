@@ -1,0 +1,45 @@
+name: Accessibility check
+
+# Runs axe-core (via Playwright) against the rendered app on every view
+# reachable from App.goView(), and fails on any WCAG 2 A/AA violation.
+# Catches regressions like an unlabeled <select>/<input> or a link that
+# only differs from surrounding text by color - the kind of thing that's
+# easy to introduce in a template-string-rendered UI (js/app.js has no
+# framework/JSX to lint) and easy to miss in review since it still looks
+# fine visually.
+on:
+  pull_request:
+    paths:
+      - "index.html"
+      - "js/**"
+
+permissions:
+  contents: read
+
+jobs:
+  a11y:
+    name: axe-core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Playwright + axe-core
+        run: npm install --no-save playwright@1.47 @axe-core/playwright@4
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Serve the app
+        run: |
+          python3 -m http.server 8080 &
+          for i in $(seq 1 20); do
+            curl -sf http://localhost:8080/index.html > /dev/null && break
+            sleep 0.5
+          done
+
+      - name: Run accessibility check
+        run: node .github/scripts/a11y-check.js http://localhost:8080/index.html

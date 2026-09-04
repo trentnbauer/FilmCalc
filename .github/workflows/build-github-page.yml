@@ -58,12 +58,6 @@ jobs:
           sed -i "s/%%ADSENSE_SLOT_ID%%/${{ secrets.ADSENSE_SLOT_ID }}/g" js/adsense-loader.js
           sed -i "s/%%ADSENSE_CLIENT_ID%%/${{ secrets.ADSENSE_CLIENT_ID }}/g" ads.txt
           sed -i 's/, ca-pub-/, pub-/' ads.txt
-      - name: Build Tailwind CSS
-        # Regenerated into the working tree so the next step stages it, same
-        # pattern as changelog.json below; not committed back. The checked-in
-        # css/tailwind.css is just the fallback for anyone running this from
-        # a local checkout without Node — see css/README.md.
-        run: npx --yes tailwindcss@3.4.17 -i css/tailwind.src.css -o css/tailwind.css --minify
       - name: Generate changelog.json
         # Footer "What's new" popup (issue #53) reads this at runtime.
         # Regenerated into the working tree, not committed back — the
@@ -88,19 +82,22 @@ jobs:
         # region tree (issue #114/#116) on every deploy, no matter what was
         # actually committed. js/ is index.html's own calculation engine
         # (issue #61), loaded via <script src> — also needs to be live, not
-        # just present in the repo. css/ is the prebuilt Tailwind CSS (issue
-        # #74), just regenerated above. ads.txt (AdSense site verification,
+        # just present in the repo. ads.txt (AdSense site verification,
         # issue #181 follow-up) is Pages-only monetization, same as the
         # AdSense script itself — irrelevant to anyone self-hosting.
         # Docs and packaging files (README, CONTRIBUTING) still don't
         # belong here. schema/ (film-lab-schema.json) is fetched at runtime
         # by js/data-validate.js, same reason films/labs need to be live.
         # manifest.json (PWA installability) is linked from index.html's
-        # <head>, so it needs to be live at the same path too.
+        # <head>, so it needs to be live at the same path too. robots.txt/
+        # sitemap.xml are read directly by crawlers at the site root.
+        # (css/ + Tailwind build step removed: index.html hasn't loaded
+        # css/tailwind.css since the redesign to inline styles — it was
+        # dead weight nobody was linking to.)
         run: |
           mkdir -p _site
-          cp index.html favicon.ico icon.ico icon.svg apple-touch-icon.png manifest.json options.yaml changelog.json ads.txt _site/
-          cp -r films labs schema js css _site/
+          cp index.html favicon.ico icon.ico icon.svg apple-touch-icon.png manifest.json options.yaml changelog.json ads.txt robots.txt sitemap.xml _site/
+          cp -r films labs schema js _site/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
