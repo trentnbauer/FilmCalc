@@ -1190,33 +1190,69 @@ const App = {
         const d = state.draft;
         if (!d || !d.name || !d.name.trim()) { flash('Add a name first'); return; }
         const base = 'https://github.com/trentnbauer/FilmCalc/issues/new';
+        // Same convenience prefill submitLibrary() already uses for its
+        // 'country' param — a device-local timezone guess, editable before
+        // submitting, never used to silently decide anything on its own.
+        const guess = guessLocationFromTimezone() || {};
         let template, params;
         if (state.draftKind === 'film') {
             const b = (d.bundles && d.bundles[0]) || {};
+            // storeName/colorType have no dedicated issue-form field (only
+            // name/country/availability/state/city/source do), so they
+            // still go in the freeform details block — but availability/
+            // state/city themselves come from the actual dropdown/input
+            // fields below instead of being buried in prose, since the
+            // form (and film-lab-intake.yml's prompt) already expects
+            // them there. These come straight from the bundle editor's
+            // own Availability field (bundleLabel('Availability') in
+            // renderBundleEditor), not guessed — same precision as what
+            // ends up in films/*.yaml itself.
             const details = [
                 `- Format (35mm / 120 / 110 / …): ${d.format || ''}`,
                 `- Box speed (ISO): ${d.boxSpeed || ''}`,
                 `- Process (C41 / BW / E6 / ECN-2): ${d.process || ''}`,
+                d.colorType ? `- Color type (color / bw / speciality): ${d.colorType}` : null,
                 `- Exposures per roll: ${b.exposures || ''}`,
                 `- Push/pull limit in stops (maxPushPull): ${d.maxPushPull || ''}`,
                 `- Regular price (not sale price): ${b.filmCost || ''}`,
+                `- Store name: ${b.storeName || ''}`,
                 `- Where to buy (link): ${b.buyLink || ''}`
-            ].join('\n');
+            ].filter(Boolean).join('\n');
+            const availabilityLabel = {
+                national: 'Country-wide (walk-in price, no postage anywhere)',
+                state: 'State/region-wide only',
+                city: 'City-only (mail order/local pickup — postage applies elsewhere)'
+            }[b.availability || 'national'];
             template = '01 add a film stock.yml';
-            params = { name: d.name.trim(), 'film-details': details, source: b.buyLink || '' };
+            params = {
+                name: d.name.trim(), 'film-details': details, source: b.buyLink || '',
+                country: guess.country || '', availability: availabilityLabel,
+                state: b.state || '', city: b.city || ''
+            };
         } else {
+            // country here is only ever the same device-local guess as
+            // above, not derived from the lab's own address — a lab can
+            // easily be somewhere other than the contributor's own
+            // location (a mail-in lab, or adding one on someone else's
+            // behalf), so unlike availability/state/city for films this
+            // is a starting point to edit, not sourced from precise data.
             const details = (d.services || []).map(t => [
                 `- Address: ${d.address || ''}`,
+                `- Phone: ${d.phone || ''}`,
+                `- Email: ${d.email || ''}`,
                 `- Website: ${d.website || ''}`,
                 `- Service tier: ${t.label || tierDescription(t)}`,
                 `  - Development cost per roll: ${t.devCost || ''}`,
                 `  - Push/pull fee (and whether it's per-stop or flat): ${t.pushPullCost || ''} (${t.pushPullType || ''})`,
+                `  - Push/pull unavailable on this tier? (yes/no): ${t.noPushPull ? 'yes' : 'no'}`,
                 `  - Turnaround (next day / same week / longer): ${t.turnaroundTime || ''}`,
                 `  - Hi-res scan? (yes/no): ${t.highResScan ? 'yes' : 'no'}`,
+                `  - TIFF/lossless scan? (yes/no): ${t.tiffScan ? 'yes' : 'no'}`,
+                `  - Mail-back return postage (blank if unknown/walk-in only, 0 if free): ${t.mailBackCost ?? ''}`,
                 `  - Processes handled (C41 / BW / E6 / ECN-2): ${(t.processes || []).join(', ')}`
             ].join('\n')).join('\n');
             template = '02 add a lab.yml';
-            params = { name: d.name.trim(), 'lab-details': details, source: d.website || '' };
+            params = { name: d.name.trim(), 'lab-details': details, source: d.website || '', country: guess.country || '' };
         }
         // encodeURIComponent (not URLSearchParams, which encodes spaces as
         // "+") to match the %20-style encoding contributing.md's own
@@ -1376,24 +1412,81 @@ const App = {
     // another so a film/lab shared across two chosen files (e.g. a
     // national + a city retailer file) combines instead of the second
     // overwriting the first.
+    // Bundled region files are already schema-checked in CI before they
+    // ever reach main, so this doesn't show the user a full preview the
+    // way importYamlFile()'s untrusted-upload path does — but it still
+    // runs the same validators (loadDataSchema() below) before writing
+    // anything, as a second line of defence against a file that passed
+    // CI under an older schema version, or any other drift between what
+    // was validated at merge time and what's actually being served now.
+    // A file that fails is skipped and reported the same way a fetch
+    // failure already was, rather than silently merging entries the
+    // calculator would then have to paper over with `|| 0`-style
+    // fallbacks downstream. It also confirms once, below, before
+    // overwriting anything the current library already has a different
+    // (presumably locally-edited) copy of.
     importPresetSelected() {
         const filmFiles = [...document.querySelectorAll('.preset-check[data-kind="films"]:checked')].map(el => el.value);
         const labFiles = [...document.querySelectorAll('.preset-check[data-kind="labs"]:checked')].map(el => el.value);
         if (!filmFiles.length && !labFiles.length) { state.importNote = 'Tick at least one region first.'; render(); return; }
         const fetchAll = (kind, files) => Promise.all(files.map(file => fetch(`${kind}/${file}`).then(r => r.text()).then(text => ({ file, parsed: jsyaml.load(text) || {} })).catch(() => ({ file, parsed: null }))));
-        return Promise.all([fetchAll('films', filmFiles), fetchAll('labs', labFiles)]).then(([filmResults, labResults]) => {
-            state.lastImportSnapshot = { filmProfiles: readJSON('filmProfiles', {}), labProfiles: readJSON('labProfiles', {}) };
-            let filmCount = 0, labCount = 0;
+        return loadDataSchema().then(schema => Promise.all([fetchAll('films', filmFiles), fetchAll('labs', labFiles)]).then(([filmResults, labResults]) => {
+            const existingFilms = readJSON('filmProfiles', {});
+            const existingLabs = readJSON('labProfiles', {});
             const failed = [];
-            filmResults.forEach(({ file, parsed }) => {
-                if (!parsed) { failed.push(file); return; }
+            const filmEntriesByFile = filmResults.map(({ file, parsed }) => {
+                if (!parsed) { failed.push(file); return null; }
                 const entries = Array.isArray(parsed.films) ? parsed.films : [];
+                if (validateFilmEntries(entries, schema).length) { failed.push(file); return null; }
+                return entries;
+            });
+            const labEntriesByFile = labResults.map(({ file, parsed }) => {
+                if (!parsed) { failed.push(file); return null; }
+                const entries = Array.isArray(parsed.labs) ? parsed.labs : [];
+                if (validateLabEntries(entries, schema).length) { failed.push(file); return null; }
+                return entries;
+            });
+            // Re-importing a region you've already got, or one that
+            // overlaps a film/lab you've since customized locally,
+            // otherwise silently overwrites those local edits (bundles
+            // merge by store/rolls/exposures identity, but every other
+            // field — maxPushPull, colorType, a hand-corrected price —
+            // just gets replaced; labs have no merge logic at all). One
+            // confirm, only when there's actually something that would
+            // change, rather than a preview for every import.
+            let changedFilms = 0, changedLabs = 0;
+            filmEntriesByFile.forEach(entries => {
+                if (!entries) return;
+                Object.entries(buildFilmProfilesFromEntries(entries)).forEach(([key, incoming]) => {
+                    const existing = existingFilms[key];
+                    if (existing && JSON.stringify(existing) !== JSON.stringify(incoming)) changedFilms++;
+                });
+            });
+            labEntriesByFile.forEach(entries => {
+                if (!entries) return;
+                entries.forEach(l => {
+                    if (!l.name) return;
+                    const existing = existingLabs[l.name];
+                    if (existing && JSON.stringify(existing) !== JSON.stringify(l)) changedLabs++;
+                });
+            });
+            if (changedFilms || changedLabs) {
+                const parts = [];
+                if (changedFilms) parts.push(`${changedFilms} film${changedFilms === 1 ? '' : 's'}`);
+                if (changedLabs) parts.push(`${changedLabs} lab${changedLabs === 1 ? '' : 's'}`);
+                const proceed = window.confirm(`This will overwrite ${parts.join(' and ')} you've already saved with the preset's version — any local edits to them will be lost. Continue?`);
+                if (!proceed) { state.importNote = 'Import cancelled.'; render(); return; }
+            }
+
+            state.lastImportSnapshot = { filmProfiles: existingFilms, labProfiles: existingLabs };
+            let filmCount = 0, labCount = 0;
+            filmEntriesByFile.forEach(entries => {
+                if (!entries) return;
                 writeJSON('filmProfiles', mergeFilmProfiles(readJSON('filmProfiles', {}), buildFilmProfilesFromEntries(entries)));
                 filmCount += entries.length;
             });
-            labResults.forEach(({ file, parsed }) => {
-                if (!parsed) { failed.push(file); return; }
-                const entries = Array.isArray(parsed.labs) ? parsed.labs : [];
+            labEntriesByFile.forEach(entries => {
+                if (!entries) return;
                 const saved = readJSON('labProfiles', {});
                 entries.forEach(l => { if (l.name) saved[l.name] = l; });
                 writeJSON('labProfiles', saved);
@@ -1405,7 +1498,7 @@ const App = {
             const total = filmFiles.length + labFiles.length;
             state.importNote = (parts.length ? `Imported ${parts.join(' and ')}` : 'Nothing to import') + ` from ${total} region file${total === 1 ? '' : 's'}.` + (failed.length ? ` Couldn't load ${failed.join(', ')}.` : '');
             render();
-        });
+        }));
     },
 
     // Restores the generic "drop a config.yaml / films.yaml / labs.yaml"
