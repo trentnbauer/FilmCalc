@@ -12,7 +12,7 @@ films:
     bundles:
       - rolls: 3
         exposures: 36
-        filmCost: 52.5
+        filmCost: 52.00
         storeName: Walkens
         buyLink: >-
           https://walkens.com.au/products/kodak-gold-200-35mm-24exp-3-pack-copy?variant=46212077715645&country=AU&currency=AUD&utm_medium=product_sync&utm_source=google&utm_content=sag_organic&utm_campaign=sag_organic&gad_source=1&gad_campaignid=17181065002&gbraid=0AAAAADBByy702yk-BGUXuaKWjQkZuYXfL&gclid=CjwKCAjwx7LSBhB3EiwAjcodxMOmoI8wokqx_tSQCbG6Kwub1Ibff7oeDZZ-IuABCkf46Zxc1LY61RoCiuAQAvD_BwE
@@ -44,7 +44,7 @@ films:
     bundles:
       - rolls: 3
         exposures: 36
-        filmCost: 60
+        filmCost: 59.00
         storeName: Walkens
         buyLink: >-
           https://walkens.com.au/products/kodak-ultramax-400-35mm-36exp-3-pack?variant=46212088463549&country=AU&currency=AUD&utm_medium=product_sync&utm_source=google&utm_content=sag_organic&utm_campaign=sag_organic&gad_source=1&gad_campaignid=17181065002&gbraid=0AAAAADBByy702yk-BGUXuaKWjQkZuYXfL&gclid=CjwKCAjwx7LSBhB3EiwAjcodxKiS0Zql1QCEv34utnT491kY9NR92r-DHULGNBttjogbU9u4xN_GDhoCIT0QAvD_BwE
@@ -92,7 +92,7 @@ films:
     bundles:
       - rolls: 1
         exposures: 36
-        filmCost: 21
+        filmCost: 22.00
         storeName: Walkens
         buyLink: >-
           https://walkens.com.au/products/fujifilm-400-35mm?variant=44813990822077&country=AU&currency=AUD&utm_medium=product_sync&utm_source=google&utm_content=sag_organic&utm_campaign=sag_organic&gad_source=1&gad_campaignid=17181065002&gbraid=0AAAAADBByy5tpW6BX3WlkcSGm1Gyi-dsT&gclid=CjwKCAjwmdLSBhANEiwAkREMN4V4LSyyE5GssWC83m3Fhtp8McyViuFbAsccgz7TYtu8BSoq5cgtNhoC53kQAvD_BwE
@@ -256,7 +256,7 @@ films:
         city: Melbourne
       - rolls: 1
         exposures: 36
-        filmCost: 15.80
+        filmCost: 17.00
         storeName: Ikigai Film Lab
         buyLink: https://ikigaifilmlab.com.au/store/kodak-colorplus-35mm-36exp
         availability: city
@@ -301,7 +301,7 @@ films:
     bundles:
       - rolls: 1
         exposures: 36
-        filmCost: 16.95
+        filmCost: 17.00
         storeName: Ikigai Film Lab
         buyLink: https://ikigaifilmlab.com.au/store/kodak-kodacolor-200-35mm-36-exp
         availability: city
@@ -316,7 +316,7 @@ films:
     bundles:
       - rolls: 1
         exposures: 36
-        filmCost: 17.00
+        filmCost: 17.50
         storeName: Ikigai Film Lab
         buyLink: https://ikigaifilmlab.com.au/store/lucky-color-c200-35mm-36-exp
         availability: city
@@ -446,7 +446,7 @@ films:
     bundles:
       - rolls: 1
         exposures: 12
-        filmCost: 18.5
+        filmCost: 17.50
         storeName: Walkens
         buyLink: https://walkens.com.au/products/eastman-kodak-gold-200-120-film
         availability: city
