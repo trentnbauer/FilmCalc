@@ -923,10 +923,14 @@ function yamlScalar(v) {
 }
 
 function serializeFilmEntryYaml(f) {
+    // Not `parseFloat(...) || 1` — maxPushPull: 0 is a real, meaningful value
+    // (a stock that shouldn't be pushed at all, e.g. Ektar 100) and `0 || 1`
+    // would silently turn it into 1.
+    const maxPushPullNum = parseFloat(f.maxPushPull ?? 1);
     const lines = [
         `- name: ${yamlScalar(f.name)}`,
         `  boxSpeed: ${parseFloat(f.boxSpeed) || 0}`,
-        `  maxPushPull: ${parseFloat(f.maxPushPull) || 0}`,
+        `  maxPushPull: ${Number.isFinite(maxPushPullNum) ? maxPushPullNum : 1}`,
         `  process: ${yamlScalar(f.process)}`
     ];
     // Every locally-saved film carries an explicit colorType (the editor
@@ -1140,9 +1144,13 @@ const App = {
             const saved = readJSON('filmProfiles', {});
             const newKey = filmKey(d.name, d.boxSpeed, d.format);
             if (state.draftKey && state.draftKey !== newKey) delete saved[state.draftKey];
+            // Not `parseFloat(...) || 1` — maxPushPull: 0 is a real, meaningful
+            // value (a stock that shouldn't be pushed at all), and an empty/
+            // cleared field should default to 1, not save as NaN.
+            const draftMaxPushPull = parseFloat(d.maxPushPull);
             saved[newKey] = {
                 name: d.name.trim(), boxSpeed: parseFloat(d.boxSpeed) || 0, process: d.process, colorType: d.colorType, format: d.format,
-                maxPushPull: parseFloat(d.maxPushPull), hidden: !!d.hidden,
+                maxPushPull: Number.isFinite(draftMaxPushPull) ? draftMaxPushPull : 1, hidden: !!d.hidden,
                 bundles: d.bundles.map(b => {
                     const availability = b.availability || 'national';
                     return {
@@ -1577,7 +1585,11 @@ function buildFilmProfilesFromEntries(entries) {
     const hasNestedBundles = entries.some(f => Array.isArray(f.bundles));
     const result = {};
     if (hasNestedBundles) {
-        entries.forEach(f => { if (f.name) result[filmKey(f.name, f.boxSpeed, f.format)] = f; });
+        // maxPushPull is optional in the source YAML (DATA_SPEC.md) — default
+        // it here, at the point a film enters storage, rather than leaving it
+        // undefined and trusting every future reader (the editor, the export
+        // serializer, ...) to remember its own `?? 1` fallback.
+        entries.forEach(f => { if (f.name) result[filmKey(f.name, f.boxSpeed, f.format)] = { ...f, maxPushPull: f.maxPushPull ?? 1 }; });
     } else {
         entries.forEach(f => {
             if (!f.name) return;

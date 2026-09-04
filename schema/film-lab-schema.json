@@ -2,7 +2,7 @@
   "$comment": "Single source of truth for film/lab YAML shape, read by both the CI validator (.github/workflows/validate data.yml) and the in-app importer (js/data-validate.js), so the two never drift apart. Mirrors DATA_SPEC.md — update that doc too if you change this.",
   "film": {
     "requiredTopLevelFields": ["country"],
-    "requiredFields": ["name", "boxSpeed", "maxPushPull", "process", "bundles"],
+    "requiredFields": ["name", "boxSpeed", "process", "bundles"],
     "requiredBundleFields": ["rolls", "exposures", "filmCost"],
     "enums": {
       "process": ["C41", "BW", "E6", "ECN2"],
