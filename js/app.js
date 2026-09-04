@@ -2166,3 +2166,12 @@ async function initApp() {
 }
 
 document.addEventListener('DOMContentLoaded', initApp);
+
+// Registered after load (not blocking initApp) so a slow/failed
+// registration never delays the calculator itself becoming usable — see
+// sw.js's own header comment for what it does and doesn't cache.
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+    });
+}

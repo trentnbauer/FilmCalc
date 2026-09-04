@@ -38,6 +38,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>FilmCalc — Film Cost Calculator</title>
+    <!-- Description text duplicates manifest.json's - no shared template
+         at build time to source both from, so kept in sync by hand. Same
+         for canonical: this is a single-page app, filmcalc.app/ is the
+         only URL that ever exists to be canonical *to*.
+         og:image/twitter:image use icon-512.png (square) rather than a
+         dedicated 1200x630 banner, since no such banner exists yet - a
+         real banner image would preview better on social platforms but
+         this is a functional minimum, not a placeholder. -->
+    <meta name="description" content="Work out the true cost per photo of shooting film, and which lab is actually cheapest for a given roll.">
+    <link rel="canonical" href="https://filmcalc.app/">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://filmcalc.app/">
+    <meta property="og:title" content="FilmCalc — Film Cost Calculator">
+    <meta property="og:description" content="Work out the true cost per photo of shooting film, and which lab is actually cheapest for a given roll.">
+    <meta property="og:image" content="https://filmcalc.app/icon-512.png">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="FilmCalc — Film Cost Calculator">
+    <meta name="twitter:description" content="Work out the true cost per photo of shooting film, and which lab is actually cheapest for a given roll.">
+    <meta name="twitter:image" content="https://filmcalc.app/icon-512.png">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Narrow:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
