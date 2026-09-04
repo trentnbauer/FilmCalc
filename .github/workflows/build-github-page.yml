@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Stamp build version into index.html and sw.js
         # sw.js's cache name uses the same token so every deploy gets its
         # own service-worker cache for free, without a separate version
