@@ -29,8 +29,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Stamp build version into index.html
-        run: sed -i "s/%%FILMCALC_VERSION%%/$(git rev-parse --short HEAD)/" index.html
+      - name: Stamp build version into index.html and sw.js
+        # sw.js's cache name uses the same token so every deploy gets its
+        # own service-worker cache for free, without a separate version
+        # bump step.
+        run: |
+          sed -i "s/%%FILMCALC_VERSION%%/$(git rev-parse --short HEAD)/" index.html
+          sed -i "s/%%FILMCALC_VERSION%%/$(git rev-parse --short HEAD)/" sw.js
       - name: Stamp AdSense IDs into js/adsense-loader.js and ads.txt
         # Pages-only monetization. ADSENSE_CLIENT_ID/ADSENSE_SLOT_ID are repo
         # secrets (Settings → Secrets and variables → Actions) from the
@@ -89,14 +94,21 @@ jobs:
         # belong here. schema/ (film-lab-schema.json) is fetched at runtime
         # by js/data-validate.js, same reason films/labs need to be live.
         # manifest.json (PWA installability) is linked from index.html's
-        # <head>, so it needs to be live at the same path too. robots.txt/
-        # sitemap.xml are read directly by crawlers at the site root.
+        # <head>, so it needs to be live at the same path too, along with
+        # icon-192.png/icon-512.png — the PNG sizes Chrome actually
+        # requires for the install prompt (icon.svg's sizes="any" entry
+        # looks sufficient but isn't, on its own, enough to satisfy
+        # Chrome's installability check). sw.js (offline app-shell cache,
+        # see its own header comment) is registered from js/app.js at
+        # '/sw.js', so it needs to be live at the site root too, not
+        # nested under js/. robots.txt/sitemap.xml are read directly by
+        # crawlers at the site root.
         # (css/ + Tailwind build step removed: index.html hasn't loaded
         # css/tailwind.css since the redesign to inline styles — it was
         # dead weight nobody was linking to.)
         run: |
           mkdir -p _site
-          cp index.html favicon.ico icon.ico icon.svg apple-touch-icon.png manifest.json options.yaml changelog.json ads.txt robots.txt sitemap.xml _site/
+          cp index.html sw.js favicon.ico icon.ico icon.svg icon-192.png icon-512.png apple-touch-icon.png manifest.json options.yaml changelog.json ads.txt robots.txt sitemap.xml _site/
           cp -r films labs schema js _site/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
