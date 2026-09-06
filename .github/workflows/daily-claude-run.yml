@@ -303,6 +303,41 @@ jobs:
             you're low on remaining turns, finish the item you're on, save, and stop there rather than
             starting another.
 
+            **Tier 5b — Revisit stale price-audit-flag issues**
+
+            Only start this once Tier 5 has nothing left unprocessed this run. A `price-audit-flag`
+            issue asks the repo owner to confirm a value Claude couldn't verify at audit time — but the
+            owner may never reply, and the underlying page can become checkable on its own (a sale
+            ends, a dead link comes back, a site redesign clears up an ambiguous mapping). Without this
+            tier these issues just sit open forever; this gives each one a periodic second look instead.
+
+            List open issues labelled `price-audit-flag`:
+            ```
+            gh issue list --repo ${{ github.repository }} --label price-audit-flag --state open \
+              --json number,title,body,comments
+            ```
+            For each, skip it if it already has a `PRICE-AUDIT-RECHECK:` comment dated within the last
+            25 days — leave those alone this run, no re-fetch, no new comment. Otherwise, reread the
+            issue body (it names the exact file, the entry via its `<!-- price-audit-key: ... -->`
+            comment, and the live URL(s) to check) and WebFetch those same link(s) again:
+
+            - If you can now confidently and precisely read the correct current value(s) off the live
+              page (link now resolves, sale ended, redesign clarified the mapping, etc.), apply the fix
+              to the data file per `DATA_SPEC.md`'s formatting rules, commit to a branch named
+              `claude/price-audit-flag-<number>`, and open a PR titled "Price audit correction:
+              <entry name> (<file>)" with `Closes #<number>` in the body. Apply the same auto-merge
+              confidence bar as Tier 2 above — merge it yourself if it holds, otherwise leave it open
+              for review.
+            - If the live page now matches the existing data file value exactly, with no ambiguity left,
+              close the issue (`gh issue close <number> --comment "..."`) explaining that the current
+              value already matches and no change is needed.
+            - Otherwise it's still genuinely unresolved (same reason as before, or a new one) — leave the
+              issue open, and leave exactly one `PRICE-AUDIT-RECHECK: <today's date>, still unresolved
+              (<one-line reason>)` comment so it's skipped for the next 25 days, then move on.
+
+            Never guess a value you can't read confidently off the page — the entire point of leaving
+            these open is that a wrong guess here is worse than waiting.
+
             ---
 
             If a tier has nothing to do, move on to the next one silently. If every tier is empty, do
