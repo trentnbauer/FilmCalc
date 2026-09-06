@@ -18,6 +18,21 @@ films:
         availability: city
         state: New South Wales
         city: Sydney
+  - name: FujiFilm Color
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 34.95
+        storeName: Georges
+        buyLink: https://www.georges.com.au/products/fujifilm-superia-x-tra-400-35mm-36-exposure-colour-negative-film
+        availability: city
+        state: New South Wales
+        city: Sydney
   - name: Kodak Portra 800
     boxSpeed: 800
     maxPushPull: 1
