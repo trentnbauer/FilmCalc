@@ -149,7 +149,7 @@ labs:
         noPushPull: false
         mailBackCost: 13
         processes:
-          - C41
+          - ECN2
   - name: Walkens Melbourne
     hidden: false
     address: 338 Brunswick St, Fitzroy VIC 3065, Australia
