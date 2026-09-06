@@ -40,7 +40,7 @@ jobs:
             --description "A price-audit entry Claude couldn't verify. Reply with the correct value and mention @claude." \
             --force
 
-      - name: Skip if last month's audit isn't finished yet
+      - name: Skip if a batch is in progress or this month's already ran
         id: guard
         env:
           GH_TOKEN: ${{ github.token }}
@@ -49,6 +49,21 @@ jobs:
           if [ "$open_count" -gt 0 ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
             echo "$open_count price-audit issue(s) still open — not starting a new batch this month."
+            exit 0
+          fi
+
+          # Even with nothing open, this month's batch may already have run and been
+          # fully closed (e.g. a manual workflow_dispatch after the scheduled run already
+          # finished) — the open-count check alone can't see that and would just open a
+          # second, duplicate batch of identically-titled issues. Guard against that by
+          # checking whether any price-audit issue, open or closed, was already titled
+          # for the current month.
+          month=$(date -u +'%B %Y')
+          existing=$(gh issue list --repo ${{ github.repository }} --label price-audit --state all \
+            --search "\"— ${month}\" in:title" --json number -q 'length')
+          if [ "$existing" -gt 0 ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "$existing price-audit issue(s) already exist for ${month} — not opening a duplicate batch."
           else
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
