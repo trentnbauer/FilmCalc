@@ -46,15 +46,27 @@ For each unchecked item below:
      new: <value read off the live page>
      source: <the URL you checked>
      ```
-   - **Can't confidently verify** (dead link, discontinued, ambiguous, big unexplained
-     swing, anything you're not sure about) → first check whether an open issue labelled
-     `price-audit-flag` already references this same entry (search its key comment,
-     `<!-- price-audit-key: {path}#... -->`); if one exists, don't duplicate it. Otherwise
-     open a new issue labelled `price-audit-flag` explaining what's unclear, including that
-     same key comment, and asking the repo owner to reply with the correct value and
-     mention @claude to have it applied. Then leave a comment on *this* issue:
-     `PRICE-AUDIT-FLAGGED: <key> -> #<new issue number>`. Still tick the box either way —
-     ticked means "audited", not "confirmed unchanged".
+   - **Blocked, not ambiguous** (403/CAPTCHA/robot-check, a JS-rendered page that returns
+     no price to WebFetch, a timeout, or any other case where the page simply won't render
+     for you) → just tick the box and move on to the next item, same as "no link to check".
+     Don't open an issue for this — a page Claude can't fetch isn't a data problem, and
+     these should never cost the repo owner any review effort. (Tier 5b in
+     `daily-claude-run.yml` retries genuinely-flagged issues periodically in case a block
+     was temporary; a page that was merely inaccessible tonight doesn't need tracking at
+     all — next month's audit will just try it again.)
+   - **Genuinely ambiguous** (the page loads and shows content, but the value is unclear
+     for a reason a fresh fetch won't fix — discontinued product, a price that doesn't
+     match the linked product at all, conflicting numbers on the same page, a big
+     unexplained swing, or a mapping that doesn't fit this repo's data schema) → first
+     check whether an open issue labelled `price-audit-flag` already references this same
+     entry (search its key comment, `<!-- price-audit-key: {path}#... -->`); if one
+     exists, don't duplicate it. Otherwise open a new issue labelled `price-audit-flag`
+     explaining what's unclear, including that same key comment, and asking the repo
+     owner to reply with the correct value and mention @claude to have it applied. Then
+     leave a comment on *this* issue: `PRICE-AUDIT-FLAGGED: <key> -> #<new issue number>`.
+     Still tick the box either way — ticked means "audited", not "confirmed unchanged".
+     Reserve this for cases a human actually needs to weigh in on — never for a page that
+     merely failed to load.
 
 Save progress after every single item — tick the box (and post any comment) immediately,
 then rewrite this issue's body with `gh issue edit <number> --body-file <file>` before
