@@ -70,7 +70,7 @@ labs:
         mailBackCost: 15
         processes:
           - E6
-      - devCost: 25
+      - devCost: 18
         pushPullCost: 0
         pushPullType: flat
         turnaroundTime: longer
