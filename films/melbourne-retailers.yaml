@@ -156,7 +156,7 @@ films:
     bundles:
       - rolls: 1
         exposures: 36
-        filmCost: 36.00
+        filmCost: 25.00
         storeName: FilmNeverDie
         buyLink: https://filmneverdie.com/products/kodak-portra-160-35mm-36-exp
         availability: city
@@ -286,7 +286,7 @@ films:
     bundles:
       - rolls: 1
         exposures: 36
-        filmCost: 17.00
+        filmCost: 16.95
         storeName: Ikigai Film Lab
         buyLink: https://ikigaifilmlab.com.au/store/kodak-kodacolor-100-36-exp
         availability: city
@@ -362,10 +362,10 @@ films:
     hidden: false
     bundles:
       - rolls: 1
-        exposures: 12
-        filmCost: 26
+        exposures: 36
+        filmCost: 31.50
         storeName: Walkens
-        buyLink: https://walkens.com.au/products/lomography-color-negative-400-120
+        buyLink: https://walkens.com.au/products/lomography-color-negative-800-35mm
         availability: city
         state: Victoria
         city: Melbourne
@@ -431,7 +431,7 @@ films:
     bundles:
       - rolls: 1
         exposures: 12
-        filmCost: 29
+        filmCost: 37.00
         storeName: Walkens
         buyLink: https://walkens.com.au/products/kodak-ektar-100-120-film
         availability: city
