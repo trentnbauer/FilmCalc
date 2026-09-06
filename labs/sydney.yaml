@@ -69,7 +69,7 @@ labs:
         mailBackCost: 15
         processes:
           - E6
-      - devCost: 25
+      - devCost: 18
         pushPullCost: 5
         pushPullType: per_stop
         turnaroundTime: same_week
@@ -147,7 +147,7 @@ labs:
     email: mail@rewindphotolab.com.au
     website: https://rewindphotolab.com.au
     services:
-      - devCost: 11
+      - devCost: 12
         pushPullCost: 0
         pushPullType: flat
         highResScan: false
