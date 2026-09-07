@@ -1,0 +1,42 @@
+label: Chicago Labs
+country: United States
+state: Illinois
+city: Chicago
+labs:
+  - name: Latitude Chicago
+    hidden: false
+    address: 2003 W Fulton St, #211, Chicago, IL 60612, United States
+    phone: (773) 888-2241
+    email: info@latitudechicago.org
+    website: https://www.latitudechicago.org
+    services:
+      - devCost: 8.50
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        processes:
+          - C41
+  - name: Constant Agitation Film Lab
+    hidden: false
+    address: 3501 W Armitage Ave, Chicago, IL 60647, United States
+    email: hello@cafilmlab.com
+    website: https://www.cafilmlab.com
+    services:
+      - devCost: 10
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        processes:
+          - C41
+          - BW
+          - E6
+          - ECN2
+      - devCost: 18
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: true
+        processes:
+          - C41
+          - BW
+          - E6
+          - ECN2
