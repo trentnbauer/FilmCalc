@@ -28,6 +28,13 @@
     "city": "London"
   },
   {
+    "file": "los-angeles.yaml",
+    "label": "Los Angeles Labs",
+    "country": "United States",
+    "state": "California",
+    "city": "Los Angeles"
+  },
+  {
     "file": "melbourne.yaml",
     "label": "Melbourne Labs",
     "country": "Australia",
@@ -47,6 +54,13 @@
     "country": "Australia",
     "state": "Western Australia",
     "city": "Perth"
+  },
+  {
+    "file": "san-francisco.yaml",
+    "label": "San Francisco Labs",
+    "country": "United States",
+    "state": "California",
+    "city": "San Francisco"
   },
   {
     "file": "sydney.yaml",
