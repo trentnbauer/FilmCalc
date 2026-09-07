@@ -1,0 +1,134 @@
+label: Portland Retailers
+country: United States
+state: Oregon
+city: Portland
+films:
+  - name: Kodak Portra 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 16.99
+        storeName: Pro Photo Supply
+        buyLink: https://prophotosupply.com/products/portra-400-135-36-unboxed
+        availability: city
+        state: Oregon
+        city: Portland
+      - rolls: 5
+        exposures: 36
+        filmCost: 84.99
+        storeName: Pro Photo Supply
+        buyLink: https://prophotosupply.com/products/kodak-professional-portra-400-color-negative-35mm-film-36-exposures-5-pack
+        availability: city
+        state: Oregon
+        city: Portland
+  - name: Kodak Portra 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 15.99
+        storeName: Pro Photo Supply
+        buyLink: https://prophotosupply.com/products/portra-400-120-unboxed
+        availability: city
+        state: Oregon
+        city: Portland
+      - rolls: 5
+        exposures: 12
+        filmCost: 79.99
+        storeName: Pro Photo Supply
+        buyLink: https://prophotosupply.com/products/kodak-portra-120-film
+        availability: city
+        state: Oregon
+        city: Portland
+  - name: Kodak Gold
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 8.99
+        storeName: Pro Photo Supply
+        buyLink: https://prophotosupply.com/products/kodak-gold-200-color-negative-35mm-film-36-exposures
+        availability: city
+        state: Oregon
+        city: Portland
+  - name: Kodak Gold
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 8.60
+        storeName: Pro Photo Supply
+        buyLink: https://prophotosupply.com/products/kodak-gold-200-color-negative-120-format-film
+        availability: city
+        state: Oregon
+        city: Portland
+      - rolls: 5
+        exposures: 12
+        filmCost: 42.99
+        storeName: Pro Photo Supply
+        buyLink: https://prophotosupply.com/products/kodak-gold-200-color-negative-120-format-film-36-exposure-5-pack
+        availability: city
+        state: Oregon
+        city: Portland
+  - name: Kodak UltraMax
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 10.99
+        storeName: Pro Photo Supply
+        buyLink: https://prophotosupply.com/products/kodak-ultramax-400-color-negative-35mm-film-36-exposures
+        availability: city
+        state: Oregon
+        city: Portland
+  - name: Ilford HP5+ 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 10.99
+        storeName: Pro Photo Supply
+        buyLink: https://prophotosupply.com/products/hp5-plus-400-135-36
+        availability: city
+        state: Oregon
+        city: Portland
+  - name: Ilford HP5+ 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 9.99
+        storeName: Pro Photo Supply
+        buyLink: https://prophotosupply.com/products/hp5-plus-400-120
+        availability: city
+        state: Oregon
+        city: Portland
