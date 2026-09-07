@@ -21,11 +21,25 @@
     "city": "Canberra"
   },
   {
+    "file": "london.yaml",
+    "label": "London Labs",
+    "country": "United Kingdom",
+    "state": "England",
+    "city": "London"
+  },
+  {
     "file": "melbourne.yaml",
     "label": "Melbourne Labs",
     "country": "Australia",
     "state": "Victoria",
     "city": "Melbourne"
+  },
+  {
+    "file": "new-york.yaml",
+    "label": "New York Labs",
+    "country": "United States",
+    "state": "New York",
+    "city": "New York"
   },
   {
     "file": "perth.yaml",
@@ -40,5 +54,12 @@
     "country": "Australia",
     "state": "New South Wales",
     "city": "Sydney"
+  },
+  {
+    "file": "tokyo.yaml",
+    "label": "Tokyo Labs",
+    "country": "Japan",
+    "state": "Tokyo",
+    "city": "Tokyo"
   }
 ]
