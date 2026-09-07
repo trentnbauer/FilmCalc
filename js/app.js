@@ -404,7 +404,7 @@ function computeCheaperFilm(s, home) {
         return {
             key,
             text: `${cand.f.name} — ${CUR()}${money(cand.cpp)}/frame from ${cand.bundle.storeName || 'saved library'}, saves ${((curCpp - cand.cpp) * 100).toFixed(0)}c a frame${cand.stopsAbs ? ` (${cand.stopsAbs} stop ${cand.stopsSigned > 0 ? 'push' : 'pull'})` : ''}`,
-            url: sanitizeUrl(cand.bundle.buyLink), load: () => App.loadFilm(filmKey(cand.f.name, cand.f.boxSpeed, cand.f.format))
+            url: sanitizeUrl(cand.bundle.buyLink), load: () => App.loadFilm(filmKey(cand.f.name, cand.f.boxSpeed, cand.f.format), cand.stopsSigned)
         };
     };
     const options = [mk('native', bestNative), mk('pushPull', bestPushPull)].filter(Boolean);
@@ -1065,24 +1065,35 @@ const App = {
     toggleLab(name) { state.expandedLab = state.expandedLab === name ? null : name; render(); },
     toggleFilm(key) { state.expandedFilm = state.expandedFilm === key ? null : key; render(); },
 
-    loadFilm(key) {
+    // pushPull: the stops of push/pull the loaded film should be shot at
+    // (0 for a normal native-ISO load). Left unset by a plain library load —
+    // the previous push/pull was tuned for whatever stock was loaded
+    // before, and silently carrying it over onto a different stock's own
+    // box speed produces a bogus "N stops of push/pull" warning (issue: a
+    // cheaper-film suggestion at the same *effective* ISO loaded clean, but
+    // the old pull amount stuck around against the new stock's native
+    // rating). The cheaper-film suggestion (mk() above) passes its own
+    // candidate's required stops instead, since that candidate may
+    // legitimately need pushing/pulling to reach the target ISO.
+    loadFilm(key, pushPull = 0) {
         const f = getAllFilms()[key];
         if (!f) return;
         const bundles = normalizeFilmBundles(f);
         const best = bundles.slice().sort((a, b) => a.filmCost / a.rolls - b.filmCost / b.rolls)[0];
-        this._applyFilm(f, best);
+        this._applyFilm(f, best, pushPull);
     },
     loadFilmBundle(key, storeName, rolls, exposures) {
         const f = getAllFilms()[key];
         if (!f) return;
         const bundle = normalizeFilmBundles(f).find(b => b.storeName === storeName && b.rolls === rolls && b.exposures === exposures) || normalizeFilmBundles(f)[0];
-        this._applyFilm(f, bundle);
+        this._applyFilm(f, bundle, 0);
     },
-    _applyFilm(f, bundle) {
+    _applyFilm(f, bundle, pushPull = 0) {
         state.format = f.format || '35mm';
         state.process = f.process || 'C41';
         state.filmColor = filmColorType(f);
         state.boxSpeed = String(f.boxSpeed || '');
+        state.pushPull = String(pushPull);
         state.packCost = String(bundle.filmCost || '');
         state.rolls = String(bundle.rolls || 1);
         state.exposures = String(bundle.exposures || 36);
