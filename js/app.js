@@ -1797,7 +1797,7 @@ function renderMobileToast(s) {
 
 function renderMobileFooter(s) {
     return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:20px;padding:0 14px">
-<span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#b9b8b6">FilmCalc · <a href="/privacy.html" style="color:#928e88;text-decoration:underline">${escapeHtml(t('v2ConsentPrivacyLink'))}</a></span>
+<span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#b9b8b6">FilmCalc · <a href="/privacy.html" style="color:#928e88;text-decoration:underline">${escapeHtml(t('v2ConsentPrivacyLink'))}</a> · <a href="/terms.html" style="color:#928e88;text-decoration:underline">${escapeHtml(t('v2TermsLink'))}</a></span>
 <span style="${MONO};font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#b9b8b6">${formatLabel(s.format)} · ${procLabel(s.process)}</span>
 </div>`;
 }
