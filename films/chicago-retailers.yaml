@@ -1,0 +1,142 @@
+label: Chicago Retailers
+country: United States
+state: Illinois
+city: Chicago
+films:
+  - name: Kodak Portra 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 5
+        exposures: 36
+        filmCost: 89.99
+        storeName: Dodd Camera
+        buyLink: https://doddcamera.com/kodak-portra-400-pro-film-35mm-36-exposure-5-pack-propack
+        availability: city
+        state: Illinois
+        city: Chicago
+  - name: Kodak Portra 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 5
+        exposures: 12
+        filmCost: 79.99
+        storeName: Dodd Camera
+        buyLink: https://doddcamera.com/kodak-portra-400-pro-film-120-5-pack-propack
+        availability: city
+        state: Illinois
+        city: Chicago
+  - name: Kodak Gold
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 24
+        filmCost: 8.95
+        storeName: Dodd Camera
+        buyLink: https://doddcamera.com/kodak-gb-gold-200asa-135-24-single-roll-box
+        availability: city
+        state: Illinois
+        city: Chicago
+      - rolls: 1
+        exposures: 36
+        filmCost: 9.49
+        storeName: Dodd Camera
+        buyLink: https://doddcamera.com/ekc518251
+        availability: city
+        state: Illinois
+        city: Chicago
+      - rolls: 3
+        exposures: 36
+        filmCost: 28.99
+        storeName: Dodd Camera
+        buyLink: https://doddcamera.com/ekc518329
+        availability: city
+        state: Illinois
+        city: Chicago
+  - name: Kodak Gold
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 5
+        exposures: 12
+        filmCost: 45.99
+        storeName: Dodd Camera
+        buyLink: https://doddcamera.com/ekc518411
+        availability: city
+        state: Illinois
+        city: Chicago
+  - name: Kodak UltraMax
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 11.99
+        storeName: Dodd Camera
+        buyLink: https://doddcamera.com/ekc518282
+        availability: city
+        state: Illinois
+        city: Chicago
+      - rolls: 3
+        exposures: 36
+        filmCost: 29.99
+        storeName: Dodd Camera
+        buyLink: https://doddcamera.com/ekc518336
+        availability: city
+        state: Illinois
+        city: Chicago
+  - name: Ilford HP5+ 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 24
+        filmCost: 8.99
+        storeName: Dodd Camera
+        buyLink: https://doddcamera.com/ilford-hp5-plus-135-24-400
+        availability: city
+        state: Illinois
+        city: Chicago
+      - rolls: 1
+        exposures: 36
+        filmCost: 10.99
+        storeName: Dodd Camera
+        buyLink: https://doddcamera.com/ilf0270
+        availability: city
+        state: Illinois
+        city: Chicago
+  - name: Ilford HP5+ 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 10.99
+        storeName: Dodd Camera
+        buyLink: https://doddcamera.com/ilford-hp5-plus-120-400
+        availability: city
+        state: Illinois
+        city: Chicago
