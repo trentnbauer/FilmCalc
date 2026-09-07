@@ -622,6 +622,11 @@ const STRINGS = {
         v2AnalyticsStatusUnset: 'Not answered yet',
         v2ButtonResetConsent: 'Change my choice',
         v2TermsLink: 'Terms & Conditions',
+        v2SettingsReportData: 'Report inaccurate data',
+        v2ReportDataDesc: 'Spotted a wrong price, address, or detail in a preset film or lab? Report it — this opens a pre-filled GitHub issue.',
+        v2ButtonReportFilm: 'Report a film',
+        v2ButtonReportLab: 'Report a lab',
+        v2ImportDisclaimer: 'Prices are best-effort, compiled from a mix of human and AI research — always confirm against the shop or lab\'s own page before relying on it.',
     },
 
     es: {

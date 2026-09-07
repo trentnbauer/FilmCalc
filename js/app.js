@@ -685,6 +685,13 @@ ${settingsSection(t('v2SettingsPrivacy'), (() => {
 <a href="/privacy.html" style="font-size:10px;color:var(--acc);text-decoration:underline">${escapeHtml(t('v2ConsentPrivacyLink'))}</a>
 </div>`;
 })())}
+${settingsSection(t('v2SettingsReportData'), `
+<div style="font-size:10px;color:#b0aeac;margin-bottom:8px">${escapeHtml(t('v2ReportDataDesc'))}</div>
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+<button type="button" onclick="App.reportInaccurateData('film')" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${escapeHtml(t('v2ButtonReportFilm'))}</button>
+<button type="button" onclick="App.reportInaccurateData('lab')" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${escapeHtml(t('v2ButtonReportLab'))}</button>
+</div>
+`)}
 </div>`;
 }
 
@@ -807,6 +814,7 @@ function renderPresetImport(showImportButton = true) {
         ? `Pre-ticked below: whatever looks like it covers ${escapeHtml(geoGuess.city || geoGuess.country)}, guessed from your device's location or timezone — that guess never leaves this device. Tick or untick anything; only what's ticked when you import actually gets added.`
         : `Community-contributed regional film/lab price lists shipped with FilmCalc — tick any that apply to you (more than one is fine) to add real data instead of typing it all by hand.`;
     return `<div style="font-size:10px;color:#b0aeac;margin-bottom:8px">${geoNote}</div>
+<div style="font-size:10px;color:#928e88;margin-bottom:8px;font-style:italic">${escapeHtml(t('v2ImportDisclaimer'))}</div>
 <div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#928e88;margin-bottom:4px">Films</div>
 <div style="display:flex;flex-direction:column;max-height:160px;overflow:auto;border:1px solid #26262a;border-radius:6px;padding:4px 8px;margin-bottom:10px">${presetCheckList('films', presetFilmIndex)}</div>
 <div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#928e88;margin-bottom:4px">Labs</div>
@@ -1392,6 +1400,19 @@ const App = {
     resetAnalyticsConsent() {
         try { localStorage.removeItem('analyticsConsent'); } catch (e) { /* private mode etc. */ }
         render();
+    },
+    // Settings → "Report inaccurate data" — opens a pre-filled GitHub issue
+    // using the repo's "05 incorrect data.yml" form template, so a wrong
+    // preset price/detail gets reported through the same structured flow a
+    // manual bug report would use, without the user having to find it
+    // themselves. kind just seeds the title so triage can tell films from
+    // labs at a glance; the template's own dropdown still asks for specifics.
+    reportInaccurateData(kind) {
+        const title = kind === 'lab' ? '[Data] Lab: ' : '[Data] Film: ';
+        const url = 'https://github.com/trentnbauer/FilmCalc/issues/new'
+            + '?template=' + encodeURIComponent('05 incorrect data.yml')
+            + '&title=' + encodeURIComponent(title);
+        window.open(url, '_blank', 'noopener');
     },
     openSetup() { state.setupOpen = true; state.setupStep = 0; state.setupBusy = false; render(); },
     closeSetup() { state.setupOpen = false; state.setupStep = 0; state.setupBusy = false; localStorage.setItem('setupSeen', '1'); render(); },
