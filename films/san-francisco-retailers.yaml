@@ -1,0 +1,172 @@
+label: San Francisco Retailers
+country: United States
+state: California
+city: San Francisco
+films:
+  - name: Kodak UltraMax
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 10.99
+        storeName: Glass Key Photo
+        buyLink: https://www.glasskeyphoto.com/film35/kodak-ultra-max-400-box
+        availability: city
+        state: California
+        city: San Francisco
+  - name: Ilford HP5+ 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 9.99
+        storeName: Glass Key Photo
+        buyLink: https://www.glasskeyphoto.com/film35/hp5-35mm
+        availability: city
+        state: California
+        city: San Francisco
+  - name: Ilford Delta 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 16.99
+        storeName: Glass Key Photo
+        buyLink: https://www.glasskeyphoto.com/film35/delta-400-35mm
+        availability: city
+        state: California
+        city: San Francisco
+  - name: Ilford FP4+ 125
+    boxSpeed: 125
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 12.99
+        storeName: Glass Key Photo
+        buyLink: https://www.glasskeyphoto.com/film35/fp4-35mm
+        availability: city
+        state: California
+        city: San Francisco
+  - name: Ilford XP2 Super 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    colorType: bw
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 16.99
+        storeName: Glass Key Photo
+        buyLink: https://www.glasskeyphoto.com/film35/xp2-35mm
+        availability: city
+        state: California
+        city: San Francisco
+  - name: Ilford HP5+ 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 9.99
+        storeName: Glass Key Photo
+        buyLink: https://www.glasskeyphoto.com/film120/hp5-120
+        availability: city
+        state: California
+        city: San Francisco
+  - name: Kodak Tri-X 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 8.99
+        storeName: Glass Key Photo
+        buyLink: https://www.glasskeyphoto.com/film120/tri-x-400-120
+        availability: city
+        state: California
+        city: San Francisco
+  - name: Ilford Delta 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 12.99
+        storeName: Glass Key Photo
+        buyLink: https://www.glasskeyphoto.com/film120/delta-400-120
+        availability: city
+        state: California
+        city: San Francisco
+  - name: Ilford XP2 Super 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    colorType: bw
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 11.99
+        storeName: Glass Key Photo
+        buyLink: https://www.glasskeyphoto.com/film120/xp2-120
+        availability: city
+        state: California
+        city: San Francisco
+  - name: Kodak Ektar 100
+    boxSpeed: 100
+    maxPushPull: 0
+    process: C41
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 11.99
+        storeName: Glass Key Photo
+        buyLink: https://www.glasskeyphoto.com/film120/ektar-100-120
+        availability: city
+        state: California
+        city: San Francisco
+  - name: Ilford FP4+ 125
+    boxSpeed: 125
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 11.99
+        storeName: Glass Key Photo
+        buyLink: https://www.glasskeyphoto.com/film120/fp4-120
+        availability: city
+        state: California
+        city: San Francisco

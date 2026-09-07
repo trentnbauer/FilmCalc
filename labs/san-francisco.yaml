@@ -1,0 +1,95 @@
+label: San Francisco Labs
+country: United States
+state: California
+city: San Francisco
+labs:
+  - name: Photoworks San Francisco
+    hidden: false
+    address: 2279 Market St, San Francisco, CA 94114, United States
+    phone: (415) 269-9097
+    email: info@photoworkssf.com
+    website: https://www.photoworkssf.com
+    services:
+      - devCost: 10
+        pushPullCost: 3
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 15
+        pushPullCost: 3
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+  - name: Oscar's Photo Lab
+    hidden: false
+    address: 790 Brannan St, 7th Floor, San Francisco, CA 94103, United States
+    phone: (415) 621-5800
+    email: oscars@oscarsphotolab.com
+    website: https://oscarsphotolab.com
+    services:
+      - devCost: 10
+        pushPullCost: 2
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 14
+        pushPullCost: 2
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 12
+        pushPullCost: 2
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+  - name: Dickerman Prints
+    hidden: false
+    address: 1141 Howard Street, San Francisco, CA 94103, United States
+    phone: (415) 252-1300
+    email: info@dickermanprints.com
+    website: https://www.dickermanprints.com
+    services:
+      - devCost: 12
+        pushPullCost: 5
+        pushPullType: per_stop
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 39
+        pushPullCost: 5
+        pushPullType: per_stop
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 30
+        pushPullCost: 5
+        pushPullType: per_stop
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+          - BW
