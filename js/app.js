@@ -19,11 +19,12 @@
 //     SECTION_COLORS). Dark/light toggle exists in the header for parity
 //     with the mockup, but (same as the mockup itself) no light palette
 //     is defined yet.
-//   - Changelog popup, "Add via AI" modal, generic YAML file-drop import.
+//   - "Add via AI" modal, generic YAML file-drop import.
 // Still preserved, just re-implemented against this file's own state
 // instead of the old DOM: JSON backup export/import, region-file preset
 // import (films/labs index.json + per-region YAML), hide/edit/delete for
-// saved films and labs, home lab + preferred tier + mail-back settings.
+// saved films and labs, home lab + preferred tier + mail-back settings,
+// changelog ("What's New") popup.
 
 // The muted-gray text tiers (#928e88/#9c9994/#a6a4a0/#b0aeac/#b9b8b6, plus
 // the two error/link reds #e5675c/#d2857d) were bumped from their original,
@@ -190,6 +191,7 @@ const state = {
     // in the full-screen sub-editor, or null when showing the list view.
     subEditIndex: null,
     setupOpen: false, setupStep: 0, setupBusy: false, // 0=language, 1=import presets, 2=home lab
+    changelogOpen: false, changelogShowNumbers: null, // null = show full history (manual open); array = just-merged-since-last-visit (auto popup)
     // Which starter-preset checkboxes are ticked, keyed "kind:file" (e.g.
     // "films:melbourne-retailers.yaml") — controlled, unlike most of this
     // screen's markup, specifically so a geo-matched pre-check (see
@@ -471,6 +473,43 @@ function turnaroundOptions() {
         { value: 'same_week', label: t('v2FilterSameWeek') },
         { value: 'longer', label: t('turnaroundLongerLabel') },
     ];
+}
+
+// ---------- Changelog ("What's New") ----------
+// Footer link pops up recent changes, generated at build time into
+// changelog.json from merged PR titles (see .github/scripts/generate-
+// changelog.py and build-github-page.yml). Auto-popup appears when new
+// entries have landed since this browser last saw the changelog; a
+// first-ever visit gets its baseline set quietly (no popup — nobody wants
+// the whole project history flagged as "new" the first time they open the
+// app). Tracks the actual SET of seen PR numbers in localStorage (not a
+// single high-watermark number) so an out-of-order merge (an older PR
+// landing after a newer one) still gets flagged correctly.
+let changelogEntries = [];
+async function loadChangelog() {
+    try {
+        const res = await fetch('changelog.json');
+        if (res.ok) changelogEntries = await res.json();
+    } catch (e) { /* offline / no changelog.json — nothing to show */ }
+    if (!Array.isArray(changelogEntries) || changelogEntries.length === 0) return;
+
+    const isFirstEverVisit = localStorage.getItem('changelogSeenPRs') === null;
+    const seen = new Set(readJSON('changelogSeenPRs', []));
+    const newEntries = changelogEntries.filter(e => !seen.has(e.number));
+    if (newEntries.length === 0) return;
+    if (isFirstEverVisit) {
+        markChangelogSeen(changelogEntries.map(e => e.number)); // quiet baseline, no popup
+    } else {
+        state.changelogOpen = true;
+        state.changelogShowNumbers = newEntries.map(e => e.number);
+        markChangelogSeen(changelogEntries.map(e => e.number));
+        render();
+    }
+}
+function markChangelogSeen(numbers) {
+    const seen = new Set(readJSON('changelogSeenPRs', []));
+    numbers.forEach(n => seen.add(n));
+    localStorage.setItem('changelogSeenPRs', JSON.stringify([...seen]));
 }
 
 // ---------- Starter presets (films/index.json + labs/index.json) ----------
@@ -773,6 +812,27 @@ ${tierLabels.map(l => `<option value="${escapeHtml(l)}" ${s.defaultTier === l ? 
 <div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#928e88;margin-bottom:8px">${stepTitle}</div>
 ${stepBody}
 <div style="display:flex;gap:10px;margin-top:18px">${backBtn}${nextBtn}</div>
+</div></div>`;
+}
+
+// onlyNumbers: null shows the full history (manual footer-link open);
+// an array (from the auto-popup in loadChangelog()) restricts the list to
+// just what's new since this browser's last visit.
+function renderChangelogModal(s) {
+    const all = Array.isArray(changelogEntries) ? changelogEntries : [];
+    const entries = s.changelogShowNumbers ? all.filter(e => s.changelogShowNumbers.includes(e.number)) : all;
+    const rows = entries.length ? entries.map(e => `<a href="${escapeHtml(e.url)}" target="_blank" rel="noopener noreferrer" style="display:block;padding:10px 0;border-top:1px solid #212125;color:#c9c5bd;text-decoration:none">
+<span style="display:block;font-size:13px;line-height:1.4">${escapeHtml(e.title)}</span>
+<span style="${MONO};display:block;font-size:10px;color:#928e88;margin-top:3px">#${e.number} · ${escapeHtml(new Date(e.mergedAt).toLocaleDateString())}</span>
+</a>`).join('') : `<p style="font-size:12px;color:#928e88;text-align:center;padding:16px 0">${escapeHtml(s.changelogShowNumbers ? t('noNewChanges') : t('noChangelogAvailable'))}</p>`;
+    return `<div onclick="if(event.target===this)App.closeChangelogModal()" style="position:fixed;inset:0;z-index:75;background:rgba(6,6,7,.74);display:flex;align-items:flex-start;justify-content:center;padding:64px 16px;overflow:auto"><div style="width:100%;max-width:460px;max-height:calc(100vh - 128px);display:flex;flex-direction:column;background:linear-gradient(180deg,#151517,#111113);border:1px solid #33333a;border-radius:10px;box-shadow:0 30px 80px -20px #000;padding:18px 20px 20px">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+<div style="${NARROW};font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#eae7e1">${escapeHtml(t('whatsNewHeading'))}</div>
+<button type="button" onclick="App.closeChangelogModal()" aria-label="Close" style="background:transparent;border:0;color:#928e88;font-size:18px;line-height:1;cursor:pointer;padding:4px">×</button>
+</div>
+<p style="margin:0 0 4px;font-size:11px;color:#928e88">${escapeHtml(t('whatsNewHelp'))}</p>
+<div style="overflow:auto;flex:1;margin-top:4px">${rows}</div>
+<button type="button" onclick="App.closeChangelogModal()" style="margin-top:16px;background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:9px 16px;color:#928e88;font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${escapeHtml(t('v2ButtonDone'))}</button>
 </div></div>`;
 }
 
@@ -1451,6 +1511,10 @@ const App = {
     },
     openSetup() { state.setupOpen = true; state.setupStep = 0; state.setupBusy = false; render(); },
     closeSetup() { state.setupOpen = false; state.setupStep = 0; state.setupBusy = false; localStorage.setItem('setupSeen', '1'); render(); },
+    // Manual footer-link open always shows the full history (null), unlike
+    // the auto-popup in loadChangelog() which restricts to just what's new.
+    openChangelog() { state.changelogShowNumbers = null; state.changelogOpen = true; render(); },
+    closeChangelogModal() { state.changelogOpen = false; render(); },
     setupGoto(step) { state.setupStep = step; render(); },
     // Next on the presets step used to require a separate "Import
     // selected" click first. Now Next itself imports whatever's ticked
@@ -1863,7 +1927,7 @@ function renderMobileToast(s) {
 
 function renderMobileFooter(s) {
     return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:20px;padding:0 14px">
-<span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#b9b8b6">FilmCalc · <a href="/privacy.html" style="color:#928e88;text-decoration:underline">${escapeHtml(t('v2ConsentPrivacyLink'))}</a> · <a href="/terms.html" style="color:#928e88;text-decoration:underline">${escapeHtml(t('v2TermsLink'))}</a></span>
+<span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#b9b8b6">FilmCalc · <button type="button" onclick="App.openChangelog()" style="background:transparent;border:0;padding:0;font:inherit;letter-spacing:inherit;text-transform:inherit;color:#928e88;text-decoration:underline;cursor:pointer">${escapeHtml(t('whatsNewHeading'))}</button> · <a href="/privacy.html" style="color:#928e88;text-decoration:underline">${escapeHtml(t('v2ConsentPrivacyLink'))}</a> · <a href="/terms.html" style="color:#928e88;text-decoration:underline">${escapeHtml(t('v2TermsLink'))}</a></span>
 <span style="${MONO};font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#b9b8b6">${formatLabel(s.format)} · ${procLabel(s.process)}</span>
 </div>`;
 }
@@ -2383,6 +2447,7 @@ ${renderMobileFooter(s)}
 </div>
 ${renderMobileMenu(s)}
 ${s.setupOpen ? renderSetupModal(s) : ''}
+${s.changelogOpen ? renderChangelogModal(s) : ''}
 ${renderMobileToast(s)}
 ${renderConsentBanner()}`;
 }
@@ -2402,6 +2467,7 @@ async function initApp() {
         state.setupOpen = true;
     }
     render();
+    loadChangelog(); // fire-and-forget — re-renders itself if there's something new to show
 }
 
 document.addEventListener('DOMContentLoaded', initApp);
