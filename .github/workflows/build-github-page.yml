@@ -119,7 +119,7 @@ jobs:
         # dead weight nobody was linking to.)
         run: |
           mkdir -p _site
-          cp index.html privacy.html sw.js favicon.ico icon.ico icon.svg icon-192.png icon-512.png apple-touch-icon.png manifest.json options.yaml changelog.json ads.txt robots.txt sitemap.xml _site/
+          cp index.html privacy.html terms.html 404.html sw.js favicon.ico icon.ico icon.svg icon-192.png icon-512.png apple-touch-icon.png manifest.json options.yaml changelog.json ads.txt robots.txt sitemap.xml _site/
           cp -r films labs schema js _site/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
