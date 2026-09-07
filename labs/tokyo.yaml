@@ -1,0 +1,210 @@
+label: Tokyo Labs
+country: Japan
+state: Tokyo
+city: Tokyo
+labs:
+  - name: Popeye Camera
+    hidden: false
+    address: "2-10-2 Jiyugaoka, Meguro-ku, Tokyo 152-0035, Japan"
+    phone: "+81 3-3718-3431"
+    email: popeyecamera.y@gmail.com
+    website: http://www.popeye.jp/free/price
+    services:
+      - devCost: 950
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        mailBackCost: 350
+        processes:
+          - C41
+      - devCost: 1940
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        mailBackCost: 350
+        processes:
+          - C41
+      - devCost: 2750
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: false
+        noPushPull: true
+        mailBackCost: 350
+        processes:
+          - C41
+      - devCost: 1050
+        pushPullCost: 400
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 350
+        processes:
+          - BW
+      - devCost: 2550
+        pushPullCost: 400
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 350
+        processes:
+          - BW
+      - devCost: 3450
+        pushPullCost: 400
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 350
+        processes:
+          - BW
+      - devCost: 1800
+        pushPullCost: 400
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 350
+        processes:
+          - E6
+      - devCost: 3200
+        pushPullCost: 400
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 350
+        processes:
+          - E6
+      - devCost: 4600
+        pushPullCost: 400
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 350
+        processes:
+          - E6
+  - name: Kitamura Camera (Shinjuku)
+    hidden: false
+    address: "3-26-14 Shinjuku, Shinjuku-ku, Tokyo 160-0022, Japan"
+    phone: "+81 3-5361-8300"
+    website: https://www.kitamura-print.com/print/nega_print/
+    services:
+      - devCost: 950
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 1830
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 2930
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+  - name: Yodobashi Camera (Shinjuku Nishiguchi Main Store)
+    hidden: false
+    address: "1-11-1 Nishi-Shinjuku, Shinjuku-ku, Tokyo 160-0023, Japan"
+    phone: "+81 3-3346-1010"
+    website: https://pg-yd-ja.fujifilm.com/develop.html
+    services:
+      - devCost: 930
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 1600
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 2900
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+  - name: Bic Camera (Yurakucho)
+    hidden: false
+    address: "1-11-1 Yurakucho, Chiyoda-ku, Tokyo 100-0006, Japan"
+    phone: "+81 3-5221-1111"
+    website: https://www.biccamera.co.jp/shopguide/service/photo/film_print/index.html
+    services:
+      - devCost: 930
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 720
+        pushPullCost: 1450
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 2570
+        pushPullCost: 1210
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 1320
+        pushPullCost: 720
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6

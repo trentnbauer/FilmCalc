@@ -1,0 +1,326 @@
+label: London Labs
+country: United Kingdom
+state: England
+city: London
+labs:
+  - name: Aperture Printing
+    hidden: false
+    address: 27 Rathbone Place, London W1T 1JE, United Kingdom
+    phone: "020 7580 0857"
+    email: info@apertureprinting.com
+    website: https://www.apertureprinting.com
+    services:
+      - devCost: 9
+        pushPullCost: 4
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 10
+        pushPullCost: 4
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 15
+        pushPullCost: 4
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 16
+        pushPullCost: 4
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 19
+        pushPullCost: 4
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 20
+        pushPullCost: 4
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 22
+        pushPullCost: 4
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 23
+        pushPullCost: 4
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 13
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 19
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 23
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 26
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 15
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 21
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 25
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 28
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 15
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - ECN2
+      - devCost: 21
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - ECN2
+      - devCost: 25
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - ECN2
+      - devCost: 28
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: true
+        noPushPull: true
+        processes:
+          - ECN2
+  - name: Photofusion
+    hidden: false
+    address: Unit 2, 2 Beehive Place, Brixton, London SW9 7QR, United Kingdom
+    phone: "020 7738 5774"
+    email: info@photofusion.org
+    website: https://www.photofusion.org
+    services:
+      - devCost: 8
+        pushPullCost: 4
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 17
+        pushPullCost: 4
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 22
+        pushPullCost: 4
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 27
+        pushPullCost: 4
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+  - name: Rapid Eye Darkrooms
+    hidden: false
+    address: 79 Leonard Street, London EC2A 4QS, United Kingdom
+    phone: "+44 20 7729 9292"
+    email: support@rapideye.uk.com
+    website: https://www.rapideye.uk.com
+    services:
+      - devCost: 8
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 18.60
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 24.60
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 24.60
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 30.60
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 6
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 13
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 19
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 19
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 25
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+          - BW
