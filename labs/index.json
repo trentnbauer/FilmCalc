@@ -21,6 +21,13 @@
     "city": "Canberra"
   },
   {
+    "file": "chicago.yaml",
+    "label": "Chicago Labs",
+    "country": "United States",
+    "state": "Illinois",
+    "city": "Chicago"
+  },
+  {
     "file": "london.yaml",
     "label": "London Labs",
     "country": "United Kingdom",
@@ -54,6 +61,13 @@
     "country": "Australia",
     "state": "Western Australia",
     "city": "Perth"
+  },
+  {
+    "file": "portland.yaml",
+    "label": "Portland Labs",
+    "country": "United States",
+    "state": "Oregon",
+    "city": "Portland"
   },
   {
     "file": "san-francisco.yaml",
