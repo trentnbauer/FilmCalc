@@ -220,6 +220,8 @@ const state = {
     loadedFilmKey: '',
     loadedStoreName: '',
     loadedBuyLink: '',
+    presetCountryFilter: '',
+    presetCountryFilterTouched: false,
     mailRolls: localStorage.getItem('mailBackRollCount') || '1',
     upgradePct: localStorage.getItem('upgradeThresholdPercent') || '4',
     libProcess: 'all', libFormat: 'all', libTab: 'films', libSearch: '',
@@ -586,6 +588,10 @@ function detectUserLocation() {
     const finish = (g) => {
         geoGuess = g;
         if (g) {
+            // Only seeds the filter if the user hasn't touched the dropdown
+            // yet (see App.setPresetCountryFilter) — same one-time-seed
+            // rule as the checkbox pre-ticking below.
+            if (!state.presetCountryFilterTouched && g.country) state.presetCountryFilter = g.country;
             // One-time seed, not a live binding — from here on,
             // state.presetChecked only changes via the user's own clicks
             // (App.togglePresetCheck), so a manual uncheck sticks even
@@ -815,12 +821,26 @@ function renderPresetImport(showImportButton = true) {
     const geoNote = geoGuess
         ? `Pre-ticked below: whatever looks like it covers ${escapeHtml(geoGuess.city || geoGuess.country)}, guessed from your device's location or timezone — that guess never leaves this device. Tick or untick anything; only what's ticked when you import actually gets added.`
         : `Community-contributed regional film/lab price lists shipped with FilmCalc — tick any that apply to you (more than one is fine) to add real data instead of typing it all by hand.`;
+    // Country filter (issue #452) — the flat file list gets unwieldy as
+    // more regions ship, so narrow it to one country at a time. Options
+    // come from whatever countries the shipped indexes actually contain,
+    // not a hardcoded list, so a new region file just shows up on its own.
+    const countries = [...new Set([...presetFilmIndex, ...presetLabIndex].map(f => f.country).filter(Boolean))].sort();
+    const filter = state.presetCountryFilter;
+    const matchesFilter = f => !filter || f.country === filter;
+    const filteredFilms = presetFilmIndex.filter(matchesFilter);
+    const filteredLabs = presetLabIndex.filter(matchesFilter);
+    const countrySelect = countries.length > 1 ? `<select onchange="App.setPresetCountryFilter(this.value)" aria-label="Filter by country" style="${FIELD_INPUT};max-width:280px;margin-bottom:8px">
+<option value="" ${!filter ? 'selected' : ''}>All countries</option>
+${countries.map(c => `<option value="${escapeHtml(c)}" ${filter === c ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('')}
+</select>` : '';
     return `<div style="font-size:10px;color:#b0aeac;margin-bottom:8px">${geoNote}</div>
 <div style="font-size:10px;color:#928e88;margin-bottom:8px;font-style:italic">${escapeHtml(t('v2ImportDisclaimer'))}</div>
-<div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#928e88;margin-bottom:4px">Films</div>
-<div style="display:flex;flex-direction:column;max-height:160px;overflow:auto;border:1px solid #26262a;border-radius:6px;padding:4px 8px;margin-bottom:10px">${presetCheckList('films', presetFilmIndex)}</div>
-<div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#928e88;margin-bottom:4px">Labs</div>
-<div style="display:flex;flex-direction:column;max-height:160px;overflow:auto;border:1px solid #26262a;border-radius:6px;padding:4px 8px;margin-bottom:10px">${presetCheckList('labs', presetLabIndex)}</div>
+${countrySelect}
+<div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#928e88;margin-bottom:4px">Films${filteredFilms.length !== presetFilmIndex.length ? ` (${filteredFilms.length} of ${presetFilmIndex.length})` : ''}</div>
+<div style="display:flex;flex-direction:column;max-height:160px;overflow:auto;border:1px solid #26262a;border-radius:6px;padding:4px 8px;margin-bottom:10px">${filteredFilms.length ? presetCheckList('films', filteredFilms) : `<div style="font-size:11px;color:#b0aeac;padding:6px 2px">No films for this country yet.</div>`}</div>
+<div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#928e88;margin-bottom:4px">Labs${filteredLabs.length !== presetLabIndex.length ? ` (${filteredLabs.length} of ${presetLabIndex.length})` : ''}</div>
+<div style="display:flex;flex-direction:column;max-height:160px;overflow:auto;border:1px solid #26262a;border-radius:6px;padding:4px 8px;margin-bottom:10px">${filteredLabs.length ? presetCheckList('labs', filteredLabs) : `<div style="font-size:11px;color:#b0aeac;padding:6px 2px">No labs for this country yet.</div>`}</div>
 ${showImportButton ? `<button type="button" onclick="App.importPresetSelected()" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">Import selected</button>` : ''}`;
 }
 
@@ -1482,6 +1502,16 @@ const App = {
     togglePresetCheck(kind, file, checked) {
         const key = `${kind}:${file}`;
         if (checked) state.presetChecked.add(key); else state.presetChecked.delete(key);
+    },
+    // Import screen's country filter (issue #452 — the flat file list gets
+    // unwieldy as more regions ship). '' means "All countries". Marking it
+    // touched stops the geo-guess in detectUserLocation() from silently
+    // overriding a choice the user already made, including picking "All"
+    // explicitly after a guess had narrowed it.
+    setPresetCountryFilter(value) {
+        state.presetCountryFilter = value;
+        state.presetCountryFilterTouched = true;
+        render();
     },
     // Imports every checked region file — films AND labs together in one
     // pass, not one button per kind, since importing triggers a full
