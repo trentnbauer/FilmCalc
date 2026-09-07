@@ -218,6 +218,8 @@ const state = {
     fWeek: readJSON('reqFilters', {}).week || false,
     isoFilter: 'shoot',
     loadedFilmKey: '',
+    loadedStoreName: '',
+    loadedBuyLink: '',
     mailRolls: localStorage.getItem('mailBackRollCount') || '1',
     upgradePct: localStorage.getItem('upgradeThresholdPercent') || '4',
     libProcess: 'all', libFormat: 'all', libTab: 'films', libSearch: '',
@@ -1065,6 +1067,8 @@ const App = {
         state.rolls = String(bundle.rolls || 1);
         state.exposures = String(bundle.exposures || 36);
         state.loadedFilmKey = filmKey(f.name, f.boxSpeed, f.format);
+        state.loadedStoreName = bundle.storeName || '';
+        state.loadedBuyLink = bundle.buyLink || '';
         persistScope();
         flash('Loaded ' + f.name);
         render();
@@ -1098,7 +1102,7 @@ const App = {
         render();
     },
     clearForm() {
-        Object.assign(state, { boxSpeed: '', pushPull: '0', packCost: '', postage: '', rolls: '1', exposures: '36', onceOff: '', perRoll: '', loadedFilmKey: '' });
+        Object.assign(state, { boxSpeed: '', pushPull: '0', packCost: '', postage: '', rolls: '1', exposures: '36', onceOff: '', perRoll: '', loadedFilmKey: '', loadedStoreName: '', loadedBuyLink: '' });
         render();
     },
 
@@ -1471,7 +1475,7 @@ const App = {
     deleteAllData() {
         if (!window.confirm('Delete every saved film, lab, and home-lab preference from this browser? This cannot be undone.')) return;
         ['filmProfiles', 'labProfiles', 'homeLab', 'defaultTierLabel', 'favouriteFilms', 'favouriteLabs'].forEach(k => localStorage.removeItem(k));
-        state.homeLab = ''; state.defaultTier = ''; state.expandedLab = null; state.expandedFilm = null; state.loadedFilmKey = '';
+        state.homeLab = ''; state.defaultTier = ''; state.expandedLab = null; state.expandedFilm = null; state.loadedFilmKey = ''; state.loadedStoreName = ''; state.loadedBuyLink = '';
         state.importNote = 'All saved data deleted.';
         render();
     },
@@ -1981,6 +1985,10 @@ ${cheaper.has ? cheaper.options.map((o, i) => `
 </div>
 </div>`).join('') : `<div style="font-size:13px;line-height:1.45;color:#c9c5bd">${escapeHtml(cheaper.text)}</div>`}
 </div>
+${s.loadedBuyLink ? `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding:12px 14px;border:1px solid #26262a;border-radius:10px;background:#131315">
+<span style="font-size:12px;color:#928e88">Loaded from ${escapeHtml(s.loadedStoreName || 'saved library')}</span>
+<a href="${escapeHtml(sanitizeUrl(s.loadedBuyLink))}" target="_blank" rel="noopener noreferrer" style="height:36px;display:flex;align-items:center;padding:0 14px;background:#1c1512;border:1px solid #5a3a1c;border-radius:8px;color:${SECTION_COLORS.films};font-size:12px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none">Buy ↗</a>
+</div>` : ''}
 <div style="display:flex;align-items:center;gap:10px;margin-top:14px">
 <button type="button" onclick="App.saveToLibrary()" style="flex:1;height:44px;background:#1c1512;border:1px solid #5a3a1c;border-radius:8px;color:var(--acc);font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Save to library</button>
 <button type="button" onclick="App.shareLink()" title="Copy a link that reopens this lookup with the same values" style="flex:1;height:44px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#928e88;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Share</button>
