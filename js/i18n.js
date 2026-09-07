@@ -621,6 +621,7 @@ const STRINGS = {
         v2AnalyticsStatusDenied: 'Declined',
         v2AnalyticsStatusUnset: 'Not answered yet',
         v2ButtonResetConsent: 'Change my choice',
+        v2TermsLink: 'Terms & Conditions',
     },
 
     es: {
@@ -1227,6 +1228,7 @@ const STRINGS = {
         v2AnalyticsStatusDenied: 'Rechazado',
         v2AnalyticsStatusUnset: 'Aún sin responder',
         v2ButtonResetConsent: 'Cambiar mi elección',
+        v2TermsLink: 'Términos y condiciones',
     },
 
     ja: {
@@ -1833,6 +1835,7 @@ const STRINGS = {
         v2AnalyticsStatusDenied: '拒否済み',
         v2AnalyticsStatusUnset: '未回答',
         v2ButtonResetConsent: '選択を変更',
+        v2TermsLink: '利用規約',
     },
     de: {
         // ---- index.html: labels, buttons, headings, help text ----
@@ -2443,6 +2446,7 @@ const STRINGS = {
         v2AnalyticsStatusDenied: 'Abgelehnt',
         v2AnalyticsStatusUnset: 'Noch nicht beantwortet',
         v2ButtonResetConsent: 'Wahl ändern',
+        v2TermsLink: 'Nutzungsbedingungen',
     },
     pt: {
         // ---- index.html: labels, buttons, headings, help text ----
@@ -3053,6 +3057,7 @@ const STRINGS = {
         v2AnalyticsStatusDenied: 'Recusado',
         v2AnalyticsStatusUnset: 'Ainda não respondido',
         v2ButtonResetConsent: 'Mudar minha escolha',
+        v2TermsLink: 'Termos e Condições',
     },
     fr: {
         // ---- index.html: labels, buttons, headings, help text ----
@@ -3663,6 +3668,7 @@ const STRINGS = {
         v2AnalyticsStatusDenied: 'Refusé',
         v2AnalyticsStatusUnset: 'Pas encore répondu',
         v2ButtonResetConsent: 'Changer mon choix',
+        v2TermsLink: 'Conditions d\'utilisation',
     },
     ko: {
         // ---- index.html: labels, buttons, headings, help text ----
@@ -4273,6 +4279,7 @@ const STRINGS = {
         v2AnalyticsStatusDenied: '거부함',
         v2AnalyticsStatusUnset: '아직 응답 안 함',
         v2ButtonResetConsent: '선택 변경',
+        v2TermsLink: '이용약관',
     },
     zh: {
         // ---- index.html: labels, buttons, headings, help text ----
@@ -4883,6 +4890,7 @@ const STRINGS = {
         v2AnalyticsStatusDenied: '已拒绝',
         v2AnalyticsStatusUnset: '尚未回应',
         v2ButtonResetConsent: '更改我的选择',
+        v2TermsLink: '条款与条件',
     },
     it: {
         // ---- index.html: labels, buttons, headings, help text ----
@@ -5493,6 +5501,7 @@ const STRINGS = {
         v2AnalyticsStatusDenied: 'Rifiutato',
         v2AnalyticsStatusUnset: 'Ancora nessuna risposta',
         v2ButtonResetConsent: 'Cambia la mia scelta',
+        v2TermsLink: 'Termini e condizioni',
     },
     ru: {
         // ---- index.html: labels, buttons, headings, help text ----
@@ -6103,6 +6112,7 @@ const STRINGS = {
         v2AnalyticsStatusDenied: 'Отклонено',
         v2AnalyticsStatusUnset: 'Пока нет ответа',
         v2ButtonResetConsent: 'Изменить выбор',
+        v2TermsLink: 'Условия использования',
     },
 };
 
