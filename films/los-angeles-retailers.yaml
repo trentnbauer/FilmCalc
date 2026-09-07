@@ -1,0 +1,141 @@
+label: Los Angeles Retailers
+country: United States
+state: California
+city: Los Angeles
+films:
+  - name: Kodak Portra 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 16.79
+        storeName: Freestyle Photo & Imaging Supplies
+        buyLink: https://www.freestylephoto.com/60316781-Kodak-Portra-400-ISO-35mm-x-36-exp.-(Single-Roll-Unboxed)-Color-Film
+        availability: city
+        state: California
+        city: Los Angeles
+      - rolls: 5
+        exposures: 36
+        filmCost: 86.95
+        storeName: Freestyle Photo & Imaging Supplies
+        buyLink: https://www.freestylephoto.com/6031678-Kodak-Portra-400-ISO-35mm-x-36-exp.-5-Pack-Color-Film
+        availability: city
+        state: California
+        city: Los Angeles
+  - name: Kodak Portra 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 16.79
+        storeName: Freestyle Photo & Imaging Supplies
+        buyLink: https://www.freestylephoto.com/83315061-Kodak-Portra-400-ISO-120-Size-(Single-Roll-Unboxed)-Color-Film
+        availability: city
+        state: California
+        city: Los Angeles
+      - rolls: 5
+        exposures: 12
+        filmCost: 79.99
+        storeName: Freestyle Photo & Imaging Supplies
+        buyLink: https://www.freestylephoto.com/8331506-Kodak-Portra-400-ISO-120-Size-5-Pack-Color-Film
+        availability: city
+        state: California
+        city: Los Angeles
+  - name: Kodak Gold
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 9.49
+        storeName: Freestyle Photo & Imaging Supplies
+        buyLink: https://www.freestylephoto.com/6033997-Kodak-Gold-200-ISO-35mm-x-36-exp.-Color-Film
+        availability: city
+        state: California
+        city: Los Angeles
+  - name: Kodak UltraMax
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 10.89
+        storeName: Freestyle Photo & Imaging Supplies
+        buyLink: https://www.freestylephoto.com/7518285-Kodak-UltraMax-400-ISO-35mm-x-36-exp.-Color-Negative-Film
+        availability: city
+        state: California
+        city: Los Angeles
+  - name: Kodak Ektar 100
+    boxSpeed: 100
+    maxPushPull: 0
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 16.99
+        storeName: Freestyle Photo & Imaging Supplies
+        buyLink: https://www.freestylephoto.com/6031330-Kodak-Ektar-100-ISO-35mm-x-36-exp.
+        availability: city
+        state: California
+        city: Los Angeles
+  - name: Ilford HP5+ 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 11.49
+        storeName: Freestyle Photo & Imaging Supplies
+        buyLink: https://www.freestylephoto.com/5745771-Ilford-HP5+-400-ISO-35mm-x-36-exp.
+        availability: city
+        state: California
+        city: Los Angeles
+  - name: Kodak Tri-X 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 8.99
+        storeName: Freestyle Photo & Imaging Supplies
+        buyLink: https://www.freestylephoto.com/7518509-Kodak-Tri-X-400-ISO-35mm-x-36-exp.-TX
+        availability: city
+        state: California
+        city: Los Angeles
+  - name: Ilford Delta 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 16.99
+        storeName: Freestyle Photo & Imaging Supplies
+        buyLink: https://www.freestylephoto.com/649587-Ilford-Delta-Pro-400-ISO-35mm-x-36-exp.
+        availability: city
+        state: California
+        city: Los Angeles
