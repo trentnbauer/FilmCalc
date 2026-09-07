@@ -29,11 +29,25 @@
     "country": "Japan"
   },
   {
+    "file": "los-angeles-retailers.yaml",
+    "label": "Los Angeles Retailers",
+    "country": "United States",
+    "state": "California",
+    "city": "Los Angeles"
+  },
+  {
     "file": "melbourne-retailers.yaml",
     "label": "Melbourne Retailers",
     "country": "Australia",
     "state": "Victoria",
     "city": "Melbourne"
+  },
+  {
+    "file": "san-francisco-retailers.yaml",
+    "label": "San Francisco Retailers",
+    "country": "United States",
+    "state": "California",
+    "city": "San Francisco"
   },
   {
     "file": "sydney-retailers.yaml",
