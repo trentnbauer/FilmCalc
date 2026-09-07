@@ -201,35 +201,16 @@ labs:
         mailBackCost: 13
         processes:
           - E6
-      - devCost: 25
-        pushPullCost: 0
-        pushPullType: flat
-        highResScan: false
-        tiffScan: true
-        noPushPull: true
-        mailBackCost: 13
-        processes:
-          - C41
       - devCost: 28
         pushPullCost: 0
         pushPullType: flat
-        highResScan: false
-        tiffScan: true
-        noPushPull: true
-        mailBackCost: 13
-        processes:
-          - BW
-          - E6
-      - devCost: 40
-        pushPullCost: 0
-        pushPullType: flat
         highResScan: true
         tiffScan: false
         noPushPull: true
         mailBackCost: 13
         processes:
           - C41
-      - devCost: 43
+      - devCost: 32
         pushPullCost: 0
         pushPullType: flat
         highResScan: true
@@ -238,8 +219,16 @@ labs:
         mailBackCost: 13
         processes:
           - BW
+      - devCost: 34
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: true
+        tiffScan: false
+        noPushPull: true
+        mailBackCost: 13
+        processes:
           - E6
-      - devCost: 45
+      - devCost: 33
         pushPullCost: 0
         pushPullType: flat
         highResScan: true
@@ -248,7 +237,7 @@ labs:
         mailBackCost: 13
         processes:
           - C41
-      - devCost: 48
+      - devCost: 37
         pushPullCost: 0
         pushPullType: flat
         highResScan: true
@@ -257,6 +246,14 @@ labs:
         mailBackCost: 13
         processes:
           - BW
+      - devCost: 39
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: true
+        tiffScan: true
+        noPushPull: true
+        mailBackCost: 13
+        processes:
           - E6
   - name: Photoland
     hidden: false
