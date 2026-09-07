@@ -1,0 +1,355 @@
+label: Los Angeles Labs
+country: United States
+state: California
+city: Los Angeles
+labs:
+  - name: LA Film Lab
+    hidden: false
+    address: 3131 North San Fernando Road, Los Angeles, CA 90065, United States
+    email: hello@lafilmlab.com
+    website: https://lafilmlab.com
+    services:
+      - devCost: 9.50
+        pushPullCost: 3
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+  - name: Richard Photo Lab
+    hidden: false
+    address: 21515 Centre Pointe Pkwy, Santa Clarita, CA 91350, United States
+    phone: (661) 200-5300
+    email: info@richardphotolab.com
+    website: https://richardphotolab.com
+    services:
+      - devCost: 10.00
+        pushPullCost: 1.50
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 17.99
+        pushPullCost: 1.50
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 23.98
+        pushPullCost: 1.50
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 25.98
+        pushPullCost: 1.50
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 27.98
+        pushPullCost: 1.50
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 32.98
+        pushPullCost: 1.50
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 34.98
+        pushPullCost: 1.50
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 25.98
+        pushPullCost: 1.50
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 27.98
+        pushPullCost: 1.50
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 30.98
+        pushPullCost: 1.50
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 29.98
+        pushPullCost: 1.50
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 31.98
+        pushPullCost: 1.50
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 45.98
+        pushPullCost: 1.50
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+  - name: BerryFlash Photo Lab
+    hidden: false
+    address: 2931 S. Sepulveda Blvd, Los Angeles, CA 90064, United States
+    phone: (424) 204-6849
+    email: info@berryflash.com
+    website: https://berryflash.com
+    services:
+      - devCost: 9.99
+        highResScan: false
+        tiffScan: false
+        processes:
+          - C41
+      - devCost: 29.99
+        highResScan: false
+        tiffScan: false
+        processes:
+          - BW
+      - devCost: 19.99
+        highResScan: false
+        tiffScan: false
+        processes:
+          - E6
+      - devCost: 19.99
+        highResScan: false
+        tiffScan: false
+        processes:
+          - C41
+      - devCost: 24.99
+        highResScan: false
+        tiffScan: false
+        processes:
+          - BW
+          - E6
+      - devCost: 24.99
+        highResScan: true
+        tiffScan: true
+        processes:
+          - C41
+      - devCost: 29.99
+        highResScan: true
+        tiffScan: true
+        processes:
+          - BW
+          - E6
+  - name: The Icon
+    hidden: false
+    address: 5450 Wilshire Blvd, Los Angeles, CA 90036, United States
+    phone: (323) 933-1666
+    email: icon@iconla.com
+    website: https://www.iconla.com
+    services:
+      - devCost: 9.50
+        pushPullCost: 2
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 10.00
+        pushPullCost: 2
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 11.50
+        pushPullCost: 2
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 12.00
+        pushPullCost: 2
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 12.00
+        pushPullCost: 2
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 15.00
+        pushPullCost: 2
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 20.00
+        pushPullCost: 2
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 18.00
+        pushPullCost: 2
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 21.00
+        pushPullCost: 2
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 26.00
+        pushPullCost: 2
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 20.00
+        pushPullCost: 2
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 25.00
+        pushPullCost: 2
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 35.00
+        pushPullCost: 2
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 26.00
+        pushPullCost: 2
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 31.00
+        pushPullCost: 2
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 41.00
+        pushPullCost: 2
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+          - BW
