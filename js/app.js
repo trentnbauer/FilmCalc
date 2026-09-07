@@ -675,6 +675,16 @@ ${renderImportPreview(s)}
 <div style="font-size:10px;color:#928e88;min-height:12px">${escapeHtml(s.importNote)}${s.lastImportSnapshot ? ` <a href="javascript:void(0)" onclick="App.undoLastImport()" style="color:var(--acc);text-decoration:underline;cursor:pointer">Undo</a>` : ''}</div>
 <div style="margin-top:10px;font-size:10px;color:#b0aeac">Drag <a href="javascript:void(window.open('https://filmcalc.app/?add='+encodeURIComponent(location.href)))" style="text-decoration:underline;cursor:move">↗ Add to FilmCalc</a> to your bookmarks bar — click it from any shop or lab page to jump back here with that page's link ready to paste in.</div>
 `)}
+${settingsSection(t('v2SettingsPrivacy'), (() => {
+    let consent;
+    try { consent = localStorage.getItem('analyticsConsent'); } catch (e) { consent = null; }
+    const statusKey = consent === 'granted' ? 'v2AnalyticsStatusGranted' : consent === 'denied' ? 'v2AnalyticsStatusDenied' : 'v2AnalyticsStatusUnset';
+    return `<div style="font-size:10px;color:#b0aeac;margin-bottom:8px">${escapeHtml(t('v2SettingsAnalyticsCurrentChoice'))}: <strong style="color:#c9c5bd">${escapeHtml(t(statusKey))}</strong></div>
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+<button type="button" onclick="App.resetAnalyticsConsent()" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${escapeHtml(t('v2ButtonResetConsent'))}</button>
+<a href="/privacy.html" style="font-size:10px;color:var(--acc);text-decoration:underline">${escapeHtml(t('v2ConsentPrivacyLink'))}</a>
+</div>`;
+})())}
 </div>`;
 }
 
@@ -1360,6 +1370,29 @@ const App = {
         localStorage.setItem('locale', code);
         render();
     },
+    // Cookie-consent banner (privacy.html has the full explanation). GA
+    // itself never loads until 'granted' is written here — see
+    // js/ga-loader.js, which reads this same key on every page load.
+    // window.__loadGAIfConsented, defined by that script, is called
+    // directly on accept so analytics starts this session too, not just
+    // on the next visit.
+    acceptAnalytics() {
+        try { localStorage.setItem('analyticsConsent', 'granted'); } catch (e) { /* private mode etc. */ }
+        if (typeof window.__loadGAIfConsented === 'function') window.__loadGAIfConsented();
+        render();
+    },
+    declineAnalytics() {
+        try { localStorage.setItem('analyticsConsent', 'denied'); } catch (e) { /* private mode etc. */ }
+        render();
+    },
+    // Settings → Privacy "change my choice" — clears the saved answer so
+    // the banner reappears. Doesn't retroactively unload GA if it's
+    // already running this session (the script itself has no "undo"); a
+    // fresh Decline just prevents it loading on the next visit.
+    resetAnalyticsConsent() {
+        try { localStorage.removeItem('analyticsConsent'); } catch (e) { /* private mode etc. */ }
+        render();
+    },
     openSetup() { state.setupOpen = true; state.setupStep = 0; state.setupBusy = false; render(); },
     closeSetup() { state.setupOpen = false; state.setupStep = 0; state.setupBusy = false; localStorage.setItem('setupSeen', '1'); render(); },
     setupGoto(step) { state.setupStep = step; render(); },
@@ -1764,8 +1797,26 @@ function renderMobileToast(s) {
 
 function renderMobileFooter(s) {
     return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:20px;padding:0 14px">
-<span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#b9b8b6">FilmCalc</span>
+<span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#b9b8b6">FilmCalc · <a href="/privacy.html" style="color:#928e88;text-decoration:underline">${escapeHtml(t('v2ConsentPrivacyLink'))}</a></span>
 <span style="${MONO};font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#b9b8b6">${formatLabel(s.format)} · ${procLabel(s.process)}</span>
+</div>`;
+}
+
+// Cookie-consent banner — shown until the visitor answers (localStorage
+// 'analyticsConsent' unset), then never again. Read directly from
+// localStorage each render rather than mirrored into `state`, same
+// pattern currentLocale uses in js/i18n.js — one source of truth, no
+// risk of the banner and the actual GA-loaded state drifting apart.
+function renderConsentBanner() {
+    let consent;
+    try { consent = localStorage.getItem('analyticsConsent'); } catch (e) { consent = 'denied'; }
+    if (consent !== null) return '';
+    return `<div style="position:fixed;left:12px;right:12px;bottom:12px;z-index:70;max-width:520px;margin:0 auto;background:#141416;border:1px solid #2c2c30;border-radius:10px;padding:14px 16px;box-shadow:0 20px 50px -15px #000;display:flex;flex-direction:column;gap:10px">
+<div style="font-size:12px;line-height:1.5;color:#c9c5bd">${escapeHtml(t('v2ConsentMessage'))} <a href="/privacy.html" style="color:var(--acc);text-decoration:underline">${escapeHtml(t('v2ConsentPrivacyLink'))}</a></div>
+<div style="display:flex;gap:8px;justify-content:flex-end">
+<button type="button" onclick="App.declineAnalytics()" style="background:transparent;border:1px solid #33333a;border-radius:6px;padding:7px 14px;color:#928e88;font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${escapeHtml(t('v2ConsentDecline'))}</button>
+<button type="button" onclick="App.acceptAnalytics()" style="background:#1c1512;border:1px solid #5a3a1c;border-radius:6px;padding:7px 14px;color:var(--acc);font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${escapeHtml(t('v2ConsentAccept'))}</button>
+</div>
 </div>`;
 }
 
@@ -2262,7 +2313,8 @@ ${renderMobileFooter(s)}
 </div>
 ${renderMobileMenu(s)}
 ${s.setupOpen ? renderSetupModal(s) : ''}
-${renderMobileToast(s)}`;
+${renderMobileToast(s)}
+${renderConsentBanner()}`;
 }
 
 async function initApp() {

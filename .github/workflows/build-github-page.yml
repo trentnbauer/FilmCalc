@@ -63,6 +63,17 @@ jobs:
           sed -i "s/%%ADSENSE_SLOT_ID%%/${{ secrets.ADSENSE_SLOT_ID }}/g" js/adsense-loader.js
           sed -i "s/%%ADSENSE_CLIENT_ID%%/${{ secrets.ADSENSE_CLIENT_ID }}/g" ads.txt
           sed -i 's/, ca-pub-/, pub-/' ads.txt
+      - name: Stamp GA measurement ID into js/ga-loader.js
+        # Same pattern/reasoning as the AdSense step above: GA_MEASUREMENT_ID
+        # is a repo secret (Settings → Secrets and variables → Actions,
+        # from the GA4 admin's Data Streams page — the "G-XXXXXXX" id, not
+        # sensitive, just kept out of committed source). Unset substitutes
+        # to an empty string, which js/ga-loader.js's own guard also treats
+        # as "no analytics" — safe default until the secret is added. GA is
+        # opt-in on top of this regardless (see js/ga-loader.js) — this
+        # step only controls whether a measurement ID exists to opt into.
+        run: |
+          sed -i "s/%%GA_MEASUREMENT_ID%%/${{ secrets.GA_MEASUREMENT_ID }}/g" js/ga-loader.js
       - name: Generate changelog.json
         # Footer "What's new" popup (issue #53) reads this at runtime.
         # Regenerated into the working tree, not committed back — the
@@ -108,7 +119,7 @@ jobs:
         # dead weight nobody was linking to.)
         run: |
           mkdir -p _site
-          cp index.html sw.js favicon.ico icon.ico icon.svg icon-192.png icon-512.png apple-touch-icon.png manifest.json options.yaml changelog.json ads.txt robots.txt sitemap.xml _site/
+          cp index.html privacy.html sw.js favicon.ico icon.ico icon.svg icon-192.png icon-512.png apple-touch-icon.png manifest.json options.yaml changelog.json ads.txt robots.txt sitemap.xml _site/
           cp -r films labs schema js _site/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5

@@ -4,32 +4,41 @@
     <!-- AdSense site verification — see js/adsense-loader.js for what this
          does and why it's an external file rather than inline. -->
     <script src="js/adsense-loader.js"></script>
+    <!-- Google Analytics (GA4) — opt-in only, gated behind the cookie-
+         consent banner (js/app.js's App.acceptAnalytics()/renderConsent
+         Banner). See js/ga-loader.js's own header comment and
+         privacy.html for what this does and doesn't send before consent. -->
+    <script src="js/ga-loader.js"></script>
     <!-- Content-Security-Policy: script-src/frame-src/connect-src carry the
          AdSense/Google ad-tech domains (script-src also needs them because
          adsbygoogle.js itself, running in this document, issues the ad
          request before any iframe exists) — those wildcards are Google's
          own documented CSP requirement for AdSense, not a general
-         allowance. Everything else is locked to 'self' plus the two CDNs
-         this page actually loads from (cdnjs for js-yaml, Google Fonts).
-         script-src also needs 'unsafe-inline': js/app.js renders the whole
-         UI as onclick/oninput/onchange attribute strings (no framework, no
+         allowance. googletagmanager.com/google-analytics.com are Google's
+         own documented CSP requirement for GA4 (gtag.js), same reasoning —
+         script-src needs the loader script's own origin, connect-src needs
+         the collect-request domains it calls after loading. Everything
+         else is locked to 'self' plus the two CDNs this page actually
+         loads from (cdnjs for js-yaml, Google Fonts). script-src also
+         needs 'unsafe-inline': js/app.js renders the whole UI as
+         onclick/oninput/onchange attribute strings (no framework, no
          addEventListener wiring — see app.js's own header comment), so
          blocking inline handlers would break every control in the app.
          That means script-src can't fully stop injected script from
          *running* the way default-src normally would; what it still buys
          is real: connect-src/frame-src/img-src keep injected script from
-         *exfiltrating* to an arbitrary attacker origin (only these ad
-         domains and 'self' are reachable), and object-src/base-uri/
-         form-action close the plugin/<base>-hijack/form-exfil escape
-         hatches. The primary defense against the DOM XSS this app is
-         actually exposed to (imported YAML, see security.md) stays
+         *exfiltrating* to an arbitrary attacker origin (only these ad/
+         analytics domains and 'self' are reachable), and object-src/
+         base-uri/form-action close the plugin/<base>-hijack/form-exfil
+         escape hatches. The primary defense against the DOM XSS this app
+         is actually exposed to (imported YAML, see security.md) stays
          output encoding — escapeHtml()/sanitizeUrl() in app.js — this
          header is defense in depth on top of that, not a replacement.
          GitHub Pages (the only hosting this app has, since #315 dropped
          Docker self-hosting) serves no custom headers, so a <meta> tag is
          the only way to deliver this at all — frame-ancestors/report-uri/
          X-Frame-Options aren't available in either form here. -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://www.googletagservices.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.googlesyndication.com https://*.google.com https://*.doubleclick.net; frame-src https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://www.googletagservices.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.googlesyndication.com https://*.google.com https://*.doubleclick.net https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com; frame-src https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com; object-src 'none'; base-uri 'self'; form-action 'self'">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="icon" type="image/svg+xml" href="/icon.svg">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">

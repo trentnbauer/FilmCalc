@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Privacy Policy — FilmCalc</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/icon.svg">
+    <meta name="theme-color" content="#0b0b0c">
+    <meta name="robots" content="noindex">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Narrow:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --acc: #ff7a2f; }
+        body {
+            margin: 0; background: #0b0b0c; color: #c9c5bd;
+            font-family: Archivo, system-ui, sans-serif; -webkit-font-smoothing: antialiased;
+            line-height: 1.6;
+        }
+        main { max-width: 680px; margin: 0 auto; padding: 40px 20px 80px; }
+        a { color: var(--acc); }
+        h1 {
+            font-family: 'Archivo Narrow', Archivo, sans-serif; font-weight: 700;
+            letter-spacing: .04em; font-size: 26px; color: #eae7e1; margin: 0 0 6px;
+        }
+        h2 {
+            font-family: 'Archivo Narrow', Archivo, sans-serif; font-weight: 600;
+            font-size: 16px; letter-spacing: .08em; text-transform: uppercase;
+            color: #eae7e1; margin: 36px 0 10px;
+        }
+        p, li { font-size: 14px; color: #b0aeac; }
+        ul { padding-left: 20px; }
+        .updated { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #6d6a64; margin: 0 0 28px; }
+        code { background: #1a1a1d; border: 1px solid #33333a; border-radius: 3px; padding: 1px 5px; font-size: 12.5px; }
+        .back { display: inline-block; margin-bottom: 24px; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
+        footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid #26262a; font-size: 11px; color: #6d6a64; }
+    </style>
+</head>
+<body>
+<main>
+    <a class="back" href="/">← Back to FilmCalc</a>
+    <h1>Privacy Policy</h1>
+    <p class="updated">Last updated: September 2026</p>
+
+    <p>FilmCalc is a static, client-side app. There's no account to create, no server-side database, and
+    no backend at all — everything you enter (saved films, labs, prices, settings) lives only in your own
+    browser's <code>localStorage</code> and is never transmitted anywhere. For the technical detail on
+    that, see <a href="https://github.com/trentnbauer/FilmCalc/blob/main/security.md">security.md</a> in
+    the source repo.</p>
+
+    <p>This page is about the one thing that <em>can</em> leave your browser: optional, opt-in analytics.</p>
+
+    <h2>Analytics (Google Analytics)</h2>
+    <p>FilmCalc may use Google Analytics (GA4) to understand how many people use the app and roughly which
+    parts get used — nothing more. It is <strong>strictly opt-in</strong>:</p>
+    <ul>
+        <li>On your first visit, a small banner asks whether to allow analytics.</li>
+        <li>If you click <strong>Decline</strong>, or close the banner without answering, no analytics
+        script ever loads. No request is made to Google, and no analytics cookie is ever set.</li>
+        <li>Only if you click <strong>Accept</strong> does the Google Analytics script load, from that
+        point on.</li>
+        <li>You can change your mind at any time — Settings → Privacy has a button to reset your choice,
+        which clears the saved preference and shows the banner again on your next visit.</li>
+    </ul>
+    <p>If you do accept, here's what Google Analytics collects: which pages/views you use within the app,
+    an approximate location derived from your IP address (the IP itself is truncated before Google stores
+    it — see <a href="https://support.google.com/analytics/answer/2763052" target="_blank" rel="noopener">IP anonymization</a>),
+    your browser and device type, and how you arrived at the site (referrer). It sets standard Google
+    Analytics cookies (<code>_ga</code>, <code>_ga_*</code>) to distinguish visitors across a session.</p>
+    <p><strong>None of the data you enter into the calculator itself — film names, lab names, prices,
+    saved profiles — is ever sent to Google or anywhere else.</strong> That data only ever exists in your
+    own browser's <code>localStorage</code>, which analytics scripts have no access to.</p>
+
+    <h2>Advertising</h2>
+    <p>FilmCalc currently runs no advertising. An earlier application to Google AdSense was not approved,
+    so no ad script runs and no ad cookies are set. If that changes in the future, this page will be
+    updated first, and any ad network that uses cookies will go through the same opt-in consent gate
+    analytics uses above — never on by default.</p>
+
+    <h2>Other resources this page loads</h2>
+    <p>A couple of third-party resources load automatically, regardless of your analytics choice, because
+    they're what make the page work rather than anything that tracks you:</p>
+    <ul>
+        <li><strong>Google Fonts</strong> — the typeface files this page uses.</li>
+        <li><strong>cdnjs.cloudflare.com</strong> — hosts the <code>js-yaml</code> library FilmCalc uses to
+        read imported film/lab data files.</li>
+    </ul>
+    <p>Neither sets cookies or receives anything beyond a standard request for the file itself.</p>
+
+    <h2>Children's privacy</h2>
+    <p>FilmCalc isn't directed at children and doesn't knowingly collect data from them.</p>
+
+    <h2>Changes to this policy</h2>
+    <p>If this policy changes, the "last updated" date at the top will change too. Worth a glance back
+    occasionally if you're curious.</p>
+
+    <h2>Questions</h2>
+    <p>Open an issue on <a href="https://github.com/trentnbauer/FilmCalc/issues" target="_blank" rel="noopener">FilmCalc's GitHub repo</a>.</p>
+
+    <footer>FilmCalc — <a href="/">filmcalc.app</a></footer>
+</main>
+</body>
+</html>
