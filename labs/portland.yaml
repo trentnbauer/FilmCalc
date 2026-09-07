@@ -1,0 +1,89 @@
+label: Portland Labs
+country: United States
+state: Oregon
+city: Portland
+labs:
+  - name: Citizens Photo
+    hidden: false
+    address: 3070 NE Sandy Blvd, Portland, OR 97232, United States
+    phone: (503) 232-8501
+    email: lab@citizensphoto.com
+    website: https://www.citizensphoto.com
+    services:
+      - devCost: 5
+        pushPullCost: 2
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        processes:
+          - C41
+  - name: Blue Moon Camera & Machine
+    hidden: false
+    address: 8417 N Lombard St, Portland, OR 97203, United States
+    phone: (503) 978-0333
+    email: sales@bluemooncamera.com
+    website: https://bluemooncamera.com
+    services:
+      - devCost: 8.25
+        pushPullCost: 4
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        processes:
+          - C41
+      - devCost: 12
+        pushPullCost: 4
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        processes:
+          - BW
+      - devCost: 17
+        pushPullCost: 4
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        processes:
+          - E6
+      - devCost: 25
+        pushPullCost: 4
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        processes:
+          - ECN2
+  - name: The Shutterbug
+    hidden: false
+    address: 714 SW Washington St, Portland, OR 97205, United States
+    phone: (503) 227-3456
+    website: https://www.theshutterbug.com
+    services:
+      - devCost: 7
+        highResScan: false
+        tiffScan: false
+        processes:
+          - C41
+      - devCost: 17
+        highResScan: false
+        tiffScan: false
+        processes:
+          - C41
+      - devCost: 10
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        processes:
+          - BW
+          - E6
+      - devCost: 20
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        processes:
+          - BW
+          - E6
