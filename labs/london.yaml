@@ -245,8 +245,6 @@ labs:
     website: https://www.rapideye.uk.com
     services:
       - devCost: 8
-        pushPullCost: UNKNOWN
-        pushPullType: UNKNOWN
         turnaroundTime: same_week
         highResScan: false
         tiffScan: false
@@ -255,8 +253,6 @@ labs:
           - C41
           - BW
       - devCost: 18.60
-        pushPullCost: UNKNOWN
-        pushPullType: UNKNOWN
         turnaroundTime: same_week
         highResScan: false
         tiffScan: false
@@ -265,8 +261,6 @@ labs:
           - C41
           - BW
       - devCost: 24.60
-        pushPullCost: UNKNOWN
-        pushPullType: UNKNOWN
         turnaroundTime: same_week
         highResScan: true
         tiffScan: false
@@ -275,8 +269,6 @@ labs:
           - C41
           - BW
       - devCost: 24.60
-        pushPullCost: UNKNOWN
-        pushPullType: UNKNOWN
         turnaroundTime: same_week
         highResScan: false
         tiffScan: true
@@ -285,8 +277,6 @@ labs:
           - C41
           - BW
       - devCost: 30.60
-        pushPullCost: UNKNOWN
-        pushPullType: UNKNOWN
         turnaroundTime: same_week
         highResScan: true
         tiffScan: true
@@ -295,8 +285,6 @@ labs:
           - C41
           - BW
       - devCost: 6
-        pushPullCost: UNKNOWN
-        pushPullType: UNKNOWN
         turnaroundTime: same_week
         highResScan: false
         tiffScan: false
@@ -305,8 +293,6 @@ labs:
           - C41
           - BW
       - devCost: 13
-        pushPullCost: UNKNOWN
-        pushPullType: UNKNOWN
         turnaroundTime: same_week
         highResScan: false
         tiffScan: false
@@ -315,8 +301,6 @@ labs:
           - C41
           - BW
       - devCost: 19
-        pushPullCost: UNKNOWN
-        pushPullType: UNKNOWN
         turnaroundTime: same_week
         highResScan: true
         tiffScan: false
@@ -325,8 +309,6 @@ labs:
           - C41
           - BW
       - devCost: 19
-        pushPullCost: UNKNOWN
-        pushPullType: UNKNOWN
         turnaroundTime: same_week
         highResScan: false
         tiffScan: true
@@ -335,8 +317,6 @@ labs:
           - C41
           - BW
       - devCost: 25
-        pushPullCost: UNKNOWN
-        pushPullType: UNKNOWN
         turnaroundTime: same_week
         highResScan: true
         tiffScan: true
