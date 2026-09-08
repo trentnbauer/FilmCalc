@@ -9,6 +9,7 @@ labs:
     phone: (604) 876-1737
     email: info@thelabvancouver.com
     website: https://www.thelabvancouver.com
+    source: https://www.thelabvancouver.com/services/film-processing/
     services:
       - devCost: 13.50
         highResScan: false
@@ -71,6 +72,7 @@ labs:
     phone: (604) 682-6000
     email: order@rocketrepro.com
     website: https://rocketrepro.com
+    source: https://rocketrepro.com/wp-content/themes/intermission_theme/Rocket-Repro-Film-Services-2026.pdf
     services:
       - devCost: 13.25
         turnaroundTime: next_day
@@ -189,6 +191,7 @@ labs:
     phone: (604) 736-7017
     email: consumer@abcphoto.com
     website: https://abcphoto.com
+    source: https://abcphoto.com/film-processing/
     services:
       - devCost: 8.50
         pushPullCost: 5.00
