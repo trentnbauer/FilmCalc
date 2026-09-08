@@ -1,0 +1,61 @@
+label: Osaka Labs
+country: Japan
+state: Osaka
+city: Osaka
+labs:
+  - name: "#八百富フィルム現像所 (Yaotomi Film Lab)"
+    hidden: false
+    address: "Osaka Ekimae Dai-3 Building B2F, 1-1-3 Umeda, Kita-ku, Osaka 530-0001, Japan"
+    phone: "+81 6-6341-0284"
+    website: https://www.yaotomi.co.jp/genzousho/
+    source: https://www.yaotomi.co.jp/genzousho/
+    services:
+      - devCost: 800
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 1265
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 1997
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+  - name: Kitamura Camera (Namba CITY)
+    hidden: false
+    address: "5-1-60 Namba, Chuo-ku, Osaka 542-0076, Japan"
+    phone: "+81 6-6644-2626"
+    website: https://www.kitamura-print.com/print/nega_print/
+    source: https://www.kitamura-print.com/print/nega_print/
+    services:
+      - devCost: 950
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 1830
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 2930
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
