@@ -1,0 +1,398 @@
+label: London Retailers
+country: United Kingdom
+state: England
+city: London
+films:
+  - name: Ilford HP5+
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 10.67
+        storeName: Parallax Photographic
+        buyLink: https://parallaxphotographic.coop/shop/ilford-hp5-plus-400-35mm-film/
+        availability: city
+        state: England
+        city: London
+  - name: Kodak ColorPlus
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 9.95
+        storeName: Parallax Photographic
+        buyLink: https://parallaxphotographic.coop/shop/kodak-colorplus-200-35mm-film/
+        availability: city
+        state: England
+        city: London
+      - rolls: 1
+        exposures: 24
+        filmCost: 8.95
+        storeName: Parallax Photographic
+        buyLink: https://parallaxphotographic.coop/shop/kodak-colorplus-200-35mm-film-24-exposures-copy/
+        availability: city
+        state: England
+        city: London
+  - name: Kodak UltraMax
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 12.95
+        storeName: Parallax Photographic
+        buyLink: https://parallaxphotographic.coop/shop/kodak-ultramax-400-35mm-film/
+        availability: city
+        state: England
+        city: London
+      - rolls: 3
+        exposures: 36
+        filmCost: 35.95
+        storeName: Parallax Photographic
+        buyLink: https://parallaxphotographic.coop/shop/kodak-ultramax-400-35mm-film-3-pack-36-exposures/
+        availability: city
+        state: England
+        city: London
+  - name: Kodak Portra 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 19.45
+        storeName: Parallax Photographic
+        buyLink: https://parallaxphotographic.coop/shop/kodak-portra-400-35mm-film-36-exposures/
+        availability: city
+        state: England
+        city: London
+      - rolls: 5
+        exposures: 36
+        filmCost: 98.45
+        storeName: Parallax Photographic
+        buyLink: https://parallaxphotographic.coop/shop/kodak-portra-400-35mm-film-5-pack/
+        availability: city
+        state: England
+        city: London
+  - name: Kodak Gold
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 11.45
+        storeName: Parallax Photographic
+        buyLink: https://parallaxphotographic.coop/shop/kodak-gold-200-35mm-film/
+        availability: city
+        state: England
+        city: London
+      - rolls: 3
+        exposures: 36
+        filmCost: 30.95
+        storeName: Parallax Photographic
+        buyLink: https://parallaxphotographic.coop/shop/kodak-gold-200-35mm-film-3-pack-36-exposures/
+        availability: city
+        state: England
+        city: London
+  - name: FujiFilm Color
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 12.95
+        storeName: Parallax Photographic
+        buyLink: https://parallaxphotographic.coop/shop/fuji-superia-400-35mm-film-36-exposures/
+        availability: city
+        state: England
+        city: London
+  - name: FujiFilm Color
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 11.95
+        storeName: Parallax Photographic
+        buyLink: https://parallaxphotographic.coop/shop/fujicolor-c200-35mm-film-36-exposures/
+        availability: city
+        state: England
+        city: London
+  - name: Kodak Tri-X 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 11.95
+        storeName: Parallax Photographic
+        buyLink: https://parallaxphotographic.coop/shop/kodak-tri-x-400-35mm-film/
+        availability: city
+        state: England
+        city: London
+  - name: Ilford FP4+
+    boxSpeed: 125
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 10.56
+        storeName: Parallax Photographic
+        buyLink: https://parallaxphotographic.coop/shop/ilford-fp4-plus-125-35mm-film/
+        availability: city
+        state: England
+        city: London
+  - name: Kentmere Pan 400
+    boxSpeed: 400
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 6.85
+        storeName: Parallax Photographic
+        buyLink: https://parallaxphotographic.coop/shop/kentmere-400-35mm-film-36-exposures/
+        availability: city
+        state: England
+        city: London
+  - name: Kodak Ektar 100
+    boxSpeed: 100
+    maxPushPull: 0
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 18.95
+        storeName: Parallax Photographic
+        buyLink: https://parallaxphotographic.coop/shop/kodak-ektar-100-35mm-film/
+        availability: city
+        state: England
+        city: London
+  - name: Cinestill 800Tungsten
+    boxSpeed: 800
+    maxPushPull: 2
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 18.95
+        storeName: Parallax Photographic
+        buyLink: https://parallaxphotographic.coop/shop/cinestill-800-tungsten-35mm-film/
+        availability: city
+        state: England
+        city: London
+  - name: Cinestill 400Dynamic
+    boxSpeed: 400
+    maxPushPull: 3
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 18.95
+        storeName: Parallax Photographic
+        buyLink: https://parallaxphotographic.coop/shop/cinestill-400-daylight-35mm-film-36-exposures/
+        availability: city
+        state: England
+        city: London
+  - name: Fomapan 200
+    boxSpeed: 200
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 6.95
+        storeName: Parallax Photographic
+        buyLink: https://parallaxphotographic.coop/shop/fomapan-200-35mm-film/
+        availability: city
+        state: England
+        city: London
+  - name: Fomapan 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 5.95
+        storeName: Parallax Photographic
+        buyLink: https://parallaxphotographic.coop/shop/fomapan-100-35mm-film/
+        availability: city
+        state: England
+        city: London
+  - name: Ilford Delta 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 12.64
+        storeName: Parallax Photographic
+        buyLink: https://parallaxphotographic.coop/shop/ilford-delta-400-35mm-film/
+        availability: city
+        state: England
+        city: London
+  - name: Ilford Delta 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 12.64
+        storeName: Parallax Photographic
+        buyLink: https://parallaxphotographic.coop/shop/ilford-delta-100-35mm-film/
+        availability: city
+        state: England
+        city: London
+  - name: Ilford Delta 3200
+    boxSpeed: 3200
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 14.34
+        storeName: Parallax Photographic
+        buyLink: https://parallaxphotographic.coop/shop/ilford-delta-3200-35mm-film/
+        availability: city
+        state: England
+        city: London
+  - name: Ilford XP2 Super
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    colorType: bw
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 11.32
+        storeName: Parallax Photographic
+        buyLink: https://parallaxphotographic.coop/shop/ilford-xp2-super-400-35mm-film/
+        availability: city
+        state: England
+        city: London
+  - name: Kodak Portra 160
+    boxSpeed: 160
+    maxPushPull: 2
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 17.95
+        storeName: Parallax Photographic
+        buyLink: https://parallaxphotographic.coop/shop/kodak-portra-160-35mm-film-36-exposures/
+        availability: city
+        state: England
+        city: London
+  - name: Kodak T-Max 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 13.99
+        storeName: Parallax Photographic
+        buyLink: https://parallaxphotographic.coop/shop/kodak-t-max-400-35mm-film/
+        availability: city
+        state: England
+        city: London
+  - name: Kodak T-Max P3200
+    boxSpeed: 3200
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 17.95
+        storeName: Parallax Photographic
+        buyLink: https://parallaxphotographic.coop/shop/kodak-t-max-p3200-35mm-film-36-exposures/
+        availability: city
+        state: England
+        city: London
+  - name: Kodak Pro Image 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 12.95
+        storeName: Parallax Photographic
+        buyLink: https://parallaxphotographic.coop/shop/kodak-pro-image-100-35mm-film-36-exposures/
+        availability: city
+        state: England
+        city: London
+  - name: Kodak Ektachrome E100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: E6
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 27.95
+        storeName: Parallax Photographic
+        buyLink: https://parallaxphotographic.coop/shop/kodak-ektachrome-e100-35mm-film-36-exposures/
+        availability: city
+        state: England
+        city: London
