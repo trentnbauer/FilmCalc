@@ -9,6 +9,7 @@ labs:
     phone: (647) 426-1277
     email: contact@graination.ca
     website: https://graination.ca
+    source: https://graination.ca/film-developing/
     services:
       - devCost: 9
         pushPullCost: 3
@@ -33,6 +34,7 @@ labs:
     address: 89 Queen Street East, Toronto, ON M5C 1S1, Canada
     phone: (416) 363-1749
     website: https://downtowncamera.com
+    source: https://cdn.prod.website-files.com/5d1bef57df18292a91ebcc88/67e5936fb1cebab0974e9426_20232710c41bwpricelist%20website%20smaller%20size.pdf
     services:
       - devCost: 8.50
         pushPullCost: 3.50
@@ -79,6 +81,7 @@ labs:
     phone: (416) 516-8558
     email: hello@c41filmlabs.com
     website: https://www.c41filmlabs.com
+    source: https://www.c41filmlabs.com/product-page/order-form
     services:
       - devCost: 15
         turnaroundTime: next_day
@@ -92,6 +95,7 @@ labs:
     phone: (416) 922-0920
     email: appointments@annexphoto.ca
     website: https://annexphoto.ca
+    source: https://irp.cdn-website.com/530196e9/files/uploaded/Annex%20Photo%20Film%20Development%20Price%20List%2035mm%20Colour.pdf
     services:
       - devCost: 11.00
         turnaroundTime: next_day
