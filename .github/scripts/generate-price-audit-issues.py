@@ -123,8 +123,12 @@ def lab_lines(path, doc):
         if lab.get("hidden"):
             continue
         name = lab.get("name", "unnamed")
-        website = lab.get("website") or ""
-        link_note = website if website else "no website"
+        # `source` (the specific page/PDF the prices were actually read from)
+        # is a much better link to re-check than `website` (the lab's
+        # homepage, which may be several clicks from the real pricelist) —
+        # prefer it whenever a contributor bothered to fill it in.
+        link = lab.get("source") or lab.get("website") or ""
+        link_note = link if link else "no link"
         for j, service in enumerate(lab.get("services") or []):
             key = f"{path}#{name}#{j}"
             processes = ", ".join(service.get("processes") or []) or "?"
