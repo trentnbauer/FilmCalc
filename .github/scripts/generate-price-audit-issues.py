@@ -9,9 +9,11 @@ script or the nightly prompt), so the two stay in sync automatically and a human
 the issue can see exactly what Claude is meant to do with it.
 
 One issue per file, not one giant issue, because a single combined checklist across all
-~15 files comfortably exceeds GitHub's issue body size limit. monthly-price-audit.yml
-already checks that no `price-audit` issue is still open before invoking this script, so
-these only ever get created once the previous batch is fully worked through.
+~15 files comfortably exceeds GitHub's issue body size limit. Safe to run anytime, not
+just on the monthly schedule — `open_audit_paths()` skips any file that already has an
+open price-audit issue, so a manual `workflow_dispatch` re-run mid-month (e.g. to pick up
+files added since the last run) only opens issues for what's actually missing, never a
+duplicate checklist for a file still being worked through.
 
 No PR exists for a file until its whole checklist is done and there's a real, complete
 changeset to open — findings are collected as issue comments while the checklist is
@@ -22,6 +24,7 @@ takes Tier 5 — the lowest-priority tier — to get through a file's items.
 import glob
 import json
 import os
+import re
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -203,12 +206,35 @@ def create_issue(title, body):
     return result.stdout.strip()
 
 
+TITLE_RE = re.compile(r"^Price audit: (.+?) — ")
+
+
+def open_audit_paths():
+    """Every films/*.yaml or labs/*.yaml path that already has an open
+    price-audit issue, so a re-run (whether the monthly schedule or a manual
+    workflow_dispatch, possibly mid-month to pick up files added since the
+    last run) never opens a second, duplicate checklist for a file whose
+    first one is still being worked through — while still opening one for
+    any file that doesn't have one yet."""
+    result = subprocess.run(
+        ["gh", "issue", "list", "--repo", REPO, "--label", "price-audit",
+         "--state", "open", "--json", "title", "--limit", "200"],
+        capture_output=True, text=True, check=True,
+    )
+    titles = (t["title"] for t in json.loads(result.stdout))
+    return {m.group(1) for t in titles if (m := TITLE_RE.match(t))}
+
+
 def main():
     now = datetime.now(timezone.utc)
+    already_open = open_audit_paths()
     created = []
     files = sorted(glob.glob("films/*.yaml") + glob.glob("films/*.yml"))
     files += sorted(glob.glob("labs/*.yaml") + glob.glob("labs/*.yml"))
     for path in files:
+        if path in already_open:
+            print(f"{path}: already has an open price-audit issue, skipping")
+            continue
         is_lab = path.startswith("labs/")
         built = build_issue(path, is_lab, now)
         if built is None:

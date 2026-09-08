@@ -273,11 +273,14 @@ jobs:
             a partial job — comment on the issue explaining what's uncertain and @-mentioning
             `author.login`, and still label it `claude-attempted`.
 
-            **Tier 5 — Monthly price audit (lowest priority, only if everything else is caught up)**
+            **Tier 5 — Monthly price audit (lowest priority — processed last, not skipped)**
 
-            Only start this tier once Tiers 1-4 have nothing left unprocessed this run — it exists to
-            fill spare time on quiet nights, not to compete with anything a person is actually waiting
-            on.
+            Always work through Tiers 1-4 first, in order — but "lowest priority" means this tier goes
+            last, not that it only runs on a night where Tiers 1-4 had literally nothing to do. Once
+            you've finished everything Tiers 1-4 actually had this run (even if that was just one item),
+            move on to this tier with whatever turns remain, same as any other tier. It only actually gets
+            skipped if you run out of turns before reaching it, or Tiers 1-4 leave nothing to hand off to
+            (e.g. Tier 3/4 items still awaiting more turns than you have).
 
             List open issues labelled `price-audit`:
             ```
