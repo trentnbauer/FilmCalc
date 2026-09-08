@@ -1,0 +1,80 @@
+label: Brisbane Retailers
+country: Australia
+state: Queensland
+city: Brisbane
+films:
+  - name: Kodak UltraMax
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 23.00
+        storeName: CameraPro
+        buyLink: https://www.camerapro.com.au/12475-kodak-film-ultramax-400-color-negative-film-35mm-roll-film-36-exposures.html
+        availability: city
+        state: Queensland
+        city: Brisbane
+  - name: Kodak Gold
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 32.00
+        storeName: CameraPro
+        buyLink: https://www.camerapro.com.au/12233-kodak-film-gold-200-color-negative-film-35mm-roll-film-36-exposures.html
+        availability: city
+        state: Queensland
+        city: Brisbane
+  - name: Kodak ColorPlus
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 18.00
+        storeName: CameraPro
+        buyLink: https://www.camerapro.com.au/15133-kodak-film-colorplus-200-color-negative-film-35mm-roll-film-36-exposures.html
+        availability: city
+        state: Queensland
+        city: Brisbane
+  - name: FujiFilm Color
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 23.00
+        storeName: CameraPro
+        buyLink: https://www.camerapro.com.au/14977-fujifilm-200-color-35mm-roll-film-36-exposures.html
+        availability: city
+        state: Queensland
+        city: Brisbane
+  - name: Ilford Delta 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 24
+        filmCost: 25.00
+        storeName: CameraPro
+        buyLink: https://www.camerapro.com.au/15236-ilford-delta-400-iso-professional-35mm-24-exposure-black-white-film.html
+        availability: city
+        state: Queensland
+        city: Brisbane
