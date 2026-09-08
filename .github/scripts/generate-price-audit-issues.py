@@ -100,21 +100,17 @@ Save progress after every single item — tick the box (and post any comment) im
 then rewrite this issue's body with `gh issue edit <number> --body-file <file>` before
 moving to the next item. Don't batch several items' worth of changes into one save.
 
-**Once every box below is checked:** collect every `PRICE-AUDIT-FINDING` comment on this
-issue (`gh issue view <number> --json comments`), apply each one to `{path}` following
-`DATA_SPEC.md`'s formatting rules (a `field: source` finding adds/updates that lab's
-top-level `source:`, same as any other field), and commit them all together on a branch
-named `claude/price-audit-<number>`. If there was at least one finding, open a single PR
-titled "Price audit corrections: {path} — {month}" with a table of every change (entry,
-field, old → new, source) in the body, and include the literal line `Closes #<number>` so
-the issue closes automatically the moment this merges — then merge it yourself,
-`gh pr merge --squash --auto --delete-branch`. No extra confidence gate on top of this:
-every finding above only ever came from a price you read confidently and unambiguously
-off a live page (anything less certain went to a `price-audit-flag` issue instead), so by
-the time it's a `PRICE-AUDIT-FINDING` comment it's already past that bar. If there were
-zero findings, there's nothing to open a PR for — just close this issue yourself
-(`gh issue close <number> --comment "..."`) summarizing that nothing needed changing, and
-mention any `price-audit-flag` issues opened along the way either way.
+**Once every box below is checked:**
+
+0. First check whether a PR already exists for this issue (`gh pr list --search "Closes #<number>" --state all` — also check for a branch named `claude/price-audit-<number>` directly, `git ls-remote --heads origin`), in case a previous run got this far and was interrupted before merging. If one exists and is still open, skip straight to step 3 (below) with that PR instead of creating a new one. If one exists and already merged, this issue should have auto-closed with it — something's wrong (re-opened issue?); just close it yourself with a comment noting the PR already merged, and stop.
+
+1. Collect every `PRICE-AUDIT-FINDING` comment on this issue (`gh issue view <number> --json comments`). If there are none, there's nothing to open a PR for — close this issue yourself (`gh issue close <number> --comment "..."`) summarizing that nothing needed changing, mention any `price-audit-flag` issues opened along the way, and stop here.
+
+2. Apply each finding to `{path}` following `DATA_SPEC.md`'s formatting rules (a `field: source` finding adds/updates that lab's top-level `source:`, same as any other field), and commit them all together on a branch named `claude/price-audit-<number>`. Open a PR titled "Price audit corrections: {path} — {month}" with a table of every change (entry, field, old → new, source) in the body, and include the literal line `Closes #<number>` so the issue closes automatically the moment this merges. Mention any `price-audit-flag` issues opened along the way.
+
+3. Decide whether to auto-merge or leave it for review: for every finding whose `field` is a price-like number (not `source`, not a field going from empty to a value), compute the absolute percent change between `old` and `new` (skip any finding where `old` is empty/zero — nothing to divide by, treat it as a review-worthy addition instead of a swing).
+   - If every one of those is **within 30%**, this is within the same confidence bar Tier 2 already auto-merges under — merge it yourself, `gh pr merge --squash --auto --delete-branch`.
+   - If **any single finding swings by more than 30%**, don't auto-merge — leave the PR open for human review instead, and say explicitly in the PR body which finding(s) triggered the hold and why (e.g. "Kodak Portra 400 devCost $12 → $19, a 58% jump — flagging for a human glance instead of auto-merging"). A swing that large is more likely a misread (wrong pack size, wrong tier, a stray digit) than a genuine price move, and this is the one mechanical backstop against that — independent of how confident the per-item read felt at the time.
 
 ---
 
