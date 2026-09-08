@@ -1,0 +1,329 @@
+label: Vancouver Retailers
+country: Canada
+state: British Columbia
+city: Vancouver
+films:
+  - name: Fujifilm 200
+    boxSpeed: 200
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 20.25
+        storeName: Rocket Repro
+        buyLink: https://rocketrepro.com/wp-content/themes/intermission_theme/film-prices-2025.pdf
+        availability: city
+        state: British Columbia
+        city: Vancouver
+  - name: Fujifilm 400
+    boxSpeed: 400
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 21.25
+        storeName: Rocket Repro
+        buyLink: https://rocketrepro.com/wp-content/themes/intermission_theme/film-prices-2025.pdf
+        availability: city
+        state: British Columbia
+        city: Vancouver
+  - name: Kodak Gold
+    boxSpeed: 200
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 24
+        filmCost: 14.95
+        storeName: Rocket Repro
+        buyLink: https://rocketrepro.com/wp-content/themes/intermission_theme/film-prices-2025.pdf
+        availability: city
+        state: British Columbia
+        city: Vancouver
+      - rolls: 1
+        exposures: 36
+        filmCost: 17.95
+        storeName: Rocket Repro
+        buyLink: https://rocketrepro.com/wp-content/themes/intermission_theme/film-prices-2025.pdf
+        availability: city
+        state: British Columbia
+        city: Vancouver
+  - name: Kodak Gold
+    boxSpeed: 200
+    process: C41
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 15.95
+        storeName: Rocket Repro
+        buyLink: https://rocketrepro.com/wp-content/themes/intermission_theme/film-prices-2025.pdf
+        availability: city
+        state: British Columbia
+        city: Vancouver
+  - name: Kodak Kodacolor
+    boxSpeed: 200
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 17.95
+        storeName: Rocket Repro
+        buyLink: https://rocketrepro.com/wp-content/themes/intermission_theme/film-prices-2025.pdf
+        availability: city
+        state: British Columbia
+        city: Vancouver
+  - name: Kodak ColorPlus
+    boxSpeed: 200
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 16.97
+        storeName: Rocket Repro
+        buyLink: https://rocketrepro.com/wp-content/themes/intermission_theme/film-prices-2025.pdf
+        availability: city
+        state: British Columbia
+        city: Vancouver
+  - name: Kodak UltraMax
+    boxSpeed: 400
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 19.95
+        storeName: Rocket Repro
+        buyLink: https://rocketrepro.com/wp-content/themes/intermission_theme/film-prices-2025.pdf
+        availability: city
+        state: British Columbia
+        city: Vancouver
+  - name: Kodak Portra 160
+    boxSpeed: 160
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 26.95
+        storeName: Rocket Repro
+        buyLink: https://rocketrepro.com/wp-content/themes/intermission_theme/film-prices-2025.pdf
+        availability: city
+        state: British Columbia
+        city: Vancouver
+  - name: Kodak Portra 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 33.95
+        storeName: Rocket Repro
+        buyLink: https://rocketrepro.com/wp-content/themes/intermission_theme/film-prices-2025.pdf
+        availability: city
+        state: British Columbia
+        city: Vancouver
+  - name: Kodak Portra 800
+    boxSpeed: 800
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 36.95
+        storeName: Rocket Repro
+        buyLink: https://rocketrepro.com/wp-content/themes/intermission_theme/film-prices-2025.pdf
+        availability: city
+        state: British Columbia
+        city: Vancouver
+  - name: Kodak Portra 160
+    boxSpeed: 160
+    process: C41
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 23.95
+        storeName: Rocket Repro
+        buyLink: https://rocketrepro.com/wp-content/themes/intermission_theme/film-prices-2025.pdf
+        availability: city
+        state: British Columbia
+        city: Vancouver
+  - name: Kodak Portra 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 30.95
+        storeName: Rocket Repro
+        buyLink: https://rocketrepro.com/wp-content/themes/intermission_theme/film-prices-2025.pdf
+        availability: city
+        state: British Columbia
+        city: Vancouver
+  - name: Harman Phoenix
+    boxSpeed: 200
+    process: C41
+    colorType: speciality
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 19.99
+        storeName: Rocket Repro
+        buyLink: https://rocketrepro.com/wp-content/themes/intermission_theme/film-prices-2025.pdf
+        availability: city
+        state: British Columbia
+        city: Vancouver
+  - name: Harman Phoenix
+    boxSpeed: 200
+    process: C41
+    colorType: speciality
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 17.85
+        storeName: Rocket Repro
+        buyLink: https://rocketrepro.com/wp-content/themes/intermission_theme/film-prices-2025.pdf
+        availability: city
+        state: British Columbia
+        city: Vancouver
+  - name: Kentmere 100
+    boxSpeed: 100
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 12.60
+        storeName: Rocket Repro
+        buyLink: https://rocketrepro.com/wp-content/themes/intermission_theme/film-prices-2025.pdf
+        availability: city
+        state: British Columbia
+        city: Vancouver
+  - name: Kentmere 400
+    boxSpeed: 400
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 12.60
+        storeName: Rocket Repro
+        buyLink: https://rocketrepro.com/wp-content/themes/intermission_theme/film-prices-2025.pdf
+        availability: city
+        state: British Columbia
+        city: Vancouver
+  - name: Kentmere 400
+    boxSpeed: 400
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 10.50
+        storeName: Rocket Repro
+        buyLink: https://rocketrepro.com/wp-content/themes/intermission_theme/film-prices-2025.pdf
+        availability: city
+        state: British Columbia
+        city: Vancouver
+  - name: Ilford HP5 Plus
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 16.80
+        storeName: Rocket Repro
+        buyLink: https://rocketrepro.com/wp-content/themes/intermission_theme/film-prices-2025.pdf
+        availability: city
+        state: British Columbia
+        city: Vancouver
+  - name: Ilford HP5 Plus
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 16.80
+        storeName: Rocket Repro
+        buyLink: https://rocketrepro.com/wp-content/themes/intermission_theme/film-prices-2025.pdf
+        availability: city
+        state: British Columbia
+        city: Vancouver
+  - name: Ilford XP2 Super
+    boxSpeed: 400
+    process: C41
+    colorType: bw
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 22.05
+        storeName: Rocket Repro
+        buyLink: https://rocketrepro.com/wp-content/themes/intermission_theme/film-prices-2025.pdf
+        availability: city
+        state: British Columbia
+        city: Vancouver
+  - name: Kodak Tri-X 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 17.95
+        storeName: Rocket Repro
+        buyLink: https://rocketrepro.com/wp-content/themes/intermission_theme/film-prices-2025.pdf
+        availability: city
+        state: British Columbia
+        city: Vancouver
+  - name: Kodak T-Max P3200
+    boxSpeed: 3200
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 29.40
+        storeName: Rocket Repro
+        buyLink: https://rocketrepro.com/wp-content/themes/intermission_theme/film-prices-2025.pdf
+        availability: city
+        state: British Columbia
+        city: Vancouver
