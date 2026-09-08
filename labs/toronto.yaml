@@ -1,0 +1,139 @@
+label: Toronto Labs
+country: Canada
+state: Ontario
+city: Toronto
+labs:
+  - name: Graination
+    hidden: false
+    address: 204 Spadina Ave, Basement, Toronto, ON M5T 2C2, Canada
+    phone: (647) 426-1277
+    email: contact@graination.ca
+    website: https://graination.ca
+    services:
+      - devCost: 9
+        pushPullCost: 3
+        pushPullType: per_stop
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        processes:
+          - C41
+          - BW
+          - ECN2
+      - devCost: 12
+        pushPullCost: 3
+        pushPullType: per_stop
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        processes:
+          - E6
+  - name: Downtown Camera
+    hidden: false
+    address: 89 Queen Street East, Toronto, ON M5C 1S1, Canada
+    phone: (416) 363-1749
+    website: https://downtowncamera.com
+    services:
+      - devCost: 8.50
+        pushPullCost: 3.50
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        processes:
+          - C41
+          - BW
+      - devCost: 8.00
+        pushPullCost: 3.50
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        processes:
+          - C41
+          - BW
+      - devCost: 33.00
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        processes:
+          - C41
+          - BW
+      - devCost: 13.50
+        pushPullCost: 4.50
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        processes:
+          - E6
+      - devCost: 14.50
+        pushPullCost: 4.50
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        processes:
+          - E6
+  - name: C41 Film Labs
+    hidden: false
+    address: 163 Sterling Rd, Unit J, Toronto, ON M6R 2B2, Canada
+    phone: (416) 516-8558
+    email: hello@c41filmlabs.com
+    website: https://www.c41filmlabs.com
+    services:
+      - devCost: 15
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        processes:
+          - C41
+  - name: Annex Photo Concept by Fujifilm
+    hidden: false
+    address: 362 Bloor St W, Toronto, ON M5S 1X2, Canada
+    phone: (416) 922-0920
+    email: appointments@annexphoto.ca
+    website: https://annexphoto.ca
+    services:
+      - devCost: 11.00
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        processes:
+          - C41
+      - devCost: 10.00
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        processes:
+          - C41
+      - devCost: 16.00
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        processes:
+          - C41
+      - devCost: 13.00
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        processes:
+          - BW
+      - devCost: 22.00
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        processes:
+          - BW
+      - devCost: 11.00
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        processes:
+          - C41
+          - BW
+      - devCost: 24.00
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        processes:
+          - C41
+          - BW
