@@ -9,6 +9,7 @@ labs:
     phone: (415) 269-9097
     email: info@photoworkssf.com
     website: https://www.photoworkssf.com
+    source: https://www.photoworkssf.com/pricing/film-developing-and-processing
     services:
       - devCost: 10
         pushPullCost: 3
@@ -33,6 +34,7 @@ labs:
     phone: (415) 621-5800
     email: oscars@oscarsphotolab.com
     website: https://oscarsphotolab.com
+    source: https://oscarsphotolab.com/film-processing
     services:
       - devCost: 10
         pushPullCost: 2
@@ -65,6 +67,7 @@ labs:
     phone: (415) 252-1300
     email: info@dickermanprints.com
     website: https://www.dickermanprints.com
+    source: https://www.dickermanprints.com/processing/
     services:
       - devCost: 12
         pushPullCost: 5
