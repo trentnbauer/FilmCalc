@@ -1,0 +1,35 @@
+label: Hong Kong Retailers
+country: Hong Kong
+state: Hong Kong
+city: Hong Kong
+films:
+  - name: Kodak Portra 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 158.0
+        storeName: Filming Lab
+        buyLink: https://www.hkfilminglab.com/product/kodak-portra-400/
+        availability: city
+        state: Hong Kong
+        city: Hong Kong
+  - name: Kodak Gold
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 90.0
+        storeName: SHOWA
+        buyLink: https://hk.showa-store.com/products/kodak-gold-200-135
+        availability: city
+        state: Hong Kong
+        city: Hong Kong
