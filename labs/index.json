@@ -89,5 +89,12 @@
     "country": "Japan",
     "state": "Tokyo",
     "city": "Tokyo"
+  },
+  {
+    "file": "toronto.yaml",
+    "label": "Toronto Labs",
+    "country": "Canada",
+    "state": "Ontario",
+    "city": "Toronto"
   }
 ]
