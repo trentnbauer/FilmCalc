@@ -9,6 +9,7 @@ labs:
     phone: "020 7580 0857"
     email: info@apertureprinting.com
     website: https://www.apertureprinting.com
+    source: https://www.apertureprinting.com/processing
     services:
       - devCost: 9
         pushPullCost: 4
@@ -196,6 +197,7 @@ labs:
     phone: "020 7738 5774"
     email: info@photofusion.org
     website: https://www.photofusion.org
+    source: https://www.photofusion.org/film-processing
     services:
       - devCost: 8
         pushPullCost: 4
@@ -243,6 +245,7 @@ labs:
     phone: "+44 20 7729 9292"
     email: support@rapideye.uk.com
     website: https://www.rapideye.uk.com
+    source: https://www.rapideye.uk.com/pages/price-list
     services:
       - devCost: 8
         turnaroundTime: same_week
