@@ -1,0 +1,20 @@
+label: Singapore Retailers
+country: Singapore
+state: Singapore
+city: Singapore
+films:
+  - name: Kodak Portra 800
+    boxSpeed: 800
+    maxPushPull: 2
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 35.00
+        storeName: Triple D Minilab Centre
+        buyLink: https://www.tripledminilab.com/products/kodak-portra-800
+        availability: city
+        state: Singapore
+        city: Singapore
