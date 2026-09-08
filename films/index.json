@@ -19,6 +19,13 @@
     "city": "Canberra"
   },
   {
+    "file": "chicago-retailers.yaml",
+    "label": "Chicago Retailers",
+    "country": "United States",
+    "state": "Illinois",
+    "city": "Chicago"
+  },
+  {
     "file": "germany-retailers.yaml",
     "label": "Germany Retailers",
     "country": "Germany"
@@ -41,6 +48,13 @@
     "country": "Australia",
     "state": "Victoria",
     "city": "Melbourne"
+  },
+  {
+    "file": "portland-retailers.yaml",
+    "label": "Portland Retailers",
+    "country": "United States",
+    "state": "Oregon",
+    "city": "Portland"
   },
   {
     "file": "san-francisco-retailers.yaml",
