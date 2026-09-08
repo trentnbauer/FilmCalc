@@ -627,6 +627,7 @@ const STRINGS = {
         v2ButtonReportFilm: 'Report a film',
         v2ButtonReportLab: 'Report a lab',
         v2ImportDisclaimer: 'Prices are best-effort, compiled from a mix of human and AI research — always confirm against the shop or lab\'s own page before relying on it.',
+        v2LabelPriceSource: 'Price source (optional)',
     },
 
     es: {
