@@ -2079,8 +2079,8 @@ ${pushWarn ? `<div style="display:flex;align-items:center;gap:9px;margin-top:10p
 <span style="width:7px;height:7px;border-radius:50%;background:var(--acc);flex-shrink:0"></span>
 <span style="font-size:13px;line-height:1.45;color:#ffa268">${stopsAbs} stops of ${r.stopsSigned > 0 ? 'push' : 'pull'} — ${loaded ? `${escapeHtml(loaded.name)} is rated for ${limit === 0 ? 'no push/pull' : '±' + limit}` : 'most stocks hold ±2'}, so expect heavy grain and contrast shift.</span>
 </div>` : ''}
-<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;padding:12px 14px;border:1px solid ${cheaper.has ? '#5a3a1c' : '#26262a'};border-radius:10px;background:${cheaper.has ? '#17140f' : '#131315'}">
-<div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:${cheaper.has ? SECTION_COLORS.films : '#928e88'}">${escapeHtml(cheaper.label)}</div>
+<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;padding:12px 14px;border:1px solid ${cheaper.has ? '#5a3a1c' : '#2d4a24'};border-radius:10px;background:${cheaper.has ? '#17140f' : '#12190f'}">
+<div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:${SECTION_COLORS.films}">${escapeHtml(cheaper.label)}</div>
 ${cheaper.has ? cheaper.options.map((o, i) => `
 <div style="display:flex;flex-direction:column;gap:6px;${i > 0 ? 'padding-top:8px;border-top:1px solid #26262a' : ''}">
 <div style="font-size:13px;line-height:1.45;color:#c9c5bd">${escapeHtml(o.text)}</div>
