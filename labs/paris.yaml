@@ -1,0 +1,169 @@
+label: Paris Labs
+country: France
+state: Île-de-France
+city: Paris
+labs:
+  - name: LSD Laboratory Scan & Developing
+    hidden: false
+    address: 47 Rue de la Folie Méricourt, 75011 Paris, France
+    phone: +33 7 65 72 96 76
+    email: info@lsd-lab.com
+    website: https://www.lsd-lab.com
+    source: https://www.lsd-lab.com/prices/
+    services:
+      - devCost: 9.50
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 13.00
+        pushPullCost: 1.00
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 19.50
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 19.50
+        pushPullCost: 1.00
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 25.00
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: true
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 25.00
+        pushPullCost: 1.00
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 38.00
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: true
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 38.00
+        pushPullCost: 1.00
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - BW
+  - name: Négatif+
+    hidden: false
+    address: 106 rue La Fayette, 75010 Paris, France
+    phone: 0 805 390 000
+    email: argentique@negatifplus.com
+    website: https://negatifplus.com
+    source: https://negatifplus.com/content/38-service-argentique
+    services:
+      - devCost: 12.00
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+          - BW
+      - devCost: 14.00
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+          - BW
+      - devCost: 19.00
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+          - BW
+      - devCost: 20.00
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: true
+        noPushPull: true
+        processes:
+          - C41
+          - BW
+      - devCost: 25.00
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: true
+        processes:
+          - C41
+          - BW
+      - devCost: 35.00
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: true
+        noPushPull: true
+        processes:
+          - C41
+          - BW
+  - name: Reportage Image
+    hidden: false
+    address: 8 Place Jacques Bonsergent, 75010 Paris, France
+    phone: 01 42 41 08 34
+    email: labo@reportage-image.com
+    website: https://reportage-image.com
+    source: https://reportage-image.com/boutique
+    services:
+      - devCost: 6.00
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+          - BW
+      - devCost: 11.40
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+          - BW
+      - devCost: 14.50
+        highResScan: true
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+          - BW
+      - devCost: 18.50
+        highResScan: true
+        tiffScan: true
+        noPushPull: true
+        processes:
+          - C41
+          - BW
