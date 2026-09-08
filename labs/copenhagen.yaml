@@ -1,0 +1,213 @@
+label: Copenhagen Labs
+country: Denmark
+state: Capital Region of Denmark
+city: Copenhagen
+labs:
+  - name: Shutterbug
+    hidden: false
+    address: Vesterbrogade 57, 1620 København V, Denmark
+    phone: +45 33 31 63 63
+    email: info@shutterbugcph.dk
+    website: https://shutterbugcph.dk
+    source: https://shutterbugcph.dk/pages/film-fremkaldelse
+    services:
+      - devCost: 50.00
+        pushPullCost: 30.00
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 60.00
+        pushPullCost: 20.00
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 150.00
+        pushPullCost: 50.00
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - ECN2
+      - devCost: 80.00
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 80.00
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+  - name: PhotoCare København K
+    hidden: false
+    address: Frederiksborggade 23, 1360 København K, Denmark
+    phone: +45 33 91 53 00
+    email: kbh-k@photocare.dk
+    website: https://photocarekbh.dk
+    source: https://photocarekbh.dk/film-fremkaldelser/
+    services:
+      - devCost: 49.00
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 119.00
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 199.00
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 79.00
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+          - E6
+  - name: Foto/C København
+    hidden: false
+    address: Nørre Voldgade 20, 1358 København K, Denmark
+    phone: +45 33 14 24 14
+    email: foto@fotoc.dk
+    website: https://www.fotoc.dk
+    source: https://www.fotoc.dk/content/58-filmfremkaldelse
+    services:
+      - devCost: 49.00
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 98.00
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+  - name: Silver Lab
+    hidden: false
+    address: Vermundsgade 40C, 2100 København Ø, Denmark
+    phone: +45 39 27 27 55
+    email: lab@silverlab.dk
+    website: https://silverlab.dk
+    source: https://silverlab.dk/#price_list
+    services:
+      - devCost: 80.00
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 80.00
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 80.00
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 160.00
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+          - E6
+      - devCost: 210.00
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+          - E6
+      - devCost: 235.00
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+          - E6
+      - devCost: 260.00
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+          - E6
+      - devCost: 285.00
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+          - E6
+      - devCost: 350.00
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+          - E6
+      - devCost: 385.00
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+          - E6
+      - devCost: 435.00
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+          - E6
