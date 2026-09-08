@@ -8,6 +8,7 @@ labs:
     address: 3131 North San Fernando Road, Los Angeles, CA 90065, United States
     email: hello@lafilmlab.com
     website: https://lafilmlab.com
+    source: https://lafilmlab.com/our-services
     services:
       - devCost: 9.50
         pushPullCost: 3
@@ -25,6 +26,7 @@ labs:
     phone: (661) 200-5300
     email: info@richardphotolab.com
     website: https://richardphotolab.com
+    source: https://richardphotolab.com/pages/pricing
     services:
       - devCost: 10.00
         pushPullCost: 1.50
@@ -150,6 +152,7 @@ labs:
     phone: (424) 204-6849
     email: info@berryflash.com
     website: https://berryflash.com
+    source: https://berryflash.com/film-development
     services:
       - devCost: 9.99
         highResScan: false
@@ -194,6 +197,7 @@ labs:
     phone: (323) 933-1666
     email: icon@iconla.com
     website: https://www.iconla.com
+    source: https://iconla.com/film-services/online-film-processing/
     services:
       - devCost: 9.50
         pushPullCost: 2
