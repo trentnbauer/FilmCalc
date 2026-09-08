@@ -1,0 +1,32 @@
+label: Bangkok Labs
+country: Thailand
+state: Bangkok
+city: Bangkok
+labs:
+  - name: One Shot Film Lab
+    hidden: false
+    address: 51 Soi Satriwitthaya 2 Soi 21, Lat Phrao, Bangkok 10230, Thailand
+    phone: "+66 83 259 9900"
+    website: https://oneshotfilmlab.com
+    source: https://oneshotfilmlab.com/
+    services:
+      - devCost: 150
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 200
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - ECN2
+      - devCost: 200
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
