@@ -1,0 +1,39 @@
+label: Thailand Retailers
+country: Thailand
+films:
+  - name: Kodak Gold
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 490
+        storeName: BIG Camera
+        buyLink: https://www.bigcamera.co.th/kodak-6033997-gold-200
+  - name: Ilford Delta 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 480
+        storeName: BIG Camera
+        buyLink: https://www.bigcamera.co.th/ilford-dp100-135-36exp
+  - name: Ilford FP4 Plus
+    boxSpeed: 125
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 420
+        storeName: BIG Camera
+        buyLink: https://www.bigcamera.co.th/ilford-fp4-135-36exp
