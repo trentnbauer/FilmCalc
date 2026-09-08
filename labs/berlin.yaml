@@ -1,0 +1,297 @@
+label: Berlin Labs
+country: Germany
+state: Berlin
+city: Berlin
+labs:
+  - name: Aperture Film Lab
+    hidden: false
+    address: Schlüterstraße 68, 10625 Berlin, Germany
+    email: info@apertureberlin.com
+    website: https://apertureberlin.com
+    source: https://apertureberlin.com/collections/film-developing
+    services:
+      - devCost: 7.00
+        pushPullCost: 5.00
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 13.00
+        pushPullCost: 5.00
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 15.00
+        pushPullCost: 5.00
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 19.00
+        pushPullCost: 5.00
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 9.00
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 16.00
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 18.00
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 20.00
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 7.00
+        pushPullCost: 5.00
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 15.00
+        pushPullCost: 5.00
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 19.00
+        pushPullCost: 5.00
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 9.00
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 17.00
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 20.00
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - BW
+  - name: Film Speed Lab
+    hidden: false
+    address: Dietrich-Bonhoeffer-Straße 32, 10407 Berlin, Germany
+    phone: +49 176 84786140
+    email: fsl@filmspeedlab.com
+    website: https://filmspeedlab.com
+    source: https://filmspeedlab.com
+    services:
+      - devCost: 6.50
+        pushPullCost: 1.00
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 14.50
+        pushPullCost: 1.00
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 16.50
+        pushPullCost: 1.00
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 19.50
+        pushPullCost: 1.00
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 22.50
+        pushPullCost: 1.00
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 9.50
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 17.50
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 19.50
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 22.50
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 25.50
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - BW
+  - name: Jet-Foto
+    hidden: false
+    address: Dircksenstraße 89, 10178 Berlin, Germany
+    phone: 030 2424446
+    email: jet-foto@web.de
+    website: https://www.jet-foto.de
+    source: https://www.jet-foto.de/preisliste/
+    services:
+      - devCost: 5.95
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 8.50
+        pushPullCost: 9.50
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - E6
+          - BW
+      - devCost: 7.80
+        pushPullCost: 9.50
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - E6
+          - BW
+  - name: viertel vor 8 Foto Fachlabor
+    hidden: false
+    address: Pappelallee 7, 10437 Berlin, Germany
+    phone: +49 30 50341447
+    email: fotobestellung@vv8.de
+    website: https://www.fotolabor-berlin.com
+    source: https://www.fotolabor-berlin.com/filmentwicklung/
+    services:
+      - devCost: 6.60
+        pushPullCost: 4.00
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 8.00
+        pushPullCost: 4.00
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
