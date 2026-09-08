@@ -1,0 +1,125 @@
+label: Amsterdam Labs
+country: Netherlands
+state: North Holland
+city: Amsterdam
+labs:
+  - name: Fotolab
+    hidden: false
+    address: Buyspad 25, 1051 MB Amsterdam, Netherlands
+    phone: 020-6253789
+    email: info@fotolab.nl
+    website: https://www.fotolab.nl
+    source: https://www.fotolab.nl/style/prijslijst.pdf
+    services:
+      - devCost: 9.00
+        pushPullCost: 1.50
+        pushPullType: per_stop
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 9.50
+        pushPullCost: 1.50
+        pushPullType: per_stop
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 10.00
+        pushPullCost: 1.50
+        pushPullType: per_stop
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+  - name: Key-Color
+    hidden: false
+    address: Elandsgracht 96, 1016 VA Amsterdam, Netherlands
+    phone: 020-6201418
+    email: info@key-color.nl
+    website: https://www.key-color.nl
+    source: https://www.key-color.nl/wp-content/uploads/2025/09/KEY-PRIJSLIJST_2025_september_spreads.pdf
+    services:
+      - devCost: 5.95
+        pushPullCost: 2.50
+        pushPullType: per_stop
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 6.95
+        pushPullCost: 2.50
+        pushPullType: per_stop
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 14.95
+        pushPullCost: 2.50
+        pushPullType: per_stop
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 22.95
+        pushPullCost: 2.50
+        pushPullType: per_stop
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 9.95
+        pushPullCost: 2.50
+        pushPullType: per_stop
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 15.95
+        pushPullCost: 2.50
+        pushPullType: per_stop
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 24.95
+        pushPullCost: 2.50
+        pushPullType: per_stop
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 12.95
+        pushPullCost: 2.50
+        pushPullType: per_stop
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 17.95
+        pushPullCost: 2.50
+        pushPullType: per_stop
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 24.95
+        pushPullCost: 2.50
+        pushPullType: per_stop
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
