@@ -19,6 +19,15 @@ on:
     - cron: '0 14 1 * *'
   workflow_dispatch:
 
+# Now that this can run anytime (not just once a month), two overlapping runs (a manual
+# trigger landing near the scheduled one, or someone clicking "Run workflow" twice) could
+# otherwise both see the same file as "not yet audited" and each open a duplicate issue
+# for it — the per-file check in generate-price-audit-issues.py only protects against
+# sequential re-runs, not concurrent ones. Serializing on one group closes that gap.
+concurrency:
+  group: monthly-price-audit
+  cancel-in-progress: false
+
 permissions:
   issues: write
   contents: read
