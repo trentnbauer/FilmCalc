@@ -9,6 +9,7 @@ labs:
     phone: 08 8221 6500
     email: apf.lab1@gmail.com
     website: https://adelaidephotofactory.com.au
+    source: https://adelaidephotofactory.com.au/pages/film-processing
     services:
       - devCost: 11
         pushPullCost: 0
@@ -96,6 +97,7 @@ labs:
     phone: (08) 8231 5632
     email: photoco@ozemail.com.au
     website: https://photococamera.com
+    source: https://photococamera.com/film-develop-adelaide/
     services:
       - devCost: 7.00
         pushPullCost: 0
