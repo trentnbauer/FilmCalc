@@ -9,6 +9,7 @@ labs:
     phone: (773) 888-2241
     email: info@latitudechicago.org
     website: https://www.latitudechicago.org
+    source: https://www.latitudechicago.org/film-services
     services:
       - devCost: 8.50
         turnaroundTime: same_week
@@ -21,6 +22,7 @@ labs:
     address: 3501 W Armitage Ave, Chicago, IL 60647, United States
     email: hello@cafilmlab.com
     website: https://www.cafilmlab.com
+    source: https://www.cafilmlab.com/store
     services:
       - devCost: 10
         turnaroundTime: longer
