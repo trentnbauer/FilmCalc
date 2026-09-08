@@ -1,0 +1,104 @@
+label: Amsterdam Retailers
+country: Netherlands
+state: North Holland
+city: Amsterdam
+films:
+  - name: Kodak Gold
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 24
+        filmCost: 11.99
+        storeName: Analogue Shop
+        buyLink: https://analogueshop.com/products/kodak-gold-200
+        availability: city
+        state: North Holland
+        city: Amsterdam
+      - rolls: 1
+        exposures: 36
+        filmCost: 14.99
+        storeName: Analogue Shop
+        buyLink: https://analogueshop.com/products/kodak-gold-200
+        availability: city
+        state: North Holland
+        city: Amsterdam
+  - name: Kodak Ultramax 400
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 24
+        filmCost: 15.99
+        storeName: Analogue Shop
+        buyLink: https://analogueshop.com/products/kodak-ultramax-400
+        availability: city
+        state: North Holland
+        city: Amsterdam
+      - rolls: 1
+        exposures: 36
+        filmCost: 17.99
+        storeName: Analogue Shop
+        buyLink: https://analogueshop.com/products/kodak-ultramax-400
+        availability: city
+        state: North Holland
+        city: Amsterdam
+  - name: Ilford HP5 Plus
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 24
+        filmCost: 11.99
+        storeName: Analogue Shop
+        buyLink: https://analogueshop.com/products/ilford-hp5-plus-400
+        availability: city
+        state: North Holland
+        city: Amsterdam
+      - rolls: 1
+        exposures: 36
+        filmCost: 14.99
+        storeName: Analogue Shop
+        buyLink: https://analogueshop.com/products/ilford-hp5-plus-400
+        availability: city
+        state: North Holland
+        city: Amsterdam
+  - name: Kodak Ektar 100
+    boxSpeed: 100
+    maxPushPull: 0
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 22.99
+        storeName: Analogue Shop
+        buyLink: https://analogueshop.com/products/kodak-ektar-100
+        availability: city
+        state: North Holland
+        city: Amsterdam
+  - name: Kodak Portra 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 23.99
+        storeName: Analogue Shop
+        buyLink: https://analogueshop.com/products/kodak-portra-400-36
+        availability: city
+        state: North Holland
+        city: Amsterdam
