@@ -279,29 +279,33 @@ jobs:
             fill spare time on quiet nights, not to compete with anything a person is actually waiting
             on.
 
-            List open issues labelled `price-audit`:
+            List open PRs labelled `price-audit`:
             ```
-            gh issue list --repo ${{ github.repository }} --label price-audit --state open --json number,title
+            gh pr list --repo ${{ github.repository }} --label price-audit --state open --json number,title,headRefName
             ```
             If there are none, there's nothing to do this tier — stop.
 
-            Each such issue is a checklist of film/lab entries from one data file under `films/` or
-            `labs/`, generated on the 1st of the month by `monthly-price-audit.yml`. The full procedure
-            for what to do with each item — including exactly when to tick a box, when to leave a
-            `PRICE-AUDIT-FINDING` comment, when to open a `price-audit-flag` issue instead, and what to
-            do once every box is checked — is written into the issue body itself. Read and follow it
-            exactly. When it has you edit a YAML file directly (the "once every box is checked" finalize
-            step), follow `DATA_SPEC.md`'s formatting rules, same as any other data change in this repo.
+            Each such PR is a checklist of film/lab entries from one data file under `films/` or
+            `labs/`, generated on the 1st of the month by `monthly-price-audit.yml`, on its own branch
+            (starting as a single empty commit ahead of `main`). The full procedure for what to do with
+            each item — including exactly when to tick a box, when to commit a fix straight onto the
+            PR's own branch, when to search for a missing lab `source` first, when to open a
+            `price-audit-flag` issue instead, and what to do once every box is checked — is written into
+            the PR body itself. Read and follow it exactly. Every YAML edit follows `DATA_SPEC.md`'s
+            formatting rules, same as any other data change in this repo.
 
-            Work through open `price-audit` issues in any order, and within each issue work unchecked
-            boxes top to bottom. This can be a lot of items — you will likely run out of turns before
-            finishing all of them, and that's expected: after every single item (ticking a box, posting
-            a finding comment, or opening a flag issue), immediately save that progress with
-            `gh issue edit <number> --body-file <file>` before starting the next item, so a run that
-            gets cut off mid-audit loses nothing — tomorrow night's Tier 5 just resumes at the next
-            unchecked box. Never batch several items' worth of tick-marks into one save. If you sense
-            you're low on remaining turns, finish the item you're on, save, and stop there rather than
-            starting another.
+            `gh pr checkout <number>` before editing that PR's file, so your commits land on its branch
+            rather than whatever's currently checked out.
+
+            Work through open `price-audit` PRs in any order, and within each PR work unchecked boxes top
+            to bottom. This can be a lot of items — you will likely run out of turns before finishing all
+            of them, and that's expected: after every single item (ticking a box and committing any fix,
+            or opening a flag issue), immediately save that progress with `gh pr edit <number> --body-file
+            <file>` before starting the next item, so a run that gets cut off mid-audit loses nothing —
+            tomorrow night's Tier 5 just resumes at the next unchecked box. Never batch several items'
+            worth of tick-marks or file changes into one save/commit. If you sense you're low on
+            remaining turns, finish the item you're on, save, and stop there rather than starting
+            another.
 
             **Tier 5b — Revisit stale price-audit-flag issues**
 
