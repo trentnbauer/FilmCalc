@@ -8,6 +8,7 @@ labs:
     address: Basement, 398/402 Sussex St, Haymarket NSW 2000, Australia
     phone: +61 414 852 820
     website: https://irohasphoto.com.au
+    source: https://irohasphoto.com.au/pages/service
     services:
       - devCost: 17
         pushPullCost: 5
@@ -95,6 +96,7 @@ labs:
     phone: +61 439 363 456
     email: team@dofilmlab.com.au
     website: https://dofilmlab.com.au
+    source: https://dofilmlab.com.au/pages/lab-services
     services:
       - devCost: 19
         pushPullCost: 0
@@ -146,6 +148,7 @@ labs:
     phone: +61 2 8041 7049
     email: mail@rewindphotolab.com.au
     website: https://rewindphotolab.com.au
+    source: https://rewindphotolab.com.au/pages/processing
     services:
       - devCost: 12
         pushPullCost: 0
@@ -260,6 +263,7 @@ labs:
     address: Shop 5, 60 Elizabeth Street, Sydney NSW 2000, Australia
     phone: +61 2 9235 1933
     website: https://www.photoland.com.au
+    source: https://www.photoland.com.au/photo-services/from-film/colour-film-processing-c41/
     services:
       - devCost: 16.95
         pushPullCost: 0
