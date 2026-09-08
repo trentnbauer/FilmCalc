@@ -9,6 +9,7 @@ labs:
     phone: "+1 833 345 6522"
     email: hello@nycfilmlab.com
     website: https://nycfilmlab.com
+    source: https://nycfilmlab.com/order
     services:
       - devCost: 9.75
         pushPullType: per_stop
@@ -90,6 +91,7 @@ labs:
     phone: "+1 347 352 3456"
     email: info@exposuretherapy.nyc
     website: https://www.exposuretherapy.nyc
+    source: https://www.exposuretherapy.nyc/services/film-processing
     services:
       - devCost: 7.99
         pushPullCost: 10
@@ -169,6 +171,7 @@ labs:
     phone: "+1 347 916 0297"
     email: darkroom@photolab-nyc.com
     website: https://www.photolab-nyc.com
+    source: https://www.photolab-nyc.com/film-processing-1
     services:
       - devCost: 12
         pushPullCost: 3.50
