@@ -1,0 +1,232 @@
+label: Hong Kong Labs
+country: Hong Kong
+state: Hong Kong
+city: Hong Kong
+labs:
+  - name: Filming Lab (光昍工作室)
+    hidden: false
+    address: 18/F, Yeung Iu Chi Commercial Building, 462 Jaffe Road, Causeway Bay, Hong Kong
+    phone: "+852 9746 1004"
+    email: filminglab@gmail.com
+    website: https://www.hkfilminglab.com
+    source: https://www.hkfilminglab.com/filmprocess/
+    services:
+      - devCost: 42
+        pushPullCost: 15
+        pushPullType: per_stop
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 25
+        pushPullCost: 15
+        pushPullType: per_stop
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 68
+        pushPullCost: 15
+        pushPullType: per_stop
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 50
+        pushPullCost: 15
+        pushPullType: per_stop
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 92
+        pushPullCost: 15
+        pushPullType: per_stop
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 70
+        pushPullCost: 15
+        pushPullType: per_stop
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 82
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - ECN2
+      - devCost: 60
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - ECN2
+  - name: SHOWA (Causeway Bay)
+    hidden: false
+    address: 2/F, 16 Pak Sha Road, Causeway Bay, Hong Kong
+    phone: "+852 9383 3437"
+    website: https://hk.showa-store.com
+    source: https://hk.showa-store.com/pages/film-service-2026
+    services:
+      - devCost: 45
+        pushPullCost: 15
+        pushPullType: per_stop
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 30
+        pushPullCost: 15
+        pushPullType: per_stop
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 75
+        pushPullCost: 15
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 48
+        pushPullCost: 15
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 75
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - ECN2
+      - devCost: 68
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - ECN2
+  - name: Dot-Well Photo Workshop
+    hidden: false
+    address: G/F, 44 Carnarvon Road, Tsim Sha Tsui, Kowloon, Hong Kong
+    phone: "+852 2368 3826"
+    email: dotwell2@gmail.com
+    website: https://www.dotwellphoto.com.hk
+    source: https://www.dotwellphoto.com.hk/photo-service-pricelist/film-scanning/
+    services:
+      - devCost: 45
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 25
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 65
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 53
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 85
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 68
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 70
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - ECN2
+      - devCost: 55
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - ECN2
+  - name: LSKamera
+    hidden: false
+    address: 1/F, 21 Lan Fong Road, Causeway Bay, Hong Kong
+    phone: "+852 9686 4585"
+    email: info@lskamera.com
+    website: https://lskamera.com
+    source: https://lskamera.com/film-processing
+    services:
+      - devCost: 70
+        pushPullCost: 15
+        pushPullType: per_stop
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 90
+        pushPullCost: 15
+        pushPullType: per_stop
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 125
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 110
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - ECN2
