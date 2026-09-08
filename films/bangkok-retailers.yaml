@@ -1,0 +1,35 @@
+label: Bangkok Retailers
+country: Thailand
+state: Bangkok
+city: Bangkok
+films:
+  - name: Kodak Ektar 100
+    boxSpeed: 100
+    maxPushPull: 0
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 670.00
+        storeName: Bangkok Darkroom Equipment Co.
+        buyLink: https://www.bangkokdarkroom.com/products/kodak-ektar-100-br-35mm-iso-100
+        availability: city
+        state: Bangkok
+        city: Bangkok
+  - name: Ilford FP4 Plus
+    boxSpeed: 125
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 410.00
+        storeName: Bangkok Darkroom Equipment Co.
+        buyLink: https://www.bangkokdarkroom.com/products/ilford-fp4-br-120-iso-125
+        availability: city
+        state: Bangkok
+        city: Bangkok
