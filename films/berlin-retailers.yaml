@@ -1,0 +1,35 @@
+label: Berlin Retailers
+country: Germany
+state: Berlin
+city: Berlin
+films:
+  - name: Kodak Portra 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 5
+        exposures: 36
+        filmCost: 19.99
+        storeName: Fotoimpex
+        buyLink: https://www.fotoimpex.com/films/kodak-portra-400-135-36.html
+        availability: city
+        state: Berlin
+        city: Berlin
+  - name: Ilford HP5 Plus
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 12.00
+        storeName: Fotoimpex
+        buyLink: https://www.fotoimpex.com/films/ilford-hp5-35mm-36-exp-400-asa.html
+        availability: city
+        state: Berlin
+        city: Berlin
