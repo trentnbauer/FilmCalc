@@ -1,0 +1,69 @@
+label: Singapore Labs
+country: Singapore
+state: Singapore
+city: Singapore
+labs:
+  - name: Standard Photo
+    hidden: false
+    address: 565 Macpherson Road #03-00, Singapore 368234, Singapore
+    website: https://www.standardphoto.com.sg
+    source: https://www.standardphoto.com.sg/pages/service-price-list
+    services:
+      - devCost: 5.50
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 6.50
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 12.00
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 22.00
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 40.00
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+  - name: Triple D Minilab Centre
+    hidden: false
+    address: 175 Bencoolen Street #01-07 Burlington Square, Singapore 189649, Singapore
+    website: https://www.tripledminilab.com
+    source: https://www.tripledminilab.com/products/c41-developing-scan
+    services:
+      - devCost: 10.50
+        mailBackCost: 3.50
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+  - name: Analog Film Lab
+    hidden: false
+    address: 3015 Ubi Road 1 #03-260, Singapore 408704, Singapore
+    email: hello@analogfilmlab.com
+    website: https://www.afl.sg
+    source: https://www.afl.sg/
+    services:
+      - devCost: 14.00
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+          - E6
