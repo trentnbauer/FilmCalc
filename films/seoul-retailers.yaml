@@ -1,0 +1,33 @@
+label: Seoul Retailers
+country: South Korea
+state: Seoul
+city: Seoul
+films:
+  - name: Kodak Gold
+    boxSpeed: 200
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 17300
+        storeName: Ally Camera
+        buyLink: https://www.allycamera.com/films/?idx=2253
+        availability: city
+        state: Seoul
+        city: Seoul
+  - name: Kodak ColorPlus
+    boxSpeed: 200
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 16300
+        storeName: Ally Camera
+        buyLink: https://www.allycamera.com/films/?idx=2252
+        availability: city
+        state: Seoul
+        city: Seoul
