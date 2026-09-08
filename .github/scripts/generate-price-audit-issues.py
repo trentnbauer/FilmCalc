@@ -82,12 +82,16 @@ to the next item.
 
 **Once every box below is checked:** if this branch has any real commits beyond the
 initial empty one (`git log --oneline main..HEAD`), mark the PR ready for review
-(`gh pr ready <number>`) and update the PR description with a short summary of what
-changed and why — do not auto-merge it, this bundles a month of externally-sourced price
-checks and is worth a human glance. If there were zero real commits (every item ticked
-clean, or only blocked/skipped), there's nothing to review — close the PR instead
-(`gh pr close <number> --comment "..."` summarizing that nothing needed changing). Either
-way, mention any `price-audit-flag` issues opened along the way in the final comment.
+(`gh pr ready <number>`), update the PR description with a short summary of what changed
+and why, and merge it yourself — `gh pr merge <number> --squash --auto --delete-branch`.
+No extra confidence gate on top of this — every commit on this branch already only ever
+came from a price you read confidently and unambiguously off a live page (anything less
+certain went to a `price-audit-flag` issue instead of touching the file), so by the time
+a box is ticked with a commit behind it, it's already past that bar. If there were zero
+real commits (every item ticked clean, or only blocked/skipped), there's nothing to
+review — close the PR instead (`gh pr close <number> --comment "..."` summarizing that
+nothing needed changing). Either way, mention any `price-audit-flag` issues opened along
+the way in the final comment.
 
 ---
 
