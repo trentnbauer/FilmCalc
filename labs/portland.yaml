@@ -9,6 +9,7 @@ labs:
     phone: (503) 232-8501
     email: lab@citizensphoto.com
     website: https://www.citizensphoto.com
+    source: https://www.citizensphoto.com/processing
     services:
       - devCost: 5
         pushPullCost: 2
@@ -24,6 +25,7 @@ labs:
     phone: (503) 978-0333
     email: sales@bluemooncamera.com
     website: https://bluemooncamera.com
+    source: https://assets.bluemooncamera.com/statamic/content_assets/bmc_pricelist-2025.pdf
     services:
       - devCost: 8.25
         pushPullCost: 4
@@ -62,6 +64,7 @@ labs:
     address: 714 SW Washington St, Portland, OR 97205, United States
     phone: (503) 227-3456
     website: https://www.theshutterbug.com
+    source: https://www.theshutterbug.com/film-lab-services
     services:
       - devCost: 7
         highResScan: false
