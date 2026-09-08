@@ -105,6 +105,7 @@ labs:
   phone: (03) 1234 5678
   email: hello@example.com
   website: https://example.com
+  source: https://example.com/pricing
   services:
   - devCost: 17
     pushPullCost: 5
@@ -133,6 +134,7 @@ labs:
 | `address` | A **full street address that Google Maps can find** — it powers the app's Directions link. Include city, state/region, postcode, country. |
 | `phone` / `email` | Omit the line entirely if not listed on the page. Don't write `UNKNOWN` for these — they're genuinely optional. |
 | `website` | The lab's site. |
+| `source` | **Optional but strongly encouraged.** The exact page or PDF URL the prices in `services` were read from — a direct link to the pricing page, or the PDF itself if that's where the numbers live (e.g. `https://example.com/pricelist.pdf`). One per lab, not per tier — if different tiers genuinely came from different pages (e.g. a separate E6 pricelist), link whichever page is most useful as a starting point, or the primary one. Lets anyone re-check a price later without re-researching where it came from. Omit if genuinely not applicable (e.g. a price given verbally/by phone). |
 | `services` | **One entry per service tier — not one per lab.** See below; this is the field people get wrong. |
 | `devCost` | Cost to develop one roll. Plain number. |
 | `pushPullCost` | Cost to push or pull. Use `0` if free. |

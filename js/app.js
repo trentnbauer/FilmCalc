@@ -1203,7 +1203,7 @@ const App = {
         render();
     },
     newLab() {
-        state.draft = { name: '', address: '', website: '', phone: '', email: '', hidden: false, services: [{ devCost: '', pushPullCost: '', pushPullType: 'per_stop', turnaroundTime: 'same_week', highResScan: false, tiffScan: false, noPushPull: false, mailBackCost: null, processes: ['C41'] }] };
+        state.draft = { name: '', address: '', website: '', phone: '', email: '', source: '', hidden: false, services: [{ devCost: '', pushPullCost: '', pushPullType: 'per_stop', turnaroundTime: 'same_week', highResScan: false, tiffScan: false, noPushPull: false, mailBackCost: null, processes: ['C41'] }] };
         state.draftKind = 'lab'; state.draftKey = null; state.subEditIndex = null;
         render();
     },
@@ -1293,7 +1293,7 @@ const App = {
             const saved = readJSON('labProfiles', {});
             if (state.draftKey && state.draftKey !== d.name.trim()) delete saved[state.draftKey];
             saved[d.name.trim()] = {
-                name: d.name.trim(), address: d.address || '', website: d.website || '', phone: d.phone || '', email: d.email || '', hidden: !!d.hidden,
+                name: d.name.trim(), address: d.address || '', website: d.website || '', phone: d.phone || '', email: d.email || '', source: d.source || '', hidden: !!d.hidden,
                 services: d.services.map(t => ({
                     label: t.label || '', devCost: parseFloat(t.devCost) || 0, pushPullCost: parseFloat(t.pushPullCost) || 0, pushPullType: t.pushPullType || 'per_stop',
                     turnaroundTime: t.turnaroundTime || 'same_week', highResScan: !!t.highResScan, tiffScan: !!t.tiffScan, noPushPull: !!t.noPushPull,
@@ -2362,6 +2362,7 @@ ${mField(t('addressPlaceholder'), `<input value="${escapeHtml(d.address || '')}"
 ${mField(t('websitePlaceholder'), `<input value="${escapeHtml(d.website || '')}" oninput="App.setDraftField('website',this.value)" data-fkey="m-draft-website" placeholder="https://…" style="${M_FIELD_INPUT}">`)}
 ${mField(t('phoneNumberPlaceholder'), `<input value="${escapeHtml(d.phone || '')}" oninput="App.setDraftField('phone',this.value)" data-fkey="m-draft-phone" style="${M_FIELD_INPUT}">`)}
 ${mField(t('emailPlaceholder'), `<input value="${escapeHtml(d.email || '')}" oninput="App.setDraftField('email',this.value)" data-fkey="m-draft-email" style="${M_FIELD_INPUT}">`)}
+${mField(t('v2LabelPriceSource'), `<input value="${escapeHtml(d.source || '')}" oninput="App.setDraftField('source',this.value)" data-fkey="m-draft-source" inputmode="url" placeholder="https://…" style="${M_FIELD_INPUT}">`)}
 <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px">
 <div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#928e88">${escapeHtml(t('serviceTiersLabel'))}</div>
 <button type="button" onclick="App.addTier()" style="align-self:flex-start;height:36px;background:#141416;border:1px solid #2c2c30;border-radius:8px;padding:0 14px;color:#928e88;font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;white-space:nowrap">${escapeHtml(t('addServiceTierButton'))}</button>

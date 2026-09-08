@@ -84,6 +84,7 @@ function validateLabEntries(entries, schema) {
             if (!(key in lab)) errors.push(`${where}: missing '${key}'`);
         });
         if (lab.website && !isValidUrl(lab.website)) errors.push(`${where}: website doesn't look like a URL`);
+        if (lab.source && !isValidUrl(lab.source)) errors.push(`${where}: source doesn't look like a URL`);
         if (!lab.services || !lab.services.length) errors.push(`${where}: needs at least one service tier`);
         (lab.services || []).forEach((svc, j) => {
             const sw = `${where}, tier #${j + 1}`;
@@ -96,6 +97,7 @@ function validateLabEntries(entries, schema) {
             else if (typeof svc.mailBackCost === 'number' && svc.mailBackCost < 0) errors.push(`${sw}: mailBackCost can't be negative`);
             if (s && svc.turnaroundTime && !s.enums.turnaroundTime.includes(svc.turnaroundTime)) errors.push(`${sw}: turnaroundTime '${svc.turnaroundTime}' must be one of ${s.enums.turnaroundTime.join(', ')}`);
             if (s && svc.pushPullType && !s.enums.pushPullType.includes(svc.pushPullType)) errors.push(`${sw}: pushPullType '${svc.pushPullType}' must be 'per_stop' or 'flat'`);
+            if (svc.source && !isValidUrl(svc.source)) errors.push(`${sw}: source doesn't look like a URL`);
         });
     });
     return errors;
