@@ -9,6 +9,7 @@ labs:
     phone: 07 3229 5083
     email: sales@fotofast.com.au
     website: https://fotofast.com.au
+    source: https://irp.cdn-website.com/b0f60654/files/uploaded/film_processing_pricing_2026-July.pdf
     services:
       - devCost: 15
         pushPullCost: 0

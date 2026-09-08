@@ -9,6 +9,7 @@ labs:
     phone: (03) 9023 3689
     email: develop@hillvale.com.au
     website: https://hillvale.com.au
+    source: https://hillvale.com.au/pages/pricelist
     services:
       - devCost: 19
         pushPullCost: 3
@@ -155,6 +156,7 @@ labs:
     address: 338 Brunswick St, Fitzroy VIC 3065, Australia
     email: contact@walkens.com.au
     website: https://walkens.com.au
+    source: https://walkens.com.au/pages/lab-services
     services:
       - devCost: 18
         pushPullCost: 0
@@ -361,6 +363,7 @@ labs:
     address: 'GL, 15 McKillop St, Melbourne VIC 3000, Australia'
     phone: '+61 483 968 883'
     website: https://irohasphoto.com.au
+    source: https://irohasphoto.com.au/pages/service
     services:
       - devCost: 17
         pushPullCost: 5

@@ -9,6 +9,7 @@ labs:
     phone: (02) 6295 7810
     email: hello@photoaccess.org.au
     website: https://photoaccess.org.au
+    source: https://photoaccess.org.au/film-lab/
     services:
       - devCost: 13
         pushPullCost: 5

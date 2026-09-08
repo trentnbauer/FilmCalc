@@ -9,6 +9,7 @@ labs:
     phone: "+81 3-3718-3431"
     email: popeyecamera.y@gmail.com
     website: http://www.popeye.jp/free/price
+    source: http://www.popeye.jp/free/price
     services:
       - devCost: 950
         pushPullCost: 0
@@ -105,6 +106,7 @@ labs:
     address: "3-26-14 Shinjuku, Shinjuku-ku, Tokyo 160-0022, Japan"
     phone: "+81 3-5361-8300"
     website: https://www.kitamura-print.com/print/nega_print/
+    source: https://www.kitamura-print.com/print/nega_print/
     services:
       - devCost: 950
         pushPullCost: 0
@@ -138,6 +140,7 @@ labs:
     address: "1-11-1 Nishi-Shinjuku, Shinjuku-ku, Tokyo 160-0023, Japan"
     phone: "+81 3-3346-1010"
     website: https://pg-yd-ja.fujifilm.com/develop.html
+    source: https://pg-yd-ja.fujifilm.com/develop.html
     services:
       - devCost: 930
         pushPullCost: 0
@@ -171,6 +174,7 @@ labs:
     address: "1-11-1 Yurakucho, Chiyoda-ku, Tokyo 100-0006, Japan"
     phone: "+81 3-5221-1111"
     website: https://www.biccamera.co.jp/shopguide/service/photo/film_print/index.html
+    source: https://www.biccamera.co.jp/shopguide/service/photo/film_print/index.html
     services:
       - devCost: 930
         pushPullCost: 0
