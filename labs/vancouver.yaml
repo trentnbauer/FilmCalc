@@ -1,0 +1,232 @@
+label: Vancouver Labs
+country: Canada
+state: British Columbia
+city: Vancouver
+labs:
+  - name: The Lab Vancouver
+    hidden: false
+    address: 295 East 2nd Avenue, Vancouver, BC V5T 1B8, Canada
+    phone: (604) 876-1737
+    email: info@thelabvancouver.com
+    website: https://www.thelabvancouver.com
+    services:
+      - devCost: 13.50
+        highResScan: false
+        tiffScan: false
+        processes:
+          - C41
+          - BW
+      - devCost: 26.00
+        highResScan: false
+        tiffScan: false
+        processes:
+          - C41
+          - BW
+      - devCost: 10.00
+        highResScan: false
+        tiffScan: false
+        processes:
+          - C41
+          - BW
+      - devCost: 20.00
+        highResScan: false
+        tiffScan: false
+        processes:
+          - C41
+          - BW
+      - devCost: 23.50
+        highResScan: false
+        tiffScan: false
+        processes:
+          - C41
+          - BW
+      - devCost: 18.00
+        highResScan: false
+        tiffScan: false
+        processes:
+          - E6
+      - devCost: 32.00
+        highResScan: false
+        tiffScan: false
+        processes:
+          - E6
+      - devCost: 12.00
+        highResScan: false
+        tiffScan: false
+        processes:
+          - E6
+      - devCost: 25.00
+        highResScan: false
+        tiffScan: false
+        processes:
+          - E6
+      - devCost: 27.50
+        highResScan: false
+        tiffScan: false
+        processes:
+          - E6
+  - name: Rocket Repro
+    hidden: false
+    address: 403 West Cordova St, Vancouver, BC V6B 1E5, Canada
+    phone: (604) 682-6000
+    email: order@rocketrepro.com
+    website: https://rocketrepro.com
+    services:
+      - devCost: 13.25
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 13.25
+        pushPullCost: 4.00
+        pushPullType: per_stop
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        processes:
+          - BW
+      - devCost: 24.20
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+          - BW
+      - devCost: 45.10
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+          - BW
+      - devCost: 39.00
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+          - BW
+      - devCost: 58.30
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+          - BW
+      - devCost: 26.40
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+          - BW
+      - devCost: 28.60
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+          - BW
+      - devCost: 37.51
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+          - BW
+      - devCost: 42.35
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+          - BW
+      - devCost: 60.89
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+          - BW
+      - devCost: 57.21
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+          - BW
+      - devCost: 74.09
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+          - BW
+      - devCost: 76.51
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+          - BW
+  - name: ABC Photo
+    hidden: false
+    address: 472 West 15th Avenue, Vancouver, BC V5Y 1Y4, Canada
+    phone: (604) 736-7017
+    email: consumer@abcphoto.com
+    website: https://abcphoto.com
+    services:
+      - devCost: 8.50
+        pushPullCost: 5.00
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        processes:
+          - C41
+          - BW
+      - devCost: 16.00
+        highResScan: false
+        tiffScan: false
+        processes:
+          - C41
+          - BW
+      - devCost: 11.50
+        pushPullCost: 5.00
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        processes:
+          - E6
+      - devCost: 20.00
+        highResScan: false
+        tiffScan: false
+        processes:
+          - E6
+      - devCost: 7.00
+        highResScan: false
+        tiffScan: false
+        processes:
+          - C41
+          - BW
+          - E6
+      - devCost: 15.00
+        highResScan: false
+        tiffScan: false
+        processes:
+          - C41
+          - BW
+          - E6
