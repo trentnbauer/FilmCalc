@@ -63,7 +63,7 @@ films:
 | Field | Rules |
 |---|---|
 | `label` | Shown in the app's Import screen. |
-| `country` | **Required.** The country this file's films are grouped by — always present, even for a city-scoped file (a city file's presets are still within one country). A GitHub Actions workflow (`sync-preset-index.yml`) reads this — plus `state`/`city` below — straight out of the file to (re)generate `films/index.json` automatically. Never hand-edit that JSON file; it's a generated artifact. The app also reads these values at runtime to pre-tick this file for a visitor whose device location/timezone matches, so get them right even beyond keeping the generated index accurate. |
+| `country` | **Required.** The country this file's films are grouped by — always present, even for a city-scoped file (a city file's presets are still within one country). The deploy workflow (`build-github-page.yml`) reads this — plus `state`/`city` below — straight out of the file to (re)generate `films/index.json` at build time, fresh on every deploy. Never hand-edit that JSON file; it's a generated artifact, and a PR never needs to touch it. The app also reads these values at runtime to pre-tick this file for a visitor whose device location/timezone matches, so get them right even beyond keeping the generated index accurate. |
 | `state` / `city` | Present **only** if every bundle in this file is city/state-scoped (see `availability` below) — that's what makes this a city file (`melbourne-retailers.yaml`) instead of a country file (`australian-retailers.yaml`). Omit both for a country-wide file. |
 
 ### Per-film fields
@@ -122,7 +122,7 @@ labs:
 | Field | Rules |
 |---|---|
 | `label` | Shown in the app's Import screen. |
-| `country` / `state` / `city` | **All three required.** A lab is always tied to one physical place, unlike a film (which can be national). As with films, a workflow (`sync-preset-index.yml`) regenerates `labs/index.json` from these — never hand-edit that file — and the app reads them at runtime to pre-tick this file for a visitor whose device location/timezone matches. |
+| `country` / `state` / `city` | **All three required.** A lab is always tied to one physical place, unlike a film (which can be national). As with films, the deploy workflow regenerates `labs/index.json` from these at build time — never hand-edit that file, and a PR never needs to touch it — and the app reads them at runtime to pre-tick this file for a visitor whose device location/timezone matches. |
 
 ### Per-lab fields
 
@@ -177,8 +177,8 @@ After the YAML, add a short note with exactly these three things:
    - **The file already exists** → they should open it and paste your entry at the bottom of the list.
    - **It doesn't exist** → they need to create it, and the file must start with `label:`, `country:`,
      and — for a city-scoped film file or any lab file — `state:`/`city:` too. Don't touch
-     `films/index.json` or `labs/index.json`; a GitHub Actions workflow regenerates those
-     automatically from these fields after the PR merges.
+     `films/index.json` or `labs/index.json`, and don't worry about keeping them in sync — the
+     deploy workflow regenerates both automatically from these fields on every deploy.
 
      ```yaml
      label: US Retailers
