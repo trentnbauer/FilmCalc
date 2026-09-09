@@ -1,0 +1,80 @@
+label: Osaka Retailers
+country: Japan
+state: Osaka
+city: Osaka
+films:
+  - name: Lomography LomoChrome Classicolor
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 1580
+        storeName: Yaotomi
+        buyLink: https://yaotomi.co.jp/products/detail/47137
+        availability: city
+        state: Osaka
+        city: Osaka
+  - name: Ilford Ilfocolor Vivid
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 2321
+        storeName: Yaotomi
+        buyLink: https://yaotomi.co.jp/products/detail/47044
+        availability: city
+        state: Osaka
+        city: Osaka
+  - name: Ilford Ilfocolor Vintage Tone Plus
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 1100
+        storeName: Yaotomi
+        buyLink: https://yaotomi.co.jp/products/detail/48410
+        availability: city
+        state: Osaka
+        city: Osaka
+  - name: Candido
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 2840
+        storeName: Yaotomi
+        buyLink: https://yaotomi.co.jp/products/detail/48105
+        availability: city
+        state: Osaka
+        city: Osaka
+  - name: Candido
+    boxSpeed: 50
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 2779
+        storeName: Yaotomi
+        buyLink: https://yaotomi.co.jp/products/detail/48104
+        availability: city
+        state: Osaka
+        city: Osaka
