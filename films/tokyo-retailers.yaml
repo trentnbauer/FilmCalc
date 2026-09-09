@@ -1,0 +1,118 @@
+label: Tokyo Retailers
+country: Japan
+state: Tokyo
+city: Tokyo
+films:
+  - name: Kodak UltraMax
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 1978
+        storeName: Fujiya Camera
+        buyLink: https://www.fujiya-camera.co.jp/shop/g/gC0086806034067/
+        availability: city
+        state: Tokyo
+        city: Tokyo
+      - rolls: 3
+        exposures: 36
+        filmCost: 5480
+        storeName: Fujiya Camera
+        buyLink: https://www.fujiya-camera.co.jp/shop/g/gC0041771024383/
+        availability: city
+        state: Tokyo
+        city: Tokyo
+  - name: Kodak ColorPlus
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 1648
+        storeName: Fujiya Camera
+        buyLink: https://www.fujiya-camera.co.jp/shop/g/gC0086806031479/
+        availability: city
+        state: Tokyo
+        city: Tokyo
+  - name: Kodak Portra 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 5
+        exposures: 36
+        filmCost: 17980
+        storeName: Fujiya Camera
+        buyLink: https://www.fujiya-camera.co.jp/shop/g/gC0086806031677/
+        availability: city
+        state: Tokyo
+        city: Tokyo
+  - name: Kodak Portra 160
+    boxSpeed: 160
+    maxPushPull: 2
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 5
+        exposures: 36
+        filmCost: 13480
+        storeName: Fujiya Camera
+        buyLink: https://www.fujiya-camera.co.jp/shop/g/gC0086806031950/
+        availability: city
+        state: Tokyo
+        city: Tokyo
+  - name: Kodak T-Max 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 2698
+        storeName: Fujiya Camera
+        buyLink: https://www.fujiya-camera.co.jp/shop/g/gC0041778947944/
+        availability: city
+        state: Tokyo
+        city: Tokyo
+  - name: Kodak T-Max 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 2498
+        storeName: Fujiya Camera
+        buyLink: https://www.fujiya-camera.co.jp/shop/g/gC0041778532843/
+        availability: city
+        state: Tokyo
+        city: Tokyo
+  - name: Rollei RPX 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 1917
+        storeName: Fujiya Camera
+        buyLink: https://www.fujiya-camera.co.jp/shop/g/gC4024953810116/
+        availability: city
+        state: Tokyo
+        city: Tokyo
