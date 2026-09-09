@@ -1,0 +1,104 @@
+label: Perth Retailers
+country: Australia
+state: Western Australia
+city: Perth
+films:
+  - name: Kodak UltraMax
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 24.95
+        storeName: Camera Electronic
+        buyLink: https://www.cameraelectronic.com.au/products/kodak-gc-ultramax-400-colour-negative-film-35mm-roll-film-36-exposures
+        availability: city
+        state: Western Australia
+        city: Perth
+      - rolls: 3
+        exposures: 24
+        filmCost: 59.00
+        storeName: Camera Electronic
+        buyLink: https://www.cameraelectronic.com.au/products/kodak-ultramax-400-35mm-film-3-pack-1
+        availability: city
+        state: Western Australia
+        city: Perth
+  - name: Kodak Gold
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 3
+        exposures: 36
+        filmCost: 49.00
+        storeName: Camera Electronic
+        buyLink: https://www.cameraelectronic.com.au/products/kodak-gold-200-color-negative-film-35mm-roll-film-36-exposures-3-pack
+        availability: city
+        state: Western Australia
+        city: Perth
+  - name: Kodak Portra 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 42.95
+        storeName: Camera Electronic
+        buyLink: https://www.cameraelectronic.com.au/products/kodak-professional-portra-400-colour-negative-film-35mm-roll-film-36-exposures
+        availability: city
+        state: Western Australia
+        city: Perth
+  - name: Kodak Tri-X 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 24.95
+        storeName: Camera Electronic
+        buyLink: https://www.cameraelectronic.com.au/products/kodak-professional-tri-x-400-black-white-negative-film-35mm-roll-film-36-exposures
+        availability: city
+        state: Western Australia
+        city: Perth
+  - name: Ilford Delta 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 24.95
+        storeName: Camera Electronic
+        buyLink: https://www.cameraelectronic.com.au/products/ilford-delta-400-professional-black-white-negative-film-35mm-roll-film-36-exposures
+        availability: city
+        state: Western Australia
+        city: Perth
+  - name: Ilford XP2 Super
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    colorType: bw
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 24.95
+        storeName: Camera Electronic
+        buyLink: https://www.cameraelectronic.com.au/products/ilford-xp2-super-black-white-negative-film-35mm-roll-film-36-exposures
+        availability: city
+        state: Western Australia
+        city: Perth
