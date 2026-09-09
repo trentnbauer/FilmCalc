@@ -1,0 +1,111 @@
+label: Copenhagen Retailers
+country: Denmark
+state: Capital Region of Denmark
+city: Copenhagen
+films:
+  - name: Kodak Gold
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 3
+        exposures: 36
+        filmCost: 290
+        storeName: Shutterbug
+        buyLink: https://shutterbugcph.dk/products/kopi-af-kodak-gold-200-135-36-3-pak
+        availability: city
+        state: Capital Region of Denmark
+        city: Copenhagen
+  - name: Kodak UltraMax
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 120
+        storeName: Shutterbug
+        buyLink: https://shutterbugcph.dk/products/kodak-ultramax-400-135-36
+        availability: city
+        state: Capital Region of Denmark
+        city: Copenhagen
+      - rolls: 3
+        exposures: 36
+        filmCost: 330
+        storeName: Shutterbug
+        buyLink: https://shutterbugcph.dk/products/kodak-ultramax-400-135-36-3-pak-160
+        availability: city
+        state: Capital Region of Denmark
+        city: Copenhagen
+  - name: Kodak Portra 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 180
+        storeName: Shutterbug
+        buyLink: https://shutterbugcph.dk/products/kodak-portra-400-135-36
+        availability: city
+        state: Capital Region of Denmark
+        city: Copenhagen
+      - rolls: 5
+        exposures: 36
+        filmCost: 850
+        storeName: Shutterbug
+        buyLink: https://shutterbugcph.dk/products/kodak-portra-400-135-36-5-pak
+        availability: city
+        state: Capital Region of Denmark
+        city: Copenhagen
+  - name: Kodak Portra 800
+    boxSpeed: 800
+    maxPushPull: 2
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 200
+        storeName: Shutterbug
+        buyLink: https://shutterbugcph.dk/products/kodak-portra-800-135-36
+        availability: city
+        state: Capital Region of Denmark
+        city: Copenhagen
+  - name: Ilford HP5 Plus
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 125
+        storeName: Shutterbug
+        buyLink: https://shutterbugcph.dk/products/ilford-hp5-400-135-36
+        availability: city
+        state: Capital Region of Denmark
+        city: Copenhagen
+  - name: Fujifilm 200
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 105
+        storeName: Shutterbug
+        buyLink: https://shutterbugcph.dk/products/fujifilm-200-135-36-1-pak
+        availability: city
+        state: Capital Region of Denmark
+        city: Copenhagen
