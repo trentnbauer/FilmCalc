@@ -1,0 +1,301 @@
+label: New York Retailers
+country: United States
+state: New York
+city: New York
+films:
+  - name: Ilford HP5+
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 9.99
+        storeName: K&M Camera
+        buyLink: https://kmcamera.com/products/ilf1574577
+        availability: city
+        state: New York
+        city: New York
+  - name: Kodak UltraMax
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 10.49
+        storeName: K&M Camera
+        buyLink: https://kmcamera.com/products/kod6034060
+        availability: city
+        state: New York
+        city: New York
+      - rolls: 3
+        exposures: 36
+        filmCost: 29.99
+        storeName: K&M Camera
+        buyLink: https://kmcamera.com/products/kod1024389
+        availability: city
+        state: New York
+        city: New York
+  - name: Cinestill 800Tungsten
+    boxSpeed: 800
+    maxPushPull: 2
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 17.99
+        storeName: K&M Camera
+        buyLink: https://kmcamera.com/products/cin800135
+        availability: city
+        state: New York
+        city: New York
+  - name: Kodak Tri-X 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 8.99
+        storeName: K&M Camera
+        buyLink: https://kmcamera.com/products/kod8667073
+        availability: city
+        state: New York
+        city: New York
+  - name: Kodak Gold
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 8.99
+        storeName: K&M Camera
+        buyLink: https://kmcamera.com/products/kod7518236
+        availability: city
+        state: New York
+        city: New York
+      - rolls: 3
+        exposures: 36
+        filmCost: 29.95
+        storeName: K&M Camera
+        buyLink: https://kmcamera.com/products/kod1880806
+        availability: city
+        state: New York
+        city: New York
+  - name: FujiFilm Color
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 8.99
+        storeName: K&M Camera
+        buyLink: https://kmcamera.com/products/fuj600022186
+        availability: city
+        state: New York
+        city: New York
+  - name: FujiFilm Color
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 12.49
+        storeName: K&M Camera
+        buyLink: https://kmcamera.com/products/fuj600022184
+        availability: city
+        state: New York
+        city: New York
+      - rolls: 3
+        exposures: 36
+        filmCost: 35.99
+        storeName: K&M Camera
+        buyLink: https://kmcamera.com/products/fuj600022183
+        availability: city
+        state: New York
+        city: New York
+  - name: Ilford FP4+
+    boxSpeed: 125
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 11.99
+        storeName: K&M Camera
+        buyLink: https://kmcamera.com/products/ilf1649651
+        availability: city
+        state: New York
+        city: New York
+  - name: Kentmere Pan 400
+    boxSpeed: 400
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 8.99
+        storeName: K&M Camera
+        buyLink: https://kmcamera.com/products/ken6010476
+        availability: city
+        state: New York
+        city: New York
+      - rolls: 1
+        exposures: 24
+        filmCost: 6.95
+        storeName: K&M Camera
+        buyLink: https://kmcamera.com/products/ken6012379
+        availability: city
+        state: New York
+        city: New York
+  - name: Ilford Delta 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 15.99
+        storeName: K&M Camera
+        buyLink: https://kmcamera.com/products/ilf1748192
+        availability: city
+        state: New York
+        city: New York
+  - name: Ilford Delta 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 16.49
+        storeName: K&M Camera
+        buyLink: https://kmcamera.com/products/ilf1780624
+        availability: city
+        state: New York
+        city: New York
+  - name: Ilford Delta 3200
+    boxSpeed: 3200
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 18.99
+        storeName: K&M Camera
+        buyLink: https://kmcamera.com/products/ilf1887710
+        availability: city
+        state: New York
+        city: New York
+  - name: Ilford XP2 Super
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    colorType: bw
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 17.49
+        storeName: K&M Camera
+        buyLink: https://kmcamera.com/products/ilf1839575
+        availability: city
+        state: New York
+        city: New York
+      - rolls: 1
+        exposures: 24
+        filmCost: 11.99
+        storeName: K&M Camera
+        buyLink: https://kmcamera.com/products/ilf1839584
+        availability: city
+        state: New York
+        city: New York
+  - name: Kodak T-Max 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 10.99
+        storeName: K&M Camera
+        buyLink: https://kmcamera.com/products/kod8532848
+        availability: city
+        state: New York
+        city: New York
+  - name: Kodak Portra 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 5
+        exposures: 36
+        filmCost: 84.95
+        storeName: K&M Camera
+        buyLink: https://kmcamera.com/products/kod6031678
+        availability: city
+        state: New York
+        city: New York
+  - name: Kodak Portra 160
+    boxSpeed: 160
+    maxPushPull: 2
+    process: C41
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 5
+        exposures: 36
+        filmCost: 72.95
+        storeName: K&M Camera
+        buyLink: https://kmcamera.com/products/kod6031959
+        availability: city
+        state: New York
+        city: New York
+  - name: Fomapan 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 8.99
+        storeName: K&M Camera
+        buyLink: https://kmcamera.com/products/fom420136
+        availability: city
+        state: New York
+        city: New York
