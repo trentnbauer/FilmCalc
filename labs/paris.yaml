@@ -2,6 +2,8 @@ label: Paris Labs
 country: France
 state: Île-de-France
 city: Paris
+lat: 48.8566
+lon: 2.3522
 labs:
   - name: LSD Laboratory Scan & Developing
     hidden: false

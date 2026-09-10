@@ -2,6 +2,8 @@ label: Bangkok Retailers
 country: Thailand
 state: Bangkok
 city: Bangkok
+lat: 13.7563
+lon: 100.5018
 films:
   - name: Kodak Ektar 100
     boxSpeed: 100

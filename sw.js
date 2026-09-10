@@ -34,6 +34,7 @@ const SHELL_FILES = [
     '/js/i18n.js',
     '/js/dev-cost-calc.js',
     '/js/data-validate.js',
+    '/js/tz-country.js',
     '/js/app.js',
     '/js/adsense-loader.js',
 ];

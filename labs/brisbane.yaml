@@ -2,6 +2,8 @@ label: Brisbane Labs
 country: Australia
 state: Queensland
 city: Brisbane
+lat: -27.4698
+lon: 153.0251
 labs:
   - name: Fotofast
     hidden: false

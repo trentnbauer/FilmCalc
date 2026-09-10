@@ -2,6 +2,8 @@ label: Portland Labs
 country: United States
 state: Oregon
 city: Portland
+lat: 45.5152
+lon: -122.6784
 labs:
   - name: Citizens Photo
     hidden: false

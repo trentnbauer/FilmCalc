@@ -2,6 +2,8 @@ label: New York Retailers
 country: United States
 state: New York
 city: New York
+lat: 40.7128
+lon: -74.006
 films:
   - name: Ilford HP5+
     boxSpeed: 400

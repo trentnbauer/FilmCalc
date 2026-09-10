@@ -2,6 +2,8 @@ label: Vancouver Labs
 country: Canada
 state: British Columbia
 city: Vancouver
+lat: 49.2827
+lon: -123.1207
 labs:
   - name: The Lab Vancouver
     hidden: false

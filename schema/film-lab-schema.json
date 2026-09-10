@@ -12,7 +12,7 @@
     }
   },
   "lab": {
-    "requiredTopLevelFields": ["country", "state", "city"],
+    "requiredTopLevelFields": ["country", "state", "city", "lat", "lon"],
     "requiredFields": ["name"],
     "requiredServiceFields": ["devCost"],
     "enums": {

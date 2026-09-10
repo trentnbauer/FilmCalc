@@ -2,6 +2,8 @@ label: Sydney Retailers
 country: Australia
 state: New South Wales
 city: Sydney
+lat: -33.8688
+lon: 151.2093
 films:
   - name: FujiFilm Color
     boxSpeed: 200

@@ -2,6 +2,8 @@ label: Copenhagen Retailers
 country: Denmark
 state: Capital Region of Denmark
 city: Copenhagen
+lat: 55.6761
+lon: 12.5683
 films:
   - name: Kodak Gold
     boxSpeed: 200

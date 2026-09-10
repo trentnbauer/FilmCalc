@@ -2,6 +2,8 @@ label: London Labs
 country: United Kingdom
 state: England
 city: London
+lat: 51.5072
+lon: -0.1276
 labs:
   - name: Aperture Printing
     hidden: false

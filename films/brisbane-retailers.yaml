@@ -2,6 +2,8 @@ label: Brisbane Retailers
 country: Australia
 state: Queensland
 city: Brisbane
+lat: -27.4698
+lon: 153.0251
 films:
   - name: Kodak UltraMax
     boxSpeed: 400

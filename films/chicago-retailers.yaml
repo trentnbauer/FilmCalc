@@ -2,6 +2,8 @@ label: Chicago Retailers
 country: United States
 state: Illinois
 city: Chicago
+lat: 41.8781
+lon: -87.6298
 films:
   - name: Kodak Portra 400
     boxSpeed: 400

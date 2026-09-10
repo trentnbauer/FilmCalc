@@ -2,6 +2,8 @@ label: Osaka Labs
 country: Japan
 state: Osaka
 city: Osaka
+lat: 34.6937
+lon: 135.5023
 labs:
   - name: "#八百富フィルム現像所 (Yaotomi Film Lab)"
     hidden: false

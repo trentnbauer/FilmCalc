@@ -2,6 +2,8 @@ label: Singapore Labs
 country: Singapore
 state: Singapore
 city: Singapore
+lat: 1.3521
+lon: 103.8198
 labs:
   - name: Standard Photo
     hidden: false

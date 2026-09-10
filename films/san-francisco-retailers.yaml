@@ -2,6 +2,8 @@ label: San Francisco Retailers
 country: United States
 state: California
 city: San Francisco
+lat: 37.7749
+lon: -122.4194
 films:
   - name: Kodak UltraMax
     boxSpeed: 400

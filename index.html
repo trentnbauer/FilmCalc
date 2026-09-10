@@ -111,6 +111,10 @@
          schema/film-lab-schema.json before it's merged into localStorage.
          Must load before js/app.js, which calls its functions directly. -->
     <script src="js/data-validate.js"></script>
+    <!-- IANA timezone -> country name table, used only as the geo-detect
+         fallback in js/app.js when Geolocation is denied/unavailable. Must
+         load before js/app.js, which reads TZ_COUNTRY directly. -->
+    <script src="js/tz-country.js"></script>
     <!-- App shell: state, rendering, and every event handler, built for
          the "FilmCalc Redesign" mockup. See the file's own header comment
          for what carried over from the previous UI and what didn't. -->

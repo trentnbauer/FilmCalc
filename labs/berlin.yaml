@@ -2,6 +2,8 @@ label: Berlin Labs
 country: Germany
 state: Berlin
 city: Berlin
+lat: 52.52
+lon: 13.405
 labs:
   - name: Aperture Film Lab
     hidden: false

@@ -548,72 +548,41 @@ function knownStatesAndCities() {
 }
 
 // ---------- Geo-based preset defaults ----------
-// Detection never leaves the device: the Geolocation API's lat/long (when
-// granted) is matched against a small built-in table of the handful of
-// countries/cities the shipped presets actually cover, entirely locally —
-// no reverse-geocoding service, no IP-lookup API, no network request of
-// any kind. Falls back to the browser's IANA timezone (also fully local)
-// if geolocation is denied, unsupported, or times out. Either way this
-// only ever *pre-ticks* checkboxes in presetCheckList() below — it's
-// still the user's call what actually gets imported.
-const GEO_COUNTRY_BOUNDS = [
-    { country: 'Australia', minLat: -44, maxLat: -10, minLon: 112, maxLon: 154 },
-    { country: 'Germany', minLat: 47, maxLat: 55.5, minLon: 5.5, maxLon: 15.5 },
-    { country: 'Japan', minLat: 24, maxLat: 46, minLon: 122, maxLon: 146 },
-    { country: 'United Kingdom', minLat: 49.8, maxLat: 61, minLon: -8.7, maxLon: 1.9 },
-    // Contiguous US only — a visitor in Alaska/Hawaii just falls through
-    // to their timezone guess below instead of matching here.
-    { country: 'United States', minLat: 24.5, maxLat: 49.5, minLon: -125, maxLon: -66.9 },
-];
-// Only the cities the shipped films/labs presets actually have entries
-// for. Matched by nearest-city within a ~275km cutoff, not a fixed
-// per-city radius, so it's never worse than the country-level match above.
-const GEO_CITIES = [
-    { city: 'Adelaide', lat: -34.9285, lon: 138.6007 },
-    { city: 'Brisbane', lat: -27.4698, lon: 153.0251 },
-    { city: 'Canberra', lat: -35.2809, lon: 149.1300 },
-    { city: 'Melbourne', lat: -37.8136, lon: 144.9631 },
-    { city: 'Perth', lat: -31.9505, lon: 115.8605 },
-    { city: 'Sydney', lat: -33.8688, lon: 151.2093 },
-];
-function guessLocationFromCoords(lat, lon) {
-    const country = GEO_COUNTRY_BOUNDS.find(b => lat >= b.minLat && lat <= b.maxLat && lon >= b.minLon && lon <= b.maxLon);
-    if (!country) return null;
-    let nearestCity = null, nearestDist = Infinity;
-    GEO_CITIES.forEach(c => {
-        const dist = (lat - c.lat) ** 2 + (lon - c.lon) ** 2;
-        if (dist < nearestDist) { nearestDist = dist; nearestCity = c.city; }
+// Detection never leaves the device: no reverse-geocoding service, no
+// IP-lookup API, no network request of any kind. Either way this only
+// ever *pre-ticks* checkboxes in presetCheckList() below — it's still the
+// user's call what actually gets imported.
+//
+// Fully automatic w.r.t. films/labs coverage — no per-city/per-country
+// table to maintain here. City-level matching is nearest-neighbour against
+// the lat/lon every city-scoped preset file already carries (DATA_SPEC.md),
+// passed straight through into films/index.json & labs/index.json at
+// build time — so a new city YAML geo-matches the moment it's added, with
+// zero app.js changes. Country-level matching (used when Geolocation is
+// denied, or granted but no known city is close enough) instead reads the
+// visitor's IANA timezone against js/tz-country.js's TZ_COUNTRY table,
+// which is comprehensive across the whole tz database rather than scoped
+// to current presets, so it likewise needs no updates as countries are
+// added — it just starts matching once that country's `country:` field
+// text lines up with TZ_COUNTRY's.
+function nearestPresetCity(lat, lon) {
+    const candidates = [...(presetFilmIndex || []), ...(presetLabIndex || [])]
+        .filter(e => e.city && typeof e.lat === 'number' && typeof e.lon === 'number');
+    let nearest = null, nearestDist = Infinity;
+    candidates.forEach(e => {
+        const dist = (lat - e.lat) ** 2 + (lon - e.lon) ** 2;
+        if (dist < nearestDist) { nearestDist = dist; nearest = e; }
     });
     // ~2.5 degrees squared ≈ 275km at the equator — comfortably wider than
-    // the gap between any two cities above, so this only fires for a
+    // the gap between any two shipped cities, so this only fires for a
     // genuinely nearby match, not "whichever city happens to be least far".
-    return { country: country.country, city: nearestDist <= 6.25 ? nearestCity : null };
+    return nearestDist <= 6.25 ? nearest : null;
 }
-// IANA zone -> {country, city}. Not exhaustive — just the zones plausible
-// for the countries the shipped presets cover; any other zone (or a
-// browser that won't report one) simply skips the pre-check, same as if
-// geolocation had found nothing either.
-const GEO_TIMEZONE_MAP = {
-    'Australia/Adelaide': { country: 'Australia', city: 'Adelaide' },
-    'Australia/Brisbane': { country: 'Australia', city: 'Brisbane' },
-    'Australia/Melbourne': { country: 'Australia', city: 'Melbourne' },
-    'Australia/Perth': { country: 'Australia', city: 'Perth' },
-    'Australia/Sydney': { country: 'Australia', city: 'Sydney' },
-    'Australia/Broken_Hill': { country: 'Australia' }, 'Australia/Darwin': { country: 'Australia' },
-    'Australia/Eucla': { country: 'Australia' }, 'Australia/Hobart': { country: 'Australia' },
-    'Australia/Lindeman': { country: 'Australia' }, 'Australia/Lord_Howe': { country: 'Australia' },
-    'Europe/Berlin': { country: 'Germany' }, 'Europe/Busingen': { country: 'Germany' },
-    'Asia/Tokyo': { country: 'Japan' },
-    'Europe/London': { country: 'United Kingdom' },
-    'America/New_York': { country: 'United States' }, 'America/Detroit': { country: 'United States' },
-    'America/Chicago': { country: 'United States' }, 'America/Denver': { country: 'United States' },
-    'America/Phoenix': { country: 'United States' }, 'America/Los_Angeles': { country: 'United States' },
-    'America/Anchorage': { country: 'United States' }, 'Pacific/Honolulu': { country: 'United States' },
-    'America/Boise': { country: 'United States' }, 'America/Indiana/Indianapolis': { country: 'United States' },
-};
 function guessLocationFromTimezone() {
-    try { return GEO_TIMEZONE_MAP[Intl.DateTimeFormat().resolvedOptions().timeZone] || null; }
-    catch { return null; }
+    try {
+        const country = TZ_COUNTRY[Intl.DateTimeFormat().resolvedOptions().timeZone];
+        return country ? { country } : null;
+    } catch { return null; }
 }
 // undefined = not attempted yet; null = attempted, matched nothing.
 // Resolved at most once per page load — geoGuess's own presence is the
@@ -657,7 +626,10 @@ function detectUserLocation() {
         ? Promise.resolve(finish(guessLocationFromTimezone()))
         : new Promise(resolve => {
             navigator.geolocation.getCurrentPosition(
-                (pos) => resolve(finish(guessLocationFromCoords(pos.coords.latitude, pos.coords.longitude) || guessLocationFromTimezone())),
+                (pos) => {
+                    const nearest = nearestPresetCity(pos.coords.latitude, pos.coords.longitude);
+                    resolve(finish(nearest ? { country: nearest.country, city: nearest.city } : guessLocationFromTimezone()));
+                },
                 () => resolve(finish(guessLocationFromTimezone())),
                 { timeout: 5000, maximumAge: 3600000 }
             );
@@ -668,6 +640,49 @@ function detectUserLocation() {
 const SECTION_STYLE = "border-top:1px solid #212125;background:#131315;padding:12px 14px";
 function settingsSection(title, body) {
     return `<div style="${SECTION_STYLE}"><div style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#928e88;margin-bottom:10px">${title}</div>${body}</div>`;
+}
+
+// ---------- PWA install prompt ----------
+// Chrome/Edge/Android fire beforeinstallprompt only if the tab is still
+// open when the browser decides the install criteria are met — capture it
+// once, then replay it from a normal button click in Settings (this fires
+// well before Settings is ever opened, so App.installApp() below always
+// has an event to replay by the time a user finds the button).
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    render();
+});
+window.addEventListener('appinstalled', () => {
+    deferredInstallPrompt = null;
+    render();
+});
+function isStandaloneDisplay() {
+    try { return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; }
+    catch { return false; }
+}
+function isIOSDevice() {
+    return /iP(hone|ad|od)/.test(navigator.userAgent || navigator.platform || '');
+}
+// Settings → "Install App": a real button wherever beforeinstallprompt was
+// captured (Chrome/Edge/Android), static Share-sheet instructions on iOS
+// Safari (which never fires that event at all), nothing once already
+// installed or on a browser that supports neither path.
+function renderInstallSection() {
+    if (isStandaloneDisplay()) return '';
+    if (deferredInstallPrompt) {
+        return settingsSection(t('v2SettingsInstallApp'), `
+<div style="font-size:10px;color:#b0aeac;margin-bottom:8px">${escapeHtml(t('v2InstallAppDesc'))}</div>
+<button type="button" onclick="App.installApp()" style="background:#1c1512;border:1px solid #5a3a1c;border-radius:5px;padding:6px 11px;color:var(--acc);font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${escapeHtml(t('v2ButtonInstallApp'))}</button>
+`);
+    }
+    if (isIOSDevice()) {
+        return settingsSection(t('v2SettingsInstallApp'), `
+<div style="font-size:10px;color:#b0aeac">${escapeHtml(t('v2InstallAppIOSHint'))}</div>
+`);
+    }
+    return '';
 }
 
 function renderSettingsView(s) {
@@ -722,6 +737,7 @@ ${renderImportPreview(s)}
 <div style="font-size:10px;color:#928e88;min-height:12px">${escapeHtml(s.importNote)}${s.lastImportSnapshot ? ` <a href="javascript:void(0)" onclick="App.undoLastImport()" style="color:var(--acc);text-decoration:underline;cursor:pointer">Undo</a>` : ''}</div>
 <div style="margin-top:10px;font-size:10px;color:#b0aeac">Drag <a href="javascript:void(window.open('https://filmcalc.app/?add='+encodeURIComponent(location.href)))" style="text-decoration:underline;cursor:move">↗ Add to FilmCalc</a> to your bookmarks bar — click it from any shop or lab page to jump back here with that page's link ready to paste in.</div>
 `)}
+${renderInstallSection()}
 ${settingsSection(t('v2SettingsPrivacy'), (() => {
     let consent;
     try { consent = localStorage.getItem('analyticsConsent'); } catch (e) { consent = null; }
@@ -1495,6 +1511,19 @@ const App = {
     resetAnalyticsConsent() {
         try { localStorage.removeItem('analyticsConsent'); } catch (e) { /* private mode etc. */ }
         render();
+    },
+    // Settings → "Install App" — replays the deferred beforeinstallprompt
+    // event captured below. Only ever called from a button that's only
+    // rendered while deferredInstallPrompt is non-null, so there's always
+    // a prompt to replay here.
+    installApp() {
+        if (!deferredInstallPrompt) return;
+        const promptEvent = deferredInstallPrompt;
+        promptEvent.prompt();
+        promptEvent.userChoice.finally(() => {
+            deferredInstallPrompt = null;
+            render();
+        });
     },
     // Settings → "Report inaccurate data" — opens a pre-filled GitHub issue
     // using the repo's "05 incorrect data.yml" form template, so a wrong
