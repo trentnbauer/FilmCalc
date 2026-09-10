@@ -2,6 +2,8 @@ label: Adelaide Retailers
 country: Australia
 state: South Australia
 city: Adelaide
+lat: -34.9285
+lon: 138.6007
 films:
   - name: Kodak Portra 800
     boxSpeed: 800

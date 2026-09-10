@@ -2,6 +2,8 @@ label: Seoul Retailers
 country: South Korea
 state: Seoul
 city: Seoul
+lat: 37.5665
+lon: 126.978
 films:
   - name: Kodak Gold
     boxSpeed: 200

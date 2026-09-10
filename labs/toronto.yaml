@@ -2,6 +2,8 @@ label: Toronto Labs
 country: Canada
 state: Ontario
 city: Toronto
+lat: 43.6532
+lon: -79.3832
 labs:
   - name: Graination
     hidden: false

@@ -2,6 +2,8 @@ label: Osaka Retailers
 country: Japan
 state: Osaka
 city: Osaka
+lat: 34.6937
+lon: 135.5023
 films:
   - name: Lomography LomoChrome Classicolor
     boxSpeed: 200

@@ -2,6 +2,8 @@ label: Chicago Labs
 country: United States
 state: Illinois
 city: Chicago
+lat: 41.8781
+lon: -87.6298
 labs:
   - name: Latitude Chicago
     hidden: false

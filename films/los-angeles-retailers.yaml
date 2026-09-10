@@ -2,6 +2,8 @@ label: Los Angeles Retailers
 country: United States
 state: California
 city: Los Angeles
+lat: 34.0522
+lon: -118.2437
 films:
   - name: Kodak Portra 400
     boxSpeed: 400

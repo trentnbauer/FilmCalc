@@ -2,6 +2,8 @@ label: Perth Retailers
 country: Australia
 state: Western Australia
 city: Perth
+lat: -31.9505
+lon: 115.8605
 films:
   - name: Kodak UltraMax
     boxSpeed: 400

@@ -2,6 +2,8 @@ label: Amsterdam Labs
 country: Netherlands
 state: North Holland
 city: Amsterdam
+lat: 52.3676
+lon: 4.9041
 labs:
   - name: Fotolab
     hidden: false

@@ -2,6 +2,8 @@ label: Singapore Retailers
 country: Singapore
 state: Singapore
 city: Singapore
+lat: 1.3521
+lon: 103.8198
 films:
   - name: Kodak Portra 800
     boxSpeed: 800

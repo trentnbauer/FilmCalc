@@ -2,6 +2,8 @@ label: Canberra Labs
 country: Australia
 state: Australian Capital Territory
 city: Canberra
+lat: -35.2809
+lon: 149.13
 labs:
   - name: PhotoAccess
     hidden: false

@@ -2,6 +2,8 @@ label: Amsterdam Retailers
 country: Netherlands
 state: North Holland
 city: Amsterdam
+lat: 52.3676
+lon: 4.9041
 films:
   - name: Kodak Gold
     boxSpeed: 200

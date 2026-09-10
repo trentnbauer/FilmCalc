@@ -2,6 +2,8 @@ label: Bangkok Labs
 country: Thailand
 state: Bangkok
 city: Bangkok
+lat: 13.7563
+lon: 100.5018
 labs:
   - name: One Shot Film Lab
     hidden: false

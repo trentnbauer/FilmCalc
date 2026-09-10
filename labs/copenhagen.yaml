@@ -2,6 +2,8 @@ label: Copenhagen Labs
 country: Denmark
 state: Capital Region of Denmark
 city: Copenhagen
+lat: 55.6761
+lon: 12.5683
 labs:
   - name: Shutterbug
     hidden: false

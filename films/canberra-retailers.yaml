@@ -2,6 +2,8 @@ label: Canberra Retailers
 country: Australia
 state: Australian Capital Territory
 city: Canberra
+lat: -35.2809
+lon: 149.13
 films:
   - name: Kodak Portra 800
     boxSpeed: 800

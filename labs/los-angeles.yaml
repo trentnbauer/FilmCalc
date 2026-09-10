@@ -2,6 +2,8 @@ label: Los Angeles Labs
 country: United States
 state: California
 city: Los Angeles
+lat: 34.0522
+lon: -118.2437
 labs:
   - name: LA Film Lab
     hidden: false

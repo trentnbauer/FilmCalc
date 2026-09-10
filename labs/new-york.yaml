@@ -2,6 +2,8 @@ label: New York Labs
 country: United States
 state: New York
 city: New York
+lat: 40.7128
+lon: -74.006
 labs:
   - name: NYC Film Lab
     hidden: false

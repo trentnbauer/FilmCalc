@@ -40,6 +40,8 @@ label: Melbourne Retailers
 country: Australia
 state: Victoria
 city: Melbourne
+lat: -37.8136
+lon: 144.9631
 films:
 - name: Kodak Portra 400
   boxSpeed: 400
@@ -65,6 +67,7 @@ films:
 | `label` | Shown in the app's Import screen. |
 | `country` | **Required.** The country this file's films are grouped by — always present, even for a city-scoped file (a city file's presets are still within one country). The deploy workflow (`build-github-page.yml`) reads this — plus `state`/`city` below — straight out of the file to (re)generate `films/index.json` at build time, fresh on every deploy. Never hand-edit that JSON file; it's a generated artifact, and a PR never needs to touch it. The app also reads these values at runtime to pre-tick this file for a visitor whose device location/timezone matches, so get them right even beyond keeping the generated index accurate. |
 | `state` / `city` | Present **only** if every bundle in this file is city/state-scoped (see `availability` below) — that's what makes this a city file (`melbourne-retailers.yaml`) instead of a country file (`australian-retailers.yaml`). Omit both for a country-wide file. |
+| `lat` / `lon` | **Required whenever `city` is set, omit otherwise.** The city's coordinates (city-centre is fine, 4 decimal places is plenty — e.g. `-37.8136` / `144.9631` for Melbourne). The deploy workflow copies these straight into `films/index.json` alongside `country`/`state`/`city`; the app uses them at runtime to match a visitor's device location to this file without any hardcoded per-city list to maintain — get them right or this file simply never gets geo-matched, same as leaving `city` blank. |
 
 ### Per-film fields
 
@@ -98,6 +101,8 @@ label: Melbourne Labs
 country: Australia
 state: Victoria
 city: Melbourne
+lat: -37.8136
+lon: 144.9631
 labs:
 - name: Example Photo Lab
   hidden: false
@@ -124,6 +129,7 @@ labs:
 |---|---|
 | `label` | Shown in the app's Import screen. |
 | `country` / `state` / `city` | **All three required.** A lab is always tied to one physical place, unlike a film (which can be national). As with films, the deploy workflow regenerates `labs/index.json` from these at build time — never hand-edit that file, and a PR never needs to touch it — and the app reads them at runtime to pre-tick this file for a visitor whose device location/timezone matches. |
+| `lat` / `lon` | **Required.** The city's coordinates (city-centre is fine, 4 decimal places is plenty — e.g. `-37.8136` / `144.9631` for Melbourne). Same deal as films: copied into `labs/index.json` at build time, used for runtime geo-matching, and this file just won't geo-match without it. |
 
 ### Per-lab fields
 

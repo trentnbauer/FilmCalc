@@ -2,6 +2,8 @@ label: Perth Labs
 country: Australia
 state: Western Australia
 city: Perth
+lat: -31.9505
+lon: 115.8605
 labs:
   - name: Irohas Perth
     hidden: false
