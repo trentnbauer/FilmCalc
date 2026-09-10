@@ -68,6 +68,24 @@ function readJSON(key, fallback) {
 }
 function writeJSON(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
 
+// Unicode-safe base64url — plain btoa()/atob() only handle Latin1, which
+// throws on the non-ASCII city/store names real preset data actually has
+// (e.g. "Île-de-France"). URL-safe alphabet (-_ instead of +/, no padding)
+// so the result drops straight into a query param with no extra encoding.
+function b64EncodeUnicode(str) {
+    const bytes = new TextEncoder().encode(str);
+    let binary = '';
+    bytes.forEach(b => { binary += String.fromCharCode(b); });
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function b64DecodeUnicode(str) {
+    const padded = str.replace(/-/g, '+').replace(/_/g, '/').padEnd(str.length + (4 - str.length % 4) % 4, '=');
+    const binary = atob(padded);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return new TextDecoder().decode(bytes);
+}
+
 function CUR() { return escapeHtml(localStorage.getItem('currencySymbol') || '$'); }
 
 function getAllFilms() { return readJSON('filmProfiles', {}); }
@@ -240,7 +258,11 @@ const state = {
     // Session-only (not persisted) — deliberately simple, one level of undo.
     lastImportSnapshot: null,
     // Mobile-shell-only fields (harmless on desktop, which never reads them).
-    menuOpen: false, toast: '', allowPushPull: true
+    menuOpen: false, toast: '', allowPushPull: true,
+    // Lab names pinned into the side-by-side compare panel below the
+    // ranking list — session-only (not persisted), capped at 3 so the
+    // panel stays readable. See App.toggleCompareLab().
+    compareLabs: []
 };
 let toastTimer = null;
 function flash(msg) {
@@ -727,6 +749,7 @@ ${hidden.length ? hidden.map(h => `<div style="display:flex;align-items:center;g
 ${settingsSection(t('v2SettingsStarterPresets'), renderPresetImport())}
 ${settingsSection(t('v2SettingsData'), `
 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+<button type="button" onclick="App.shareLibraryLink()" title="Copy a link that offers to import your whole saved library" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonShareLibraryLink')}</button>
 <button type="button" onclick="App.exportBackup()" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonExportBackup')}</button>
 <label style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonImportBackup')}<input type="file" accept="application/json" onchange="App.importBackup(this.files[0])" style="display:none"></label>
 <label style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonImportYaml')}<input type="file" accept=".yaml,.yml,text/yaml" onchange="App.importYamlFile(this.files[0])" style="display:none"></label>
@@ -894,6 +917,12 @@ ${hasErrors ? '' : `<button type="button" onclick="App.confirmImport()" style="f
 function renderPresetImport(showImportButton = true) {
     if (!presetFilmIndex || !presetLabIndex) { loadPresetIndexes(); return `<div style="font-size:11px;color:#b0aeac">Loading…</div>`; }
     if (geoGuess === undefined) detectUserLocation();
+    // sw.js caches this screen's data (stale-while-revalidate) so it still
+    // works offline once loaded before — but a cached price can be stale,
+    // so say so explicitly rather than showing it as if it were live.
+    const offlineNote = (typeof navigator !== 'undefined' && navigator.onLine === false)
+        ? `<div style="font-size:10px;color:#c98a4b;margin-bottom:8px">You're offline — showing presets from your last visit, which may not reflect the latest prices.</div>`
+        : '';
     const geoNote = geoGuess
         ? `Pre-ticked below: whatever looks like it covers ${escapeHtml(geoGuess.city || geoGuess.country)}, guessed from your device's location or timezone — that guess never leaves this device. Tick or untick anything; only what's ticked when you import actually gets added.`
         : `Community-contributed regional film/lab price lists shipped with FilmCalc — tick any that apply to you (more than one is fine) to add real data instead of typing it all by hand.`;
@@ -910,7 +939,7 @@ function renderPresetImport(showImportButton = true) {
 <option value="" ${!filter ? 'selected' : ''}>All countries</option>
 ${countries.map(c => `<option value="${escapeHtml(c)}" ${filter === c ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('')}
 </select>` : '';
-    return `<div style="font-size:10px;color:#b0aeac;margin-bottom:8px">${geoNote}</div>
+    return `${offlineNote}<div style="font-size:10px;color:#b0aeac;margin-bottom:8px">${geoNote}</div>
 <div style="font-size:10px;color:#928e88;margin-bottom:8px;font-style:italic">${escapeHtml(t('v2ImportDisclaimer'))}</div>
 ${countrySelect}
 <div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#928e88;margin-bottom:4px">Films${filteredFilms.length !== presetFilmIndex.length ? ` (${filteredFilms.length} of ${presetFilmIndex.length})` : ''}</div>
@@ -1139,6 +1168,18 @@ const App = {
         render();
     },
     toggleLab(name) { state.expandedLab = state.expandedLab === name ? null : name; render(); },
+    // Pins/unpins a lab into the side-by-side compare panel (see
+    // renderMobileLookup's compareRows). Capped at 3 — trying to add a
+    // 4th just flashes instead of silently bumping the oldest pick, so
+    // the user picks what to drop themselves.
+    toggleCompareLab(name) {
+        const i = state.compareLabs.indexOf(name);
+        if (i !== -1) { state.compareLabs.splice(i, 1); render(); return; }
+        if (state.compareLabs.length >= 3) { flash('Compare up to 3 at a time — remove one first'); return; }
+        state.compareLabs.push(name);
+        render();
+    },
+    clearCompareLabs() { state.compareLabs = []; render(); },
     toggleFilm(key) { state.expandedFilm = state.expandedFilm === key ? null : key; render(); },
 
     // pushPull: the stops of push/pull the loaded film should be shot at
@@ -1568,6 +1609,29 @@ const App = {
         render();
     },
 
+    // Copies a URL that, when opened, offers to import the visitor's whole
+    // saved library (films + labs + home lab) through the same review-first
+    // pendingImport pipeline as a dropped YAML file — see
+    // restoreFromShareLink(). Payload isn't compressed, just base64url —
+    // fine for a personal library's worth of films/labs; a very large one
+    // makes a long URL, same tradeoff the single-calc Share button already
+    // accepts.
+    shareLibraryLink() {
+        const films = Object.values(getAllFilms());
+        const labs = Object.values(getAllLabs());
+        if (!films.length && !labs.length) { flash('Nothing saved to share yet'); return; }
+        let encoded;
+        try {
+            encoded = b64EncodeUnicode(JSON.stringify({ films, labs, settings: { homeLab: getHomeLab() } }));
+        } catch {
+            flash('Could not build a link — try Export backup instead');
+            return;
+        }
+        const url = `${location.origin}${location.pathname}?lib=${encoded}`;
+        if (navigator.clipboard) navigator.clipboard.writeText(url).catch(() => { });
+        flash('Library link copied');
+        render();
+    },
     exportBackup() {
         const data = { films: getAllFilms(), labs: getAllLabs(), homeLab: getHomeLab(), defaultTierLabel: getDefaultTierLabel() };
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -1819,6 +1883,22 @@ function restoreFromShareLink() {
     ['format', 'process', 'filmColor', 'boxSpeed', 'pushPull', 'packCost', 'postage', 'rolls', 'exposures'].forEach(k => {
         if (p.has(k)) state[k] = p.get(k);
     });
+    // A shared library link (App.shareLibraryLink()) — routed through the
+    // exact same review-first pendingImport pipeline as a dropped YAML
+    // file (see App.importYamlFile()/confirmImport()), so nothing here
+    // touches localStorage directly; it only ever queues a preview. Lands
+    // the visitor on Settings so that preview is actually visible instead
+    // of silently waiting on a screen they may never open.
+    if (p.has('lib')) {
+        try {
+            const parsed = JSON.parse(b64DecodeUnicode(p.get('lib')));
+            if (Array.isArray(parsed.films) || Array.isArray(parsed.labs)) {
+                const preview = buildImportPreview(parsed, readJSON('filmProfiles', {}), readJSON('labProfiles', {}));
+                state.pendingImport = { fileName: 'Shared library link', parsed, ...preview };
+                state.view = 'settings';
+            }
+        } catch { /* malformed/truncated link — same as no lib param */ }
+    }
     history.replaceState(null, '', location.pathname);
 }
 
@@ -2010,6 +2090,7 @@ function renderMobileLookup(s) {
         const cheapest = r.ranked[0];
         const isHome = l.name === s.homeLab;
         const open = s.expandedLab === l.name;
+        const isCompared = s.compareLabs.includes(l.name);
         const tag = i === 0 ? 'Cheapest' : `+${((l.cpp - cheapest.cpp) * 100).toFixed(0)}c`;
         const cardBorder = i === 0 ? '#5a3a1c' : '#26262a', cardBg = i === 0 ? '#17140f' : '#131315';
         const priceColor = i === 0 ? SECTION_COLORS.labs : '#c9c5bd';
@@ -2026,7 +2107,11 @@ function renderMobileLookup(s) {
 </div>`;
         }).join('');
         return `<div style="border-radius:10px;overflow:hidden;border:1px solid ${cardBorder};background:${cardBg}">
-<button type="button" onclick="App.toggleLab('${jsAttr(l.name)}')" style="width:100%;background:transparent;border:0;padding:14px;text-align:left;cursor:pointer">
+<div style="display:flex;align-items:stretch">
+<button type="button" onclick="App.toggleCompareLab('${jsAttr(l.name)}')" aria-pressed="${isCompared ? 'true' : 'false'}" title="${isCompared ? 'Remove from compare' : 'Add to compare'}" style="flex:none;width:38px;display:flex;align-items:center;justify-content:center;background:transparent;border:0;border-right:1px solid ${cardBorder};cursor:pointer;color:${isCompared ? SECTION_COLORS.labs : '#4a4844'}">
+<svg style="width:16px;height:16px" fill="${isCompared ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+</button>
+<button type="button" onclick="App.toggleLab('${jsAttr(l.name)}')" style="flex:1;min-width:0;background:transparent;border:0;padding:14px;text-align:left;cursor:pointer">
 <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
 <span style="font-size:16px;color:#eae7e1">${escapeHtml(l.name)}</span>
 <span style="${MONO};font-size:20px;color:${priceColor}">${CUR()}${money(l.cpp)}</span>
@@ -2036,6 +2121,7 @@ function renderMobileLookup(s) {
 <span style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:${tagColor}">${tag}</span>
 </div>
 </button>
+</div>
 ${open ? `<div style="padding:0 14px 14px">
 <div style="${MONO};font-size:12px;color:#9c9994;margin-bottom:8px">${escapeHtml(l.lab.address || 'address not saved')}</div>
 <div style="display:flex;flex-direction:column;gap:6px">${tierRows}</div>
@@ -2046,6 +2132,31 @@ ${labDirectionsUrl(l.name) ? `<a href="${labDirectionsUrl(l.name)}" target="_bla
 </div>` : ''}
 </div>`;
     }).join('');
+
+    // Side-by-side panel for whatever's pinned via the compare toggle on
+    // each lab card above. Reads straight off r.ranked (same tiers/pick
+    // already computed for the list), so it's always consistent with what
+    // the cards show — no separate calculation path to drift out of sync.
+    const comparedLabs = s.compareLabs.map(name => r.ranked.find(l => l.name === name)).filter(Boolean);
+    const compareCheapest = comparedLabs.length ? Math.min(...comparedLabs.map(l => l.cpp)) : 0;
+    const comparePanel = comparedLabs.length >= 2 ? `<div style="margin-top:10px">
+${mSectionHead(`Comparing ${comparedLabs.length}`, `<a href="javascript:void(0)" onclick="App.clearCompareLabs()" style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#928e88;text-decoration:underline;cursor:pointer">Clear</a>`, SECTION_COLORS.labs)}
+<div style="display:flex;gap:8px;flex-wrap:wrap">${comparedLabs.map(l => {
+        const cheap = l.cpp <= compareCheapest + 0.001;
+        return `<div style="flex:1;min-width:140px;border:1px solid ${cheap ? '#5a3a1c' : '#26262a'};border-radius:8px;background:${cheap ? '#17140f' : '#0f0f11'};padding:12px">
+<div style="display:flex;align-items:start;justify-content:space-between;gap:6px;margin-bottom:8px">
+<span style="font-size:13px;color:#eae7e1;line-height:1.3">${escapeHtml(l.name)}</span>
+<button type="button" onclick="App.toggleCompareLab('${jsAttr(l.name)}')" title="Remove from compare" style="flex:none;background:transparent;border:0;color:#928e88;cursor:pointer;font-size:16px;line-height:1;padding:0">×</button>
+</div>
+<div style="${MONO};font-size:20px;color:${cheap ? SECTION_COLORS.labs : '#c9c5bd'};margin-bottom:8px">${CUR()}${money(l.cpp)}<span style="font-size:10px;color:#9c9994"> /photo</span></div>
+<div style="${MONO};font-size:11px;color:#9c9994;line-height:1.7">
+${escapeHtml(l.pick.label)}<br>
+Dev: ${CUR()}${money(l.pick.devCost)}<br>
+${l.pick.pushFee ? `Push/pull: ${CUR()}${money(l.pick.pushFee)}<br>` : ''}${l.pick.mailFee ? `Mail: ${CUR()}${money(l.pick.mailFee)}<br>` : ''}
+</div>
+</div>`;
+    }).join('')}</div>
+</div>` : '';
 
     const isoValues = [...new Set(Object.values(getAllFilms()).filter(f => !f.hidden && (f.format || '35mm') === s.format && filmColorType(f) === s.filmColor).map(f => parseFloat(f.boxSpeed) || 0))].sort((a, b) => a - b);
     const shownFilmRows = s.isoFilter === 'shoot' && !s.allowPushPull ? filmRows.filter(row => row.stopsAbs === 0) : filmRows;
@@ -2136,6 +2247,7 @@ ${chips}
 </div>
 <div style="${MONO};margin:-2px 0 10px;font-size:12px;color:#9c9994">${filterNote}</div>
 <div style="display:flex;flex-direction:column;gap:8px">${labRows || `<div style="padding:14px;font-size:12px;color:#b0aeac;background:#131315;border:1px solid #26262a;border-radius:10px">No labs saved yet — add one.</div>`}</div>
+${comparePanel}
 
 ${mSectionHead('Saved film stock', null, SECTION_COLORS.films)}
 <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">

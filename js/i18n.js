@@ -563,6 +563,7 @@ const STRINGS = {
         v2ButtonInstallApp: 'Install',
         v2InstallAppIOSHint: 'Tap the Share icon, then "Add to Home Screen".',
         v2SettingsData: 'Data',
+        v2ButtonShareLibraryLink: 'Copy library link',
         v2ButtonExportBackup: 'Export backup (JSON)',
         v2ButtonImportBackup: 'Import backup',
         v2ButtonImportYaml: 'Import YAML file',
