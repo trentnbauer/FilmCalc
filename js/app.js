@@ -68,6 +68,14 @@ function readJSON(key, fallback) {
 }
 function writeJSON(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
 
+// RFC 4180-ish CSV escaping — quote a field only when it actually needs
+// it (contains a comma, quote, or newline), doubling any embedded quotes.
+function csvField(v) {
+    const s = v === null || v === undefined ? '' : String(v);
+    return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+function csvLine(fields) { return fields.map(csvField).join(','); }
+
 // Unicode-safe base64url — plain btoa()/atob() only handle Latin1, which
 // throws on the non-ASCII city/store names real preset data actually has
 // (e.g. "Île-de-France"). URL-safe alphabet (-_ instead of +/, no padding)
@@ -84,6 +92,18 @@ function b64DecodeUnicode(str) {
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
     return new TextDecoder().decode(bytes);
+}
+// Shared by App.shareLibraryLink() (copy) and renderLibraryQr() (QR code)
+// so both always encode the exact same URL. Returns null when there's
+// nothing saved yet, or the payload somehow can't be encoded.
+function buildLibraryShareUrl() {
+    const films = Object.values(getAllFilms());
+    const labs = Object.values(getAllLabs());
+    if (!films.length && !labs.length) return null;
+    try {
+        const encoded = b64EncodeUnicode(JSON.stringify({ films, labs, settings: { homeLab: getHomeLab() } }));
+        return `${location.origin}${location.pathname}?lib=${encoded}`;
+    } catch { return null; }
 }
 
 function CUR() { return escapeHtml(localStorage.getItem('currencySymbol') || '$'); }
@@ -262,7 +282,8 @@ const state = {
     // Lab names pinned into the side-by-side compare panel below the
     // ranking list — session-only (not persisted), capped at 3 so the
     // panel stays readable. See App.toggleCompareLab().
-    compareLabs: []
+    compareLabs: [],
+    showLibraryQr: false
 };
 let toastTimer = null;
 function flash(msg) {
@@ -606,6 +627,32 @@ function guessLocationFromTimezone() {
         return country ? { country } : null;
     } catch { return null; }
 }
+
+// ---------- Library → "Nearest to you" ----------
+// Separate from detectUserLocation() above — that one only ever resolves
+// to a coarse {country, city} guess for pre-ticking the import checklist.
+// This wants the visitor's actual coordinates, to sort already-*saved*
+// labs (Library → Labs) by real distance rather than a preset-file match.
+// Same one-time-cache shape as geoGuess: undefined = not attempted,
+// null = attempted and failed/denied, {lat,lon} = have it.
+let userCoords = undefined;
+function requestUserCoords() {
+    if (userCoords !== undefined) return Promise.resolve(userCoords);
+    if (!navigator.geolocation) { userCoords = null; return Promise.resolve(null); }
+    return new Promise(resolve => {
+        navigator.geolocation.getCurrentPosition(
+            (pos) => { userCoords = { lat: pos.coords.latitude, lon: pos.coords.longitude }; resolve(userCoords); },
+            () => { userCoords = null; resolve(null); },
+            { timeout: 5000, maximumAge: 3600000 }
+        );
+    });
+}
+function haversineKm(lat1, lon1, lat2, lon2) {
+    const R = 6371, toRad = d => d * Math.PI / 180;
+    const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 // undefined = not attempted yet; null = attempted, matched nothing.
 // Resolved at most once per page load — geoGuess's own presence is the
 // cache, so a second call while one's already in flight (or already
@@ -707,6 +754,28 @@ function renderInstallSection() {
     return '';
 }
 
+// Settings → Data → "Show QR" toggle target. Encodes the same URL
+// App.shareLibraryLink() copies (see buildLibraryShareUrl()) as an SVG QR
+// code via the qrcode-generator library (index.html). QR codes have a hard
+// data-capacity ceiling, so a large library can genuinely fail to fit —
+// that's caught and reported plainly rather than left as a silent blank
+// box or thrown error.
+function renderLibraryQr(s) {
+    if (!s.showLibraryQr) return '';
+    const url = buildLibraryShareUrl();
+    if (!url) return `<div style="font-size:10px;color:#b0aeac;margin-top:8px">Nothing saved to share yet.</div>`;
+    if (typeof qrcode !== 'function') return `<div style="font-size:10px;color:#b0aeac;margin-top:8px">QR code library didn't load — try again once you're back online.</div>`;
+    try {
+        const qr = qrcode(0, 'M');
+        qr.addData(url);
+        qr.make();
+        const svg = qr.createSvgTag({ cellSize: 4, margin: 2 });
+        return `<div style="margin-top:10px;padding:10px;background:#fff;border-radius:8px;display:inline-block;line-height:0">${svg}</div>`;
+    } catch {
+        return `<div style="font-size:10px;color:#c98a4b;margin-top:8px">Library link is too large to fit in a QR code — use Copy library link or Export backup instead.</div>`;
+    }
+}
+
 function renderSettingsView(s) {
     const labNames = Object.keys(getAllLabs());
     const tierLabels = [...new Set(Object.values(getAllLabs()).flatMap(l => normalizeLabServices(l).map((t, i) => ((Array.isArray(l.services) ? l.services : [l])[i] || {}).label || tierDescription(t))))];
@@ -750,12 +819,15 @@ ${settingsSection(t('v2SettingsStarterPresets'), renderPresetImport())}
 ${settingsSection(t('v2SettingsData'), `
 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
 <button type="button" onclick="App.shareLibraryLink()" title="Copy a link that offers to import your whole saved library" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonShareLibraryLink')}</button>
+<button type="button" onclick="App.toggleLibraryQr()" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${s.showLibraryQr ? t('v2ButtonHideQr') : t('v2ButtonShowQr')}</button>
 <button type="button" onclick="App.exportBackup()" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonExportBackup')}</button>
+<button type="button" onclick="App.exportCsv()" title="Spreadsheet-friendly export for tracking spend — not for re-importing" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonExportCsv')}</button>
 <label style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonImportBackup')}<input type="file" accept="application/json" onchange="App.importBackup(this.files[0])" style="display:none"></label>
 <label style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonImportYaml')}<input type="file" accept=".yaml,.yml,text/yaml" onchange="App.importYamlFile(this.files[0])" style="display:none"></label>
 <button type="button" onclick="App.openSetup()" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonRerunSetup')}</button>
 <button type="button" onclick="App.deleteAllData()" style="background:transparent;border:1px solid #5a2420;border-radius:5px;padding:6px 11px;color:#e5675c;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonDeleteAllData')}</button>
 </div>
+${renderLibraryQr(s)}
 ${renderImportPreview(s)}
 <div style="font-size:10px;color:#928e88;min-height:12px">${escapeHtml(s.importNote)}${s.lastImportSnapshot ? ` <a href="javascript:void(0)" onclick="App.undoLastImport()" style="color:var(--acc);text-decoration:underline;cursor:pointer">Undo</a>` : ''}</div>
 <div style="margin-top:10px;font-size:10px;color:#b0aeac">Drag <a href="javascript:void(window.open('https://filmcalc.app/?add='+encodeURIComponent(location.href)))" style="text-decoration:underline;cursor:move">↗ Add to FilmCalc</a> to your bookmarks bar — click it from any shop or lab page to jump back here with that page's link ready to paste in.</div>
@@ -1180,6 +1252,17 @@ const App = {
         render();
     },
     clearCompareLabs() { state.compareLabs = []; render(); },
+    // Library → Labs → "Nearest to you". Only sorts labs that already
+    // carry lat/lon (attached at import time from the preset file's
+    // header — see importPresetSelected()/confirmImport()); a hand-added
+    // lab with no coordinates just sorts to the end, same as it not
+    // having a distance at all.
+    findNearestLabs() {
+        requestUserCoords().then(coords => {
+            if (!coords) { flash('Could not get your location'); return; }
+            render();
+        });
+    },
     toggleFilm(key) { state.expandedFilm = state.expandedFilm === key ? null : key; render(); },
 
     // pushPull: the stops of push/pull the loaded film should be shot at
@@ -1617,19 +1700,18 @@ const App = {
     // makes a long URL, same tradeoff the single-calc Share button already
     // accepts.
     shareLibraryLink() {
-        const films = Object.values(getAllFilms());
-        const labs = Object.values(getAllLabs());
-        if (!films.length && !labs.length) { flash('Nothing saved to share yet'); return; }
-        let encoded;
-        try {
-            encoded = b64EncodeUnicode(JSON.stringify({ films, labs, settings: { homeLab: getHomeLab() } }));
-        } catch {
-            flash('Could not build a link — try Export backup instead');
-            return;
-        }
-        const url = `${location.origin}${location.pathname}?lib=${encoded}`;
+        const url = buildLibraryShareUrl();
+        if (!url) { flash('Nothing saved to share yet'); return; }
         if (navigator.clipboard) navigator.clipboard.writeText(url).catch(() => { });
         flash('Library link copied');
+        render();
+    },
+    // Shows/hides the QR code for the same URL shareLibraryLink() copies —
+    // see renderLibraryQr(). Kept as a separate toggle rather than always
+    // rendering it since generating a QR for a large library isn't free
+    // and most visitors just want the Copy button.
+    toggleLibraryQr() {
+        state.showLibraryQr = !state.showLibraryQr;
         render();
     },
     exportBackup() {
@@ -1638,6 +1720,43 @@ const App = {
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
         a.download = 'filmcalc-backup.json';
+        a.click();
+        URL.revokeObjectURL(a.href);
+    },
+    // A spreadsheet-friendly export, separate from Export backup (JSON) —
+    // that one round-trips through Import backup for restore; this one is
+    // for opening in Excel/Sheets/Numbers to track actual spend or feed a
+    // budget, not for re-importing into FilmCalc. Two labelled sections
+    // (films, then labs) in one file rather than two downloads, since most
+    // spreadsheet apps happily open a CSV with a blank-line-separated
+    // second table and it's one click instead of two.
+    exportCsv() {
+        const filmRows = [];
+        Object.values(getAllFilms()).forEach(f => {
+            normalizeFilmBundles(f).forEach(b => {
+                filmRows.push([f.name, f.boxSpeed, f.process, f.format || '35mm', b.storeName || '', b.rolls, b.exposures, b.filmCost, b.rolls ? (b.filmCost / b.rolls).toFixed(2) : '']);
+            });
+        });
+        const labRows = [];
+        Object.values(getAllLabs()).forEach(l => {
+            normalizeLabServices(l).forEach(t => {
+                labRows.push([l.name, tierDescription(t), t.devCost, t.pushPullCost ?? '', t.pushPullType || '', t.turnaroundTime || '', (t.processes || []).join('|')]);
+            });
+        });
+        if (!filmRows.length && !labRows.length) { flash('Nothing saved to export'); return; }
+        const lines = [
+            'FILMS',
+            csvLine(['Name', 'ISO', 'Process', 'Format', 'Store', 'Rolls', 'Exposures', 'Pack cost', 'Cost per roll']),
+            ...filmRows.map(csvLine),
+            '',
+            'LABS',
+            csvLine(['Name', 'Tier', 'Dev cost', 'Push/pull cost', 'Push/pull type', 'Turnaround', 'Processes']),
+            ...labRows.map(csvLine),
+        ];
+        const blob = new Blob([lines.join('\r\n')], { type: 'text/csv' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'filmcalc-export.csv';
         a.click();
         URL.revokeObjectURL(a.href);
     },
@@ -1716,11 +1835,17 @@ const App = {
                 if (validateFilmEntries(entries, schema).length) { failed.push(file); return null; }
                 return entries;
             });
+            // Carries the file-level lat/lon along with each file's lab
+            // entries (not just the bare array) — individual lab entries
+            // don't have their own coordinates, only the file header does
+            // (DATA_SPEC.md), so this is the only point that still has
+            // both in scope at once. See App.nearestSavedLab() for what
+            // consumes it.
             const labEntriesByFile = labResults.map(({ file, parsed }) => {
                 if (!parsed) { failed.push(file); return null; }
                 const entries = Array.isArray(parsed.labs) ? parsed.labs : [];
                 if (validateLabEntries(entries, schema).length) { failed.push(file); return null; }
-                return entries;
+                return { entries, lat: parsed.lat, lon: parsed.lon };
             });
             // Re-importing a region you've already got, or one that
             // overlaps a film/lab you've since customized locally,
@@ -1738,12 +1863,13 @@ const App = {
                     if (existing && JSON.stringify(existing) !== JSON.stringify(incoming)) changedFilms++;
                 });
             });
-            labEntriesByFile.forEach(entries => {
-                if (!entries) return;
-                entries.forEach(l => {
+            labEntriesByFile.forEach(f => {
+                if (!f) return;
+                f.entries.forEach(l => {
                     if (!l.name) return;
                     const existing = existingLabs[l.name];
-                    if (existing && JSON.stringify(existing) !== JSON.stringify(l)) changedLabs++;
+                    const incoming = (f.lat != null && f.lon != null) ? { ...l, lat: f.lat, lon: f.lon } : l;
+                    if (existing && JSON.stringify(existing) !== JSON.stringify(incoming)) changedLabs++;
                 });
             });
             if (changedFilms || changedLabs) {
@@ -1761,12 +1887,15 @@ const App = {
                 writeJSON('filmProfiles', mergeFilmProfiles(readJSON('filmProfiles', {}), buildFilmProfilesFromEntries(entries)));
                 filmCount += entries.length;
             });
-            labEntriesByFile.forEach(entries => {
-                if (!entries) return;
+            labEntriesByFile.forEach(f => {
+                if (!f) return;
                 const saved = readJSON('labProfiles', {});
-                entries.forEach(l => { if (l.name) saved[l.name] = l; });
+                f.entries.forEach(l => {
+                    if (!l.name) return;
+                    saved[l.name] = (f.lat != null && f.lon != null) ? { ...l, lat: f.lat, lon: f.lon } : l;
+                });
                 writeJSON('labProfiles', saved);
-                labCount += entries.length;
+                labCount += f.entries.length;
             });
             const parts = [];
             if (filmCount) parts.push(`${filmCount} film entr${filmCount === 1 ? 'y' : 'ies'}`);
@@ -1821,7 +1950,11 @@ const App = {
         }
         if (Array.isArray(p.parsed.labs)) {
             const saved = readJSON('labProfiles', {});
-            p.parsed.labs.forEach(l => { if (l.name) saved[l.name] = l; });
+            const { lat, lon } = p.parsed;
+            p.parsed.labs.forEach(l => {
+                if (!l.name) return;
+                saved[l.name] = (lat != null && lon != null && l.lat == null) ? { ...l, lat, lon } : l;
+            });
             writeJSON('labProfiles', saved);
             labCount = p.parsed.labs.length;
         }
@@ -2306,11 +2439,14 @@ function renderMobileLibrary(s) {
 <div class="lib-grid">${filmCards || empty}</div>`;
     };
     const labSection = () => {
-        const entries = Object.entries(allLabs).filter(([name]) => !search || name.toLowerCase().includes(search));
+        let entries = Object.entries(allLabs).filter(([name]) => !search || name.toLowerCase().includes(search));
+        const distanceOf = (l) => (userCoords && l.lat != null && l.lon != null) ? haversineKm(userCoords.lat, userCoords.lon, l.lat, l.lon) : Infinity;
+        if (userCoords) entries = entries.slice().sort(([, a], [, b]) => distanceOf(a) - distanceOf(b));
         const labCards = entries.map(([name, l]) => {
             const tiers = normalizeLabServices(l);
             const cheapest = tiers.slice().sort((a, b) => a.devCost - b.devCost)[0];
-            const meta = `${tiers.length} tier${tiers.length === 1 ? '' : 's'}`;
+            const dist = distanceOf(l);
+            const meta = `${tiers.length} tier${tiers.length === 1 ? '' : 's'}${Number.isFinite(dist) ? ` · ${Math.round(dist)} km away` : ''}`;
             return mLibCard('lab', name, name, meta, `${CUR()}${money(cheapest.devCost)}`, l.hidden);
         }).join('');
         const empty = search ? `<div style="padding:14px;font-size:12px;color:#b0aeac;background:#131315;border:1px solid #26262a;border-radius:10px">No lab matches "${escapeHtml(s.libSearch.trim())}".</div>` : emptyCard;
@@ -2318,6 +2454,7 @@ function renderMobileLibrary(s) {
 <div style="width:6px;height:6px;background:var(--acc);border-radius:50%"></div>
 <div style="${NARROW};font-size:16px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#eae7e1">Labs</div>
 <div style="flex:1;height:1px;background:#26262a"></div>
+${!userCoords ? `<button type="button" onclick="App.findNearestLabs()" style="height:36px;background:#141416;border:1px solid #2c2c30;border-radius:8px;padding:0 12px;color:#928e88;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;white-space:nowrap">Nearest to you</button>` : ''}
 <button type="button" onclick="App.newLab()" style="height:36px;background:#141416;border:1px solid #2c2c30;border-radius:8px;padding:0 12px;color:#928e88;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">New</button>
 </div>
 <div class="lib-grid">${labCards || empty}</div>`;
@@ -2485,13 +2622,30 @@ ${b.availability === 'city' ? `<div style="flex:1;min-width:0">${bundleLabel(t('
 </div>`;
 }
 
+// Lab tier summary row — like editRow() but with a third line of static
+// process pills (C41/BW/E6/ECN2) so which processes a tier covers is
+// visible without opening it. Not editRow() itself since bundle rows
+// (film side) have no equivalent third line and shouldn't grow one.
+// Pills here are plain <span>s, not the interactive pill() buttons the
+// tier editor itself uses — this whole row is already one <button>
+// (App.editTier), and a <button> can't nest another <button>.
+function tierRow(t, i) {
+    const activePills = PROCESS_OPTIONS.filter(o => (t.processes || []).includes(o.value)).map(o =>
+        `<span style="background:#1a1a1d;border:1px solid #33333a;border-radius:20px;padding:3px 9px;color:#9c9994;font-size:9px;letter-spacing:.1em;text-transform:uppercase">${escapeHtml(o.label)}</span>`
+    ).join('');
+    return `<button type="button" onclick="App.editTier(${i})" style="width:100%;text-align:left;display:flex;align-items:center;gap:10px;padding:12px;background:#131315;border:1px solid #26262a;border-radius:10px;color:inherit;cursor:pointer">
+<div style="flex:1;min-width:0">
+<div style="font-size:14px;color:#c9c5bd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(tierDescription(t))}</div>
+<div style="${MONO};font-size:12px;color:#9c9994;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${CUR()}${(parseFloat(t.devCost) || 0).toFixed(2)}/roll${t.pushPullCost ? ` · ${CUR()}${(parseFloat(t.pushPullCost) || 0).toFixed(2)} push/pull` : ''}</div>
+${activePills ? `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:7px">${activePills}</div>` : ''}
+</div>
+${EDIT_ICON}
+</button>`;
+}
+
 function renderMobileEditLab(s) {
     const d = s.draft;
-    const tiers = d.services.map((t, i) => editRow(
-        escapeHtml(tierDescription(t)),
-        `${CUR()}${(parseFloat(t.devCost) || 0).toFixed(2)}/roll${t.pushPullCost ? ` · ${CUR()}${(parseFloat(t.pushPullCost) || 0).toFixed(2)} push/pull` : ''}`,
-        `App.editTier(${i})`
-    )).join('');
+    const tiers = d.services.map((t, i) => tierRow(t, i)).join('');
     return `<div style="position:fixed;inset:0;z-index:50;background:#0b0b0c;display:flex;flex-direction:column">
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border-bottom:1px solid #26262a;background:#0e0e10">
 <span style="${NARROW};font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">${escapeHtml(t('v2ButtonEditLab'))}</span>
