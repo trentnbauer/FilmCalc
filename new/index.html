@@ -45,6 +45,11 @@
      comment and tests/dev-cost-calc.test.js). This preview never
      reimplements this math; it only calls it. -->
 <script src="../js/dev-cost-calc.js"></script>
+<!-- Import validation: checks custom-uploaded film/lab YAML against
+     schema/film-lab-schema.json before it's merged into localStorage. Must
+     load before js/app.js, which calls its functions directly. Same file
+     root's index.html loads. -->
+<script src="../js/data-validate.js"></script>
 <!-- This preview's own state + rendering, built against the "FilmCalc
      Lookup 4b" Claude Design mockup (see new/README.md). Reads/writes the
      exact same localStorage keys as js/app.js (filmProfiles, labProfiles,

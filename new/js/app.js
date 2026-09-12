@@ -141,6 +141,7 @@ const state = {
     shareModal: false, copied: false, shareKind: 'roll',
     libTab: 'films', libSearch: '', libFilter: 'All', libProcess: 'All', libFormat: 'All', libIso: 'All', libOpen: null, libFilterModal: false,
     draft: null, draftKind: null, draftKey: null, subIndex: null, confirm: null, toast: '',
+    pendingImport: null, lastImportSnapshot: null, importNote: '',
     desktopMq: null, installable: false,
     changelogOpen: false, changelog: null,
     menuInstalled: false,
@@ -379,6 +380,60 @@ function mergeFilmsInto(all, incoming) {
 }
 function mergeLabsInto(all, incoming) {
     incoming.forEach(l => { if (!all[l.name]) all[l.name] = l; });
+}
+
+// ---------- Custom file import (mirrors root's js/app.js, same behaviour) ----------
+function mergeFilmBundles(existing, incoming) {
+    const keyOf = b => `${b.storeName || ''}|${b.rolls}|${b.exposures}`;
+    const byKey = new Map((existing || []).map(b => [keyOf(b), b]));
+    (incoming || []).forEach(b => byKey.set(keyOf(b), b));
+    return [...byKey.values()];
+}
+function mergeFilmProfiles(saved, incoming) {
+    Object.keys(incoming).forEach(key => {
+        const existing = saved[key];
+        saved[key] = (existing && Array.isArray(existing.bundles) && Array.isArray(incoming[key].bundles))
+            ? { ...incoming[key], bundles: mergeFilmBundles(existing.bundles, incoming[key].bundles) }
+            : incoming[key];
+    });
+    return saved;
+}
+// Bridges the current { bundles: [...] } schema with the older flat
+// single-bundle schema, same as root's js/app.js version — every film in
+// films/*.yaml already uses the nested schema, this just keeps older
+// community files working too.
+function buildFilmProfilesFromEntries(entries) {
+    const hasNestedBundles = entries.some(f => Array.isArray(f.bundles));
+    const result = {};
+    if (hasNestedBundles) {
+        entries.forEach(f => { if (f.name) result[filmKeyOf(f)] = { ...f, maxPushPull: f.maxPushPull ?? 1 }; });
+    } else {
+        entries.forEach(f => {
+            if (!f.name) return;
+            const key = filmKey(f.name, f.boxSpeed, f.format);
+            const bundle = { rolls: f.rolls, exposures: f.exposures, filmCost: f.filmCost, storeName: f.storeName, buyLink: f.buyLink };
+            if (result[key]) result[key].bundles.push(bundle);
+            else result[key] = { name: f.name, boxSpeed: f.boxSpeed, maxPushPull: f.maxPushPull ?? 1, process: f.process || 'C41', format: f.format || '35mm', bundles: [bundle] };
+        });
+    }
+    return result;
+}
+function renderImportPreview() {
+    const p = state.pendingImport;
+    if (!p) return '';
+    const rowsFor = (entries, label) => !entries.length ? '' : `<div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:${C.faint};margin:8px 0 4px">${label} (${entries.length})</div>
+<div style="display:flex;flex-direction:column;gap:2px;max-height:120px;overflow:auto">${entries.map(e => `<div style="font-size:11px;color:${C.text2};display:flex;justify-content:space-between;gap:8px"><span>${escapeHtml(e.name)}</span>${e.exists ? `<span style="color:${C.faint};font-size:9px;letter-spacing:.08em;text-transform:uppercase">updates existing</span>` : ''}</div>`).join('')}</div>`;
+    const hasErrors = p.errors.length > 0;
+    return `<div style="margin-top:10px;border:1px solid ${hasErrors ? C.redBorder : C.border};border-radius:8px;background:${C.field};padding:12px">
+<div style="font-size:11px;color:${C.text2};margin-bottom:2px">Reviewing <strong>${escapeHtml(p.fileName)}</strong> — nothing saved yet.</div>
+${rowsFor(p.filmEntries, 'Films')}
+${rowsFor(p.labEntries, 'Labs')}
+${hasErrors ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid ${C.redBorder}"><div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:${C.red};margin-bottom:4px">Can't import — fix these and re-upload</div><div style="display:flex;flex-direction:column;gap:2px;max-height:120px;overflow:auto">${p.errors.map(e => `<div style="font-size:11px;color:${C.red}">${escapeHtml(e)}</div>`).join('')}</div></div>` : ''}
+<div style="display:flex;gap:8px;margin-top:12px">
+${hasErrors ? '' : `<button type="button" onclick="App.confirmImport()" style="flex:1;background:${C.accBg};border:1px solid ${C.accBorder};border-radius:8px;padding:9px 13px;color:${C.acc};font-size:12px;cursor:pointer">Confirm import</button>`}
+<button type="button" onclick="App.cancelImport()" style="${hasErrors ? 'flex:1' : ''}background:transparent;border:1px solid ${C.border2};border-radius:8px;padding:9px 13px;color:${C.text2};font-size:12px;cursor:pointer">Cancel</button>
+</div>
+</div>`;
 }
 
 async function importPresetRegions(regions) {
@@ -883,10 +938,13 @@ ${hiddenLabs.map(l => `<div style="display:flex;align-items:center;justify-conte
 <button type="button" onclick="App.shareLibrary()" style="height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">Share library link</button>
 <button type="button" onclick="App.exportJson()" style="height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">Export JSON</button>
 <button type="button" onclick="App.exportCsv()" title="Spreadsheet-friendly export for tracking spend — not for re-importing" style="height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">Export CSV</button>
-<button type="button" onclick="App.say('Choose a .yaml or .json file to import')" style="height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">Import file</button>
+<label style="display:inline-flex;align-items:center;height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">Import backup<input type="file" accept="application/json" onchange="App.importBackup(this.files[0])" style="display:none"></label>
+<label style="display:inline-flex;align-items:center;height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">Import YAML<input type="file" accept=".yaml,.yml,text/yaml" onchange="App.importYamlFile(this.files[0])" style="display:none"></label>
 <button type="button" onclick="App.openSetup()" style="height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">Re-run setup</button>
 </div>
-<button type="button" onclick="App.confirmDeleteAll()" style="width:100%;height:42px;margin-top:10px;border-radius:8px;background:transparent;border:1px solid ${C.redBorder};color:#e07a6a;font:inherit;font-size:13px;cursor:pointer">Delete all data</button>`),
+<button type="button" onclick="App.confirmDeleteAll()" style="width:100%;height:42px;margin-top:10px;border-radius:8px;background:transparent;border:1px solid ${C.redBorder};color:#e07a6a;font:inherit;font-size:13px;cursor:pointer">Delete all data</button>
+${renderImportPreview()}
+<div style="font-size:11px;color:${C.faint};min-height:14px;margin-top:8px">${escapeHtml(state.importNote || '')}${state.lastImportSnapshot ? ` <a href="javascript:void(0)" onclick="App.undoLastImport()" style="color:${C.acc};text-decoration:underline;cursor:pointer">Undo</a>` : ''}</div>`),
 
         settingsCard('Install app', `<div style="font-size:12px;line-height:1.5;color:${C.faint}">Add FilmCalc to your home screen so it opens full screen and works offline in the shop.</div>
 <button type="button" onclick="App.install()" style="height:42px;padding:0 14px;margin-top:12px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:600;cursor:pointer">Install</button>`),
@@ -1817,6 +1875,80 @@ const App = {
         a.href = url; a.download = 'filmcalc-export.csv';
         document.body.appendChild(a); a.click(); a.remove();
         setTimeout(() => URL.revokeObjectURL(url), 1000);
+    },
+    // Direct, trusted restore of a self-exported JSON backup (exportJson()'s
+    // counterpart) — overwrites by key, no review step, matching root's
+    // App.importBackup(). Distinct from importYamlFile(): that one is for an
+    // untrusted community-style films/labs YAML and goes through the
+    // pendingImport review pipeline instead.
+    importBackup(file) {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            try {
+                const parsed = JSON.parse(reader.result);
+                if (parsed.films && typeof parsed.films === 'object') setAllFilms(mergeFilmProfiles(getAllFilms(), parsed.films));
+                if (parsed.labs && typeof parsed.labs === 'object') setAllLabs({ ...getAllLabs(), ...parsed.labs });
+                if (parsed.homeLab) setHomeLab(parsed.homeLab);
+                if (parsed.defaultTierLabel) setDefaultTierLabel(parsed.defaultTierLabel);
+                state.homeLab = getHomeLab(); state.tier = getDefaultTierLabel();
+                state.importNote = 'Backup imported.';
+            } catch {
+                state.importNote = "That file isn't a valid FilmCalc backup.";
+            }
+            render();
+        };
+        reader.readAsText(file);
+    },
+    importYamlFile(file) {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            loadDataSchema().then(() => {
+                let parsed;
+                try { parsed = jsyaml.load(reader.result) || {}; }
+                catch { state.importNote = `${file.name} isn't valid YAML.`; render(); return; }
+                if (!Array.isArray(parsed.films) && !Array.isArray(parsed.labs)) {
+                    state.importNote = `${file.name} had no films or labs to import.`;
+                    render();
+                    return;
+                }
+                const preview = buildImportPreview(parsed, getAllFilms(), getAllLabs());
+                state.pendingImport = { fileName: file.name, parsed, ...preview };
+                state.importNote = '';
+                render();
+            });
+        };
+        reader.readAsText(file);
+    },
+    confirmImport() {
+        const p = state.pendingImport;
+        if (!p) return;
+        state.lastImportSnapshot = { filmProfiles: getAllFilms(), labProfiles: getAllLabs() };
+        let filmCount = 0, labCount = 0;
+        if (Array.isArray(p.parsed.films)) {
+            setAllFilms(mergeFilmProfiles(getAllFilms(), buildFilmProfilesFromEntries(p.parsed.films)));
+            filmCount = p.parsed.films.length;
+        }
+        if (Array.isArray(p.parsed.labs)) {
+            const saved = getAllLabs();
+            p.parsed.labs.forEach(l => { if (l.name) saved[l.name] = l; });
+            setAllLabs(saved);
+            labCount = p.parsed.labs.length;
+        }
+        state.importNote = `Imported ${filmCount} film entr${filmCount === 1 ? 'y' : 'ies'} and ${labCount} lab${labCount === 1 ? '' : 's'} from ${p.fileName}.`;
+        state.pendingImport = null;
+        render();
+    },
+    cancelImport() { state.pendingImport = null; render(); },
+    undoLastImport() {
+        if (!state.lastImportSnapshot) return;
+        setAllFilms(state.lastImportSnapshot.filmProfiles);
+        setAllLabs(state.lastImportSnapshot.labProfiles);
+        state.lastImportSnapshot = null;
+        state.homeLab = getHomeLab();
+        state.importNote = 'Import undone.';
+        render();
     },
     reportIssue() {
         const url = 'https://github.com/trentnbauer/FilmCalc/issues/new?labels=data&title=' + encodeURIComponent('Data report from /new preview');
