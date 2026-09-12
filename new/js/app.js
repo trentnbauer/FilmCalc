@@ -46,6 +46,14 @@
 function escapeHtml(str) {
     return String(str ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
+// RFC 4180-ish CSV escaping — quote a field only when it actually needs it
+// (contains a comma, quote, or newline), doubling any embedded quotes.
+// Same behaviour as js/app.js's own csvField/csvLine.
+function csvField(v) {
+    const s = v === null || v === undefined ? '' : String(v);
+    return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+function csvLine(fields) { return fields.map(csvField).join(','); }
 function jsAttr(str) {
     return escapeHtml(String(str ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, '\\n'));
 }
@@ -874,6 +882,7 @@ ${hiddenLabs.map(l => `<div style="display:flex;align-items:center;justify-conte
         settingsCard('Your data', `<div style="display:flex;flex-wrap:wrap;gap:8px">
 <button type="button" onclick="App.shareLibrary()" style="height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">Share library link</button>
 <button type="button" onclick="App.exportJson()" style="height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">Export JSON</button>
+<button type="button" onclick="App.exportCsv()" title="Spreadsheet-friendly export for tracking spend — not for re-importing" style="height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">Export CSV</button>
 <button type="button" onclick="App.say('Choose a .yaml or .json file to import')" style="height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">Import file</button>
 <button type="button" onclick="App.openSetup()" style="height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">Re-run setup</button>
 </div>
@@ -1776,6 +1785,38 @@ const App = {
             setTimeout(() => URL.revokeObjectURL(url), 1000);
             say('Library exported as JSON');
         } catch { say("Couldn't export — try again"); }
+    },
+    // Mirrors root's App.exportCsv() — a spreadsheet-friendly spend export,
+    // not meant for re-importing (that's exportJson()'s job).
+    exportCsv() {
+        const filmRows = [];
+        Object.values(getAllFilms()).forEach(f => {
+            normalizeFilmBundles(f).forEach(b => {
+                filmRows.push([f.name, f.boxSpeed, f.process, f.format || '35mm', b.storeName || '', b.rolls, b.exposures, b.filmCost, b.rolls ? (b.filmCost / b.rolls).toFixed(2) : '']);
+            });
+        });
+        const labRows = [];
+        Object.values(getAllLabs()).forEach(l => {
+            normalizeLabServices(l).forEach(t => {
+                labRows.push([l.name, tierDescription(t), t.devCost, t.pushPullCost ?? '', t.pushPullType || '', t.turnaroundTime || '', (t.processes || []).join('|')]);
+            });
+        });
+        if (!filmRows.length && !labRows.length) { say('Nothing saved to export'); return; }
+        const lines = [
+            'FILMS',
+            csvLine(['Name', 'ISO', 'Process', 'Format', 'Store', 'Rolls', 'Exposures', 'Pack cost', 'Cost per roll']),
+            ...filmRows.map(csvLine),
+            '',
+            'LABS',
+            csvLine(['Name', 'Tier', 'Dev cost', 'Push/pull cost', 'Push/pull type', 'Turnaround', 'Processes']),
+            ...labRows.map(csvLine),
+        ];
+        const blob = new Blob([lines.join('\r\n')], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'filmcalc-export.csv';
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
     },
     reportIssue() {
         const url = 'https://github.com/trentnbauer/FilmCalc/issues/new?labels=data&title=' + encodeURIComponent('Data report from /new preview');
