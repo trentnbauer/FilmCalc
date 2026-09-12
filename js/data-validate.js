@@ -15,7 +15,12 @@
 let dataSchema = null;
 async function loadDataSchema() {
     if (dataSchema) return dataSchema;
-    try { dataSchema = await (await fetch('schema/film-lab-schema.json')).json(); }
+    // Absolute (site-root) path rather than page-relative: this file is
+    // shared by root (at /) and the /new preview (at /new/) — a relative
+    // 'schema/...' fetch would resolve against whichever page loaded it and
+    // 404 from /new/. Identical resolution for root, since root is already
+    // served from the site root.
+    try { dataSchema = await (await fetch('/schema/film-lab-schema.json')).json(); }
     catch { dataSchema = null; }
     return dataSchema;
 }
