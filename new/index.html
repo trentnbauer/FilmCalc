@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://www.googletagservices.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.googlesyndication.com https://*.google.com https://*.doubleclick.net https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com; frame-src https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+    <meta name="robots" content="noindex">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/icon.svg">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#08090a">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>FilmCalc — Film Cost Calculator (Preview)</title>
+    <meta name="description" content="Work out the true cost per photo of shooting film, and which lab is actually cheapest for a given roll. Preview of the next FilmCalc redesign.">
+    <link rel="canonical" href="https://filmcalc.app/new/">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --acc: #ff7a2f; }
+        body { margin: 0; background: #08090a; font-family: 'Public Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+        a { color: #5fa8d3; text-decoration: none; }
+        a:hover { color: #8cc4e4; }
+        input, select, button { font-family: inherit; }
+        input::placeholder { color: #4a4f57; }
+        input[type=range] { accent-color: #ff7a2f; }
+        button:hover { filter: brightness(1.12); }
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-thumb { background: #26292e; border-radius: 6px; }
+    </style>
+    <!-- js-yaml: parses the films/labs region preset files, same library
+         root's index.html loads (js/app.js's own loadPresetIndexes()). -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js" integrity="sha512-CSBhVREyzHAjAFfBlIBakjoRUKp5h7VSweP0InR/pAJyptH7peuhCsqAI/snV+TwZmXZqoUklpXp6R6wMnYf5Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- qrcode-generator: renders the share-link QR in the Share sheet. -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" integrity="sha512-ZDSPMa/JM1D+7kdg2x3BsruQ6T/JpJo3jWDWkCZsP+5yVyp1KfESqLI+7RqB5k24F7p2cV7i2YHh/890y6P6Sw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+<div id="app"></div>
+
+<!-- Google Analytics (GA4) — same opt-in gate as root (js/ga-loader.js),
+     loaded from the shared repo path so the consent choice made here or on
+     root applies to both. -->
+<script src="../js/ga-loader.js"></script>
+<!-- Dev Cost / Per ISO calculation engine — pure global functions shared
+     byte-for-byte with root's UI (see js/dev-cost-calc.js's own header
+     comment and tests/dev-cost-calc.test.js). This preview never
+     reimplements this math; it only calls it. -->
+<script src="../js/dev-cost-calc.js"></script>
+<!-- This preview's own state + rendering, built against the "FilmCalc
+     Lookup 4b" Claude Design mockup (see new/README.md). Reads/writes the
+     exact same localStorage keys as js/app.js (filmProfiles, labProfiles,
+     homeLab, globalFormat, …) so a library built on one UI shows up on the
+     other — this is a second skin on the same data, not a separate app. -->
+<script src="js/app.js"></script>
+</body>
+</html>
