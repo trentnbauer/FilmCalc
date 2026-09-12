@@ -55,6 +55,12 @@
      denied/unavailable. Must load before js/app.js, which reads TZ_COUNTRY
      directly. Same file root's index.html loads. -->
 <script src="../js/tz-country.js"></script>
+<!-- STRINGS dictionary + t()/setLocale()/currentLocale — shared byte-for-
+     byte with root's UI. Must load before js/app.js, which calls t()
+     directly inside its render functions. Same file root's index.html
+     loads, same 'locale' localStorage key, so a language choice made on
+     either UI applies to both. -->
+<script src="../js/i18n.js"></script>
 <!-- This preview's own state + rendering, built against the "FilmCalc
      Lookup 4b" Claude Design mockup (see new/README.md). Reads/writes the
      exact same localStorage keys as js/app.js (filmProfiles, labProfiles,
