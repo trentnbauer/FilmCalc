@@ -142,6 +142,7 @@ const state = {
     homeLab: getHomeLab(), tier: getDefaultTierLabel(),
     upgradePct: localStorage.getItem('upgradeThresholdPercent') || '4',
     mailRolls: localStorage.getItem('mailBackRollCount') || '1',
+    theme: localStorage.getItem('newUiTheme') || 'system',
     expBox: '400', expMonth: MONTHS[new Date().getMonth()], expYear: '', expProcess: 'c41', storage: 'controlled'
 };
 let toastTimer = null;
@@ -405,9 +406,26 @@ const C = {
     acc: '#ff7a2f', accBg: '#241a13', accBorder: '#5a3a1c',
     blue: '#5fa8d3', green: '#8fbf6a', red: '#ef6a54', redBg: '#1c1210', redBorder: '#5a2420'
 };
+// Light mode isn't a second palette (every colour in C/this file is a
+// literal hex) — invert+hue-rotate the whole app instead, same trick
+// root's js/app.js uses. Own localStorage key ('newUiTheme', tri-state
+// system/light/dark) rather than reusing root's binary 'lightMode', since
+// root has no "system" concept — keeps this preview's toggle independent.
+function systemPrefersDark() {
+    try { return !window.matchMedia || window.matchMedia('(prefers-color-scheme: dark)').matches; } catch { return true; }
+}
+function isDarkNow() {
+    if (state.theme === 'light') return false;
+    if (state.theme === 'dark') return true;
+    return systemPrefersDark();
+}
+function themeLabel() {
+    return state.theme === 'light' ? 'Light' : state.theme === 'dark' ? 'Dark' : 'System';
+}
 function render() {
     const el = document.getElementById('app');
     if (!el) return;
+    el.style.filter = isDarkNow() ? '' : 'invert(1) hue-rotate(180deg)';
     el.innerHTML = viewShell();
 }
 
@@ -815,6 +833,9 @@ function viewSettings() {
     const hiddenLabs = Object.values(allLabs).filter(l => l.hidden);
 
     const cards = [
+        settingsCard('Appearance', `<div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${seg(['System', 'Light', 'Dark'], themeLabel(), l => `App.setTheme('${l.toLowerCase()}')`)}</div>
+<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:8px">System follows your device's light/dark setting automatically.</div>`),
+
         settingsCard('Language', `<select onchange="App.setLanguage(this.value)" aria-label="Language" style="width:100%;height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer">${LANGUAGE_OPTIONS.map(([code, label]) => `<option value="${code}" ${state.language === code ? 'selected' : ''}>${label}</option>`).join('')}</select>
 <div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:8px">Translations are community-contributed and may lag behind English. This preview's own copy is English-only for now.</div>`),
 
@@ -1693,6 +1714,7 @@ const App = {
         render();
     },
     setLanguage(code) { state.language = code; try { localStorage.setItem('locale', code); } catch {} render(); },
+    setTheme(value) { state.theme = value; try { localStorage.setItem('newUiTheme', value); } catch {} render(); },
     resetConsent() { state.consent = null; try { localStorage.removeItem('analyticsConsent'); } catch {} render(); },
     acceptConsent() {
         state.consent = 'granted';
@@ -1756,6 +1778,10 @@ function init() {
     state.desktop = mq.matches;
     const onMq = () => { state.desktop = mq.matches; render(); };
     if (mq.addEventListener) mq.addEventListener('change', onMq); else mq.addListener(onMq);
+
+    const themeMq = window.matchMedia('(prefers-color-scheme: dark)');
+    const onThemeMq = () => { if (state.theme === 'system') render(); };
+    if (themeMq.addEventListener) themeMq.addEventListener('change', onThemeMq); else themeMq.addListener(onThemeMq);
 
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
