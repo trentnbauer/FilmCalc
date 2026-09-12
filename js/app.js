@@ -1636,6 +1636,14 @@ const App = {
         try { localStorage.removeItem('analyticsConsent'); } catch (e) { /* private mode etc. */ }
         render();
     },
+    dismissNewUiPromo() {
+        try { localStorage.setItem('newUiPromptSeen', '1'); } catch (e) { /* private mode etc. */ }
+        render();
+    },
+    tryNewUi() {
+        try { localStorage.setItem('newUiPromptSeen', '1'); } catch (e) { /* private mode etc. */ }
+        window.location.href = '/new/';
+    },
     // Settings → "Install App" — replays the deferred beforeinstallprompt
     // event captured below. Only ever called from a button that's only
     // rendered while deferredInstallPrompt is non-null, so there's always
@@ -2192,6 +2200,34 @@ function renderConsentBanner() {
 </div>`;
 }
 
+// One-time nudge toward the /new preview build. Shown at most once ever
+// (localStorage 'newUiPromptSeen', set on either button) and never at the
+// same time as the consent banner or setup/changelog modals — those all
+// compete for the same attention, and stacking prompts on a first visit
+// is worse than deferring this one to the next render/reload.
+function shouldShowNewUiPromo(s) {
+    if (s.setupOpen || s.changelogOpen) return false;
+    if (localStorage.getItem('newUiPromptSeen') !== null) return false;
+    try {
+        if (localStorage.getItem('analyticsConsent') === null) return false;
+    } catch (e) { /* private mode etc. — fall through and show it */ }
+    return true;
+}
+
+function renderNewUiPromoModal() {
+    return `<div onclick="if(event.target===this)App.dismissNewUiPromo()" style="position:fixed;inset:0;z-index:72;background:rgba(6,6,7,.74);display:flex;align-items:flex-start;justify-content:center;padding:64px 16px;overflow:auto"><div style="width:100%;max-width:420px;background:linear-gradient(180deg,#151517,#111113);border:1px solid #33333a;border-radius:10px;box-shadow:0 30px 80px -20px #000;padding:18px 20px 20px">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+<div style="${NARROW};font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#eae7e1">${escapeHtml(t('v2NewUiPromoTitle'))}</div>
+<button type="button" onclick="App.dismissNewUiPromo()" aria-label="Close" style="background:transparent;border:0;color:#928e88;font-size:18px;line-height:1;cursor:pointer;padding:4px">×</button>
+</div>
+<p style="margin:0;font-size:12px;line-height:1.6;color:#a6a4a0">${escapeHtml(t('v2NewUiPromoMessage'))}</p>
+<div style="display:flex;gap:10px;margin-top:18px">
+<button type="button" onclick="App.dismissNewUiPromo()" style="flex:1;background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:9px 16px;color:#928e88;font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${escapeHtml(t('v2NewUiPromoDismiss'))}</button>
+<button type="button" onclick="App.tryNewUi()" style="flex:2;background:#1c1512;border:1px solid #5a3a1c;border-radius:5px;padding:9px 16px;color:var(--acc);font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${escapeHtml(t('v2NewUiPromoTry'))}</button>
+</div>
+</div></div>`;
+}
+
 function renderMobileLookup(s) {
     const is120 = s.format === '120', is35 = s.format === '35mm';
     const r = rankLabs(s);
@@ -2744,6 +2780,7 @@ ${renderMobileFooter(s)}
 ${renderMobileMenu(s)}
 ${s.setupOpen ? renderSetupModal(s) : ''}
 ${s.changelogOpen ? renderChangelogModal(s) : ''}
+${shouldShowNewUiPromo(s) ? renderNewUiPromoModal() : ''}
 ${renderMobileToast(s)}
 ${renderConsentBanner()}`;
 }
