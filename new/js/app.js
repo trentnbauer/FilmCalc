@@ -111,12 +111,21 @@ const PROCESS_VALUE = { 'C41': 'C41', 'B&W': 'BW', 'E6': 'E6', 'ECN-2': 'ECN2' }
 const PROCESS_LABEL = { C41: 'C41', BW: 'B&W', E6: 'E6', ECN2: 'ECN-2' };
 const FRAME120 = { '6x4.5': 16, '6x6': 12, '6x7': 10, '6x8': 9, '6x9': 8, '6x12': 6, '6x17': 4 };
 const FRAME35 = { full: { label: 'Full frame', factor: 1 }, half: { label: 'Half frame', factor: 2 }, xpan: { label: 'XPan', factor: 0.583 } };
+const FRAME35_KEY = { full: 'v3FrameFull', half: 'v3FrameHalf', xpan: 'v3FrameXpan' };
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const LANGUAGE_OPTIONS = [
     ['en', 'English'], ['es', 'Español'], ['ja', '日本語'], ['de', 'Deutsch'], ['pt', 'Português (BR)'],
     ['fr', 'Français'], ['ko', '한국어'], ['zh', '中文 (简体)'], ['it', 'Italiano'], ['ru', 'Русский']
 ];
-const SETUP_STEPS = ['Language', 'Starter presets', 'Home lab'];
+// Internal step tokens, not display text — kept untranslated/stable since
+// only .length and array index matter structurally. Display label comes
+// from setupStepLabel() below, computed fresh each render (unlike a
+// top-level translated const, which would go stale if the locale changes
+// after this module first loads).
+const SETUP_STEPS = ['language', 'presets', 'homeLab'];
+function setupStepLabel(key) {
+    return key === 'language' ? t('v3SetupStepLanguage') : key === 'presets' ? t('v3SetupStepPresets') : t('v3SetupStepHomeLab');
+}
 const YEARS_PER_STOP = { c41: { cold: 15, controlled: 10, uncontrolled: 5 }, bw: { cold: 20, controlled: 13, uncontrolled: 7 }, e6: { cold: 10, controlled: 7, uncontrolled: 3 } };
 const EXPIRED_PROCESSES = [['C-41 colour', 'c41'], ['B&W', 'bw'], ['E-6 slide', 'e6']];
 const STORAGE_OPTIONS = [
@@ -124,6 +133,8 @@ const STORAGE_OPTIONS = [
     ['Climate controlled', 'controlled', 'Indoors at steady room temperature, out of sunlight; the normal rate.'],
     ['Uncontrolled', 'uncontrolled', 'Shed, garage, roof space or a hot car; ages fastest.']
 ];
+const STORAGE_LABEL_KEY = { cold: 'v3StorageColdLabel', controlled: 'v3StorageControlledLabel', uncontrolled: 'v3StorageUncontrolledLabel' };
+const STORAGE_HELP_KEY = { cold: 'v3StorageColdHelp', controlled: 'v3StorageControlledHelp', uncontrolled: 'v3StorageUncontrolledHelp' };
 
 // ---------- App state ----------
 const state = {
@@ -147,7 +158,6 @@ const state = {
     menuInstalled: false,
     setupOpen: !localStorage.getItem('setupSeen'), setupStep: 0, presetChecked: new Set(), presetRegions: null, setupBusy: false,
     consent: localStorage.getItem('analyticsConsent'),
-    language: localStorage.getItem('locale') || 'en',
     homeLab: getHomeLab(), tier: getDefaultTierLabel(),
     upgradePct: localStorage.getItem('upgradeThresholdPercent') || '4',
     theme: localStorage.getItem('newUiTheme') || 'system',
@@ -191,11 +201,11 @@ function camOverride() { return state.format === '120' ? (FRAME120[state.frame12
 function mailOpts() {
     return { includeMailBack: !!state.mailBack, mailBackRollCount: Math.max(1, parseInt(state.postRolls, 10) || 1), mailToLabFee: num(state.postTo) };
 }
-function tierWhy(t, stopsAbs) {
-    if (!tierMatchesFilmProcess(t, { process: state.process })) return 'not ' + (PROCESS_LABEL[state.process] || state.process);
-    if (state.fHiRes && !t.highResScan) return 'not hi-res';
-    if (state.fRush && t.turnaroundTime !== 'next_day') return 'not next day';
-    if (stopsAbs > 0 && t.noPushPull) return 'no push/pull';
+function tierWhy(tier, stopsAbs) {
+    if (!tierMatchesFilmProcess(tier, { process: state.process })) return t('v3TierNotProcess', { process: PROCESS_LABEL[state.process] || state.process });
+    if (state.fHiRes && !tier.highResScan) return t('v3TierNotHiRes');
+    if (state.fRush && tier.turnaroundTime !== 'next_day') return t('v3TierNotNextDay');
+    if (stopsAbs > 0 && tier.noPushPull) return t('v3TierNoPushPull');
     return '';
 }
 function pushFeeFor(t, stopsAbs) {
@@ -275,7 +285,7 @@ function computeCheaperFilm(home) {
     const target = shootIso() || num(state.boxSpeed);
     const curCpp = home ? home.cpp : null;
     if (!target || !home || !(curCpp > 0)) {
-        return { has: false, headline: 'Cheaper film', note: 'Enter a box speed and pack price to compare against your library.', tone: 'grey' };
+        return { has: false, headline: t('v3CheaperFilmHeadline'), note: t('v3CheaperFilmEmptyNote'), tone: 'grey' };
     }
     const override = camOverride();
     let bestNative = null, bestPushPull = null;
@@ -306,20 +316,20 @@ function computeCheaperFilm(home) {
         .sort((a, b) => a.cpp - b.cpp)[0];
     if (pick) {
         const pct = Math.round((1 - pick.cpp / curCpp) * 100);
-        const how = pick.stopsSigned === 0 ? 'at box speed' : (pick.stopsSigned > 0 ? '+' + pick.stopsAbs + ' push' : '-' + pick.stopsAbs + ' pull');
+        const how = pick.stopsSigned === 0 ? t('v3AtBoxSpeed') : t(pick.stopsSigned > 0 ? 'v3PushHow' : 'v3PullHow', { n: pick.stopsAbs });
         return {
-            has: true, tone: 'warn', headline: 'Cheaper at ISO ' + target,
-            note: pick.f.name + ' ' + how + ' is ' + CUR() + money(pick.cpp) + ' a frame at ' + home.name + ' — ' + pct + '% less than this roll.',
-            buyLabel: pick.bundle.storeName ? 'Buy at ' + pick.bundle.storeName + ' ↗' : 'Find this stock ↗',
+            has: true, tone: 'warn', headline: t('v3CheaperAtIsoHeadline', { iso: target }),
+            note: t('v3CheaperAtIsoNote', { name: pick.f.name, how, amount: CUR() + money(pick.cpp), lab: home.name, pct }),
+            buyLabel: pick.bundle.storeName ? t('v3BuyAtStore', { store: pick.bundle.storeName }) : t('v3FindThisStock'),
             buyLink: pick.bundle.buyLink,
-            loadLabel: 'Load ' + pick.f.name,
+            loadLabel: t('v3LoadFilm', { name: pick.f.name }),
             pick: pick.f, pickStops: pick.stopsSigned,
-            overpay: 'Paying ' + CUR() + money(curCpp - pick.cpp) + ' more a frame — ' + Math.round((curCpp / pick.cpp - 1) * 100) + '% over your cheapest option'
+            overpay: t('v3PayingMoreOverpay', { amount: CUR() + money(curCpp - pick.cpp), pct: Math.round((curCpp / pick.cpp - 1) * 100) })
         };
     }
     return {
-        has: false, tone: 'grey', headline: 'Nothing cheaper at ISO ' + target,
-        note: 'No saved stock comes in more than ' + minPct + '% under this roll once dev' + (home.pick.pushPullCost ? ' and push fees' : '') + ' are added.'
+        has: false, tone: 'grey', headline: t('v3NothingCheaperHeadline', { iso: target }),
+        note: t('v3NothingCheaperNote', { pct: minPct, pushSuffix: home.pick.pushPullCost ? t('v3AndPushFeesSuffix') : '' })
     };
 }
 
@@ -327,16 +337,16 @@ function computeExpired() {
     const boxSpeed = num(state.expBox) || 400;
     const month = MONTHS.indexOf(state.expMonth) + 1;
     const year = parseInt(state.expYear, 10);
-    if (!year) return { rated: 'ISO —', note: 'Enter an expiry year', age: 'enter a year' };
+    if (!year) return { rated: t('v3IsoDash'), note: t('v3EnterExpiryYear'), age: t('v3EnterAYear') };
     const now = new Date();
     const years = Math.max(0, (now.getFullYear() - year) + (now.getMonth() + 1 - month) / 12);
     const per = (YEARS_PER_STOP[state.expProcess] || YEARS_PER_STOP.c41)[state.storage] || YEARS_PER_STOP.c41.controlled;
     const high = boxSpeed > 400 ? Math.floor(Math.log2(boxSpeed / 400)) * 0.5 : 0;
     const stops = Math.round((years / per + high) * 2) / 2;
     return {
-        rated: 'ISO ' + Math.max(1, Math.round(boxSpeed / Math.pow(2, stops))),
-        note: stops.toFixed(1) + ' stops of compensation',
-        age: years.toFixed(1) + ' yrs past expiry'
+        rated: t('v3IsoValue', { iso: Math.max(1, Math.round(boxSpeed / Math.pow(2, stops))) }),
+        note: t('v3StopsOfCompensation', { n: stops.toFixed(1) }),
+        age: t('v3YrsPastExpiry', { n: years.toFixed(1) })
     };
 }
 
@@ -479,17 +489,17 @@ function buildFilmProfilesFromEntries(entries) {
 function renderImportPreview() {
     const p = state.pendingImport;
     if (!p) return '';
-    const rowsFor = (entries, label) => !entries.length ? '' : `<div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:${C.faint};margin:8px 0 4px">${label} (${entries.length})</div>
-<div style="display:flex;flex-direction:column;gap:2px;max-height:120px;overflow:auto">${entries.map(e => `<div style="font-size:11px;color:${C.text2};display:flex;justify-content:space-between;gap:8px"><span>${escapeHtml(e.name)}</span>${e.exists ? `<span style="color:${C.faint};font-size:9px;letter-spacing:.08em;text-transform:uppercase">updates existing</span>` : ''}</div>`).join('')}</div>`;
+    const rowsFor = (entries, label) => !entries.length ? '' : `<div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:${C.faint};margin:8px 0 4px">${escapeHtml(label)} (${entries.length})</div>
+<div style="display:flex;flex-direction:column;gap:2px;max-height:120px;overflow:auto">${entries.map(e => `<div style="font-size:11px;color:${C.text2};display:flex;justify-content:space-between;gap:8px"><span>${escapeHtml(e.name)}</span>${e.exists ? `<span style="color:${C.faint};font-size:9px;letter-spacing:.08em;text-transform:uppercase">${escapeHtml(t('v3UpdatesExisting'))}</span>` : ''}</div>`).join('')}</div>`;
     const hasErrors = p.errors.length > 0;
     return `<div style="margin-top:10px;border:1px solid ${hasErrors ? C.redBorder : C.border};border-radius:8px;background:${C.field};padding:12px">
-<div style="font-size:11px;color:${C.text2};margin-bottom:2px">Reviewing <strong>${escapeHtml(p.fileName)}</strong> — nothing saved yet.</div>
-${rowsFor(p.filmEntries, 'Films')}
-${rowsFor(p.labEntries, 'Labs')}
-${hasErrors ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid ${C.redBorder}"><div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:${C.red};margin-bottom:4px">Can't import — fix these and re-upload</div><div style="display:flex;flex-direction:column;gap:2px;max-height:120px;overflow:auto">${p.errors.map(e => `<div style="font-size:11px;color:${C.red}">${escapeHtml(e)}</div>`).join('')}</div></div>` : ''}
+<div style="font-size:11px;color:${C.text2};margin-bottom:2px">${escapeHtml(t('v3ReviewingFile', { name: p.fileName }))}</div>
+${rowsFor(p.filmEntries, t('v2SectionFilms'))}
+${rowsFor(p.labEntries, t('v2SectionLabs'))}
+${hasErrors ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid ${C.redBorder}"><div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:${C.red};margin-bottom:4px">${escapeHtml(t('v3ImportErrorsHeading'))}</div><div style="display:flex;flex-direction:column;gap:2px;max-height:120px;overflow:auto">${p.errors.map(e => `<div style="font-size:11px;color:${C.red}">${escapeHtml(e)}</div>`).join('')}</div></div>` : ''}
 <div style="display:flex;gap:8px;margin-top:12px">
-${hasErrors ? '' : `<button type="button" onclick="App.confirmImport()" style="flex:1;background:${C.accBg};border:1px solid ${C.accBorder};border-radius:8px;padding:9px 13px;color:${C.acc};font-size:12px;cursor:pointer">Confirm import</button>`}
-<button type="button" onclick="App.cancelImport()" style="${hasErrors ? 'flex:1' : ''}background:transparent;border:1px solid ${C.border2};border-radius:8px;padding:9px 13px;color:${C.text2};font-size:12px;cursor:pointer">Cancel</button>
+${hasErrors ? '' : `<button type="button" onclick="App.confirmImport()" style="flex:1;background:${C.accBg};border:1px solid ${C.accBorder};border-radius:8px;padding:9px 13px;color:${C.acc};font-size:12px;cursor:pointer">${escapeHtml(t('v3ConfirmImport'))}</button>`}
+<button type="button" onclick="App.cancelImport()" style="${hasErrors ? 'flex:1' : ''}background:transparent;border:1px solid ${C.border2};border-radius:8px;padding:9px 13px;color:${C.text2};font-size:12px;cursor:pointer">${escapeHtml(t('cancelButton'))}</button>
 </div>
 </div>`;
 }
@@ -539,9 +549,6 @@ function isDarkNow() {
     if (state.theme === 'dark') return true;
     return systemPrefersDark();
 }
-function themeLabel() {
-    return state.theme === 'light' ? 'Light' : state.theme === 'dark' ? 'Dark' : 'System';
-}
 function render() {
     const el = document.getElementById('app');
     if (!el) return;
@@ -556,10 +563,15 @@ function fmtDate(iso) {
     } catch { return ''; }
 }
 
+// Each item is either a plain value (used as both the button's value and
+// its display label — untranslated technical terms like format/process
+// names) or a [value, label] pair (a translated display label decoupled
+// from the English value onPick() needs).
 function seg(list, current, onPick) {
-    return list.map(label => {
-        const on = label === current;
-        return `<button type="button" onclick="${onPick(label)}" style="flex:1;height:38px;border-radius:6px;font:inherit;font-size:13px;cursor:pointer;background:${on ? '#1f2228' : 'transparent'};border:${on ? '1px solid #3a3e45' : '0'};color:${on ? C.text : C.sub};font-weight:${on ? 600 : 400}">${escapeHtml(label)}</button>`;
+    return list.map(item => {
+        const [value, label] = Array.isArray(item) ? item : [item, item];
+        const on = value === current;
+        return `<button type="button" onclick="${onPick(value)}" style="flex:1;height:38px;border-radius:6px;font:inherit;font-size:13px;cursor:pointer;background:${on ? '#1f2228' : 'transparent'};border:${on ? '1px solid #3a3e45' : '0'};color:${on ? C.text : C.sub};font-weight:${on ? 600 : 400}">${escapeHtml(label)}</button>`;
     }).join('');
 }
 
@@ -590,28 +602,28 @@ ${state.toast ? `<div style="position:fixed;left:50%;transform:translateX(-50%);
 }
 
 function viewMobileHeader() {
-    const title = state.view === 'expired' ? 'Expired film' : state.view === 'settings' ? 'Settings' : state.view === 'library' ? 'Library' : 'FilmCalc';
+    const title = state.view === 'expired' ? t('v3TitleExpiredFilm') : state.view === 'settings' ? t('navSettings') : state.view === 'library' ? t('navLibrary') : t('appTitle');
     return `<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px">
 <span style="font-size:17px;font-weight:700;letter-spacing:-.01em;color:${C.text}">${escapeHtml(title)}</span>
-<button type="button" onclick="App.openMenu()" aria-label="Menu" style="width:44px;height:44px;margin-right:-12px;display:flex;align-items:center;justify-content:center;background:transparent;border:0;color:${C.sub};cursor:pointer"><svg style="width:20px;height:20px" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"></path></svg></button>
+<button type="button" onclick="App.openMenu()" aria-label="${escapeHtml(t('v3MenuHeading'))}" style="width:44px;height:44px;margin-right:-12px;display:flex;align-items:center;justify-content:center;background:transparent;border:0;color:${C.sub};cursor:pointer"><svg style="width:20px;height:20px" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"></path></svg></button>
 </div>`;
 }
 
 function viewDesktopHeader() {
     const labCount = Object.keys(getAllLabs()).length, filmCount = Object.keys(getAllFilms()).length;
     const tabs = [
-        ['lookup', 'Lookup'], ['library', 'Library'], ['expired', 'Expired'], ['settings', 'Settings']
+        ['lookup', t('v3NavLookup')], ['library', t('navLibrary')], ['expired', t('v3NavExpired')], ['settings', t('navSettings')]
     ].map(([key, label]) => {
         const on = state.view === key;
-        return `<button type="button" onclick="App.setView('${key}')" style="background:transparent;border:0;border-bottom:${on ? '2px solid #ff7a2f' : '2px solid transparent'};padding:0 0 4px;font:inherit;font-size:13px;cursor:pointer;color:${on ? C.text : C.sub};font-weight:${on ? 600 : 400}">${label}</button>`;
+        return `<button type="button" onclick="App.setView('${key}')" style="background:transparent;border:0;border-bottom:${on ? '2px solid #ff7a2f' : '2px solid transparent'};padding:0 0 4px;font:inherit;font-size:13px;cursor:pointer;color:${on ? C.text : C.sub};font-weight:${on ? 600 : 400}">${escapeHtml(label)}</button>`;
     }).join('');
     return `<div style="display:flex;align-items:center;gap:26px;padding:16px 28px;border-bottom:1px solid ${C.border}">
-<span style="font-size:18px;font-weight:700;letter-spacing:-.01em;color:${C.text}">FilmCalc</span>
+<span style="font-size:18px;font-weight:700;letter-spacing:-.01em;color:${C.text}">${escapeHtml(t('appTitle'))}</span>
 <div style="display:flex;gap:20px">${tabs}</div>
 <span style="margin-left:auto;display:flex;align-items:center;gap:16px">
-<span style="font-size:12px;color:${C.faint}">${state.homeLab || 'no home lab'} · ${labCount} labs · ${filmCount} stocks</span>
-<button type="button" onclick="App.openChangelog()" style="background:transparent;border:0;padding:0;font:inherit;font-size:12px;color:${C.sub};cursor:pointer">What's new</button>
-<button type="button" onclick="App.install()" style="height:34px;padding:0 12px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:12px;font-weight:600;cursor:pointer">Install</button>
+<span style="font-size:12px;color:${C.faint}">${escapeHtml(t('v3HeaderLabsStocksSummary', { home: state.homeLab || t('v3NoHomeLab'), labs: labCount, stocks: filmCount }))}</span>
+<button type="button" onclick="App.openChangelog()" style="background:transparent;border:0;padding:0;font:inherit;font-size:12px;color:${C.sub};cursor:pointer">${escapeHtml(t('v3WhatsNew'))}</button>
+<button type="button" onclick="App.install()" style="height:34px;padding:0 12px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:12px;font-weight:600;cursor:pointer">${escapeHtml(t('v2ButtonInstallApp'))}</button>
 </span>
 </div>`;
 }
@@ -639,15 +651,15 @@ function viewLookup() {
     const summaryCard = `<div style="margin:18px 20px 0;background:${C.panel};border:1px solid ${C.border};border-radius:10px;overflow:hidden">
 <div style="padding:18px 20px">
 <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-${home && home.lab.address ? `<button type="button" onclick="App.openMaps()" aria-label="Directions to ${escapeHtml(home.name)}" style="display:flex;align-items:center;gap:6px;background:transparent;border:0;padding:0;font:inherit;font-size:12px;color:${C.sub};cursor:pointer">
+${home && home.lab.address ? `<button type="button" onclick="App.openMaps()" aria-label="${escapeHtml(t('v3DirectionsToLab', { name: home.name }))}" style="display:flex;align-items:center;gap:6px;background:transparent;border:0;padding:0;font:inherit;font-size:12px;color:${C.sub};cursor:pointer">
 <svg style="width:13px;height:13px;flex:none" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s7-6.3 7-11a7 7 0 10-14 0c0 4.7 7 11 7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
-<span>${escapeHtml(home.name)} <span style="color:${C.acc}">· home</span></span>
-</button>` : `<span style="font-size:12px;color:${C.sub}">${home ? escapeHtml(home.name) + ' · home' : 'No home lab set'}</span>`}
-<span style="font-size:12px;color:${C.blue}">${best && saveC > 0.05 ? escapeHtml(best.name.split(' ')[0]) + ' −' + saveC.toFixed(1) + 'c ›' : (home ? 'Cheapest already ›' : '')}</span>
+<span>${escapeHtml(home.name)} <span style="color:${C.acc}">${escapeHtml(t('v3HomeSuffix'))}</span></span>
+</button>` : `<span style="font-size:12px;color:${C.sub}">${home ? escapeHtml(home.name) + ' ' + escapeHtml(t('v3HomeSuffix')) : escapeHtml(t('v3NoHomeLabSet'))}</span>`}
+<span style="font-size:12px;color:${C.blue}">${best && saveC > 0.05 ? escapeHtml(t('v3SaveVsBestName', { name: best.name.split(' ')[0], amount: saveC.toFixed(1) })) : (home ? escapeHtml(t('v3CheapestAlready')) : '')}</span>
 </div>
 <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-top:8px">
-<div style="display:flex;align-items:baseline;gap:5px"><span style="font-size:24px;font-weight:500;color:${C.sub}">${CUR()}</span><span style="font-size:66px;font-weight:700;line-height:.84;color:${cheaper.tone === 'warn' ? C.red : C.text};letter-spacing:-.035em">${home ? money(homeCpp) : '—'}</span><span style="font-size:12px;color:${C.sub}">/frame</span></div>
-<div style="text-align:right;padding-bottom:6px"><div style="font-size:11px;color:${C.sub}">Total Cost</div><div style="font-size:24px;font-weight:600;color:${C.text}">${CUR()}${home ? money(perRoll + homeDev + homePush + homeFee) : '0.00'}</div></div>
+<div style="display:flex;align-items:baseline;gap:5px"><span style="font-size:24px;font-weight:500;color:${C.sub}">${CUR()}</span><span style="font-size:66px;font-weight:700;line-height:.84;color:${cheaper.tone === 'warn' ? C.red : C.text};letter-spacing:-.035em">${home ? money(homeCpp) : '—'}</span><span style="font-size:12px;color:${C.sub}">${escapeHtml(t('v3PerFrame'))}</span></div>
+<div style="text-align:right;padding-bottom:6px"><div style="font-size:11px;color:${C.sub}">${escapeHtml(t('v3TotalCost'))}</div><div style="font-size:24px;font-weight:600;color:${C.text}">${CUR()}${home ? money(perRoll + homeDev + homePush + homeFee) : '0.00'}</div></div>
 </div>
 ${cheaper.tone === 'warn' ? `<div style="display:flex;align-items:center;gap:7px;margin-top:10px;padding:7px 10px;border-radius:8px;background:${C.redBg};border:1px solid ${C.redBorder}">
 <svg style="width:13px;height:13px;flex:none;color:${C.red}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5L2.8 20h18.4L12 4.5z"></path><path stroke-linecap="round" d="M12 10v4.2"></path><circle cx="12" cy="17.2" r="1" fill="currentColor" stroke="none"></circle></svg>
@@ -655,13 +667,13 @@ ${cheaper.tone === 'warn' ? `<div style="display:flex;align-items:center;gap:7px
 </div>` : ''}
 <div style="display:flex;height:4px;margin-top:16px;border-radius:2px;overflow:hidden;background:${C.field}"><div style="background:${cheaper.tone === 'warn' ? C.red : C.green};width:${Math.round((perRoll / rollTotal) * 100)}%"></div><div style="background:${C.blue};width:${Math.round((homeDev / rollTotal) * 100)}%"></div><div style="background:#b3541a;width:${Math.round((homePush / rollTotal) * 100)}%"></div><div style="flex:1;background:#ff9a5c"></div></div>
 <div style="display:flex;gap:12px;margin-top:10px">
-<div style="flex:1"><div style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:2px;background:${cheaper.tone === 'warn' ? C.red : C.green}"></span><span style="font-size:11px;color:${C.sub}">Film</span></div><div style="font-size:15px;font-weight:600;color:${cheaper.tone === 'warn' ? C.red : C.text};margin-top:3px">${CUR()}${money(perRoll)}</div></div>
-<div style="flex:1"><div style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:2px;background:${C.blue}"></span><span style="font-size:11px;color:${C.sub}">Dev</span></div><div style="font-size:15px;font-weight:600;color:${C.text};margin-top:3px">${CUR()}${money(homeDev)}</div></div>
+<div style="flex:1"><div style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:2px;background:${cheaper.tone === 'warn' ? C.red : C.green}"></span><span style="font-size:11px;color:${C.sub}">${escapeHtml(t('v3LabelFilm'))}</span></div><div style="font-size:15px;font-weight:600;color:${cheaper.tone === 'warn' ? C.red : C.text};margin-top:3px">${CUR()}${money(perRoll)}</div></div>
+<div style="flex:1"><div style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:2px;background:${C.blue}"></span><span style="font-size:11px;color:${C.sub}">${escapeHtml(t('v3LabelDev'))}</span></div><div style="font-size:15px;font-weight:600;color:${C.text};margin-top:3px">${CUR()}${money(homeDev)}</div></div>
 <div style="flex:1.2;min-width:0">
-<div style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;flex:none;border-radius:2px;background:#ff9a5c"></span><span style="font-size:11px;color:${C.sub}">Fees</span></div>
-${(homePush <= 0 && homeFee <= 0) ? `<div style="font-size:15px;font-weight:600;color:${C.faint};margin-top:3px">None</div>` : `<div style="display:flex;gap:10px;margin-top:3px">
-${homePush > 0 ? `<span style="min-width:0"><span style="display:block;font-size:15px;font-weight:600;color:${C.text}">${CUR()}${money(homePush)}</span><span style="display:flex;align-items:center;gap:4px;margin-top:2px"><span style="width:6px;height:6px;flex:none;border-radius:2px;background:#b3541a"></span><span style="font-size:10px;color:${C.faint}">push</span></span></span>` : ''}
-${homeFee > 0 ? `<span style="min-width:0"><span style="display:block;font-size:15px;font-weight:600;color:${C.text}">${CUR()}${money(homeFee)}</span><span style="display:flex;align-items:center;gap:4px;margin-top:2px"><span style="width:6px;height:6px;flex:none;border-radius:2px;background:#ff9a5c"></span><span style="font-size:10px;color:${C.faint}">post</span></span></span>` : ''}
+<div style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;flex:none;border-radius:2px;background:#ff9a5c"></span><span style="font-size:11px;color:${C.sub}">${escapeHtml(t('v3LabelFees'))}</span></div>
+${(homePush <= 0 && homeFee <= 0) ? `<div style="font-size:15px;font-weight:600;color:${C.faint};margin-top:3px">${escapeHtml(t('v3FeesNone'))}</div>` : `<div style="display:flex;gap:10px;margin-top:3px">
+${homePush > 0 ? `<span style="min-width:0"><span style="display:block;font-size:15px;font-weight:600;color:${C.text}">${CUR()}${money(homePush)}</span><span style="display:flex;align-items:center;gap:4px;margin-top:2px"><span style="width:6px;height:6px;flex:none;border-radius:2px;background:#b3541a"></span><span style="font-size:10px;color:${C.faint}">${escapeHtml(t('v3FeePush'))}</span></span></span>` : ''}
+${homeFee > 0 ? `<span style="min-width:0"><span style="display:block;font-size:15px;font-weight:600;color:${C.text}">${CUR()}${money(homeFee)}</span><span style="display:flex;align-items:center;gap:4px;margin-top:2px"><span style="width:6px;height:6px;flex:none;border-radius:2px;background:#ff9a5c"></span><span style="font-size:10px;color:${C.faint}">${escapeHtml(t('v3FeePost'))}</span></span></span>` : ''}
 </div>`}
 </div>
 </div>
@@ -669,9 +681,9 @@ ${homeFee > 0 ? `<span style="min-width:0"><span style="display:block;font-size:
 <div style="padding:13px 20px 15px;background:${overPush ? C.redBg : (cheaper.tone === 'warn' ? C.redBg : C.panel)};border-top:1px solid ${overPush || cheaper.tone === 'warn' ? C.redBorder : C.border}">
 <div style="display:flex;align-items:center;gap:7px">
 ${overPush || cheaper.tone === 'warn' ? `<svg style="width:15px;height:15px;flex:none;color:${C.red}" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5L2.8 20h18.4L12 4.5z"></path><path stroke-linecap="round" d="M12 10v4.2"></path><circle cx="12" cy="17.2" r="1" fill="currentColor" stroke="none"></circle></svg>` : ''}
-<span style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${overPush || cheaper.tone === 'warn' ? C.red : C.sub}">${overPush ? 'Pushed past ' + pushLimit + ' stop' + (pushLimit === 1 ? '' : 's') : escapeHtml(cheaper.headline)}</span>
+<span style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${overPush || cheaper.tone === 'warn' ? C.red : C.sub}">${overPush ? escapeHtml(t(pushLimit === 1 ? 'v3PushedPastLimitOne' : 'v3PushedPastLimit', { n: pushLimit })) : escapeHtml(cheaper.headline)}</span>
 </div>
-<div style="font-size:14px;line-height:1.5;color:${C.text2};margin-top:5px">${overPush ? 'Expect heavy grain, crushed shadows and colour shifts — and most labs will not guarantee the result.' : escapeHtml(cheaper.note)}</div>
+<div style="font-size:14px;line-height:1.5;color:${C.text2};margin-top:5px">${overPush ? escapeHtml(t('v3PushExpectGrain')) : escapeHtml(cheaper.note)}</div>
 ${(cheaper.has && !overPush) ? `<div style="display:flex;gap:8px;margin-top:12px">
 <button type="button" onclick="App.loadCheaper()" style="flex:1;min-width:0;height:42px;border-radius:8px;background:transparent;border:1px solid ${C.redBorder};color:${C.red};font:inherit;font-size:13px;font-weight:600;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 12px">${escapeHtml(cheaper.loadLabel)}</button>
 ${cheaper.buyLink ? `<a href="${sanitizeUrl(cheaper.buyLink)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(cheaper.buyLabel)}" title="${escapeHtml(cheaper.buyLabel)}" style="flex:none;width:46px;height:42px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid ${C.border2};color:${C.text2};text-decoration:none">
@@ -682,29 +694,29 @@ ${cheaper.buyLink ? `<a href="${sanitizeUrl(cheaper.buyLink)}" target="_blank" r
 </div>`;
 
     const chips = state.tab === 'labs'
-        ? [chip('Hi-res', state.fHiRes, () => `App.toggleFlag('fHiRes')`), chip('Next day', state.fRush, () => `App.toggleFlag('fRush')`)]
+        ? [chip(escapeHtml(t('dcHiResScanLabel')), state.fHiRes, () => `App.toggleFlag('fHiRes')`), chip(escapeHtml(t('v2FilterNextDay')), state.fRush, () => `App.toggleFlag('fRush')`)]
         : [
-            `<button type="button" style="height:32px;padding:0 11px;display:flex;align-items:center;gap:6px;border-radius:8px;font:inherit;font-size:12px;background:${C.panel};border:1px solid ${C.border2};color:${C.sub}">${shootIso() ? 'ISO ' + shootIso() : 'Any ISO · cheapest first'}</button>`,
-            chip('± push/pull', state.includePush, () => `App.toggleFlag('includePush')`)
+            `<button type="button" style="height:32px;padding:0 11px;display:flex;align-items:center;gap:6px;border-radius:8px;font:inherit;font-size:12px;background:${C.panel};border:1px solid ${C.border2};color:${C.sub}">${shootIso() ? escapeHtml(t('v3IsoValue', { iso: shootIso() })) : escapeHtml(t('v3AnyIsoCheapestFirst'))}</button>`,
+            chip(escapeHtml(t('v3PushPullChip')), state.includePush, () => `App.toggleFlag('includePush')`)
         ];
 
     const totalLabs = Object.keys(getAllLabs()).filter(n => !getAllLabs()[n].hidden).length;
     const rows = state.tab === 'labs'
         ? r.ranked.map((x, i) => `<button type="button" onclick="App.openLibDetail(App.labDetail('${jsAttr(x.name)}'))" style="display:flex;align-items:center;gap:12px;width:100%;padding:14px 0;background:transparent;border:0;border-top:${i === 0 ? '2px solid ' + C.blue : '1px solid ' + C.border};font:inherit;text-align:left;cursor:pointer">
-<span style="flex:1;min-width:0"><span style="display:block;font-size:16px;color:${C.text}">${escapeHtml(x.name)}${x.name === state.homeLab ? ' · home' : ''}</span><span style="display:block;font-size:12px;color:${C.faint};margin-top:3px">${CUR()}${money(x.pick.devCost)} · ${escapeHtml(x.pick.label.toLowerCase())} · ${(turnaroundLabels[x.pick.turnaroundTime] || '').toLowerCase()}</span></span>
-<span style="text-align:right;flex:none"><span style="display:block;font-size:24px;font-weight:600;color:${i === 0 ? C.blue : C.text2}">${money(x.cpp)}</span><span style="display:block;font-size:11px;color:${i === 0 ? C.blue : C.faint};margin-top:2px">${i === 0 ? 'cheapest' : '+' + ((x.cpp - best.cpp) * 100).toFixed(1) + 'c'}</span></span>
+<span style="flex:1;min-width:0"><span style="display:block;font-size:16px;color:${C.text}">${escapeHtml(x.name)}${x.name === state.homeLab ? ' ' + escapeHtml(t('v3HomeSuffix')) : ''}</span><span style="display:block;font-size:12px;color:${C.faint};margin-top:3px">${CUR()}${money(x.pick.devCost)} · ${escapeHtml(x.pick.label.toLowerCase())} · ${(turnaroundLabels[x.pick.turnaroundTime] || '').toLowerCase()}</span></span>
+<span style="text-align:right;flex:none"><span style="display:block;font-size:24px;font-weight:600;color:${i === 0 ? C.blue : C.text2}">${money(x.cpp)}</span><span style="display:block;font-size:11px;color:${i === 0 ? C.blue : C.faint};margin-top:2px">${i === 0 ? escapeHtml(t('v3TagCheapestLower')) : '+' + ((x.cpp - best.cpp) * 100).toFixed(1) + 'c'}</span></span>
 <span style="color:${C.border3};font-size:18px;flex:none">›</span>
 </button>`).join('')
         : filmRows.map((row, i) => {
             const st = row.f;
             const meta = row.overLimit
-                ? 'ISO ' + st.boxSpeed + ' · ' + PROCESS_LABEL[st.process] + ' · past its ' + parseFloat(st.maxPushPull ?? 1) + '-stop limit'
+                ? t('v3MetaOverLimit', { iso: st.boxSpeed, process: PROCESS_LABEL[st.process], limit: parseFloat(st.maxPushPull ?? 1) })
                 : row.feeBlocked
-                    ? 'ISO ' + st.boxSpeed + ' · ' + PROCESS_LABEL[st.process] + ' · ' + (home ? home.name.split(' ')[0] : 'lab') + ' will not push'
-                    : 'ISO ' + st.boxSpeed + ' · ' + PROCESS_LABEL[st.process] + (row.stopsAbs ? ' · ' + (row.dir === 'push' ? '+' : '-') + row.stopsAbs + ' stop' : ' · native') + ' · ' + CUR() + money(row.perFrame) + '/frame';
+                    ? t('v3MetaFeeBlocked', { iso: st.boxSpeed, process: PROCESS_LABEL[st.process], lab: home ? home.name.split(' ')[0] : t('v3GenericLab') })
+                    : t('v3MetaNormal', { iso: st.boxSpeed, process: PROCESS_LABEL[st.process], pushPart: row.stopsAbs ? t('v3MetaPushPart', { sign: row.dir === 'push' ? '+' : '-', n: row.stopsAbs }) : t('v3MetaNativePart'), amount: CUR() + money(row.perFrame) });
             return `<button type="button" onclick="App.openLibDetail(App.filmDetail('${jsAttr(filmKeyOf(st))}'))" style="display:flex;align-items:center;gap:12px;width:100%;padding:14px 0;background:transparent;border:0;border-top:${i === 0 ? '2px solid ' + C.green : '1px solid ' + C.border};font:inherit;text-align:left;cursor:pointer">
-<span style="flex:1;min-width:0"><span style="display:block;font-size:16px;color:${row.overLimit ? C.sub : C.text}">${escapeHtml(st.name)}</span><span style="display:block;font-size:12px;color:${C.faint};margin-top:3px">${meta}</span></span>
-<span style="text-align:right;flex:none"><span style="display:block;font-size:24px;font-weight:600;color:${row.overLimit ? '#8a5c50' : (i === 0 ? C.green : C.text2)}">${money(row.perRoll)}</span><span style="display:block;font-size:11px;color:${C.faint};margin-top:2px">${CUR()}/roll</span></span>
+<span style="flex:1;min-width:0"><span style="display:block;font-size:16px;color:${row.overLimit ? C.sub : C.text}">${escapeHtml(st.name)}</span><span style="display:block;font-size:12px;color:${C.faint};margin-top:3px">${escapeHtml(meta)}</span></span>
+<span style="text-align:right;flex:none"><span style="display:block;font-size:24px;font-weight:600;color:${row.overLimit ? '#8a5c50' : (i === 0 ? C.green : C.text2)}">${money(row.perRoll)}</span><span style="display:block;font-size:11px;color:${C.faint};margin-top:2px">${escapeHtml(t('v3PerRollAmount', { amount: CUR() }))}</span></span>
 <span style="color:${C.border3};font-size:18px;flex:none">›</span>
 </button>`;
         }).join('');
@@ -712,18 +724,18 @@ ${cheaper.buyLink ? `<a href="${sanitizeUrl(cheaper.buyLink)}" target="_blank" r
     const labsList = `<div>
 <div style="margin:14px 20px 0">
 <div style="display:flex;gap:4px;padding:4px;background:${C.panel};border:1px solid ${C.border};border-radius:10px">
-<button type="button" onclick="App.setField('tab','labs')" style="flex:1;height:40px;border-radius:7px;border:0;display:flex;align-items:center;justify-content:center;gap:7px;font:inherit;font-size:13px;cursor:pointer;background:${state.tab === 'labs' ? '#1f2228' : 'transparent'};color:${state.tab === 'labs' ? C.text : C.sub};font-weight:${state.tab === 'labs' ? 600 : 400}">Labs <span style="font-size:11px;font-weight:400;color:${C.faint}">${r.ranked.length}</span></button>
-<button type="button" onclick="App.setField('tab','stock')" style="flex:1;height:40px;border-radius:7px;border:0;display:flex;align-items:center;justify-content:center;gap:7px;font:inherit;font-size:13px;cursor:pointer;background:${state.tab === 'stock' ? '#1f2228' : 'transparent'};color:${state.tab === 'stock' ? C.text : C.sub};font-weight:${state.tab === 'stock' ? 600 : 400}">Stock <span style="font-size:11px;font-weight:400;color:${C.faint}">${filmRows.length}</span></button>
+<button type="button" onclick="App.setField('tab','labs')" style="flex:1;height:40px;border-radius:7px;border:0;display:flex;align-items:center;justify-content:center;gap:7px;font:inherit;font-size:13px;cursor:pointer;background:${state.tab === 'labs' ? '#1f2228' : 'transparent'};color:${state.tab === 'labs' ? C.text : C.sub};font-weight:${state.tab === 'labs' ? 600 : 400}">${escapeHtml(t('v2SectionLabs'))} <span style="font-size:11px;font-weight:400;color:${C.faint}">${r.ranked.length}</span></button>
+<button type="button" onclick="App.setField('tab','stock')" style="flex:1;height:40px;border-radius:7px;border:0;display:flex;align-items:center;justify-content:center;gap:7px;font:inherit;font-size:13px;cursor:pointer;background:${state.tab === 'stock' ? '#1f2228' : 'transparent'};color:${state.tab === 'stock' ? C.text : C.sub};font-weight:${state.tab === 'stock' ? 600 : 400}">${escapeHtml(t('v3TabStock'))} <span style="font-size:11px;font-weight:400;color:${C.faint}">${filmRows.length}</span></button>
 </div>
 <div style="display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap">
 ${chips.join('')}
-<span style="margin-left:auto;font-size:11px;color:${C.faint}">${state.tab === 'labs' ? r.ranked.length + ' of ' + totalLabs + ' shown' : filmRows.length + ' stocks'}</span>
+<span style="margin-left:auto;font-size:11px;color:${C.faint}">${state.tab === 'labs' ? escapeHtml(t('v3LabsShownOfTotal', { shown: r.ranked.length, total: totalLabs })) : escapeHtml(t('v3StocksCount', { n: filmRows.length }))}</span>
 </div>
 <div style="margin-top:6px">
 ${rows || `<div style="margin-top:10px;padding:22px 18px;border:1px dashed ${C.border2};border-radius:10px;text-align:center">
-<div style="font-size:14px;font-weight:600;color:${C.text2}">${state.tab === 'labs' ? 'No labs match these filters' : 'No saved stock matches this combination'}</div>
-<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:6px">${state.tab === 'labs' ? 'Clear a filter above, or add a lab in the Library.' : escapeHtml(state.format) + ' · ' + escapeHtml(FILM_COLOR_LABEL[state.filmColor]) + ' has nothing in your library yet.'}</div>
-<button type="button" onclick="App.setView('library')" style="height:42px;padding:0 16px;margin-top:14px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text};font:inherit;font-size:13px;cursor:pointer">${state.tab === 'labs' ? '+ Add a lab' : '+ Add a film stock'}</button>
+<div style="font-size:14px;font-weight:600;color:${C.text2}">${state.tab === 'labs' ? escapeHtml(t('v3NoLabsMatchFilters')) : escapeHtml(t('v3NoStockMatchesCombination'))}</div>
+<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:6px">${state.tab === 'labs' ? escapeHtml(t('v3ClearFilterOrAddLab')) : escapeHtml(t('v3FormatColorEmptyLibrary', { format: state.format, color: FILM_COLOR_LABEL[state.filmColor] }))}</div>
+<button type="button" onclick="App.setView('library')" style="height:42px;padding:0 16px;margin-top:14px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text};font:inherit;font-size:13px;cursor:pointer">${state.tab === 'labs' ? escapeHtml(t('v2ButtonNewLab')) : escapeHtml(t('v3ButtonAddFilmStock'))}</button>
 </div>`}
 </div>
 </div>
@@ -731,21 +743,21 @@ ${rows || `<div style="margin-top:10px;padding:22px 18px;border:1px dashed ${C.b
 
     const actions = `<div style="padding:10px 20px 0">
 <div style="display:flex;gap:8px;margin-top:10px">
-<button type="button" onclick="App.openPost()" aria-label="Postage" title="Postage" style="flex:1;height:46px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;font:inherit;background:${state.mailBack ? C.accBg : 'transparent'};border:1px solid ${state.mailBack ? C.accBorder : C.border2};color:${state.mailBack ? C.acc : C.text2}">
+<button type="button" onclick="App.openPost()" aria-label="${escapeHtml(t('v3Postage'))}" title="${escapeHtml(t('v3Postage'))}" style="flex:1;height:46px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;font:inherit;background:${state.mailBack ? C.accBg : 'transparent'};border:1px solid ${state.mailBack ? C.accBorder : C.border2};color:${state.mailBack ? C.acc : C.text2}">
 <svg style="width:18px;height:18px" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"></rect><path stroke-linecap="round" stroke-linejoin="round" d="M3.5 7.5l8.5 6 8.5-6"></path></svg>
-<span style="font-size:10px;letter-spacing:.04em">${state.mailBack ? CUR() + money(homeFee) : 'Postage'}</span>
+<span style="font-size:10px;letter-spacing:.04em">${state.mailBack ? CUR() + money(homeFee) : escapeHtml(t('v3Postage'))}</span>
 </button>
-<button type="button" onclick="App.saveCurrentRoll()" aria-label="Save to library" title="Save to library" style="flex:1;height:46px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;cursor:pointer">
+<button type="button" onclick="App.saveCurrentRoll()" aria-label="${escapeHtml(t('v2ButtonSaveToLibrary'))}" title="${escapeHtml(t('v2ButtonSaveToLibrary'))}" style="flex:1;height:46px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;cursor:pointer">
 <svg style="width:18px;height:18px" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 4h11l3 3v13a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1z"></path><path stroke-linecap="round" d="M8 4v5h7M8 16h8"></path></svg>
-<span style="font-size:10px;letter-spacing:.04em">Save</span>
+<span style="font-size:10px;letter-spacing:.04em">${escapeHtml(t('v3ButtonSaveShort'))}</span>
 </button>
-<button type="button" onclick="App.openShare()" aria-label="Share link" title="Share link" style="flex:1;height:46px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;cursor:pointer">
+<button type="button" onclick="App.openShare()" aria-label="${escapeHtml(t('v2ButtonShareLink'))}" title="${escapeHtml(t('v2ButtonShareLink'))}" style="flex:1;height:46px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;cursor:pointer">
 <svg style="width:18px;height:18px" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 0L8 8m4-4l4 4M5 14v4a2 2 0 002 2h10a2 2 0 002-2v-4"></path></svg>
-<span style="font-size:10px;letter-spacing:.04em">Share</span>
+<span style="font-size:10px;letter-spacing:.04em">${escapeHtml(t('v3ButtonShareShort'))}</span>
 </button>
-<button type="button" onclick="App.clearAll()" aria-label="Clear" title="Clear" style="flex:1;height:46px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;cursor:pointer">
+<button type="button" onclick="App.clearAll()" aria-label="${escapeHtml(t('v2ButtonClear'))}" title="${escapeHtml(t('v2ButtonClear'))}" style="flex:1;height:46px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;cursor:pointer">
 <svg style="width:18px;height:18px" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"></path></svg>
-<span style="font-size:10px;letter-spacing:.04em">Clear</span>
+<span style="font-size:10px;letter-spacing:.04em">${escapeHtml(t('v2ButtonClear'))}</span>
 </button>
 </div>
 </div>`;
@@ -753,16 +765,16 @@ ${rows || `<div style="margin-top:10px;padding:22px 18px;border:1px dashed ${C.b
     const left = `<div>
 <div style="padding:4px 20px 0;display:flex;gap:10px">
 <label style="flex:1;display:block">
-<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Box speed</div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v2LabelBoxSpeed'))}</div>
 <div style="height:56px;background:${C.panel};border:1px solid ${C.border};border-radius:8px;display:flex;align-items:center;justify-content:flex-end;padding:0 12px">
-<input type="text" inputmode="numeric" value="${escapeHtml(state.boxSpeed)}" onchange="App.setField('boxSpeed',this.value)" aria-label="Box speed" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:28px;font-weight:600;color:${C.text}">
+<input type="text" inputmode="numeric" value="${escapeHtml(state.boxSpeed)}" onchange="App.setField('boxSpeed',this.value)" aria-label="${escapeHtml(t('v2LabelBoxSpeed'))}" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:28px;font-weight:600;color:${C.text}">
 </div>
 </label>
 <label style="flex:1.25;display:block">
-<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Pack price</div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v3PackPrice'))}</div>
 <div style="height:56px;background:${C.panel};border:1px solid ${C.acc};border-radius:8px;display:flex;align-items:center;gap:3px;padding:0 12px">
 <span style="font-size:17px;color:${C.sub}">${CUR()}</span>
-<input type="text" inputmode="decimal" value="${escapeHtml(state.packCost)}" onchange="App.setField('packCost',this.value)" aria-label="Pack price" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:28px;font-weight:600;color:${C.text}">
+<input type="text" inputmode="decimal" value="${escapeHtml(state.packCost)}" onchange="App.setField('packCost',this.value)" aria-label="${escapeHtml(t('v3PackPrice'))}" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:28px;font-weight:600;color:${C.text}">
 </div>
 </label>
 </div>
@@ -773,10 +785,10 @@ ${!desktop ? `<div style="padding:10px 20px 0">
 <span style="font-size:13px;color:${C.text}">${escapeHtml(state.format)}</span><span style="color:${C.border3}">·</span><span style="font-size:13px;color:${C.text}">${escapeHtml(FILM_COLOR_LABEL[state.filmColor])}</span><span style="color:${C.border3}">·</span><span style="font-size:13px;color:${C.acc}">${escapeHtml(PROCESS_LABEL[state.process])}</span>
 </span>
 <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-<span style="font-size:12px;color:${C.sub}">${state.rolls} roll${state.rolls === '1' ? '' : 's'}</span><span style="color:${C.border3}">·</span><span style="font-size:12px;color:${C.sub}">${exposuresPerRoll()} exp</span>
+<span style="font-size:12px;color:${C.sub}">${escapeHtml(t(state.rolls === '1' ? 'v3RollsCountOne' : 'v3RollsCount', { n: state.rolls }))}</span><span style="color:${C.border3}">·</span><span style="font-size:12px;color:${C.sub}">${escapeHtml(t('v3ExpCount', { n: exposuresPerRoll() }))}</span>
 </span>
 </span>
-<span style="font-size:12px;color:${C.sub};white-space:nowrap">Change ›</span>
+<span style="font-size:12px;color:${C.sub};white-space:nowrap">${escapeHtml(t('v3ChangeChevron'))}</span>
 </button>
 </div>` : `<div style="padding:10px 20px 0">${viewRollDetails()}</div>`}
 ${actions}
@@ -816,63 +828,63 @@ function viewRollDetails() {
 
     const body = `<div style="display:flex;flex-direction:column;gap:14px">
 <div>
-<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Format</div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('formatLabel'))}</div>
 <div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${seg(FORMATS, state.format, l => `App.setFormat('${l}')`)}</div>
 </div>
 <div>
-<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Film type</div>
-<div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${seg(FILM_COLORS, FILM_COLOR_LABEL[state.filmColor], l => `App.setFilmColor('${l}')`)}</div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v3FilmTypeLabel'))}</div>
+<div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${seg([['Colour', t('v3FilmColorColour')], ['B&W', t('v3FilmColorBW')], ['Speciality', t('v3FilmColorSpeciality')]], FILM_COLOR_LABEL[state.filmColor], l => `App.setFilmColor('${l}')`)}</div>
 </div>
 <div>
-<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Development</div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v3DevelopmentLabel'))}</div>
 <div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${seg(PROCESSES, PROCESS_LABEL[state.process], l => `App.setField('process','${PROCESS_VALUE[l]}')`)}</div>
 </div>
 <div style="display:flex;gap:10px">
 <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:5px;margin-bottom:6px">
 ${overLimit ? `<svg style="width:13px;height:13px;flex:none;color:${C.red}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5L2.8 20h18.4L12 4.5z"></path><path stroke-linecap="round" d="M12 10v4.2"></path><circle cx="12" cy="17.2" r="1" fill="currentColor" stroke="none"></circle></svg>` : ''}
-<span style="font-size:11px;color:${overLimit ? C.red : C.sub}">Push / pull</span>
+<span style="font-size:11px;color:${overLimit ? C.red : C.sub}">${escapeHtml(t('v2LabelPushPull'))}</span>
 </div>
 <div style="display:flex;align-items:center;gap:2px;height:44px;background:${C.field};border:1px solid ${overLimit ? C.redBorder : C.border};border-radius:8px;padding:3px;box-sizing:border-box">
-<button type="button" onclick="App.incField('pushPull',-1,-3,3)" aria-label="One stop less" style="width:38px;height:36px;flex:none;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:19px;font-weight:600;line-height:1;cursor:pointer">−</button>
+<button type="button" onclick="App.incField('pushPull',-1,-3,3)" aria-label="${escapeHtml(t('v3OneStopLess'))}" style="width:38px;height:36px;flex:none;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:19px;font-weight:600;line-height:1;cursor:pointer">−</button>
 <span style="flex:1;text-align:center;font-size:18px;font-weight:700;color:${overLimit ? C.red : C.text}">${stops > 0 ? '+' + stops : stops}</span>
-<button type="button" onclick="App.incField('pushPull',1,-3,3)" aria-label="One stop more" style="width:38px;height:36px;flex:none;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:19px;font-weight:600;line-height:1;cursor:pointer">+</button>
+<button type="button" onclick="App.incField('pushPull',1,-3,3)" aria-label="${escapeHtml(t('v3OneStopMore'))}" style="width:38px;height:36px;flex:none;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:19px;font-weight:600;line-height:1;cursor:pointer">+</button>
 </div>
 </div>
-<label style="flex:1;display:block"><div style="font-size:11px;color:${C.sub};margin-bottom:6px">Camera</div><select onchange="App.setField('frame35',this.value)" ${cameraDisabled ? 'disabled' : ''} aria-label="Camera type" style="width:100%;box-sizing:border-box;height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};opacity:${cameraDisabled ? '.45' : '1'};cursor:${cameraDisabled ? 'not-allowed' : 'pointer'}">${Object.keys(FRAME35).map(k => `<option value="${k}" ${state.frame35 === k ? 'selected' : ''}>${FRAME35[k].label}</option>`).join('')}</select></label>
+<label style="flex:1;display:block"><div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v3CameraLabel'))}</div><select onchange="App.setField('frame35',this.value)" ${cameraDisabled ? 'disabled' : ''} aria-label="${escapeHtml(t('v3CameraTypeLabel'))}" style="width:100%;box-sizing:border-box;height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};opacity:${cameraDisabled ? '.45' : '1'};cursor:${cameraDisabled ? 'not-allowed' : 'pointer'}">${Object.keys(FRAME35).map(k => `<option value="${k}" ${state.frame35 === k ? 'selected' : ''}>${escapeHtml(t(FRAME35_KEY[k]))}</option>`).join('')}</select></label>
 </div>
-<div style="font-size:12px;line-height:1.5;color:${overLimit ? C.red : C.faint}">${overLimit ? 'Shooting at ISO ' + shotIso + ' — beyond ' + pushLimit + ' stop' + (pushLimit === 1 ? '' : 's') + ', most labs will not guarantee the result.' : (stops === 0 ? 'Developed at box speed.' : 'Shooting at ISO ' + shotIso + ' — labs that do not push are hidden.')}</div>
+<div style="font-size:12px;line-height:1.5;color:${overLimit ? C.red : C.faint}">${overLimit ? escapeHtml(t(pushLimit === 1 ? 'v3PushOverLimitOne' : 'v3PushOverLimit', { iso: shotIso, limit: pushLimit })) : (stops === 0 ? escapeHtml(t('v3DevelopedAtBoxSpeed')) : escapeHtml(t('v3ShootingAtIsoHidden', { iso: shotIso })))}</div>
 <div style="height:1px;background:${C.border}"></div>
 <div>
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-<span style="font-size:11px;color:${C.sub}">Rolls in the pack</span>
+<span style="font-size:11px;color:${C.sub}">${escapeHtml(t('v3RollsInThePack'))}</span>
 <span style="display:flex;align-items:center;gap:2px;background:${C.field};border:1px solid ${C.border};border-radius:9px;padding:3px">
-<button type="button" onclick="App.incField('rolls',-1,1,99)" aria-label="One roll fewer" style="width:40px;height:38px;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:20px;font-weight:600;line-height:1;cursor:pointer">−</button>
-<input type="text" inputmode="numeric" value="${escapeHtml(state.rolls)}" onchange="App.setField('rolls',this.value)" aria-label="Rolls in the pack" style="width:46px;height:38px;background:transparent;border:0;outline:none;text-align:center;font:inherit;font-size:20px;font-weight:700;color:${C.text}">
-<button type="button" onclick="App.incField('rolls',1,1,99)" aria-label="One roll more" style="width:40px;height:38px;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:20px;font-weight:600;line-height:1;cursor:pointer">+</button>
+<button type="button" onclick="App.incField('rolls',-1,1,99)" aria-label="${escapeHtml(t('v3OneRollFewer'))}" style="width:40px;height:38px;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:20px;font-weight:600;line-height:1;cursor:pointer">−</button>
+<input type="text" inputmode="numeric" value="${escapeHtml(state.rolls)}" onchange="App.setField('rolls',this.value)" aria-label="${escapeHtml(t('v3RollsInThePack'))}" style="width:46px;height:38px;background:transparent;border:0;outline:none;text-align:center;font:inherit;font-size:20px;font-weight:700;color:${C.text}">
+<button type="button" onclick="App.incField('rolls',1,1,99)" aria-label="${escapeHtml(t('v3OneRollMore'))}" style="width:40px;height:38px;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:20px;font-weight:600;line-height:1;cursor:pointer">+</button>
 </span>
 </div>
 </div>
 <div>
-<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Postage</div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v3Postage'))}</div>
 <div style="height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;display:flex;align-items:center;gap:3px;padding:0 12px">
 <span style="font-size:15px;color:${C.sub}">$</span>
-<input type="text" inputmode="decimal" value="${escapeHtml(state.postage)}" onchange="App.setField('postage',this.value)" aria-label="Postage" placeholder="3.95" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:17px;font-weight:600;color:${C.text}">
+<input type="text" inputmode="decimal" value="${escapeHtml(state.postage)}" onchange="App.setField('postage',this.value)" aria-label="${escapeHtml(t('v3Postage'))}" placeholder="3.95" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:17px;font-weight:600;color:${C.text}">
 </div>
-<div style="font-size:11px;line-height:1.5;color:${C.faint};margin-top:4px">Shipping to receive the pack, split across the rolls in it.</div>
+<div style="font-size:11px;line-height:1.5;color:${C.faint};margin-top:4px">${escapeHtml(t('v3PostageHelp'))}</div>
 </div>
 <div>
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
-<span style="min-width:0"><span style="display:block;font-size:11px;color:${C.sub}">${state.format === '120' ? 'Camera back' : (state.format === 'Sheet' ? 'Frames per sheet' : 'Exposures on the roll')}</span><span style="display:block;font-size:11px;line-height:1.4;color:${C.faint};margin-top:2px">${state.format === '35mm' && state.frame35 !== 'full' ? '→ ' + framesShot() + ' frames' : ''}</span></span>
+<span style="min-width:0"><span style="display:block;font-size:11px;color:${C.sub}">${state.format === '120' ? escapeHtml(t('v3CameraBackLabel')) : (state.format === 'Sheet' ? escapeHtml(t('v3FramesPerSheetLabel')) : escapeHtml(t('v3ExposuresOnRollLabel')))}</span><span style="display:block;font-size:11px;line-height:1.4;color:${C.faint};margin-top:2px">${state.format === '35mm' && state.frame35 !== 'full' ? escapeHtml(t('v3FramesShotArrow', { n: framesShot() })) : ''}</span></span>
 ${(state.format === '35mm' || state.format === '127' || state.format === '220') ? `<span style="display:flex;align-items:center;gap:2px;background:${C.field};border:1px solid ${C.border};border-radius:9px;padding:3px">
-<button type="button" onclick="App.incField('exposures',-1,1,99)" aria-label="One exposure fewer" style="width:40px;height:38px;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:20px;font-weight:600;line-height:1;cursor:pointer">−</button>
-<input type="text" inputmode="numeric" value="${escapeHtml(state.exposures)}" onchange="App.setField('exposures',this.value)" aria-label="Exposures on the roll" style="width:46px;height:38px;background:transparent;border:0;outline:none;text-align:center;font:inherit;font-size:20px;font-weight:700;color:${C.text}">
-<button type="button" onclick="App.incField('exposures',1,1,99)" aria-label="One exposure more" style="width:40px;height:38px;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:20px;font-weight:600;line-height:1;cursor:pointer">+</button>
+<button type="button" onclick="App.incField('exposures',-1,1,99)" aria-label="${escapeHtml(t('v3OneExposureFewer'))}" style="width:40px;height:38px;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:20px;font-weight:600;line-height:1;cursor:pointer">−</button>
+<input type="text" inputmode="numeric" value="${escapeHtml(state.exposures)}" onchange="App.setField('exposures',this.value)" aria-label="${escapeHtml(t('v3ExposuresOnRollLabel'))}" style="width:46px;height:38px;background:transparent;border:0;outline:none;text-align:center;font:inherit;font-size:20px;font-weight:700;color:${C.text}">
+<button type="button" onclick="App.incField('exposures',1,1,99)" aria-label="${escapeHtml(t('v3OneExposureMore'))}" style="width:40px;height:38px;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:20px;font-weight:600;line-height:1;cursor:pointer">+</button>
 </span>` : `<span style="font-size:20px;font-weight:700;color:${C.text}">${exp}</span>`}
 </div>
 ${state.format === '120' ? `<div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px;flex-wrap:wrap">
-${Object.keys(FRAME120).map(k => `<button type="button" onclick="App.setField('frame120','${k}')" style="flex:1;min-width:70px;height:44px;border-radius:6px;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:${state.frame120 === k ? '#1f2228' : 'transparent'};border:${state.frame120 === k ? '1px solid ' + C.border3 : '0'};color:${state.frame120 === k ? C.text : C.sub};font-weight:${state.frame120 === k ? 600 : 400}"><span style="font-size:13px">${k.replace('x', '×')}</span><span style="font-size:10px;font-weight:400;color:${C.faint}">${FRAME120[k]} exp</span></button>`).join('')}
+${Object.keys(FRAME120).map(k => `<button type="button" onclick="App.setField('frame120','${k}')" style="flex:1;min-width:70px;height:44px;border-radius:6px;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:${state.frame120 === k ? '#1f2228' : 'transparent'};border:${state.frame120 === k ? '1px solid ' + C.border3 : '0'};color:${state.frame120 === k ? C.text : C.sub};font-weight:${state.frame120 === k ? 600 : 400}"><span style="font-size:13px">${k.replace('x', '×')}</span><span style="font-size:10px;font-weight:400;color:${C.faint}">${escapeHtml(t('v3ExpCount', { n: FRAME120[k] }))}</span></button>`).join('')}
 </div>` : ''}
-${state.format === '110' || state.format === 'Sheet' ? `<div style="font-size:12px;color:${C.faint};line-height:1.5">${state.format === '110' ? '110 cartridges are always 24 exposures.' : 'Sheet film is priced one frame per sheet.'}</div>` : ''}
+${state.format === '110' || state.format === 'Sheet' ? `<div style="font-size:12px;color:${C.faint};line-height:1.5">${state.format === '110' ? escapeHtml(t('v3The110AlwaysNote')) : escapeHtml(t('v3SheetPricedOneFrameNote'))}</div>` : ''}
 </div>
 </div>`;
 
@@ -882,11 +894,11 @@ ${state.format === '110' || state.format === 'Sheet' ? `<div style="font-size:12
 <div role="dialog" aria-modal="true" style="position:relative;background:#131518;border-top:1px solid #2f333a;border-radius:18px 18px 0 0;padding:8px 20px 22px;box-shadow:0 -18px 40px rgba(0,0,0,.45)">
 <div style="width:38px;height:4px;border-radius:2px;background:${C.border3};margin:0 auto 14px"></div>
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-<span style="font-size:16px;font-weight:700;color:${C.text}">Roll details</span>
-<button type="button" onclick="App.closeModal()" aria-label="Close" style="width:32px;height:32px;border-radius:8px;background:#1f2228;border:0;color:${C.sub};font:inherit;font-size:15px;line-height:1;cursor:pointer">✕</button>
+<span style="font-size:16px;font-weight:700;color:${C.text}">${escapeHtml(t('v3RollDetailsHeading'))}</span>
+<button type="button" onclick="App.closeModal()" aria-label="${escapeHtml(t('closeLabel'))}" style="width:32px;height:32px;border-radius:8px;background:#1f2228;border:0;color:${C.sub};font:inherit;font-size:15px;line-height:1;cursor:pointer">✕</button>
 </div>
 ${body}
-<button type="button" onclick="App.closeModal()" style="width:100%;height:48px;margin-top:18px;border-radius:10px;background:${C.text};border:0;color:${C.shell};font:inherit;font-size:13px;font-weight:700;cursor:pointer">Done</button>
+<button type="button" onclick="App.closeModal()" style="width:100%;height:48px;margin-top:18px;border-radius:10px;background:${C.text};border:0;color:${C.shell};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${escapeHtml(t('v2ButtonDone'))}</button>
 </div>
 </div>`;
 }
@@ -895,34 +907,34 @@ function viewExpired() {
     const desktop = state.desktop;
     const ex = computeExpired();
     const form = `<div style="max-width:${desktop ? '560px' : 'none'}">
-<p style="margin:0 0 14px;font-size:14px;line-height:1.55;color:${C.sub}">Old film loses speed as it ages. Enter the roll's box speed and expiry date, and this gives you what to rate it at.</p>
+<p style="margin:0 0 14px;font-size:14px;line-height:1.55;color:${C.sub}">${escapeHtml(t('v3ExpiredIntro'))}</p>
 <div style="display:flex;gap:10px">
 <label style="flex:1;display:block">
-<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Box speed</div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v2LabelBoxSpeed'))}</div>
 <div style="height:56px;background:${C.panel};border:1px solid ${C.border};border-radius:8px;display:flex;align-items:center;padding:0 12px">
-<input type="text" inputmode="numeric" value="${escapeHtml(state.expBox)}" onchange="App.setField('expBox',this.value)" aria-label="Box speed" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:28px;font-weight:600;color:${C.text}">
+<input type="text" inputmode="numeric" value="${escapeHtml(state.expBox)}" onchange="App.setField('expBox',this.value)" aria-label="${escapeHtml(t('v2LabelBoxSpeed'))}" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:28px;font-weight:600;color:${C.text}">
 </div>
 </label>
 <label style="flex:1.25;display:block">
-<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Expired</div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v3ExpiredFieldLabel'))}</div>
 <div style="height:56px;background:${C.panel};border:1px solid ${C.acc};border-radius:8px;display:flex;align-items:center;gap:6px;padding:0 10px 0 12px">
-<select onchange="App.setField('expMonth',this.value)" aria-label="Expiry month" style="background:transparent;border:0;outline:none;font:inherit;font-size:15px;color:${C.text2};cursor:pointer">${MONTHS.map(m => `<option value="${m}" ${state.expMonth === m ? 'selected' : ''}>${m}</option>`).join('')}</select>
-<input type="text" inputmode="numeric" value="${escapeHtml(state.expYear)}" onchange="App.setField('expYear',this.value)" aria-label="Expiry year" placeholder="2006" style="width:100%;min-width:0;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:28px;font-weight:600;color:${C.text}">
+<select onchange="App.setField('expMonth',this.value)" aria-label="${escapeHtml(t('v3ExpiryMonth'))}" style="background:transparent;border:0;outline:none;font:inherit;font-size:15px;color:${C.text2};cursor:pointer">${MONTHS.map(m => `<option value="${m}" ${state.expMonth === m ? 'selected' : ''}>${m}</option>`).join('')}</select>
+<input type="text" inputmode="numeric" value="${escapeHtml(state.expYear)}" onchange="App.setField('expYear',this.value)" aria-label="${escapeHtml(t('v3ExpiryYear'))}" placeholder="2006" style="width:100%;min-width:0;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:28px;font-weight:600;color:${C.text}">
 </div>
 </label>
 </div>
 <div style="margin-top:14px">
-<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Development</div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v3DevelopmentLabel'))}</div>
 <div style="display:flex;gap:4px;padding:4px;background:${C.panel};border:1px solid ${C.border};border-radius:9px">${seg(EXPIRED_PROCESSES.map(p => p[0]), EXPIRED_PROCESSES.find(p => p[1] === state.expProcess)[0], l => `App.setField('expProcess','${EXPIRED_PROCESSES.find(p => p[0] === l)[1]}')`)}</div>
 </div>
 <div style="margin-top:14px">
-<div style="font-size:11px;color:${C.sub};margin-bottom:6px">How it was stored</div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v3HowStoredLabel'))}</div>
 <div style="display:flex;flex-direction:column;gap:6px">
 ${STORAGE_OPTIONS.map(([label, value, help]) => {
     const on = state.storage === value;
     return `<button type="button" onclick="App.setField('storage','${value}')" style="width:100%;text-align:left;border-radius:10px;padding:12px 14px;cursor:pointer;font:inherit;background:${on ? C.accBg : C.panel};border:1px solid ${on ? C.accBorder : C.border}">
-<span style="display:block;font-size:15px;color:${on ? C.acc : C.text2}">${label}</span>
-<span style="display:block;font-size:12px;line-height:1.45;color:${C.faint};margin-top:4px">${help}</span>
+<span style="display:block;font-size:15px;color:${on ? C.acc : C.text2}">${escapeHtml(t(STORAGE_LABEL_KEY[value]))}</span>
+<span style="display:block;font-size:12px;line-height:1.45;color:${C.faint};margin-top:4px">${escapeHtml(t(STORAGE_HELP_KEY[value]))}</span>
 </button>`;
 }).join('')}
 </div>
@@ -930,14 +942,14 @@ ${STORAGE_OPTIONS.map(([label, value, help]) => {
 </div>`;
     const result = `<div style="max-width:${desktop ? '560px' : 'none'}">
 <div style="margin-top:16px;padding:18px 20px;background:${C.panel};border:1px solid ${C.border};border-radius:10px">
-<div style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.acc}">Rate it at</div>
-<div style="font-size:56px;font-weight:700;line-height:.9;color:${C.text};letter-spacing:-.03em;margin-top:8px">${ex.rated}</div>
+<div style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.acc}">${escapeHtml(t('v2ExpiredRateItAt'))}</div>
+<div style="font-size:56px;font-weight:700;line-height:.9;color:${C.text};letter-spacing:-.03em;margin-top:8px">${escapeHtml(ex.rated)}</div>
 <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid ${C.border}">
-<span style="font-size:13px;color:${C.text2}">${ex.note}</span>
-<span style="font-size:12px;color:${C.faint}">${ex.age}</span>
+<span style="font-size:13px;color:${C.text2}">${escapeHtml(ex.note)}</span>
+<span style="font-size:12px;color:${C.faint}">${escapeHtml(ex.age)}</span>
 </div>
 </div>
-<p style="margin:12px 0 0;font-size:12px;line-height:1.55;color:${C.faint}">A guide, not a rule — bracket a frame either side if the roll matters.</p>
+<p style="margin:12px 0 0;font-size:12px;line-height:1.55;color:${C.faint}">${escapeHtml(t('v3ExpiredGuideNote'))}</p>
 </div>`;
     return `<div style="padding:6px 20px 0;display:grid;grid-template-columns:${desktop ? '1fr 1fr' : '1fr'};gap:20px;align-items:start">${form}${result}</div>`;
 }
@@ -953,68 +965,72 @@ function viewSettings() {
     const desktop = state.desktop;
     const labNames = Object.keys(getAllLabs()).filter(n => !getAllLabs()[n].hidden);
     const home = rankLabs().ranked.find(l => l.name === state.homeLab) || rankLabs().ranked[0];
-    const tierLabels = ['Cheapest that qualifies'].concat(
-        [...new Set(Object.values(getAllLabs()).flatMap(l => normalizeLabServices(l).map((t, i) => ((Array.isArray(l.services) ? l.services : [l])[i] || {}).label || tierDescription(t))))]
+    // Stable internal marker, never displayed directly — kept untranslated
+    // so the <option value>/state.tier comparison below can't drift once a
+    // locale actually translates v3CheapestThatQualifies to something else.
+    const CHEAPEST_QUALIFYING = '__cheapest_that_qualifies__';
+    const tierLabels = [CHEAPEST_QUALIFYING].concat(
+        [...new Set(Object.values(getAllLabs()).flatMap(l => normalizeLabServices(l).map((tier, i) => ((Array.isArray(l.services) ? l.services : [l])[i] || {}).label || tierDescription(tier))))]
     );
     const allFilms = getAllFilms(), allLabs = getAllLabs();
     const hiddenFilms = Object.values(allFilms).filter(f => f.hidden);
     const hiddenLabs = Object.values(allLabs).filter(l => l.hidden);
 
     const cards = [
-        settingsCard('Appearance', `<div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${seg(['System', 'Light', 'Dark'], themeLabel(), l => `App.setTheme('${l.toLowerCase()}')`)}</div>
-<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:8px">System follows your device's light/dark setting automatically.</div>`),
+        settingsCard(escapeHtml(t('appearanceHeading')), `<div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${seg([['system', t('v3ThemeSystem')], ['light', t('v3ThemeLight')], ['dark', t('v3ThemeDark')]], state.theme, v => `App.setTheme('${v}')`)}</div>
+<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:8px">${escapeHtml(t('v3ThemeSystemHelp'))}</div>`),
 
-        settingsCard('Language', `<select onchange="App.setLanguage(this.value)" aria-label="Language" style="width:100%;height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer">${LANGUAGE_OPTIONS.map(([code, label]) => `<option value="${code}" ${state.language === code ? 'selected' : ''}>${label}</option>`).join('')}</select>
-<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:8px">Translations are community-contributed and may lag behind English. This preview's own copy is English-only for now.</div>`),
+        settingsCard(escapeHtml(t('v2SettingsLanguage')), `<select onchange="App.setLanguage(this.value)" aria-label="${escapeHtml(t('v2SettingsLanguage'))}" style="width:100%;height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer">${LANGUAGE_OPTIONS.map(([code, label]) => `<option value="${code}" ${currentLocale === code ? 'selected' : ''}>${label}</option>`).join('')}</select>
+<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:8px">${escapeHtml(t('v3TranslationsDisclaimer'))}</div>`),
 
-        settingsCard('Home lab', `<select onchange="App.setField('homeLab',this.value)" aria-label="Home lab" style="width:100%;height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer"><option value="">— pick a lab —</option>${labNames.map(n => `<option value="${escapeHtml(n)}" ${state.homeLab === n ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('')}</select>
-<div style="font-size:11px;color:${C.sub};margin:12px 0 6px">Preferred service tier</div>
-<select onchange="App.setField('tier',this.value)" aria-label="Preferred service tier" style="width:100%;height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer">${tierLabels.map(l => `<option value="${escapeHtml(l === 'Cheapest that qualifies' ? '' : l)}" ${((state.tier || 'Cheapest that qualifies') === l) ? 'selected' : ''}>${escapeHtml(l)}</option>`).join('')}</select>
-<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:8px">${home && home.pick ? 'At ' + escapeHtml(home.name) + ' that is ' + escapeHtml(home.pick.label.toLowerCase()) + ', ' + CUR() + money(home.pick.devCost) + '.' : 'Used whenever a lab offers it, otherwise its cheapest qualifying tier.'}</div>`),
+        settingsCard(escapeHtml(t('v2SettingsHomeLab')), `<select onchange="App.setField('homeLab',this.value)" aria-label="${escapeHtml(t('v2SettingsHomeLab'))}" style="width:100%;height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer"><option value="">${escapeHtml(t('v3PickALab'))}</option>${labNames.map(n => `<option value="${escapeHtml(n)}" ${state.homeLab === n ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('')}</select>
+<div style="font-size:11px;color:${C.sub};margin:12px 0 6px">${escapeHtml(t('v2SetupPreferredTier'))}</div>
+<select onchange="App.setField('tier',this.value)" aria-label="${escapeHtml(t('v2SetupPreferredTier'))}" style="width:100%;height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer">${tierLabels.map(l => `<option value="${escapeHtml(l === CHEAPEST_QUALIFYING ? '' : l)}" ${((state.tier || CHEAPEST_QUALIFYING) === l) ? 'selected' : ''}>${escapeHtml(l === CHEAPEST_QUALIFYING ? t('v3CheapestThatQualifies') : l)}</option>`).join('')}</select>
+<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:8px">${home && home.pick ? escapeHtml(t('v3HomeTierSummary', { name: home.name, tier: home.pick.label.toLowerCase(), amount: CUR() + money(home.pick.devCost) })) : escapeHtml(t('v3HomeTierDefaultNote'))}</div>`),
 
-        settingsCard('Calculator', `<div style="display:flex;gap:10px">
-<label style="flex:1;display:block"><div style="font-size:11px;color:${C.sub};margin-bottom:6px">Upgrade threshold</div><div style="height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;display:flex;align-items:center;gap:4px;padding:0 12px"><input type="text" inputmode="numeric" value="${escapeHtml(state.upgradePct)}" onchange="App.setField('upgradePct',this.value)" aria-label="Upgrade threshold percent" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:17px;font-weight:600;color:${C.text}"><span style="font-size:13px;color:${C.faint}">%</span></div></label>
-<label style="flex:1;display:block"><div style="font-size:11px;color:${C.sub};margin-bottom:6px">Mail-back rolls</div><div style="height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;display:flex;align-items:center;padding:0 12px"><input type="text" inputmode="numeric" value="${escapeHtml(state.postRolls)}" onchange="App.setField('postRolls',this.value)" aria-label="Mail-back roll count" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:17px;font-weight:600;color:${C.text}"></div></label>
+        settingsCard(escapeHtml(t('v2SettingsCalculator')), `<div style="display:flex;gap:10px">
+<label style="flex:1;display:block"><div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v2SettingsUpgradePct'))}</div><div style="height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;display:flex;align-items:center;gap:4px;padding:0 12px"><input type="text" inputmode="numeric" value="${escapeHtml(state.upgradePct)}" onchange="App.setField('upgradePct',this.value)" aria-label="${escapeHtml(t('v2SettingsUpgradePct'))}" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:17px;font-weight:600;color:${C.text}"><span style="font-size:13px;color:${C.faint}">%</span></div></label>
+<label style="flex:1;display:block"><div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v2SettingsMailRolls'))}</div><div style="height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;display:flex;align-items:center;padding:0 12px"><input type="text" inputmode="numeric" value="${escapeHtml(state.postRolls)}" onchange="App.setField('postRolls',this.value)" aria-label="${escapeHtml(t('v2SettingsMailRolls'))}" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:17px;font-weight:600;color:${C.text}"></div></label>
 </div>`),
 
-        settingsCard('Hidden presets', `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.sub}"></span><span style="font-size:12px;color:${C.faint}">${hiddenFilms.length + hiddenLabs.length ? hiddenFilms.length + hiddenLabs.length + ' hidden' : 'None hidden'}</span></div>
-${!hiddenFilms.length && !hiddenLabs.length ? `<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:8px">Nothing hidden. Hide a film or lab in the library to keep it out of lookups without deleting it.</div>` : `<div style="margin-top:8px">
-${hiddenFilms.map(f => `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid ${C.border}"><span style="font-size:13px;color:${C.text2}">${escapeHtml(f.name)}</span><button type="button" onclick="App.unhide('film','${jsAttr(filmKeyOf(f))}')" style="height:34px;padding:0 12px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:12px;cursor:pointer">Unhide</button></div>`).join('')}
-${hiddenLabs.map(l => `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid ${C.border}"><span style="font-size:13px;color:${C.text2}">${escapeHtml(l.name)}</span><button type="button" onclick="App.unhide('lab','${jsAttr(l.name)}')" style="height:34px;padding:0 12px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:12px;cursor:pointer">Unhide</button></div>`).join('')}
+        settingsCard(escapeHtml(t('v2SettingsHiddenPresets')), `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.sub}"></span><span style="font-size:12px;color:${C.faint}">${hiddenFilms.length + hiddenLabs.length ? escapeHtml(t('v3HiddenCount', { n: hiddenFilms.length + hiddenLabs.length })) : escapeHtml(t('v3NoneHidden'))}</span></div>
+${!hiddenFilms.length && !hiddenLabs.length ? `<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:8px">${escapeHtml(t('v3NothingHiddenNote'))}</div>` : `<div style="margin-top:8px">
+${hiddenFilms.map(f => `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid ${C.border}"><span style="font-size:13px;color:${C.text2}">${escapeHtml(f.name)}</span><button type="button" onclick="App.unhide('film','${jsAttr(filmKeyOf(f))}')" style="height:34px;padding:0 12px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:12px;cursor:pointer">${escapeHtml(t('v3ButtonUnhide'))}</button></div>`).join('')}
+${hiddenLabs.map(l => `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid ${C.border}"><span style="font-size:13px;color:${C.text2}">${escapeHtml(l.name)}</span><button type="button" onclick="App.unhide('lab','${jsAttr(l.name)}')" style="height:34px;padding:0 12px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:12px;cursor:pointer">${escapeHtml(t('v3ButtonUnhide'))}</button></div>`).join('')}
 </div>`}`),
 
-        settingsCard('Starter presets', `<div style="display:flex;flex-direction:column;gap:6px">${(state.presetRegions || []).slice(0, 8).map(r => {
+        settingsCard(escapeHtml(t('v2SettingsStarterPresets')), `<div style="display:flex;flex-direction:column;gap:6px">${(state.presetRegions || []).slice(0, 8).map(r => {
             const on = state.presetChecked.has(r.label);
             return `<button type="button" onclick="App.togglePreset('${jsAttr(r.label)}')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:42px;padding:0 12px;border-radius:8px;font:inherit;font-size:13px;cursor:pointer;text-align:left;background:${on ? C.accBg : C.field};border:1px solid ${on ? C.accBorder : C.border};color:${on ? C.acc : C.text2}">${escapeHtml(r.label)} <span>${on ? '✓' : ''}</span></button>`;
-        }).join('') || `<div style="font-size:12px;color:${C.faint}">Loading regions…</div>`}</div>
+        }).join('') || `<div style="font-size:12px;color:${C.faint}">${escapeHtml(t('v3LoadingRegions'))}</div>`}</div>
 <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px">
-<span style="font-size:12px;color:${C.faint}">${state.presetChecked.size} region${state.presetChecked.size === 1 ? '' : 's'} selected</span>
-<button type="button" onclick="App.importPresets()" style="height:40px;padding:0 14px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:600;cursor:pointer">Import</button>
+<span style="font-size:12px;color:${C.faint}">${escapeHtml(t(state.presetChecked.size === 1 ? 'v3RegionsSelectedOne' : 'v3RegionsSelected', { n: state.presetChecked.size }))}</span>
+<button type="button" onclick="App.importPresets()" style="height:40px;padding:0 14px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:600;cursor:pointer">${escapeHtml(t('v3ButtonImport'))}</button>
 </div>`),
 
-        settingsCard('Your data', `<div style="display:flex;flex-wrap:wrap;gap:8px">
-<button type="button" onclick="App.shareLibrary()" style="height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">Share library link</button>
-<button type="button" onclick="App.exportJson()" style="height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">Export JSON</button>
-<button type="button" onclick="App.exportCsv()" title="Spreadsheet-friendly export for tracking spend — not for re-importing" style="height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">Export CSV</button>
-<label style="display:inline-flex;align-items:center;height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">Import backup<input type="file" accept="application/json" onchange="App.importBackup(this.files[0])" style="display:none"></label>
-<label style="display:inline-flex;align-items:center;height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">Import YAML<input type="file" accept=".yaml,.yml,text/yaml" onchange="App.importYamlFile(this.files[0])" style="display:none"></label>
-<button type="button" onclick="App.openSetup()" style="height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">Re-run setup</button>
+        settingsCard(escapeHtml(t('v3YourDataHeading')), `<div style="display:flex;flex-wrap:wrap;gap:8px">
+<button type="button" onclick="App.shareLibrary()" style="height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v3ShareLibraryLink'))}</button>
+<button type="button" onclick="App.exportJson()" style="height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v3ExportJson'))}</button>
+<button type="button" onclick="App.exportCsv()" title="${escapeHtml(t('v3ExportCsvTitle'))}" style="height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v2ButtonExportCsv'))}</button>
+<label style="display:inline-flex;align-items:center;height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v2ButtonImportBackup'))}<input type="file" accept="application/json" onchange="App.importBackup(this.files[0])" style="display:none"></label>
+<label style="display:inline-flex;align-items:center;height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v2ButtonImportYaml'))}<input type="file" accept=".yaml,.yml,text/yaml" onchange="App.importYamlFile(this.files[0])" style="display:none"></label>
+<button type="button" onclick="App.openSetup()" style="height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v2ButtonRerunSetup'))}</button>
 </div>
-<button type="button" onclick="App.confirmDeleteAll()" style="width:100%;height:42px;margin-top:10px;border-radius:8px;background:transparent;border:1px solid ${C.redBorder};color:#e07a6a;font:inherit;font-size:13px;cursor:pointer">Delete all data</button>
+<button type="button" onclick="App.confirmDeleteAll()" style="width:100%;height:42px;margin-top:10px;border-radius:8px;background:transparent;border:1px solid ${C.redBorder};color:#e07a6a;font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v2ButtonDeleteAllData'))}</button>
 ${renderImportPreview()}
-<div style="font-size:11px;color:${C.faint};min-height:14px;margin-top:8px">${escapeHtml(state.importNote || '')}${state.lastImportSnapshot ? ` <a href="javascript:void(0)" onclick="App.undoLastImport()" style="color:${C.acc};text-decoration:underline;cursor:pointer">Undo</a>` : ''}</div>`),
+<div style="font-size:11px;color:${C.faint};min-height:14px;margin-top:8px">${escapeHtml(state.importNote || '')}${state.lastImportSnapshot ? ` <a href="javascript:void(0)" onclick="App.undoLastImport()" style="color:${C.acc};text-decoration:underline;cursor:pointer">${escapeHtml(t('v3ButtonUndo'))}</a>` : ''}</div>`),
 
-        settingsCard('Install app', `<div style="font-size:12px;line-height:1.5;color:${C.faint}">Add FilmCalc to your home screen so it opens full screen and works offline in the shop.</div>
-<button type="button" onclick="App.install()" style="height:42px;padding:0 14px;margin-top:12px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:600;cursor:pointer">Install</button>`),
+        settingsCard(escapeHtml(t('v2SettingsInstallApp')), `<div style="font-size:12px;line-height:1.5;color:${C.faint}">${escapeHtml(t('v3InstallAppDesc'))}</div>
+<button type="button" onclick="App.install()" style="height:42px;padding:0 14px;margin-top:12px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:600;cursor:pointer">${escapeHtml(t('v2ButtonInstallApp'))}</button>`),
 
-        settingsCard('Privacy', `<div style="font-size:12px;color:${C.faint}">Analytics cookies: <span style="color:${C.text2}">${state.consent === 'granted' ? 'Allowed' : state.consent === 'denied' ? 'Declined' : 'Not set'}</span></div>
+        settingsCard(escapeHtml(t('v2SettingsPrivacy')), `<div style="font-size:12px;color:${C.faint}">${escapeHtml(t('v3AnalyticsCookiesLabel'))} <span style="color:${C.text2}">${state.consent === 'granted' ? escapeHtml(t('v2AnalyticsStatusGranted')) : state.consent === 'denied' ? escapeHtml(t('v2AnalyticsStatusDenied')) : escapeHtml(t('v2AnalyticsStatusUnset'))}</span></div>
 <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center">
-<button type="button" onclick="App.resetConsent()" style="height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">Change choice</button>
-<a href="../privacy.html" style="font-size:13px">Privacy policy</a>
+<button type="button" onclick="App.resetConsent()" style="height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v2ButtonResetConsent'))}</button>
+<a href="../privacy.html" style="font-size:13px">${escapeHtml(t('v2ConsentPrivacyLink'))}</a>
 </div>`),
 
-        settingsCard('Report bad data', `<div style="font-size:12px;line-height:1.5;color:${C.faint}">Found a lab price that has moved, or a stock that no longer exists? Send it through and it gets fixed for everyone.</div>
-<button type="button" onclick="App.reportIssue()" style="height:42px;padding:0 14px;margin-top:12px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text};font:inherit;font-size:13px;cursor:pointer">Report an issue</button>`)
+        settingsCard(escapeHtml(t('v2SettingsReportData')), `<div style="font-size:12px;line-height:1.5;color:${C.faint}">${escapeHtml(t('v3ReportBadDataDesc'))}</div>
+<button type="button" onclick="App.reportIssue()" style="height:42px;padding:0 14px;margin-top:12px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v3ButtonReportIssue'))}</button>`)
     ];
     return `<div style="padding:6px 20px 0;display:grid;grid-template-columns:${desktop ? '1fr 1fr' : '1fr'};gap:10px;align-items:start">${cards.join('')}</div>`;
 }
@@ -1026,15 +1042,15 @@ function App_filmDetail(key) {
     const bundles = f.bundles || [];
     return {
         kind: 'film', key, name: f.name,
-        meta: bundles.length + (bundles.length === 1 ? ' price · ' : ' prices · ') + (bundles[0] ? (bundles[0].storeName || 'Unnamed store') : '—'),
+        meta: t(bundles.length === 1 ? 'v3PriceCountOne' : 'v3PriceCount', { n: bundles.length }) + (bundles[0] ? (bundles[0].storeName || t('v3UnnamedStore')) : '—'),
         facts: [
-            { k: 'Speed', v: 'ISO ' + f.boxSpeed },
-            { k: 'Process', v: PROCESS_LABEL[f.process] || f.process },
-            { k: 'Category', v: FILM_COLOR_LABEL[filmColorType(f)] },
-            { k: 'Format', v: FORMAT_LABEL[f.format || '35mm'] || f.format }
+            { k: t('v3FactSpeed'), v: t('v3IsoValue', { iso: f.boxSpeed }) },
+            { k: t('v3FactProcess'), v: PROCESS_LABEL[f.process] || f.process },
+            { k: t('v3FactCategory'), v: FILM_COLOR_LABEL[filmColorType(f)] },
+            { k: t('formatLabel'), v: FORMAT_LABEL[f.format || '35mm'] || f.format }
         ],
         rows: bundles.slice().sort((a, b) => (a.filmCost / (a.rolls || 1)) - (b.filmCost / (b.rolls || 1))).map((b, i) => ({
-            name: b.storeName || 'Unnamed store', meta: (i === 0 ? 'cheapest saved price' : 'saved price'),
+            name: b.storeName || t('v3UnnamedStore'), meta: t(i === 0 ? 'v3CheapestSavedPrice' : 'v3SavedPrice'),
             price: CUR() + money(b.filmCost / (parseInt(b.rolls) || 1)), color: i === 0 ? C.green : C.text2,
             href: sanitizeUrl(b.buyLink), cta: '↗', isLink: !!b.buyLink
         }))
@@ -1045,17 +1061,17 @@ function App_labDetail(name) {
     if (!l) return null;
     const tiers = normalizeLabServices(l);
     const rawTiers = Array.isArray(l.services) && l.services.length ? l.services : [l];
-    const sorted = tiers.map((t, i) => ({ ...t, label: (rawTiers[i] && rawTiers[i].label) || tierDescription(t) })).sort((a, b) => a.devCost - b.devCost);
+    const sorted = tiers.map((tier, i) => ({ ...tier, label: (rawTiers[i] && rawTiers[i].label) || tierDescription(tier) })).sort((a, b) => a.devCost - b.devCost);
     return {
-        kind: 'lab', key: name, name: name + (name === state.homeLab ? ' · home' : ''),
+        kind: 'lab', key: name, name: name + (name === state.homeLab ? ' ' + t('v3HomeSuffix') : ''),
         meta: l.address || '',
         facts: [
-            { k: 'Tiers', v: String(tiers.length) },
-            { k: 'Address', v: l.address || 'not saved' }
+            { k: t('v3FactTiers'), v: String(tiers.length) },
+            { k: t('v3FactAddress'), v: l.address || t('v3NotSaved') }
         ],
-        rows: sorted.map(t => ({
-            name: t.label, meta: (turnaroundLabels[t.turnaroundTime] || '') + (t.highResScan ? ' · hi-res' : ' · no scans'),
-            price: CUR() + money(t.devCost), color: t.turnaroundTime === 'next_day' ? C.acc : C.text2,
+        rows: sorted.map(tier => ({
+            name: tier.label, meta: (turnaroundLabels[tier.turnaroundTime] || '') + (tier.highResScan ? t('v3HiResSuffix') : t('v3NoScansSuffix')),
+            price: CUR() + money(tier.devCost), color: tier.turnaroundTime === 'next_day' ? C.acc : C.text2,
             href: '', cta: '', isLink: false
         }))
     };
@@ -1082,11 +1098,11 @@ function viewLibrary() {
         groups = isos.map(iso => {
             const items = list.filter(x => (parseInt(x.f.boxSpeed) || 0) === iso);
             return {
-                title: 'ISO ' + iso, count: items.length + ' stock' + (items.length === 1 ? '' : 's'),
+                title: t('v3IsoValue', { iso }), count: t(items.length === 1 ? 'v3StockCountOne' : 'v3StockCount', { n: items.length }),
                 items: items.map(({ key, f }) => {
                     const bundles = f.bundles || [];
                     const cheapest = bundles.length ? Math.min(...bundles.map(b => b.filmCost / (parseInt(b.rolls) || 1))) : 0;
-                    return { key, kind: 'film', name: f.name, meta: (PROCESS_LABEL[f.process] || f.process) + ' · ' + (bundles.length || 0) + ' price' + (bundles.length === 1 ? '' : 's'), price: CUR() + money(cheapest), unit: '/roll', accent: String(f.boxSpeed) === state.boxSpeed ? C.acc : C.faint };
+                    return { key, kind: 'film', name: f.name, meta: (PROCESS_LABEL[f.process] || f.process) + ' · ' + t(bundles.length === 1 ? 'v3PriceCountBareOne' : 'v3PriceCountBare', { n: bundles.length || 0 }), price: CUR() + money(cheapest), unit: t('v3PerRollUnit'), accent: String(f.boxSpeed) === state.boxSpeed ? C.acc : C.faint };
                 })
             };
         });
@@ -1096,17 +1112,17 @@ function viewLibrary() {
             .filter(([, l]) => {
                 if (state.libFilter === 'All') return true;
                 const tiers = normalizeLabServices(l);
-                if (state.libFilter === 'Hi-res') return tiers.some(t => t.highResScan);
-                if (state.libFilter === 'Next day') return tiers.some(t => t.turnaroundTime === 'next_day');
-                if (state.libFilter === 'Mail-back') return tiers.some(t => t.mailBackCost !== null);
+                if (state.libFilter === 'Hi-res') return tiers.some(tier => tier.highResScan);
+                if (state.libFilter === 'Next day') return tiers.some(tier => tier.turnaroundTime === 'next_day');
+                if (state.libFilter === 'Mail-back') return tiers.some(tier => tier.mailBackCost !== null);
                 return true;
             });
         if (list.length) {
             groups = [{
-                title: 'Saved labs', count: list.length + ' lab' + (list.length === 1 ? '' : 's'),
+                title: t('v3SavedLabsTitle'), count: t(list.length === 1 ? 'v3LabCountOne' : 'v3LabCount', { n: list.length }),
                 items: list.map(([name, l]) => {
                     const tiers = normalizeLabServices(l).sort((a, b) => a.devCost - b.devCost);
-                    return { key: name, kind: 'lab', name: name + (name === state.homeLab ? ' · home' : ''), meta: l.address || '', price: CUR() + money(tiers[0] ? tiers[0].devCost : 0), unit: 'from', accent: name === state.homeLab ? C.acc : C.faint };
+                    return { key: name, kind: 'lab', name: name + (name === state.homeLab ? ' ' + t('v3HomeSuffix') : ''), meta: l.address || '', price: CUR() + money(tiers[0] ? tiers[0].devCost : 0), unit: t('v3FromUnit'), accent: name === state.homeLab ? C.acc : C.faint };
                 })
             }];
         }
@@ -1114,25 +1130,25 @@ function viewLibrary() {
 
     const searchBar = `<div style="display:flex;align-items:center;gap:10px;height:44px;padding:0 12px;background:${C.panel};border:1px solid ${C.border};border-radius:10px;flex:1;min-width:0">
 <svg style="width:16px;height:16px;flex:none;color:${C.faint}" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"></circle><path stroke-linecap="round" d="M20 20l-4.2-4.2"></path></svg>
-<input type="text" value="${escapeHtml(state.libSearch)}" onchange="App.setField('libSearch',this.value)" placeholder="Search ${state.libTab === 'films' ? films.length + ' stocks' : labs.length + ' labs'}…" aria-label="Search library" style="width:100%;background:transparent;border:0;outline:none;font:inherit;font-size:14px;color:${C.text}">
+<input type="text" value="${escapeHtml(state.libSearch)}" onchange="App.setField('libSearch',this.value)" placeholder="${escapeHtml(t(state.libTab === 'films' ? 'v3SearchStocksPlaceholder' : 'v3SearchLabsPlaceholder', { n: state.libTab === 'films' ? films.length : labs.length }))}" aria-label="${escapeHtml(t('v3SearchLibraryLabel'))}" style="width:100%;background:transparent;border:0;outline:none;font:inherit;font-size:14px;color:${C.text}">
 </div>`;
 
     const filterSummary = state.libTab === 'films'
-        ? [state.libFilter, state.libFormat, state.libIso === 'All' ? 'All' : 'ISO ' + state.libIso, state.libProcess].filter(x => x !== 'All').join(' · ') || 'All films'
-        : (state.libFilter === 'All' ? 'All labs' : state.libFilter);
+        ? [state.libFilter, state.libFormat, state.libIso === 'All' ? 'All' : t('v3IsoValue', { iso: state.libIso }), state.libProcess].filter(x => x !== 'All').join(' · ') || t('v3AllFilms')
+        : (state.libFilter === 'All' ? t('v3AllLabs') : state.libFilter);
 
     const filterBtn = `<button type="button" onclick="App.setField('libFilterModal',true)" style="width:${desktop ? '210px' : '100%'};flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;height:44px;padding:0 14px;background:${C.panel};border:1px solid ${C.border};border-radius:10px;font:inherit;cursor:pointer">
 <span style="display:flex;align-items:center;gap:8px;min-width:0">
 <svg style="width:14px;height:14px;flex:none;color:${C.faint}" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 6h16M7 12h10M10 18h4"></path></svg>
 <span style="font-size:13px;color:${C.text};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(filterSummary)}</span>
 </span>
-<span style="font-size:12px;color:${C.sub};white-space:nowrap">Filter ›</span>
+<span style="font-size:12px;color:${C.sub};white-space:nowrap">${escapeHtml(t('v3FilterChevron'))}</span>
 </button>`;
 
     const list = groups.length === 0
         ? `<div style="margin-top:16px;padding:24px 18px;border:1px dashed ${C.border2};border-radius:10px;text-align:center">
-<div style="font-size:14px;font-weight:600;color:${C.text2}">No matches</div>
-<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:6px">Nothing matches "${escapeHtml(state.libSearch)}".</div>
+<div style="font-size:14px;font-weight:600;color:${C.text2}">${escapeHtml(t('v3NoMatches'))}</div>
+<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:6px">${escapeHtml(t('v3NothingMatchesSearch', { query: state.libSearch }))}</div>
 </div>`
         : groups.map(g => `<div style="margin-top:18px">
 <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
@@ -1152,14 +1168,14 @@ ${g.items.map(it => `<button type="button" onclick="App.openLibDetailByKey('${it
     return `<div style="padding:4px 20px 0">
 <div style="display:flex;flex-direction:${desktop ? 'row' : 'column'};align-items:stretch;gap:10px">
 <div style="display:flex;gap:4px;padding:4px;background:${C.panel};border:1px solid ${C.border};border-radius:10px;flex:${desktop ? '0 0 260px' : '1'}">
-<button type="button" onclick="App.setLibTab('films')" style="flex:1;height:40px;border-radius:7px;border:0;display:flex;align-items:center;justify-content:center;gap:7px;font:inherit;font-size:13px;cursor:pointer;background:${state.libTab === 'films' ? '#1f2228' : 'transparent'};color:${state.libTab === 'films' ? C.text : C.sub};font-weight:${state.libTab === 'films' ? 600 : 400}">Films <span style="font-size:11px;font-weight:400;color:${C.faint}">${films.length}</span></button>
-<button type="button" onclick="App.setLibTab('labs')" style="flex:1;height:40px;border-radius:7px;border:0;display:flex;align-items:center;justify-content:center;gap:7px;font:inherit;font-size:13px;cursor:pointer;background:${state.libTab === 'labs' ? '#1f2228' : 'transparent'};color:${state.libTab === 'labs' ? C.text : C.sub};font-weight:${state.libTab === 'labs' ? 600 : 400}">Labs <span style="font-size:11px;font-weight:400;color:${C.faint}">${labs.length}</span></button>
+<button type="button" onclick="App.setLibTab('films')" style="flex:1;height:40px;border-radius:7px;border:0;display:flex;align-items:center;justify-content:center;gap:7px;font:inherit;font-size:13px;cursor:pointer;background:${state.libTab === 'films' ? '#1f2228' : 'transparent'};color:${state.libTab === 'films' ? C.text : C.sub};font-weight:${state.libTab === 'films' ? 600 : 400}">${escapeHtml(t('v2SectionFilms'))} <span style="font-size:11px;font-weight:400;color:${C.faint}">${films.length}</span></button>
+<button type="button" onclick="App.setLibTab('labs')" style="flex:1;height:40px;border-radius:7px;border:0;display:flex;align-items:center;justify-content:center;gap:7px;font:inherit;font-size:13px;cursor:pointer;background:${state.libTab === 'labs' ? '#1f2228' : 'transparent'};color:${state.libTab === 'labs' ? C.text : C.sub};font-weight:${state.libTab === 'labs' ? 600 : 400}">${escapeHtml(t('v2SectionLabs'))} <span style="font-size:11px;font-weight:400;color:${C.faint}">${labs.length}</span></button>
 </div>
 ${searchBar}
 ${filterBtn}
 </div>
 ${list}
-<button type="button" onclick="App.addLibItem()" style="width:100%;height:48px;margin-top:20px;border-radius:10px;background:transparent;border:1px dashed ${C.border3};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${state.libTab === 'films' ? '+ Add a film stock' : '+ Add a lab'}</button>
+<button type="button" onclick="App.addLibItem()" style="width:100%;height:48px;margin-top:20px;border-radius:10px;background:transparent;border:1px dashed ${C.border3};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${state.libTab === 'films' ? escapeHtml(t('v3ButtonAddFilmStock')) : escapeHtml(t('v2ButtonNewLab'))}</button>
 </div>`;
 }
 
@@ -1178,30 +1194,30 @@ function viewLibFilterModal() {
 <div role="dialog" aria-modal="true" style="position:relative;background:#131518;border-top:1px solid #2f333a;border-radius:18px 18px 0 0;padding:8px 20px 22px;box-shadow:0 -18px 40px rgba(0,0,0,.45)">
 <div style="width:38px;height:4px;border-radius:2px;background:${C.border3};margin:0 auto 14px"></div>
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-<span style="font-size:16px;font-weight:700;color:${C.text}">${state.libTab === 'films' ? 'Filter films' : 'Filter labs'}</span>
-<button type="button" onclick="App.setField('libFilterModal',false)" aria-label="Close" style="width:32px;height:32px;border-radius:8px;background:#1f2228;border:0;color:${C.sub};font:inherit;font-size:15px;line-height:1;cursor:pointer">✕</button>
+<span style="font-size:16px;font-weight:700;color:${C.text}">${state.libTab === 'films' ? escapeHtml(t('v3FilterFilmsHeading')) : escapeHtml(t('v3FilterLabsHeading'))}</span>
+<button type="button" onclick="App.setField('libFilterModal',false)" aria-label="${escapeHtml(t('closeLabel'))}" style="width:32px;height:32px;border-radius:8px;background:#1f2228;border:0;color:${C.sub};font:inherit;font-size:15px;line-height:1;cursor:pointer">✕</button>
 </div>
 <div style="display:flex;flex-direction:column;gap:14px">
 <div>
-<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${state.libTab === 'films' ? 'Film type' : 'Offers'}</div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${state.libTab === 'films' ? escapeHtml(t('v3FilmTypeLabel')) : escapeHtml(t('v3OffersLabel'))}</div>
 <div style="display:flex;gap:6px;flex-wrap:wrap">${chipRow(null, state.libFilter, 'libFilter')}</div>
 </div>
 ${state.libTab === 'films' ? `<div>
-<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Format</div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('formatLabel'))}</div>
 <div style="display:flex;gap:6px;flex-wrap:wrap">${formats.map(l => `<button type="button" onclick="App.setField('libFormat','${l}')" style="height:38px;padding:0 14px;border-radius:9px;font:inherit;font-size:13px;cursor:pointer;background:${state.libFormat === l ? C.text : 'transparent'};border:1px solid ${state.libFormat === l ? C.text : C.border2};color:${state.libFormat === l ? C.shell : C.sub}">${l}</button>`).join('')}</div>
 </div>
 <div>
-<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Box speed</div>
-<div style="display:flex;gap:6px;flex-wrap:wrap">${isos.map(l => `<button type="button" onclick="App.setField('libIso','${l}')" style="height:38px;padding:0 14px;border-radius:9px;font:inherit;font-size:13px;cursor:pointer;background:${state.libIso === l ? '#16231a' : 'transparent'};border:1px solid ${state.libIso === l ? '#33422a' : C.border2};color:${state.libIso === l ? C.green : C.sub}">${l === 'All' ? 'All' : 'ISO ' + l}</button>`).join('')}</div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v2LabelBoxSpeed'))}</div>
+<div style="display:flex;gap:6px;flex-wrap:wrap">${isos.map(l => `<button type="button" onclick="App.setField('libIso','${l}')" style="height:38px;padding:0 14px;border-radius:9px;font:inherit;font-size:13px;cursor:pointer;background:${state.libIso === l ? '#16231a' : 'transparent'};border:1px solid ${state.libIso === l ? '#33422a' : C.border2};color:${state.libIso === l ? C.green : C.sub}">${l === 'All' ? l : escapeHtml(t('v3IsoValue', { iso: l }))}</button>`).join('')}</div>
 </div>
 <div>
-<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Process</div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('processLabel'))}</div>
 <div style="display:flex;gap:6px;flex-wrap:wrap">${processes.map(l => `<button type="button" onclick="App.setField('libProcess','${l}')" style="height:38px;padding:0 14px;border-radius:9px;font:inherit;font-size:13px;cursor:pointer;background:${state.libProcess === l ? C.accBg : 'transparent'};border:1px solid ${state.libProcess === l ? C.accBorder : C.border2};color:${state.libProcess === l ? C.acc : C.sub}">${l}</button>`).join('')}</div>
 </div>` : ''}
 </div>
 <div style="display:flex;gap:8px;margin-top:18px">
-<button type="button" onclick="App.resetLibFilters()" style="flex:1;height:48px;border-radius:10px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">Reset</button>
-<button type="button" onclick="App.setField('libFilterModal',false)" style="flex:2;height:48px;border-radius:10px;background:${C.text};border:0;color:${C.shell};font:inherit;font-size:13px;font-weight:700;cursor:pointer">Show results</button>
+<button type="button" onclick="App.resetLibFilters()" style="flex:1;height:48px;border-radius:10px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v3ButtonReset'))}</button>
+<button type="button" onclick="App.setField('libFilterModal',false)" style="flex:2;height:48px;border-radius:10px;background:${C.text};border:0;color:${C.shell};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${escapeHtml(t('v3ButtonShowResults'))}</button>
 </div>
 </div>
 </div>`;
@@ -1222,23 +1238,23 @@ function viewLibDetail() {
 <span style="display:block;font-size:18px;font-weight:700;color:${C.text}">${escapeHtml(it.name)}</span>
 ${mapsHref ? `<a href="${mapsHref}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:5px;margin-top:4px;font-size:12px;color:${C.blue};text-decoration:none"><svg style="width:12px;height:12px;flex:none" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s7-6.3 7-11a7 7 0 10-14 0c0 4.7 7 11 7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg><span>${escapeHtml(it.meta)}</span></a>` : (it.kind === 'film' ? `<span style="display:block;font-size:12px;color:${C.faint};margin-top:3px">${escapeHtml(it.meta)}</span>` : '')}
 </span>
-<button type="button" onclick="App.closeLibDetail()" aria-label="Close" style="width:32px;height:32px;flex:none;border-radius:8px;background:#1f2228;border:0;color:${C.sub};font:inherit;font-size:15px;line-height:1;cursor:pointer">✕</button>
+<button type="button" onclick="App.closeLibDetail()" aria-label="${escapeHtml(t('closeLabel'))}" style="width:32px;height:32px;flex:none;border-radius:8px;background:#1f2228;border:0;color:${C.sub};font:inherit;font-size:15px;line-height:1;cursor:pointer">✕</button>
 </div>
-<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:14px">${it.facts.map(f => `<span style="display:flex;align-items:baseline;gap:6px;padding:7px 11px;border-radius:8px;background:${C.field};border:1px solid ${C.border}"><span style="font-size:11px;color:${C.faint}">${f.k}</span><span style="font-size:13px;font-weight:600;color:${C.text}">${escapeHtml(f.v)}</span></span>`).join('')}</div>
-<div style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.sub};margin:18px 0 4px">${it.kind === 'film' ? 'Where to buy' : 'Service tiers'}</div>
+<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:14px">${it.facts.map(f => `<span style="display:flex;align-items:baseline;gap:6px;padding:7px 11px;border-radius:8px;background:${C.field};border:1px solid ${C.border}"><span style="font-size:11px;color:${C.faint}">${escapeHtml(f.k)}</span><span style="font-size:13px;font-weight:600;color:${C.text}">${escapeHtml(f.v)}</span></span>`).join('')}</div>
+<div style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.sub};margin:18px 0 4px">${it.kind === 'film' ? escapeHtml(t('v2LabelWhereToBuy')) : escapeHtml(t('v3ServiceTiersHeading'))}</div>
 <div>
-${it.rows.length === 0 ? `<div style="padding:12px 0;border-top:1px solid ${C.border};font-size:12px;color:${C.faint}">${it.kind === 'film' ? 'No purchase links saved yet.' : 'No service tiers saved yet.'}</div>` : it.rows.map(r => it.kind === 'film' && r.isLink
+${it.rows.length === 0 ? `<div style="padding:12px 0;border-top:1px solid ${C.border};font-size:12px;color:${C.faint}">${it.kind === 'film' ? escapeHtml(t('v2EmptyNoPurchaseLinks')) : escapeHtml(t('v2EmptyNoServiceTiers'))}</div>` : it.rows.map(r => it.kind === 'film' && r.isLink
         ? `<a href="${r.href}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid ${C.border};text-decoration:none"><span style="flex:1;min-width:0"><span style="display:block;font-size:14px;color:${C.text}">${escapeHtml(r.name)}</span><span style="display:block;font-size:11px;color:${C.faint};margin-top:2px">${escapeHtml(r.meta)}</span></span><span style="font-size:17px;font-weight:600;color:${r.color}">${r.price}</span><span style="font-size:14px;color:${C.faint};flex:none">${r.cta}</span></a>`
         : `<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid ${C.border}"><span style="flex:1;min-width:0"><span style="display:block;font-size:14px;color:${C.text}">${escapeHtml(r.name)}</span><span style="display:block;font-size:11px;color:${C.faint};margin-top:2px">${escapeHtml(r.meta)}</span></span><span style="font-size:17px;font-weight:600;color:${r.color}">${r.price}</span></div>`
     ).join('')}
 </div>
 <div style="display:flex;gap:8px;margin-top:18px">
-<button type="button" onclick="App.loadIntoLookup()" style="flex:2;height:46px;border-radius:10px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:700;cursor:pointer">Load into lookup</button>
-<button type="button" onclick="App.openEditorFor()" style="flex:1;height:46px;border-radius:10px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">Edit</button>
+<button type="button" onclick="App.loadIntoLookup()" style="flex:2;height:46px;border-radius:10px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${escapeHtml(t('v3ButtonLoadIntoLookup'))}</button>
+<button type="button" onclick="App.openEditorFor()" style="flex:1;height:46px;border-radius:10px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v2ButtonEdit'))}</button>
 </div>
 <div style="display:flex;gap:8px;margin-top:8px">
-<button type="button" onclick="App.hideItem()" style="flex:1;height:42px;border-radius:10px;background:transparent;border:1px solid ${C.border2};color:${C.sub};font:inherit;font-size:13px;cursor:pointer">Hide from lookups</button>
-<button type="button" onclick="App.confirmDeleteItem()" style="flex:1;height:42px;border-radius:10px;background:transparent;border:1px solid ${C.redBorder};color:#e07a6a;font:inherit;font-size:13px;cursor:pointer">Delete</button>
+<button type="button" onclick="App.hideItem()" style="flex:1;height:42px;border-radius:10px;background:transparent;border:1px solid ${C.border2};color:${C.sub};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v3ButtonHideFromLookups'))}</button>
+<button type="button" onclick="App.confirmDeleteItem()" style="flex:1;height:42px;border-radius:10px;background:transparent;border:1px solid ${C.redBorder};color:#e07a6a;font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('deleteButton'))}</button>
 </div>
 </div>
 </div>`;
@@ -1253,36 +1269,36 @@ function viewPostModal() {
     const rows = Object.keys(allLabs).filter(n => !allLabs[n].hidden).map(name => {
         const tiers = normalizeLabServices(allLabs[name]);
         const cheapestMail = tiers.length ? Math.min(...tiers.map(t => t.mailBackCost === null ? Infinity : t.mailBackCost)) : Infinity;
-        return { name, price: isFinite(cheapestMail) ? CUR() + money(cheapestMail) : 'n/a' };
+        return { name, price: isFinite(cheapestMail) ? CUR() + money(cheapestMail) : t('v3NotApplicable') };
     });
     return `<div style="position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:${shellW()};z-index:45;display:flex;flex-direction:column;justify-content:flex-end">
 <div onclick="App.closePost()" style="position:absolute;inset:0;background:rgba(4,5,6,.72);cursor:pointer"></div>
 <div role="dialog" aria-modal="true" style="position:relative;background:#131518;border-top:1px solid #2f333a;border-radius:18px 18px 0 0;padding:8px 20px 22px;box-shadow:0 -18px 40px rgba(0,0,0,.45)">
 <div style="width:38px;height:4px;border-radius:2px;background:${C.border3};margin:0 auto 14px"></div>
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-<span style="font-size:16px;font-weight:700;color:${C.text}">Postage</span>
-<button type="button" onclick="App.closePost()" aria-label="Close" style="width:32px;height:32px;border-radius:8px;background:#1f2228;border:0;color:${C.sub};font:inherit;font-size:15px;line-height:1;cursor:pointer">✕</button>
+<span style="font-size:16px;font-weight:700;color:${C.text}">${escapeHtml(t('v3Postage'))}</span>
+<button type="button" onclick="App.closePost()" aria-label="${escapeHtml(t('closeLabel'))}" style="width:32px;height:32px;border-radius:8px;background:#1f2228;border:0;color:${C.sub};font:inherit;font-size:15px;line-height:1;cursor:pointer">✕</button>
 </div>
-<p style="margin:0 0 16px;font-size:13px;line-height:1.55;color:${C.sub}">Mailing rolls in costs the same whether you send one or six, so the fee is split across everything in the satchel. Return postage comes from each lab's own saved price.</p>
+<p style="margin:0 0 16px;font-size:13px;line-height:1.55;color:${C.sub}">${escapeHtml(t('v3PostageModalIntro'))}</p>
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;background:${C.field};border:1px solid ${C.border};border-radius:10px">
-<span><span style="display:block;font-size:14px;color:${C.text}">Mailing it in</span><span style="display:block;font-size:12px;color:${C.faint};margin-top:2px">Off means dropping off in person</span></span>
+<span><span style="display:block;font-size:14px;color:${C.text}">${escapeHtml(t('v3MailingItIn'))}</span><span style="display:block;font-size:12px;color:${C.faint};margin-top:2px">${escapeHtml(t('v3MailingOffNote'))}</span></span>
 <button type="button" onclick="App.toggleFlag('mailBack')" aria-pressed="${state.mailBack}" style="width:52px;height:30px;flex:none;border-radius:15px;border:0;padding:3px;cursor:pointer;display:flex;align-items:center;justify-content:${state.mailBack ? 'flex-end' : 'flex-start'};background:${state.mailBack ? C.accBorder : C.border}"><span style="width:24px;height:24px;border-radius:50%;background:${state.mailBack ? C.acc : C.faint}"></span></button>
 </div>
-${state.mailBack ? `<label style="display:block;margin-top:12px"><div style="font-size:11px;color:${C.sub};margin-bottom:6px">What it costs you to post it in</div><div style="height:52px;background:${C.field};border:1px solid ${C.border};border-radius:8px;display:flex;align-items:center;gap:3px;padding:0 12px"><span style="font-size:15px;color:${C.faint}">${CUR()}</span><input type="text" inputmode="decimal" value="${escapeHtml(state.postTo)}" onchange="App.setField('postTo',this.value)" aria-label="Post to lab" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:22px;font-weight:600;color:${C.text}"></div></label>
+${state.mailBack ? `<label style="display:block;margin-top:12px"><div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v3PostToLabCostLabel'))}</div><div style="height:52px;background:${C.field};border:1px solid ${C.border};border-radius:8px;display:flex;align-items:center;gap:3px;padding:0 12px"><span style="font-size:15px;color:${C.faint}">${CUR()}</span><input type="text" inputmode="decimal" value="${escapeHtml(state.postTo)}" onchange="App.setField('postTo',this.value)" aria-label="${escapeHtml(t('v3PostToLabAriaLabel'))}" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:22px;font-weight:600;color:${C.text}"></div></label>
 <div style="margin-top:12px;border:1px solid ${C.border};border-radius:10px;overflow:hidden">
-<div style="padding:9px 12px;background:${C.field};font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:${C.faint}">Return postage · from each lab</div>
+<div style="padding:9px 12px;background:${C.field};font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:${C.faint}">${escapeHtml(t('v3ReturnPostageFromLab'))}</div>
 ${rows.map(m => `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-top:1px solid ${C.border}"><span style="font-size:13px;color:${C.text2}">${escapeHtml(m.name)}</span><span style="font-size:13px;font-weight:600;color:${C.text}">${m.price}</span></div>`).join('')}
 </div>` : ''}
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px">
-<span style="font-size:11px;color:${C.sub}">Rolls in the satchel</span>
+<span style="font-size:11px;color:${C.sub}">${escapeHtml(t('v3RollsInSatchel'))}</span>
 <span style="display:flex;align-items:center;gap:2px;background:${C.field};border:1px solid ${C.border};border-radius:9px;padding:3px">
-<button type="button" onclick="App.incField('postRolls',-1,1,99)" aria-label="One roll fewer" style="width:40px;height:38px;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:20px;font-weight:600;line-height:1;cursor:pointer">−</button>
-<input type="text" inputmode="numeric" value="${shipRolls}" onchange="App.setField('postRolls',this.value)" aria-label="Rolls in the satchel" style="width:46px;height:38px;background:transparent;border:0;outline:none;text-align:center;font:inherit;font-size:20px;font-weight:700;color:${C.text}">
-<button type="button" onclick="App.incField('postRolls',1,1,99)" aria-label="One roll more" style="width:40px;height:38px;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:20px;font-weight:600;line-height:1;cursor:pointer">+</button>
+<button type="button" onclick="App.incField('postRolls',-1,1,99)" aria-label="${escapeHtml(t('v3OneRollFewer'))}" style="width:40px;height:38px;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:20px;font-weight:600;line-height:1;cursor:pointer">−</button>
+<input type="text" inputmode="numeric" value="${shipRolls}" onchange="App.setField('postRolls',this.value)" aria-label="${escapeHtml(t('v3RollsInSatchel'))}" style="width:46px;height:38px;background:transparent;border:0;outline:none;text-align:center;font:inherit;font-size:20px;font-weight:700;color:${C.text}">
+<button type="button" onclick="App.incField('postRolls',1,1,99)" aria-label="${escapeHtml(t('v3OneRollMore'))}" style="width:40px;height:38px;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:20px;font-weight:600;line-height:1;cursor:pointer">+</button>
 </span>
 </div>
-<div style="margin-top:14px;padding:12px 14px;border-radius:10px;background:#1a1410;border:1px solid #3a2a1c;font-size:13px;color:#ffb184">${state.mailBack ? CUR() + money(num(state.postTo)) + ' in + ' + CUR() + money(homeMailBack) + ' back, split across ' + shipRolls + ' roll' + (shipRolls === 1 ? '' : 's') + ' — ' + CUR() + money((num(state.postTo) + homeMailBack) / shipRolls) + ' each' : 'Dropping off and collecting in person — no postage.'}</div>
-<button type="button" onclick="App.closePost()" style="width:100%;height:48px;margin-top:18px;border-radius:10px;background:${C.text};border:0;color:${C.shell};font:inherit;font-size:13px;font-weight:700;cursor:pointer">Done</button>
+<div style="margin-top:14px;padding:12px 14px;border-radius:10px;background:#1a1410;border:1px solid #3a2a1c;font-size:13px;color:#ffb184">${state.mailBack ? escapeHtml(t(shipRolls === 1 ? 'v3PostageSplitNoteOne' : 'v3PostageSplitNote', { in: CUR() + money(num(state.postTo)), back: CUR() + money(homeMailBack), rolls: shipRolls, each: CUR() + money((num(state.postTo) + homeMailBack) / shipRolls) })) : escapeHtml(t('v3DropOffNoPostage'))}</div>
+<button type="button" onclick="App.closePost()" style="width:100%;height:48px;margin-top:18px;border-radius:10px;background:${C.text};border:0;color:${C.shell};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${escapeHtml(t('v2ButtonDone'))}</button>
 </div>
 </div>`;
 }
@@ -1290,29 +1306,29 @@ ${rows.map(m => `<div style="display:flex;align-items:center;justify-content:spa
 function viewShareModal() {
     const param = state.shareKind === 'library' ? 'lib' : 'roll';
     const url = location.origin + location.pathname + '?' + param + '=' + encodeURIComponent(b64EncodeShare());
-    let qrHtml = `<div style="width:172px;height:172px;display:flex;align-items:center;justify-content:center;font-size:12px;color:${C.faint}">Generating…</div>`;
+    let qrHtml = `<div style="width:172px;height:172px;display:flex;align-items:center;justify-content:center;font-size:12px;color:${C.faint}">${escapeHtml(t('v3Generating'))}</div>`;
     if (typeof qrcode === 'function') {
         try {
             const qr = qrcode(0, 'M');
             qr.addData(url);
             qr.make();
             qrHtml = qr.createSvgTag({ cellSize: 4, margin: 2 });
-        } catch { qrHtml = `<div style="font-size:11px;color:${C.faint};max-width:172px">Link too long for a QR code — use Copy link instead.</div>`; }
+        } catch { qrHtml = `<div style="font-size:11px;color:${C.faint};max-width:172px">${escapeHtml(t('v3LinkTooLongForQr'))}</div>`; }
     }
     return `<div style="position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:${shellW()};z-index:46;display:flex;flex-direction:column;justify-content:flex-end">
 <div onclick="App.setField('shareModal',false)" style="position:absolute;inset:0;background:rgba(4,5,6,.72);cursor:pointer"></div>
 <div role="dialog" aria-modal="true" style="position:relative;background:#131518;border-top:1px solid #2f333a;border-radius:18px 18px 0 0;padding:8px 20px 22px;box-shadow:0 -18px 40px rgba(0,0,0,.45)">
 <div style="width:38px;height:4px;border-radius:2px;background:${C.border3};margin:0 auto 14px"></div>
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-<span style="font-size:16px;font-weight:700;color:${C.text}">${state.shareKind === 'library' ? 'Share your library' : 'Share this roll'}</span>
-<button type="button" onclick="App.setField('shareModal',false)" aria-label="Close" style="width:32px;height:32px;border-radius:8px;background:#1f2228;border:0;color:${C.sub};font:inherit;font-size:15px;line-height:1;cursor:pointer">✕</button>
+<span style="font-size:16px;font-weight:700;color:${C.text}">${state.shareKind === 'library' ? escapeHtml(t('v3ShareYourLibrary')) : escapeHtml(t('v3ShareThisRoll'))}</span>
+<button type="button" onclick="App.setField('shareModal',false)" aria-label="${escapeHtml(t('closeLabel'))}" style="width:32px;height:32px;border-radius:8px;background:#1f2228;border:0;color:${C.sub};font:inherit;font-size:15px;line-height:1;cursor:pointer">✕</button>
 </div>
-<p style="margin:0 0 16px;font-size:13px;line-height:1.55;color:${C.sub}">${state.shareKind === 'library' ? 'Scan it on another device, or send the link — it imports every saved film and lab.' : 'Scan it at the counter, or send the link — it opens FilmCalc with this exact roll loaded.'}</p>
+<p style="margin:0 0 16px;font-size:13px;line-height:1.55;color:${C.sub}">${state.shareKind === 'library' ? escapeHtml(t('v3ShareLibraryIntro')) : escapeHtml(t('v3ShareRollIntro'))}</p>
 <div style="display:flex;justify-content:center"><div style="padding:12px;background:#ffffff;border-radius:12px;line-height:0">${qrHtml}</div></div>
 <div style="margin-top:16px;padding:12px 14px;border-radius:10px;background:${C.field};border:1px solid ${C.border};font-size:12px;line-height:1.5;color:${C.sub};word-break:break-all">${escapeHtml(url)}</div>
 <div style="display:flex;gap:8px;margin-top:12px">
-<button type="button" onclick="App.copyLink('${jsAttr(url)}')" style="flex:2;height:48px;border-radius:10px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${state.copied ? 'Copied ✓' : 'Copy link'}</button>
-<button type="button" onclick="App.setField('shareModal',false)" style="flex:1;height:48px;border-radius:10px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">Done</button>
+<button type="button" onclick="App.copyLink('${jsAttr(url)}')" style="flex:2;height:48px;border-radius:10px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${state.copied ? escapeHtml(t('v3CopiedCheck')) : escapeHtml(t('v3CopyLink'))}</button>
+<button type="button" onclick="App.setField('shareModal',false)" style="flex:1;height:48px;border-radius:10px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v2ButtonDone'))}</button>
 </div>
 </div>
 </div>`;
@@ -1340,31 +1356,31 @@ function b64DecodeShare(str) {
 
 function viewMenu() {
     const items = [
-        ['lookup', 'Film lookup', 'Price a roll in your hand'],
-        ['library', 'Library', 'Your saved stocks and labs'],
-        ['expired', 'Expired film', 'What to rate an old roll at'],
-        ['settings', 'Settings', 'Home lab, language, data']
+        ['lookup', t('v3NavLookup'), t('v3MenuLookupMeta')],
+        ['library', t('navLibrary'), t('v3MenuLibraryMeta')],
+        ['expired', t('v3TitleExpiredFilm'), t('v3MenuExpiredMeta')],
+        ['settings', t('navSettings'), t('v3MenuSettingsMeta')]
     ];
     return `<div style="position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:${shellW()};z-index:50;display:flex;flex-direction:column;justify-content:flex-start">
 <div onclick="App.closeMenu()" style="position:absolute;inset:0;background:rgba(4,5,6,.72);cursor:pointer"></div>
 <div role="dialog" aria-modal="true" style="position:relative;margin:0;background:#131518;border-bottom:1px solid #2f333a;border-radius:0 0 18px 18px;padding:14px 20px 18px;box-shadow:0 18px 40px rgba(0,0,0,.45)">
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-<span style="font-size:16px;font-weight:700;color:${C.text}">Menu</span>
-<button type="button" onclick="App.closeMenu()" aria-label="Close" style="width:32px;height:32px;border-radius:8px;background:#1f2228;border:0;color:${C.sub};font:inherit;font-size:15px;line-height:1;cursor:pointer">✕</button>
+<span style="font-size:16px;font-weight:700;color:${C.text}">${escapeHtml(t('v3MenuHeading'))}</span>
+<button type="button" onclick="App.closeMenu()" aria-label="${escapeHtml(t('closeLabel'))}" style="width:32px;height:32px;border-radius:8px;background:#1f2228;border:0;color:${C.sub};font:inherit;font-size:15px;line-height:1;cursor:pointer">✕</button>
 </div>
 <div style="display:flex;flex-direction:column;gap:6px">
-${items.map(([key, label, meta]) => `<button type="button" onclick="App.setView('${key}')" style="width:100%;text-align:left;padding:12px 14px;border-radius:10px;border:1px solid ${C.border};font:inherit;cursor:pointer;background:${state.view === key ? C.panel : 'transparent'}"><span style="display:block;font-size:15px;color:${state.view === key ? C.acc : C.text}">${label}</span><span style="display:block;font-size:12px;color:${C.faint};margin-top:3px">${meta}</span></button>`).join('')}
+${items.map(([key, label, meta]) => `<button type="button" onclick="App.setView('${key}')" style="width:100%;text-align:left;padding:12px 14px;border-radius:10px;border:1px solid ${C.border};font:inherit;cursor:pointer;background:${state.view === key ? C.panel : 'transparent'}"><span style="display:block;font-size:15px;color:${state.view === key ? C.acc : C.text}">${escapeHtml(label)}</span><span style="display:block;font-size:12px;color:${C.faint};margin-top:3px">${escapeHtml(meta)}</span></button>`).join('')}
 <button type="button" onclick="App.install()" style="display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 14px;border-radius:10px;border:1px solid ${C.accBorder};background:${C.accBg};font:inherit;cursor:pointer">
 <svg style="width:18px;height:18px;flex:none;color:${C.acc}" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v10m0 0l-3.5-3.5M12 14l3.5-3.5M5 17v2a1 1 0 001 1h12a1 1 0 001-1v-2"></path></svg>
-<span style="flex:1;min-width:0"><span style="display:block;font-size:15px;color:${C.acc}">${state.installable ? 'Install FilmCalc' : 'Add to home screen'}</span><span style="display:block;font-size:12px;color:#a87a52;margin-top:3px">${state.installable ? 'Works offline, opens full screen' : 'Share → Add to Home Screen on iPhone'}</span></span>
+<span style="flex:1;min-width:0"><span style="display:block;font-size:15px;color:${C.acc}">${state.installable ? escapeHtml(t('v3InstallFilmCalc')) : escapeHtml(t('v3AddToHomeScreen'))}</span><span style="display:block;font-size:12px;color:#a87a52;margin-top:3px">${state.installable ? escapeHtml(t('v3WorksOfflineNote')) : escapeHtml(t('v3ShareAddHomeScreenNote'))}</span></span>
 </button>
 <button type="button" onclick="App.openChangelog()" style="width:100%;text-align:left;padding:12px 14px;border-radius:10px;border:1px solid ${C.border};background:transparent;font:inherit;cursor:pointer">
-<span style="display:block;font-size:15px;color:${C.text}">What's new</span>
-<span style="display:block;font-size:12px;color:${C.faint};margin-top:3px">Recent changes to FilmCalc</span>
+<span style="display:block;font-size:15px;color:${C.text}">${escapeHtml(t('v3WhatsNew'))}</span>
+<span style="display:block;font-size:12px;color:${C.faint};margin-top:3px">${escapeHtml(t('v3RecentChangesNote'))}</span>
 </button>
 <button type="button" onclick="App.openSetup()" style="width:100%;text-align:left;padding:12px 14px;border-radius:10px;border:1px dashed ${C.border3};background:transparent;font:inherit;cursor:pointer">
-<span style="display:block;font-size:15px;color:${C.text}">Run setup again</span>
-<span style="display:block;font-size:12px;color:${C.faint};margin-top:3px">Language, starter presets, home lab</span>
+<span style="display:block;font-size:15px;color:${C.text}">${escapeHtml(t('v3RunSetupAgain'))}</span>
+<span style="display:block;font-size:12px;color:${C.faint};margin-top:3px">${escapeHtml(t('v3SetupMenuMeta'))}</span>
 </button>
 </div>
 </div>
@@ -1379,32 +1395,32 @@ function viewSetup() {
 <div style="position:absolute;inset:0;background:rgba(4,5,6,.82)"></div>
 <div role="dialog" aria-modal="true" style="position:relative;width:100%;max-width:480px;background:#131518;border:1px solid #2f333a;border-radius:14px;padding:18px 20px 20px;box-shadow:0 30px 80px -20px #000">
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-<span style="font-size:16px;font-weight:700;color:${C.text}">Set up FilmCalc</span>
+<span style="font-size:16px;font-weight:700;color:${C.text}">${escapeHtml(t('v2SetupTitle'))}</span>
 <span style="display:flex;align-items:center;gap:5px">${SETUP_STEPS.map((_, i) => `<span style="width:6px;height:6px;border-radius:50%;background:${i === step ? C.acc : '#33333a'}"></span>`).join('')}</span>
 </div>
-<p style="margin:8px 0 16px;font-size:13px;line-height:1.55;color:${C.sub}">Three quick questions. Everything here can be changed later in Settings.</p>
+<p style="margin:8px 0 16px;font-size:13px;line-height:1.55;color:${C.sub}">${escapeHtml(t('v3SetupThreeQuestionsNote'))}</p>
 <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px">
-<span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.acc}">${SETUP_STEPS[step]}</span>
-<span style="font-size:11px;color:${C.faint}">Step ${step + 1} of ${SETUP_STEPS.length}</span>
+<span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.acc}">${escapeHtml(setupStepLabel(SETUP_STEPS[step]))}</span>
+<span style="font-size:11px;color:${C.faint}">${escapeHtml(t('v3StepOfTotal', { n: step + 1, total: SETUP_STEPS.length }))}</span>
 </div>
-${step === 0 ? `<select onchange="App.setLanguage(this.value)" aria-label="Language" style="width:100%;height:46px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer">${LANGUAGE_OPTIONS.map(([code, label]) => `<option value="${code}" ${state.language === code ? 'selected' : ''}>${label}</option>`).join('')}</select>
-<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:10px">Prices and dates follow your device's region regardless of this choice.</div>` : ''}
-${step === 1 ? `<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-bottom:10px">${geoGuess ? `Pre-ticked below: whatever looks like it covers ${escapeHtml(geoGuess.city || geoGuess.country)}, guessed from your device's location or timezone — that guess never leaves this device. Tick or untick anything; only what's ticked when you continue actually gets added.` : 'Pick the regions you buy and develop in. These fill your library with real lab and retailer prices — you can edit or hide any of them afterwards.'}</div>
+${step === 0 ? `<select onchange="App.setLanguage(this.value)" aria-label="${escapeHtml(t('v2SettingsLanguage'))}" style="width:100%;height:46px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer">${LANGUAGE_OPTIONS.map(([code, label]) => `<option value="${code}" ${currentLocale === code ? 'selected' : ''}>${label}</option>`).join('')}</select>
+<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:10px">${escapeHtml(t('v3LanguageRegionNote'))}</div>` : ''}
+${step === 1 ? `<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-bottom:10px">${geoGuess ? escapeHtml(t('v3GeoPreTickedNote', { place: geoGuess.city || geoGuess.country })) : escapeHtml(t('v3PickRegionsNote'))}</div>
 <div style="display:flex;flex-direction:column;gap:6px;max-height:260px;overflow:auto">${regions.length ? regions.map(r => {
         const on = state.presetChecked.has(r.label);
         return `<button type="button" onclick="App.togglePreset('${jsAttr(r.label)}')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:44px;padding:0 12px;border-radius:8px;font:inherit;font-size:14px;cursor:pointer;text-align:left;background:${on ? C.accBg : C.field};border:1px solid ${on ? C.accBorder : C.border};color:${on ? C.acc : C.text2}">${escapeHtml(r.label)} <span>${on ? '✓' : ''}</span></button>`;
-    }).join('') : `<div style="font-size:12px;color:${C.faint}">Loading regions…</div>`}</div>
-<div style="font-size:12px;color:${C.faint};margin-top:10px">${state.presetChecked.size} region${state.presetChecked.size === 1 ? '' : 's'} selected · imports when you tap Next</div>` : ''}
-${step === 2 ? `<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Home lab</div>
-<select onchange="App.setField('homeLab',this.value)" aria-label="Home lab" style="width:100%;height:46px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer"><option value="">— pick a lab —</option>${labNames.map(n => `<option value="${escapeHtml(n)}" ${state.homeLab === n ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('')}</select>
-<div style="font-size:11px;color:${C.sub};margin:14px 0 6px">Preferred service tier</div>
-<select onchange="App.setField('tier',this.value)" aria-label="Preferred service tier" style="width:100%;height:46px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer"><option value="">Cheapest that qualifies</option></select>
-<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:10px">Your home lab is the price shown as the big number on every lookup.</div>` : ''}
+    }).join('') : `<div style="font-size:12px;color:${C.faint}">${escapeHtml(t('v3LoadingRegions'))}</div>`}</div>
+<div style="font-size:12px;color:${C.faint};margin-top:10px">${escapeHtml(t(state.presetChecked.size === 1 ? 'v3RegionsSelectedImportsOne' : 'v3RegionsSelectedImports', { n: state.presetChecked.size }))}</div>` : ''}
+${step === 2 ? `<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v2SettingsHomeLab'))}</div>
+<select onchange="App.setField('homeLab',this.value)" aria-label="${escapeHtml(t('v2SettingsHomeLab'))}" style="width:100%;height:46px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer"><option value="">${escapeHtml(t('v3PickALab'))}</option>${labNames.map(n => `<option value="${escapeHtml(n)}" ${state.homeLab === n ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('')}</select>
+<div style="font-size:11px;color:${C.sub};margin:14px 0 6px">${escapeHtml(t('v2SetupPreferredTier'))}</div>
+<select onchange="App.setField('tier',this.value)" aria-label="${escapeHtml(t('v2SetupPreferredTier'))}" style="width:100%;height:46px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer"><option value="">${escapeHtml(t('v3CheapestThatQualifies'))}</option></select>
+<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:10px">${escapeHtml(t('v3HomeLabExplainerNote'))}</div>` : ''}
 <div style="display:flex;gap:10px;margin-top:20px">
-${step > 0 ? `<button type="button" onclick="App.setupBack()" style="flex:1;height:46px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">Back</button>` : ''}
+${step > 0 ? `<button type="button" onclick="App.setupBack()" style="flex:1;height:46px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v2ButtonBack'))}</button>` : ''}
 ${step === SETUP_STEPS.length - 1
-        ? `<button type="button" onclick="App.closeSetup()" style="flex:2;height:46px;border-radius:8px;background:${C.text};border:0;color:${C.shell};font:inherit;font-size:13px;font-weight:700;cursor:pointer">Done</button>`
-        : `<button type="button" onclick="App.setupNext()" style="flex:2;height:46px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:700;cursor:pointer">Next</button>`}
+        ? `<button type="button" onclick="App.closeSetup()" style="flex:2;height:46px;border-radius:8px;background:${C.text};border:0;color:${C.shell};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${escapeHtml(t('v2ButtonDone'))}</button>`
+        : `<button type="button" onclick="App.setupNext()" style="flex:2;height:46px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${escapeHtml(t('v2ButtonNext'))}</button>`}
 </div>
 </div>
 </div>`;
@@ -1413,10 +1429,10 @@ ${step === SETUP_STEPS.length - 1
 function viewConsent() {
     return `<div style="position:fixed;left:50%;transform:translateX(-50%);bottom:12px;z-index:55;width:100%;max-width:${shellW()};padding:0 12px;box-sizing:border-box">
 <div style="background:${C.panel};border:1px solid ${C.border2};border-radius:12px;padding:14px 16px;box-shadow:0 18px 40px rgba(0,0,0,.5)">
-<div style="font-size:13px;line-height:1.55;color:${C.text2}">FilmCalc uses one analytics cookie to count visits and see which screens get used. Nothing about your library ever leaves your device. <a href="../privacy.html">Privacy policy</a></div>
+<div style="font-size:13px;line-height:1.55;color:${C.text2}">${escapeHtml(t('v3ConsentMessage'))} <a href="../privacy.html">${escapeHtml(t('v2ConsentPrivacyLink'))}</a></div>
 <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
-<button type="button" onclick="App.declineConsent()" style="height:40px;padding:0 14px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">Decline</button>
-<button type="button" onclick="App.acceptConsent()" style="height:40px;padding:0 14px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:600;cursor:pointer">Allow</button>
+<button type="button" onclick="App.declineConsent()" style="height:40px;padding:0 14px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v2ConsentDecline'))}</button>
+<button type="button" onclick="App.acceptConsent()" style="height:40px;padding:0 14px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:600;cursor:pointer">${escapeHtml(t('v3ConsentAllow'))}</button>
 </div>
 </div>
 </div>`;
@@ -1429,14 +1445,14 @@ function viewChangelog() {
 <div role="dialog" aria-modal="true" style="position:relative;background:#131518;border-top:1px solid #2f333a;border-radius:18px 18px 0 0;padding:8px 20px 22px;box-shadow:0 -18px 40px rgba(0,0,0,.45)">
 <div style="width:38px;height:4px;border-radius:2px;background:${C.border3};margin:0 auto 14px"></div>
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-<span style="font-size:16px;font-weight:700;color:${C.text}">What's new</span>
-<button type="button" onclick="App.closeChangelog()" aria-label="Close" style="width:32px;height:32px;border-radius:8px;background:#1f2228;border:0;color:${C.sub};font:inherit;font-size:15px;line-height:1;cursor:pointer">✕</button>
+<span style="font-size:16px;font-weight:700;color:${C.text}">${escapeHtml(t('v3WhatsNew'))}</span>
+<button type="button" onclick="App.closeChangelog()" aria-label="${escapeHtml(t('closeLabel'))}" style="width:32px;height:32px;border-radius:8px;background:#1f2228;border:0;color:${C.sub};font:inherit;font-size:15px;line-height:1;cursor:pointer">✕</button>
 </div>
-<p style="margin:0 0 8px;font-size:12px;color:${C.faint}">Every change since your last visit.</p>
+<p style="margin:0 0 8px;font-size:12px;color:${C.faint}">${escapeHtml(t('v3ChangelogIntro'))}</p>
 <div style="max-height:320px;overflow:auto">
-${items.length ? items.slice(0, 30).map(c => `<div style="padding:12px 0;border-top:1px solid ${C.border}"><div style="font-size:14px;line-height:1.45;color:${C.text2}">${escapeHtml(c.title)}</div><div style="font-size:11px;color:${C.faint};margin-top:3px">#${c.number} · ${fmtDate(c.mergedAt)}</div></div>`).join('') : `<div style="padding:12px 0;font-size:12px;color:${C.faint}">Loading…</div>`}
+${items.length ? items.slice(0, 30).map(c => `<div style="padding:12px 0;border-top:1px solid ${C.border}"><div style="font-size:14px;line-height:1.45;color:${C.text2}">${escapeHtml(c.title)}</div><div style="font-size:11px;color:${C.faint};margin-top:3px">#${c.number} · ${fmtDate(c.mergedAt)}</div></div>`).join('') : `<div style="padding:12px 0;font-size:12px;color:${C.faint}">${escapeHtml(t('v3LoadingEllipsis'))}</div>`}
 </div>
-<button type="button" onclick="App.closeChangelog()" style="width:100%;height:48px;margin-top:16px;border-radius:10px;background:${C.text};border:0;color:${C.shell};font:inherit;font-size:13px;font-weight:700;cursor:pointer">Done</button>
+<button type="button" onclick="App.closeChangelog()" style="width:100%;height:48px;margin-top:16px;border-radius:10px;background:${C.text};border:0;color:${C.shell};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${escapeHtml(t('v2ButtonDone'))}</button>
 </div>
 </div>`;
 }
@@ -1450,7 +1466,7 @@ function viewConfirm() {
 <p style="margin:8px 0 0;font-size:13px;line-height:1.55;color:${C.sub}">${escapeHtml(c.body)}</p>
 <div style="display:flex;gap:8px;margin-top:18px">
 <button type="button" onclick="App.runConfirm()" style="flex:1;height:48px;border-radius:10px;background:#2a1513;border:1px solid ${C.redBorder};color:${C.red};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${escapeHtml(c.cta)}</button>
-<button type="button" onclick="App.cancelConfirm()" style="width:120px;height:48px;border-radius:10px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">Cancel</button>
+<button type="button" onclick="App.cancelConfirm()" style="width:120px;height:48px;border-radius:10px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('cancelButton'))}</button>
 </div>
 </div>
 </div>`;
@@ -1474,46 +1490,46 @@ function viewEditor() {
     const isFilm = state.draftKind === 'film';
     const subList = isFilm ? d.bundles : d.services;
     const subRows = subList.map((b, i) => ({
-        title: isFilm ? (b.storeName || 'Unnamed store') : (b.label || 'Unnamed tier'),
-        meta: isFilm ? `${b.rolls}×${b.exposures} · ${CUR()}${(parseFloat(b.filmCost) || 0).toFixed(2)} · ${b.availability}` : `${CUR()}${(parseFloat(b.devCost) || 0).toFixed(2)} dev · mail-back ${b.mailBackCost === '' ? 'n/a' : CUR() + (parseFloat(b.mailBackCost) || 0).toFixed(2)}`,
+        title: isFilm ? (b.storeName || t('v3UnnamedStore')) : (b.label || t('v3UnnamedTier')),
+        meta: isFilm ? `${b.rolls}×${b.exposures} · ${CUR()}${(parseFloat(b.filmCost) || 0).toFixed(2)} · ${b.availability}` : t('v3DevMailBackMeta', { dev: CUR() + (parseFloat(b.devCost) || 0).toFixed(2), mailBack: b.mailBackCost === '' ? t('v3NotApplicable') : CUR() + (parseFloat(b.mailBackCost) || 0).toFixed(2) }),
         i
     }));
     return `<div role="dialog" aria-modal="true" style="position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:${shellW()};z-index:58;background:${C.shell};display:flex;flex-direction:column">
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid ${C.border};background:#131518">
-<span style="font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.text}">${isFilm ? 'Edit film' : 'Edit lab'}</span>
-<button type="button" onclick="App.cancelDraft()" aria-label="Close" style="width:36px;height:36px;border-radius:8px;background:#1f2228;border:1px solid ${C.border2};color:${C.sub};font:inherit;font-size:16px;line-height:1;cursor:pointer">✕</button>
+<span style="font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.text}">${isFilm ? escapeHtml(t('v3EditFilmHeading')) : escapeHtml(t('v3EditLabHeading'))}</span>
+<button type="button" onclick="App.cancelDraft()" aria-label="${escapeHtml(t('closeLabel'))}" style="width:36px;height:36px;border-radius:8px;background:#1f2228;border:1px solid ${C.border2};color:${C.sub};font:inherit;font-size:16px;line-height:1;cursor:pointer">✕</button>
 </div>
 <div style="flex:1;overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px">
-${fieldLabel('Name', textInput('name', d.name))}
+${fieldLabel(escapeHtml(t('v2LabelName')), textInput('name', d.name))}
 ${isFilm ? `<div style="display:flex;gap:10px">
-<div style="flex:1;min-width:0">${fieldLabel('Box speed', textInput('boxSpeed', d.boxSpeed))}</div>
-<div style="flex:1;min-width:0">${fieldLabel('Max push/pull', textInput('maxPushPull', d.maxPushPull))}</div>
+<div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('v2LabelBoxSpeed')), textInput('boxSpeed', d.boxSpeed))}</div>
+<div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('v3MaxPushPullLabel')), textInput('maxPushPull', d.maxPushPull))}</div>
 </div>
 <div style="display:flex;gap:10px">
-<div style="flex:1;min-width:0">${fieldLabel('Format', selectInput('format', d.format, FORMATS))}</div>
-<div style="flex:1;min-width:0">${fieldLabel('Process', selectInput('process', d.process, PROCESSES))}</div>
+<div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('formatLabel')), selectInput('format', d.format, FORMATS))}</div>
+<div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('processLabel')), selectInput('process', d.process, PROCESSES))}</div>
 </div>
-${fieldLabel('Type', selectInput('colorType', d.colorType, FILM_COLORS))}` : `
-${fieldLabel('Address', textInput('address', d.address, 'Street, suburb, state postcode'))}
-${fieldLabel('Website', textInput('website', d.website, 'https://…'))}
+${fieldLabel(escapeHtml(t('v2LabelType')), selectInput('colorType', d.colorType, FILM_COLORS))}` : `
+${fieldLabel(escapeHtml(t('v3AddressLabel')), textInput('address', d.address, t('v3AddressPlaceholder')))}
+${fieldLabel(escapeHtml(t('v3WebsiteLabel')), textInput('website', d.website, 'https://…'))}
 <div style="display:flex;gap:10px">
-<div style="flex:1;min-width:0">${fieldLabel('Phone', textInput('phone', d.phone))}</div>
-<div style="flex:1;min-width:0">${fieldLabel('Email', textInput('email', d.email))}</div>
+<div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('v3PhoneLabel')), textInput('phone', d.phone))}</div>
+<div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('v3EmailLabel')), textInput('email', d.email))}</div>
 </div>
-${fieldLabel('Price source', textInput('source', d.source, 'https://…'))}`}
+${fieldLabel(escapeHtml(t('v2LabelPriceSource')), textInput('source', d.source, 'https://…'))}`}
 <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px">
-<span style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:${C.sub}">${isFilm ? 'Where to buy' : 'Service tiers'}</span>
-<button type="button" onclick="App.addSub()" style="height:36px;padding:0 14px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:12px;cursor:pointer">${isFilm ? '+ Add price' : '+ Add tier'}</button>
+<span style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:${C.sub}">${isFilm ? escapeHtml(t('v2LabelWhereToBuy')) : escapeHtml(t('v3ServiceTiersHeading'))}</span>
+<button type="button" onclick="App.addSub()" style="height:36px;padding:0 14px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:12px;cursor:pointer">${isFilm ? escapeHtml(t('v2ButtonAddPrice')) : escapeHtml(t('v3ButtonAddTier'))}</button>
 </div>
-${subRows.length === 0 ? `<div style="font-size:12px;color:${C.faint};padding:2px">${isFilm ? 'No purchase links saved yet.' : 'No service tiers saved yet.'}</div>` : ''}
+${subRows.length === 0 ? `<div style="font-size:12px;color:${C.faint};padding:2px">${isFilm ? escapeHtml(t('v2EmptyNoPurchaseLinks')) : escapeHtml(t('v2EmptyNoServiceTiers'))}</div>` : ''}
 ${subRows.map(r => `<button type="button" onclick="App.openSub(${r.i})" style="display:flex;align-items:center;gap:10px;width:100%;padding:12px;background:${C.panel};border:1px solid ${C.border};border-radius:10px;font:inherit;text-align:left;cursor:pointer">
 <span style="flex:1;min-width:0"><span style="display:block;font-size:14px;color:${C.text}">${escapeHtml(r.title)}</span><span style="display:block;font-size:12px;color:${C.faint};margin-top:3px">${escapeHtml(r.meta)}</span></span>
 <svg style="width:14px;height:14px;flex:none;color:${C.faint}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 4.5l3 3M4 20l4-1 10-10-3-3L5 16l-1 4z"></path></svg>
 </button>`).join('')}
 </div>
 <div style="display:flex;gap:10px;padding:12px 16px;border-top:1px solid ${C.border};background:#131518">
-<button type="button" onclick="App.saveDraft()" style="flex:1;height:50px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${isFilm ? 'Save film' : 'Save lab'}</button>
-<button type="button" onclick="App.cancelDraft()" style="width:110px;height:50px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">Cancel</button>
+<button type="button" onclick="App.saveDraft()" style="flex:1;height:50px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${isFilm ? escapeHtml(t('v2ButtonSaveFilm')) : escapeHtml(t('v2ButtonSaveLab'))}</button>
+<button type="button" onclick="App.cancelDraft()" style="width:110px;height:50px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('cancelButton'))}</button>
 </div>
 </div>`;
 }
@@ -1526,30 +1542,30 @@ function viewSubEditor() {
     const setSub = (field) => `App.setSub('${field}',this.value)`;
     return `<div role="dialog" aria-modal="true" style="position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:${shellW()};z-index:59;background:${C.shell};display:flex;flex-direction:column">
 <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid ${C.border};background:#131518">
-<button type="button" onclick="App.closeSub()" aria-label="Back" style="width:36px;height:36px;flex:none;border-radius:8px;background:#1f2228;border:1px solid ${C.border2};color:${C.sub};font:inherit;font-size:16px;line-height:1;cursor:pointer">‹</button>
-<span style="flex:1;font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.text}">${isFilm ? 'Purchase link' : 'Service tier'}</span>
-<button type="button" onclick="App.removeSub()" aria-label="Delete" style="width:36px;height:36px;flex:none;border-radius:8px;background:transparent;border:1px solid ${C.redBorder};color:#e07a6a;font:inherit;font-size:16px;line-height:1;cursor:pointer">✕</button>
+<button type="button" onclick="App.closeSub()" aria-label="${escapeHtml(t('v3BackAriaLabel'))}" style="width:36px;height:36px;flex:none;border-radius:8px;background:#1f2228;border:1px solid ${C.border2};color:${C.sub};font:inherit;font-size:16px;line-height:1;cursor:pointer">‹</button>
+<span style="flex:1;font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.text}">${isFilm ? escapeHtml(t('v2TitlePurchaseLink')) : escapeHtml(t('v2TitleServiceTier'))}</span>
+<button type="button" onclick="App.removeSub()" aria-label="${escapeHtml(t('deleteButton'))}" style="width:36px;height:36px;flex:none;border-radius:8px;background:transparent;border:1px solid ${C.redBorder};color:#e07a6a;font:inherit;font-size:16px;line-height:1;cursor:pointer">✕</button>
 </div>
 <div style="flex:1;overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px">
-${isFilm ? `${fieldLabel('Store name', `<input type="text" value="${escapeHtml(sub.storeName || '')}" onchange="${setSub('storeName')}" placeholder="Where you buy it" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}
+${isFilm ? `${fieldLabel(escapeHtml(t('v3StoreNameLabel')), `<input type="text" value="${escapeHtml(sub.storeName || '')}" onchange="${setSub('storeName')}" placeholder="${escapeHtml(t('v3WhereYouBuyItPlaceholder'))}" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}
 <div style="display:flex;gap:10px">
-<div style="flex:1;min-width:0">${fieldLabel('Rolls', `<input type="text" inputmode="numeric" value="${escapeHtml(sub.rolls || '')}" onchange="${setSub('rolls')}" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}</div>
-<div style="flex:1;min-width:0">${fieldLabel('Exposures', `<input type="text" inputmode="numeric" value="${escapeHtml(sub.exposures || '')}" onchange="${setSub('exposures')}" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}</div>
-<div style="flex:1;min-width:0">${fieldLabel('Price', `<input type="text" inputmode="decimal" value="${escapeHtml(sub.filmCost || '')}" onchange="${setSub('filmCost')}" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}</div>
+<div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('v3RollsLabel')), `<input type="text" inputmode="numeric" value="${escapeHtml(sub.rolls || '')}" onchange="${setSub('rolls')}" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}</div>
+<div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('v3ExposuresLabel')), `<input type="text" inputmode="numeric" value="${escapeHtml(sub.exposures || '')}" onchange="${setSub('exposures')}" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}</div>
+<div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('v3PriceLabel')), `<input type="text" inputmode="decimal" value="${escapeHtml(sub.filmCost || '')}" onchange="${setSub('filmCost')}" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}</div>
 </div>
-${fieldLabel('Purchase link', `<input type="text" value="${escapeHtml(sub.buyLink || '')}" onchange="${setSub('buyLink')}" placeholder="https://…" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}
-${fieldLabel('Availability', selectInputHandler(setSub('availability'), sub.availability || 'national', ['national', 'state', 'city']))}` : `
-${fieldLabel('Tier name', `<input type="text" value="${escapeHtml(sub.label || '')}" onchange="${setSub('label')}" placeholder="Develop + hi-res scan" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}
+${fieldLabel(escapeHtml(t('v2TitlePurchaseLink')), `<input type="text" value="${escapeHtml(sub.buyLink || '')}" onchange="${setSub('buyLink')}" placeholder="https://…" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}
+${fieldLabel(escapeHtml(t('v2LabelAvailability')), selectInputHandler(setSub('availability'), sub.availability || 'national', ['national', 'state', 'city']))}` : `
+${fieldLabel(escapeHtml(t('v3TierNameLabel')), `<input type="text" value="${escapeHtml(sub.label || '')}" onchange="${setSub('label')}" placeholder="${escapeHtml(t('v3TierNamePlaceholder'))}" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}
 <div style="display:flex;gap:10px">
-<div style="flex:1;min-width:0">${fieldLabel('Cost per roll', `<input type="text" inputmode="decimal" value="${escapeHtml(sub.devCost || '')}" onchange="${setSub('devCost')}" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}</div>
-<div style="flex:1;min-width:0">${fieldLabel('Mail-back', `<input type="text" inputmode="decimal" value="${escapeHtml(sub.mailBackCost || '')}" onchange="${setSub('mailBackCost')}" placeholder="n/a" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}</div>
+<div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('v2LabelCostPerRoll')), `<input type="text" inputmode="decimal" value="${escapeHtml(sub.devCost || '')}" onchange="${setSub('devCost')}" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}</div>
+<div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('v2LabelMailBack')), `<input type="text" inputmode="decimal" value="${escapeHtml(sub.mailBackCost || '')}" onchange="${setSub('mailBackCost')}" placeholder="${escapeHtml(t('v3NotApplicable'))}" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}</div>
 </div>
-${fieldLabel('Turnaround', selectInputHandler(setSub('turnaround'), sub.turnaround || 'Same week', ['Next day', 'Same week', 'Longer']))}
+${fieldLabel(escapeHtml(t('turnaroundRowLabel')), selectInputHandler(setSub('turnaround'), sub.turnaround || 'Same week', ['Next day', 'Same week', 'Longer']))}
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;background:${C.panel};border:1px solid ${C.border};border-radius:10px">
-<span style="font-size:14px;color:${C.text}">Includes hi-res scans</span>
+<span style="font-size:14px;color:${C.text}">${escapeHtml(t('v3IncludesHiResScans'))}</span>
 <button type="button" onclick="App.toggleSubHiRes()" style="width:52px;height:30px;flex:none;border-radius:15px;border:0;padding:3px;cursor:pointer;display:flex;align-items:center;justify-content:${sub.hiRes ? 'flex-end' : 'flex-start'};background:${sub.hiRes ? C.accBorder : C.border}"><span style="width:24px;height:24px;border-radius:50%;background:${sub.hiRes ? C.acc : C.faint}"></span></button>
 </div>`}
-<button type="button" onclick="App.closeSub()" style="height:48px;margin-top:6px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:700;cursor:pointer">Done</button>
+<button type="button" onclick="App.closeSub()" style="height:48px;margin-top:6px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${escapeHtml(t('v2ButtonDone'))}</button>
 </div>
 </div>`;
 }
@@ -1612,7 +1628,7 @@ const App = {
     openMaps() {
         const home = rankLabs().ranked.find(l => l.name === state.homeLab) || rankLabs().ranked[0];
         const href = home ? labDirectionsUrl(home.lab) : '';
-        if (!href) { say('No address saved for this lab'); return; }
+        if (!href) { say(t('v3NoAddressSavedToast')); return; }
         window.open(href, '_blank', 'noopener');
     },
     loadCheaper() {
@@ -1623,7 +1639,7 @@ const App = {
         state.pushPull = String(cheaper.pickStops);
         state.format = Object.keys(FORMAT_VALUE).find(k => FORMAT_VALUE[k] === (cheaper.pick.format || '35mm')) || state.format;
         state.filmColor = filmColorType(cheaper.pick);
-        say(cheaper.pick.name + ' loaded');
+        say(t('v3NameLoadedToast', { name: cheaper.pick.name }));
     },
     labDetail: App_labDetail,
     filmDetail: App_filmDetail,
@@ -1645,11 +1661,11 @@ const App = {
                 const bundles = f.bundles || [];
                 if (bundles.length) state.packCost = String(bundles.slice().sort((a, b) => a.filmCost / (a.rolls || 1) - b.filmCost / (b.rolls || 1))[0].filmCost);
             }
-            say((f ? f.name : 'Stock') + ' loaded');
+            say(t('v3NameLoadedToast', { name: f ? f.name : t('v3StockFallbackName') }));
         } else {
             const name = it.key;
             App.setField('homeLab', name);
-            say(name + ' set as your lab');
+            say(t('v3NameSetAsHomeLabToast', { name }));
         }
         state.libOpen = null;
         state.view = 'lookup';
@@ -1714,7 +1730,7 @@ const App = {
             if (all[it.key]) { all[it.key] = { ...all[it.key], hidden: true }; setAllLabs(all); }
         }
         state.libOpen = null;
-        say(it.name.replace(' · home', '') + ' hidden from lookups');
+        say(t('v3NameHiddenToast', { name: it.name.replace(' ' + t('v3HomeSuffix'), '') }));
     },
     unhide(kind, key) {
         if (kind === 'film') {
@@ -1729,31 +1745,31 @@ const App = {
     confirmDeleteItem() {
         const it = state.libOpen;
         if (!it) return;
-        const name = it.name.replace(' · home', '');
+        const name = it.name.replace(' ' + t('v3HomeSuffix'), '');
         state.confirm = {
-            title: 'Delete ' + name + '?',
-            body: it.kind === 'film' ? 'The stock and its saved prices are removed from your library.' : 'The lab and all of its service tiers are removed from your library.',
-            cta: 'Delete',
+            title: t('v3DeleteNameConfirmTitle', { name }),
+            body: it.kind === 'film' ? t('v3DeleteFilmConfirmBody') : t('v3DeleteLabConfirmBody'),
+            cta: t('deleteButton'),
             run: () => {
                 if (it.kind === 'film') { const all = getAllFilms(); delete all[it.key]; setAllFilms(all); }
                 else { const all = getAllLabs(); delete all[it.key]; setAllLabs(all); }
                 state.confirm = null; state.libOpen = null;
-                say(name + ' deleted');
+                say(t('v3NameDeletedToast', { name }));
             }
         };
         render();
     },
     confirmDeleteAll() {
         state.confirm = {
-            title: 'Delete everything?',
-            body: 'Every lab, film stock, saved roll and setting on this device is removed. This cannot be undone.',
-            cta: 'Delete everything',
+            title: t('v3DeleteEverythingConfirmTitle'),
+            body: t('v3DeleteEverythingConfirmBody'),
+            cta: t('v3DeleteEverythingCta'),
             run: () => {
                 setAllFilms({}); setAllLabs({});
                 setHomeLab(''); setDefaultTierLabel('');
                 state.homeLab = ''; state.tier = '';
                 state.confirm = null;
-                say('Library deleted');
+                say(t('v3LibraryDeletedToast'));
             }
         };
         render();
@@ -1801,7 +1817,7 @@ const App = {
     },
     saveDraft() {
         const d = state.draft;
-        if (!d || !d.name) { say('Name it before saving'); return; }
+        if (!d || !d.name) { say(t('v3NameItBeforeSaving')); return; }
         if (state.draftKind === 'film') {
             const format = FORMAT_VALUE[d.format] || '35mm';
             const filmObj = {
@@ -1817,13 +1833,13 @@ const App = {
         } else {
             const labObj = {
                 name: d.name, address: d.address || '', website: d.website || '', phone: d.phone || '', email: d.email || '', source: d.source || '', hidden: false,
-                services: d.services.map(t => ({
-                    label: t.label || 'Unnamed tier', devCost: parseFloat(t.devCost) || 0,
-                    pushPullCost: parseFloat(t.pushPullCost) || 0, pushPullType: t.pushPullType || 'per_stop',
-                    turnaroundTime: turnaroundValues[t.turnaround] || 'same_week',
-                    highResScan: !!t.hiRes, tiffScan: !!t.tiffScan, noPushPull: !!t.noPushPull,
-                    mailBackCost: t.mailBackCost === '' || t.mailBackCost === undefined ? null : (parseFloat(t.mailBackCost) || 0),
-                    processes: Array.isArray(t.processes) && t.processes.length ? t.processes : ['C41']
+                services: d.services.map(tier => ({
+                    label: tier.label || t('v3UnnamedTier'), devCost: parseFloat(tier.devCost) || 0,
+                    pushPullCost: parseFloat(tier.pushPullCost) || 0, pushPullType: tier.pushPullType || 'per_stop',
+                    turnaroundTime: turnaroundValues[tier.turnaround] || 'same_week',
+                    highResScan: !!tier.hiRes, tiffScan: !!tier.tiffScan, noPushPull: !!tier.noPushPull,
+                    mailBackCost: tier.mailBackCost === '' || tier.mailBackCost === undefined ? null : (parseFloat(tier.mailBackCost) || 0),
+                    processes: Array.isArray(tier.processes) && tier.processes.length ? tier.processes : ['C41']
                 }))
             };
             const all = getAllLabs();
@@ -1833,7 +1849,7 @@ const App = {
         }
         const name = d.name;
         state.draft = null; state.draftKind = null; state.draftKey = null; state.subIndex = null;
-        say(name + ' saved');
+        say(t('v3NameSavedToast', { name }));
     },
     cancelDraft() { state.draft = null; state.draftKind = null; state.draftKey = null; state.subIndex = null; render(); },
     clearAll() {
@@ -1870,13 +1886,13 @@ const App = {
     },
     async importPresets() {
         const regions = (state.presetRegions || []).filter(r => state.presetChecked.has(r.label));
-        if (!regions.length) { say('Pick at least one region'); return; }
+        if (!regions.length) { say(t('v3PickAtLeastOneRegion')); return; }
         const { filmsAdded, labsAdded } = await importPresetRegions(regions);
         state.presetChecked = new Set();
-        say(filmsAdded + labsAdded ? `Imported ${filmsAdded} films, ${labsAdded} labs` : 'Nothing new to import');
+        say(filmsAdded + labsAdded ? t('v3ImportedFilmsLabs', { films: filmsAdded, labs: labsAdded }) : t('v3NothingNewToImport'));
         render();
     },
-    setLanguage(code) { state.language = code; try { localStorage.setItem('locale', code); } catch {} render(); },
+    setLanguage(code) { setLocale(code); try { localStorage.setItem('locale', code); } catch {} render(); },
     setTheme(value) { state.theme = value; try { localStorage.setItem('newUiTheme', value); } catch {} render(); },
     resetConsent() { state.consent = null; try { localStorage.removeItem('analyticsConsent'); } catch {} render(); },
     acceptConsent() {
@@ -1889,7 +1905,7 @@ const App = {
     install() {
         if (state.deferredPrompt) { state.deferredPrompt.prompt(); state.deferredPrompt = null; return; }
         const ios = /iP(hone|ad|od)/.test(navigator.userAgent || '');
-        say(ios ? 'Tap Share, then Add to Home Screen' : "Use your browser's Install app option");
+        say(ios ? t('v3InstallIosToast') : t('v3InstallBrowserToast'));
     },
     exportJson() {
         try {
@@ -1899,8 +1915,8 @@ const App = {
             a.href = url; a.download = 'filmcalc-library.json';
             document.body.appendChild(a); a.click(); a.remove();
             setTimeout(() => URL.revokeObjectURL(url), 1000);
-            say('Library exported as JSON');
-        } catch { say("Couldn't export — try again"); }
+            say(t('v3LibraryExportedJson'));
+        } catch { say(t('v3ExportFailedToast')); }
     },
     // Mirrors root's App.exportCsv() — a spreadsheet-friendly spend export,
     // not meant for re-importing (that's exportJson()'s job).
@@ -1917,7 +1933,7 @@ const App = {
                 labRows.push([l.name, tierDescription(t), t.devCost, t.pushPullCost ?? '', t.pushPullType || '', t.turnaroundTime || '', (t.processes || []).join('|')]);
             });
         });
-        if (!filmRows.length && !labRows.length) { say('Nothing saved to export'); return; }
+        if (!filmRows.length && !labRows.length) { say(t('v3NothingSavedToExport')); return; }
         const lines = [
             'FILMS',
             csvLine(['Name', 'ISO', 'Process', 'Format', 'Store', 'Rolls', 'Exposures', 'Pack cost', 'Cost per roll']),
@@ -1950,9 +1966,9 @@ const App = {
                 if (parsed.homeLab) setHomeLab(parsed.homeLab);
                 if (parsed.defaultTierLabel) setDefaultTierLabel(parsed.defaultTierLabel);
                 state.homeLab = getHomeLab(); state.tier = getDefaultTierLabel();
-                state.importNote = 'Backup imported.';
+                state.importNote = t('v3BackupImportedNote');
             } catch {
-                state.importNote = "That file isn't a valid FilmCalc backup.";
+                state.importNote = t('v3InvalidBackupNote');
             }
             render();
         };
@@ -1965,9 +1981,9 @@ const App = {
             loadDataSchema().then(() => {
                 let parsed;
                 try { parsed = jsyaml.load(reader.result) || {}; }
-                catch { state.importNote = `${file.name} isn't valid YAML.`; render(); return; }
+                catch { state.importNote = t('v3FileNotValidYaml', { name: file.name }); render(); return; }
                 if (!Array.isArray(parsed.films) && !Array.isArray(parsed.labs)) {
-                    state.importNote = `${file.name} had no films or labs to import.`;
+                    state.importNote = t('v3FileNoFilmsOrLabs', { name: file.name });
                     render();
                     return;
                 }
@@ -1994,7 +2010,11 @@ const App = {
             setAllLabs(saved);
             labCount = p.parsed.labs.length;
         }
-        state.importNote = `Imported ${filmCount} film entr${filmCount === 1 ? 'y' : 'ies'} and ${labCount} lab${labCount === 1 ? '' : 's'} from ${p.fileName}.`;
+        state.importNote = t('v3ImportedEntriesNote', {
+            films: t(filmCount === 1 ? 'v3FilmEntryCountOne' : 'v3FilmEntryCount', { n: filmCount }),
+            labs: t(labCount === 1 ? 'v3LabEntryCountOne' : 'v3LabEntryCount', { n: labCount }),
+            fileName: p.fileName
+        });
         state.pendingImport = null;
         render();
     },
@@ -2005,7 +2025,7 @@ const App = {
         setAllLabs(state.lastImportSnapshot.labProfiles);
         state.lastImportSnapshot = null;
         state.homeLab = getHomeLab();
-        state.importNote = 'Import undone.';
+        state.importNote = t('v3ImportUndoneNote');
         render();
     },
     reportIssue() {
@@ -2031,7 +2051,7 @@ function restoreFromQuery() {
                 setAllFilms(allFilms); setAllLabs(allLabs);
                 if (data.settings && data.settings.homeLab) setHomeLab(data.settings.homeLab);
                 state.homeLab = getHomeLab();
-                say('Shared library imported');
+                say(t('v3SharedLibraryImported'));
             }
         }
         if (params.has('roll') || params.has('lib')) {
