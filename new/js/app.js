@@ -92,9 +92,9 @@ function labDirectionsUrl(lab) {
 function filmKeyOf(f) { return filmKey(f.name, f.boxSpeed, f.format); }
 
 // ---------- Option lists (fixed set the mockup designed UI for) ----------
-const FORMATS = ['35mm', '120', '110', 'Sheet'];
-const FORMAT_VALUE = { '35mm': '35mm', '120': '120', '110': '110', 'Sheet': 'sheet' };
-const FORMAT_LABEL = { '35mm': '35mm', '120': '120', '110': '110', 'sheet': 'Sheet' };
+const FORMATS = ['35mm', '120', '110', '127', '220', 'Sheet'];
+const FORMAT_VALUE = { '35mm': '35mm', '120': '120', '110': '110', '127': '127', '220': '220', 'Sheet': 'sheet' };
+const FORMAT_LABEL = { '35mm': '35mm', '120': '120', '110': '110', '127': '127', '220': '220', 'sheet': 'Sheet' };
 const FILM_COLORS = ['Colour', 'B&W', 'Speciality'];
 const FILM_COLOR_VALUE = { 'Colour': 'color', 'B&W': 'bw', 'Speciality': 'speciality' };
 const FILM_COLOR_LABEL = { color: 'Colour', bw: 'B&W', speciality: 'Speciality' };
@@ -742,7 +742,7 @@ ${overLimit ? `<svg style="width:13px;height:13px;flex:none;color:${C.red}" fill
 <div>
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
 <span style="min-width:0"><span style="display:block;font-size:11px;color:${C.sub}">${state.format === '120' ? 'Camera back' : (state.format === 'Sheet' ? 'Frames per sheet' : 'Exposures on the roll')}</span><span style="display:block;font-size:11px;line-height:1.4;color:${C.faint};margin-top:2px">${state.format === '35mm' && state.frame35 !== 'full' ? '→ ' + framesShot() + ' frames' : ''}</span></span>
-${state.format === '35mm' ? `<span style="display:flex;align-items:center;gap:2px;background:${C.field};border:1px solid ${C.border};border-radius:9px;padding:3px">
+${(state.format === '35mm' || state.format === '127' || state.format === '220') ? `<span style="display:flex;align-items:center;gap:2px;background:${C.field};border:1px solid ${C.border};border-radius:9px;padding:3px">
 <button type="button" onclick="App.incField('exposures',-1,1,99)" aria-label="One exposure fewer" style="width:40px;height:38px;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:20px;font-weight:600;line-height:1;cursor:pointer">−</button>
 <input type="text" inputmode="numeric" value="${escapeHtml(state.exposures)}" onchange="App.setField('exposures',this.value)" aria-label="Exposures on the roll" style="width:46px;height:38px;background:transparent;border:0;outline:none;text-align:center;font:inherit;font-size:20px;font-weight:700;color:${C.text}">
 <button type="button" onclick="App.incField('exposures',1,1,99)" aria-label="One exposure more" style="width:40px;height:38px;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:20px;font-weight:600;line-height:1;cursor:pointer">+</button>
@@ -1045,7 +1045,7 @@ function viewLibFilterModal() {
         return `<button type="button" onclick="App.setField('${onClickField}','${l}')" style="height:38px;padding:0 14px;border-radius:9px;font:inherit;font-size:13px;cursor:pointer;background:${on ? C.text : 'transparent'};border:1px solid ${on ? C.text : C.border2};color:${on ? C.shell : C.sub}">${l}</button>`;
     }).join('');
     const allFilms = Object.values(getAllFilms());
-    const formats = ['All', '35mm', '120', '110', 'Sheet'];
+    const formats = ['All', '35mm', '120', '110', '127', '220', 'Sheet'];
     const isos = ['All'].concat([...new Set(allFilms.map(f => String(f.boxSpeed)))].sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0)));
     const processes = ['All', 'C41', 'B&W', 'E6', 'ECN-2'];
     return `<div style="position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:${shellW()};z-index:46;display:flex;flex-direction:column;justify-content:flex-end">
