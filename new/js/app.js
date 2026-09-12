@@ -123,7 +123,7 @@ const state = {
     format: localStorage.getItem('globalFormat') || '35mm',
     filmColor: localStorage.getItem('globalFilmColor') || 'color',
     process: localStorage.getItem('globalProcess') || 'C41',
-    boxSpeed: '', packCost: '', rolls: '1', exposures: '36',
+    boxSpeed: '', packCost: '', postage: '', rolls: '1', exposures: '36',
     frame120: localStorage.getItem('globalCamera120Type') || '6x7',
     frame35: localStorage.getItem('globalCamera35Type') || 'full',
     pushPull: '0',
@@ -141,7 +141,6 @@ const state = {
     language: localStorage.getItem('locale') || 'en',
     homeLab: getHomeLab(), tier: getDefaultTierLabel(),
     upgradePct: localStorage.getItem('upgradeThresholdPercent') || '4',
-    mailRolls: localStorage.getItem('mailBackRollCount') || '1',
     theme: localStorage.getItem('newUiTheme') || 'system',
     expBox: '400', expMonth: MONTHS[new Date().getMonth()], expYear: '', expProcess: 'c41', storage: 'controlled'
 };
@@ -200,7 +199,7 @@ function rankLabs() {
     const rolls = Math.max(1, Math.round(num(state.rolls)) || 1);
     const stopsSigned = pushStops();
     const stopsAbs = Math.abs(stopsSigned);
-    const filmPerRoll = num(state.packCost) / rolls;
+    const filmPerRoll = num(state.packCost) / rolls + num(state.postage) / rolls;
     const exp = framesShot();
     const allLabs = getAllLabs();
     const opts = mailOpts();
@@ -465,7 +464,7 @@ ${state.changelogOpen ? viewChangelog() : ''}
 ${state.confirm ? viewConfirm() : ''}
 ${state.draft ? viewEditor() : ''}
 ${state.draft && state.subIndex !== null ? viewSubEditor() : ''}
-${state.toast ? `<div style="position:absolute;left:16px;right:16px;bottom:18px;z-index:70;padding:13px 16px;border-radius:10px;background:#1f2228;border:1px solid #3a3e45;box-shadow:0 14px 30px rgba(0,0,0,.5);font-size:13px;color:${C.text};text-align:center">${escapeHtml(state.toast)}</div>` : ''}
+${state.toast ? `<div style="position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:70;width:100%;max-width:${shellW()};padding:0 16px;box-sizing:border-box"><div style="padding:13px 16px;border-radius:10px;background:#1f2228;border:1px solid #3a3e45;box-shadow:0 14px 30px rgba(0,0,0,.5);font-size:13px;color:${C.text};text-align:center">${escapeHtml(state.toast)}</div></div>` : ''}
 </div>`;
 }
 
@@ -733,6 +732,14 @@ ${overLimit ? `<svg style="width:13px;height:13px;flex:none;color:${C.red}" fill
 </div>
 </div>
 <div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Postage</div>
+<div style="height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;display:flex;align-items:center;gap:3px;padding:0 12px">
+<span style="font-size:15px;color:${C.sub}">$</span>
+<input type="text" inputmode="decimal" value="${escapeHtml(state.postage)}" onchange="App.setField('postage',this.value)" aria-label="Postage" placeholder="3.95" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:17px;font-weight:600;color:${C.text}">
+</div>
+<div style="font-size:11px;line-height:1.5;color:${C.faint};margin-top:4px">Shipping to receive the pack, split across the rolls in it.</div>
+</div>
+<div>
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
 <span style="min-width:0"><span style="display:block;font-size:11px;color:${C.sub}">${state.format === '120' ? 'Camera back' : (state.format === 'Sheet' ? 'Frames per sheet' : 'Exposures on the roll')}</span><span style="display:block;font-size:11px;line-height:1.4;color:${C.faint};margin-top:2px">${state.format === '35mm' && state.frame35 !== 'full' ? '→ ' + framesShot() + ' frames' : ''}</span></span>
 ${state.format === '35mm' ? `<span style="display:flex;align-items:center;gap:2px;background:${C.field};border:1px solid ${C.border};border-radius:9px;padding:3px">
@@ -846,7 +853,7 @@ function viewSettings() {
 
         settingsCard('Calculator', `<div style="display:flex;gap:10px">
 <label style="flex:1;display:block"><div style="font-size:11px;color:${C.sub};margin-bottom:6px">Upgrade threshold</div><div style="height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;display:flex;align-items:center;gap:4px;padding:0 12px"><input type="text" inputmode="numeric" value="${escapeHtml(state.upgradePct)}" onchange="App.setField('upgradePct',this.value)" aria-label="Upgrade threshold percent" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:17px;font-weight:600;color:${C.text}"><span style="font-size:13px;color:${C.faint}">%</span></div></label>
-<label style="flex:1;display:block"><div style="font-size:11px;color:${C.sub};margin-bottom:6px">Mail-back rolls</div><div style="height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;display:flex;align-items:center;padding:0 12px"><input type="text" inputmode="numeric" value="${escapeHtml(state.mailRolls)}" onchange="App.setField('mailRolls',this.value)" aria-label="Mail-back roll count" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:17px;font-weight:600;color:${C.text}"></div></label>
+<label style="flex:1;display:block"><div style="font-size:11px;color:${C.sub};margin-bottom:6px">Mail-back rolls</div><div style="height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;display:flex;align-items:center;padding:0 12px"><input type="text" inputmode="numeric" value="${escapeHtml(state.postRolls)}" onchange="App.setField('postRolls',this.value)" aria-label="Mail-back roll count" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:17px;font-weight:600;color:${C.text}"></div></label>
 </div>`),
 
         settingsCard('Hidden presets', `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.sub}"></span><span style="font-size:12px;color:${C.faint}">${hiddenFilms.length + hiddenLabs.length ? hiddenFilms.length + hiddenLabs.length + ' hidden' : 'None hidden'}</span></div>
@@ -982,7 +989,7 @@ function viewLibrary() {
 
     const searchBar = `<div style="display:flex;align-items:center;gap:10px;height:44px;padding:0 12px;background:${C.panel};border:1px solid ${C.border};border-radius:10px;flex:1;min-width:0">
 <svg style="width:16px;height:16px;flex:none;color:${C.faint}" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"></circle><path stroke-linecap="round" d="M20 20l-4.2-4.2"></path></svg>
-<input type="text" value="${escapeHtml(state.libSearch)}" onchange="App.setField('libSearch',this.value)" oninput="App.setField('libSearch',this.value)" placeholder="Search ${state.libTab === 'films' ? films.length + ' stocks' : labs.length + ' labs'}…" aria-label="Search library" style="width:100%;background:transparent;border:0;outline:none;font:inherit;font-size:14px;color:${C.text}">
+<input type="text" value="${escapeHtml(state.libSearch)}" onchange="App.setField('libSearch',this.value)" placeholder="Search ${state.libTab === 'films' ? films.length + ' stocks' : labs.length + ' labs'}…" aria-label="Search library" style="width:100%;background:transparent;border:0;outline:none;font:inherit;font-size:14px;color:${C.text}">
 </div>`;
 
     const filterSummary = state.libTab === 'films'
@@ -1194,7 +1201,7 @@ function b64EncodeShare() {
         }
         return btoa(unescape(encodeURIComponent(JSON.stringify({
             format: state.format, filmColor: state.filmColor, process: state.process,
-            boxSpeed: state.boxSpeed, packCost: state.packCost, rolls: state.rolls, exposures: state.exposures,
+            boxSpeed: state.boxSpeed, packCost: state.packCost, postage: state.postage, rolls: state.rolls, exposures: state.exposures,
             frame120: state.frame120, frame35: state.frame35, pushPull: state.pushPull
         })))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     } catch { return ''; }
@@ -1330,8 +1337,11 @@ function fieldLabel(label, inner) {
 function textInput(field, value, placeholder) {
     return `<input type="text" value="${escapeHtml(value)}" onchange="App.setDraft('${field}',this.value)" ${placeholder ? `placeholder="${escapeHtml(placeholder)}"` : ''} style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`;
 }
+function selectInputHandler(onchangeAttr, value, options) {
+    return `<select onchange="${onchangeAttr}" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer">${options.map(o => `<option value="${escapeHtml(o)}" ${value === o ? 'selected' : ''}>${escapeHtml(o)}</option>`).join('')}</select>`;
+}
 function selectInput(field, value, options) {
-    return `<select onchange="App.setDraft('${field}',this.value)" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer">${options.map(o => `<option value="${escapeHtml(o)}" ${value === o ? 'selected' : ''}>${escapeHtml(o)}</option>`).join('')}</select>`;
+    return selectInputHandler(`App.setDraft('${field}',this.value)`, value, options);
 }
 
 function viewEditor() {
@@ -1403,13 +1413,13 @@ ${isFilm ? `${fieldLabel('Store name', `<input type="text" value="${escapeHtml(s
 <div style="flex:1;min-width:0">${fieldLabel('Price', `<input type="text" inputmode="decimal" value="${escapeHtml(sub.filmCost || '')}" onchange="${setSub('filmCost')}" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}</div>
 </div>
 ${fieldLabel('Purchase link', `<input type="text" value="${escapeHtml(sub.buyLink || '')}" onchange="${setSub('buyLink')}" placeholder="https://…" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}
-${fieldLabel('Availability', selectInput('availability', sub.availability || 'national', ['national', 'state', 'city']))}` : `
+${fieldLabel('Availability', selectInputHandler(setSub('availability'), sub.availability || 'national', ['national', 'state', 'city']))}` : `
 ${fieldLabel('Tier name', `<input type="text" value="${escapeHtml(sub.label || '')}" onchange="${setSub('label')}" placeholder="Develop + hi-res scan" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}
 <div style="display:flex;gap:10px">
 <div style="flex:1;min-width:0">${fieldLabel('Cost per roll', `<input type="text" inputmode="decimal" value="${escapeHtml(sub.devCost || '')}" onchange="${setSub('devCost')}" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}</div>
 <div style="flex:1;min-width:0">${fieldLabel('Mail-back', `<input type="text" inputmode="decimal" value="${escapeHtml(sub.mailBackCost || '')}" onchange="${setSub('mailBackCost')}" placeholder="n/a" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}</div>
 </div>
-${fieldLabel('Turnaround', selectInput('turnaround', sub.turnaround || 'Same week', ['Next day', 'Same week', 'Longer']))}
+${fieldLabel('Turnaround', selectInputHandler(setSub('turnaround'), sub.turnaround || 'Same week', ['Next day', 'Same week', 'Longer']))}
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;background:${C.panel};border:1px solid ${C.border};border-radius:10px">
 <span style="font-size:14px;color:${C.text}">Includes hi-res scans</span>
 <button type="button" onclick="App.toggleSubHiRes()" style="width:52px;height:30px;flex:none;border-radius:15px;border:0;padding:3px;cursor:pointer;display:flex;align-items:center;justify-content:${sub.hiRes ? 'flex-end' : 'flex-start'};background:${sub.hiRes ? C.accBorder : C.border}"><span style="width:24px;height:24px;border-radius:50%;background:${sub.hiRes ? C.acc : C.faint}"></span></button>
@@ -1427,14 +1437,26 @@ const App = {
         if (key === 'homeLab') setHomeLab(val);
         if (key === 'tier') setDefaultTierLabel(val);
         if (key === 'upgradePct') try { localStorage.setItem('upgradeThresholdPercent', val); } catch {}
-        if (key === 'mailRolls') try { localStorage.setItem('mailBackRollCount', val); } catch {}
         if (key === 'rolls') state.rolls = String(Math.min(99, Math.max(1, parseInt(val, 10) || 1)));
         if (key === 'exposures') state.exposures = String(Math.min(99, Math.max(1, parseInt(val, 10) || 1)));
-        if (key === 'postRolls') state.postRolls = String(Math.min(99, Math.max(1, parseInt(val, 10) || 1)));
+        if (key === 'postRolls') {
+            state.postRolls = String(Math.min(99, Math.max(1, parseInt(val, 10) || 1)));
+            try { localStorage.setItem('mailBackRollCount', state.postRolls); } catch {}
+        }
         if (key === 'libFilterModal' && val === true) { /* keep current tab's filters */ }
         render();
     },
-    setView(view) { state.view = view; state.menu = false; render(); },
+    setView(view) {
+        state.view = view;
+        state.menu = false;
+        // Settings' "Starter presets" card reads state.presetRegions directly
+        // with no fetch trigger of its own — without this, a returning user
+        // (setupSeen already set, so openSetup()'s own load never ran this
+        // session) hits Settings and the card is stuck on "Loading regions…"
+        // forever. loadPresetRegions() short-circuits once already loaded.
+        if (view === 'settings' && !state.presetRegions) loadPresetRegions().then(render);
+        render();
+    },
     setFormat(label) { state.format = label; try { localStorage.setItem('globalFormat', label); } catch {} render(); },
     setFilmColor(label) { state.filmColor = FILM_COLOR_VALUE[label]; try { localStorage.setItem('globalFilmColor', state.filmColor); } catch {} render(); },
     incField(key, delta, min, max) {
@@ -1674,7 +1696,7 @@ const App = {
     },
     cancelDraft() { state.draft = null; state.draftKind = null; state.draftKey = null; state.subIndex = null; render(); },
     clearAll() {
-        state.boxSpeed = ''; state.packCost = ''; state.rolls = '1'; state.exposures = '36';
+        state.boxSpeed = ''; state.packCost = ''; state.postage = ''; state.rolls = '1'; state.exposures = '36';
         state.pushPull = '0'; state.postTo = ''; state.mailBack = false; state.tab = 'labs';
         state.fHiRes = false; state.fRush = false;
         render();
