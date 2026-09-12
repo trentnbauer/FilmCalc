@@ -50,6 +50,11 @@
      load before js/app.js, which calls its functions directly. Same file
      root's index.html loads. -->
 <script src="../js/data-validate.js"></script>
+<!-- IANA timezone -> country name table, used as the geo-detect fallback
+     for the Setup wizard's starter-presets pre-tick when Geolocation is
+     denied/unavailable. Must load before js/app.js, which reads TZ_COUNTRY
+     directly. Same file root's index.html loads. -->
+<script src="../js/tz-country.js"></script>
 <!-- This preview's own state + rendering, built against the "FilmCalc
      Lookup 4b" Claude Design mockup (see new/README.md). Reads/writes the
      exact same localStorage keys as js/app.js (filmProfiles, labProfiles,

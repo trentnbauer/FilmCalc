@@ -344,6 +344,7 @@ function computeExpired() {
 // Builds one checkbox row per region that has a film file, a lab file, or
 // both, keyed on country/state/city so a region present in only one index
 // still gets a row (e.g. a labs-only or retailers-only file).
+let presetRawEntries = [];
 async function loadPresetRegions() {
     if (state.presetRegions) return state.presetRegions;
     try {
@@ -351,19 +352,76 @@ async function loadPresetRegions() {
             fetch('../films/index.json').then(r => r.ok ? r.json() : []),
             fetch('../labs/index.json').then(r => r.ok ? r.json() : [])
         ]);
+        presetRawEntries = [...(filmsIdx || []), ...(labsIdx || [])];
         const byKey = new Map();
         const keyOf = e => [e.country || '', e.state || '', e.city || e.label].join('|');
         const add = (entry, kind) => {
             const key = keyOf(entry);
-            const row = byKey.get(key) || { label: entry.city || entry.state || entry.country || entry.label, country: entry.country };
+            const row = byKey.get(key) || { label: entry.city || entry.state || entry.country || entry.label, country: entry.country, city: entry.city };
             row[kind] = entry.file;
             byKey.set(key, row);
         };
         (filmsIdx || []).forEach(e => add(e, 'filmsFile'));
         (labsIdx || []).forEach(e => add(e, 'labsFile'));
         state.presetRegions = [...byKey.values()].sort((a, b) => a.label.localeCompare(b.label));
+        if (geoGuess === undefined) detectUserLocation();
     } catch { state.presetRegions = []; }
     return state.presetRegions;
+}
+
+// ---------- Geo-based preset defaults (mirrors root's js/app.js) ----------
+// Detection never leaves the device: no reverse-geocoding, no IP lookup, no
+// network request of any kind. Only ever *pre-ticks* checkboxes below — the
+// user still chooses what actually gets imported. City-level matching needs
+// lat/lon on index.json entries, which the shipped files don't carry yet
+// (root doesn't get real city-level matches today either) — kept for
+// forward-compat so this starts working the moment that data ships, with
+// zero further app.js changes. Falls back to matching by country via the
+// visitor's IANA timezone (js/tz-country.js) otherwise.
+let geoGuess = undefined;
+let geoDetectPromise = null;
+function nearestPresetCity(lat, lon) {
+    const candidates = presetRawEntries.filter(e => e.city && typeof e.lat === 'number' && typeof e.lon === 'number');
+    let nearest = null, nearestDist = Infinity;
+    candidates.forEach(e => {
+        const dist = (lat - e.lat) ** 2 + (lon - e.lon) ** 2;
+        if (dist < nearestDist) { nearestDist = dist; nearest = e; }
+    });
+    return nearestDist <= 6.25 ? nearest : null;
+}
+function guessLocationFromTimezone() {
+    try {
+        const country = TZ_COUNTRY[Intl.DateTimeFormat().resolvedOptions().timeZone];
+        return country ? { country } : null;
+    } catch { return null; }
+}
+function detectUserLocation() {
+    if (geoGuess !== undefined) return Promise.resolve(geoGuess);
+    if (geoDetectPromise) return geoDetectPromise;
+    const finish = (g) => {
+        geoGuess = g;
+        if (g) {
+            (state.presetRegions || []).forEach(r => {
+                const matches = g.city ? r.city === g.city : r.country === g.country;
+                if (matches) state.presetChecked.add(r.label);
+            });
+        }
+        render();
+        return g;
+    };
+    geoDetectPromise = !navigator.geolocation
+        ? Promise.resolve(finish(guessLocationFromTimezone()))
+        : new Promise(resolve => {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const nearest = nearestPresetCity(pos.coords.latitude, pos.coords.longitude);
+                    resolve(finish(nearest ? { country: nearest.country, city: nearest.city } : guessLocationFromTimezone()));
+                },
+                () => resolve(finish(guessLocationFromTimezone())),
+                { timeout: 5000, maximumAge: 3600000 }
+            );
+        });
+    return geoDetectPromise;
 }
 
 function mergeFilmsInto(all, incoming) {
@@ -506,7 +564,7 @@ function seg(list, current, onPick) {
 }
 
 function shellW() {
-    return state.desktop ? '1080px' : '430px';
+    return state.desktop ? '1440px' : '430px';
 }
 
 function viewShell() {
@@ -515,7 +573,7 @@ function viewShell() {
     return `<div style="position:relative;max-width:${shellWidth};margin:0 auto;min-height:100vh;background:${C.shell};padding-bottom:28px;overflow:hidden">
 ${desktop ? viewDesktopHeader() : viewMobileHeader()}
 ${viewBody()}
-${state.modal || desktop ? viewRollDetails() : ''}
+${state.modal && !desktop ? viewRollDetails() : ''}
 ${state.postModal ? viewPostModal() : ''}
 ${state.shareModal ? viewShareModal() : ''}
 ${state.libFilterModal ? viewLibFilterModal() : ''}
@@ -720,7 +778,7 @@ ${!desktop ? `<div style="padding:10px 20px 0">
 </span>
 <span style="font-size:12px;color:${C.sub};white-space:nowrap">Change ›</span>
 </button>
-</div>` : ''}
+</div>` : `<div style="padding:10px 20px 0">${viewRollDetails()}</div>`}
 ${actions}
 </div>`;
 
@@ -1331,7 +1389,7 @@ function viewSetup() {
 </div>
 ${step === 0 ? `<select onchange="App.setLanguage(this.value)" aria-label="Language" style="width:100%;height:46px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer">${LANGUAGE_OPTIONS.map(([code, label]) => `<option value="${code}" ${state.language === code ? 'selected' : ''}>${label}</option>`).join('')}</select>
 <div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:10px">Prices and dates follow your device's region regardless of this choice.</div>` : ''}
-${step === 1 ? `<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-bottom:10px">Pick the regions you buy and develop in. These fill your library with real lab and retailer prices — you can edit or hide any of them afterwards.</div>
+${step === 1 ? `<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-bottom:10px">${geoGuess ? `Pre-ticked below: whatever looks like it covers ${escapeHtml(geoGuess.city || geoGuess.country)}, guessed from your device's location or timezone — that guess never leaves this device. Tick or untick anything; only what's ticked when you continue actually gets added.` : 'Pick the regions you buy and develop in. These fill your library with real lab and retailer prices — you can edit or hide any of them afterwards.'}</div>
 <div style="display:flex;flex-direction:column;gap:6px;max-height:260px;overflow:auto">${regions.length ? regions.map(r => {
         const on = state.presetChecked.has(r.label);
         return `<button type="button" onclick="App.togglePreset('${jsAttr(r.label)}')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:44px;padding:0 12px;border-radius:8px;font:inherit;font-size:14px;cursor:pointer;text-align:left;background:${on ? C.accBg : C.field};border:1px solid ${on ? C.accBorder : C.border};color:${on ? C.acc : C.text2}">${escapeHtml(r.label)} <span>${on ? '✓' : ''}</span></button>`;
