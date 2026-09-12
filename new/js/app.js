@@ -518,7 +518,7 @@ function viewLookup() {
     const summaryCard = `<div style="margin:18px 20px 0;background:${C.panel};border:1px solid ${C.border};border-radius:10px;overflow:hidden">
 <div style="padding:18px 20px">
 <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-${home && home.lab.address ? `<button type="button" onclick="App.openMaps()" style="display:flex;align-items:center;gap:6px;background:transparent;border:0;padding:0;font:inherit;font-size:12px;color:${C.sub};cursor:pointer">
+${home && home.lab.address ? `<button type="button" onclick="App.openMaps()" aria-label="Directions to ${escapeHtml(home.name)}" style="display:flex;align-items:center;gap:6px;background:transparent;border:0;padding:0;font:inherit;font-size:12px;color:${C.sub};cursor:pointer">
 <svg style="width:13px;height:13px;flex:none" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s7-6.3 7-11a7 7 0 10-14 0c0 4.7 7 11 7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
 <span>${escapeHtml(home.name)} <span style="color:${C.acc}">· home</span></span>
 </button>` : `<span style="font-size:12px;color:${C.sub}">${home ? escapeHtml(home.name) + ' · home' : 'No home lab set'}</span>`}
@@ -614,7 +614,7 @@ ${rows || `<div style="margin-top:10px;padding:22px 18px;border:1px dashed ${C.b
 <svg style="width:18px;height:18px" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"></rect><path stroke-linecap="round" stroke-linejoin="round" d="M3.5 7.5l8.5 6 8.5-6"></path></svg>
 <span style="font-size:10px;letter-spacing:.04em">${state.mailBack ? CUR() + money(homeFee) : 'Postage'}</span>
 </button>
-<button type="button" onclick="App.say('Saved to your library')" aria-label="Save to library" title="Save to library" style="flex:1;height:46px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;cursor:pointer">
+<button type="button" onclick="App.saveCurrentRoll()" aria-label="Save to library" title="Save to library" style="flex:1;height:46px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;cursor:pointer">
 <svg style="width:18px;height:18px" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 4h11l3 3v13a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1z"></path><path stroke-linecap="round" d="M8 4v5h7M8 16h8"></path></svg>
 <span style="font-size:10px;letter-spacing:.04em">Save</span>
 </button>
@@ -758,7 +758,7 @@ ${state.format === '110' || state.format === 'Sheet' ? `<div style="font-size:12
     if (desktop) return body;
     return `<div style="position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:${shellW()};z-index:40;display:flex;flex-direction:column;justify-content:flex-end">
 <div onclick="App.closeModal()" style="position:absolute;inset:0;background:rgba(4,5,6,.72);cursor:pointer"></div>
-<div style="position:relative;background:#131518;border-top:1px solid #2f333a;border-radius:18px 18px 0 0;padding:8px 20px 22px;box-shadow:0 -18px 40px rgba(0,0,0,.45)">
+<div role="dialog" aria-modal="true" style="position:relative;background:#131518;border-top:1px solid #2f333a;border-radius:18px 18px 0 0;padding:8px 20px 22px;box-shadow:0 -18px 40px rgba(0,0,0,.45)">
 <div style="width:38px;height:4px;border-radius:2px;background:${C.border3};margin:0 auto 14px"></div>
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
 <span style="font-size:16px;font-weight:700;color:${C.text}">Roll details</span>
@@ -1050,7 +1050,7 @@ function viewLibFilterModal() {
     const processes = ['All', 'C41', 'B&W', 'E6', 'ECN-2'];
     return `<div style="position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:${shellW()};z-index:46;display:flex;flex-direction:column;justify-content:flex-end">
 <div onclick="App.setField('libFilterModal',false)" style="position:absolute;inset:0;background:rgba(4,5,6,.72);cursor:pointer"></div>
-<div style="position:relative;background:#131518;border-top:1px solid #2f333a;border-radius:18px 18px 0 0;padding:8px 20px 22px;box-shadow:0 -18px 40px rgba(0,0,0,.45)">
+<div role="dialog" aria-modal="true" style="position:relative;background:#131518;border-top:1px solid #2f333a;border-radius:18px 18px 0 0;padding:8px 20px 22px;box-shadow:0 -18px 40px rgba(0,0,0,.45)">
 <div style="width:38px;height:4px;border-radius:2px;background:${C.border3};margin:0 auto 14px"></div>
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
 <span style="font-size:16px;font-weight:700;color:${C.text}">${state.libTab === 'films' ? 'Filter films' : 'Filter labs'}</span>
@@ -1090,7 +1090,7 @@ function viewLibDetail() {
         : '';
     return `<div style="position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:${shellW()};z-index:47;display:flex;flex-direction:column;justify-content:flex-end">
 <div onclick="App.closeLibDetail()" style="position:absolute;inset:0;background:rgba(4,5,6,.72);cursor:pointer"></div>
-<div style="position:relative;background:#131518;border-top:1px solid #2f333a;border-radius:18px 18px 0 0;padding:8px 20px 22px;box-shadow:0 -18px 40px rgba(0,0,0,.45);max-height:82vh;overflow:auto">
+<div role="dialog" aria-modal="true" style="position:relative;background:#131518;border-top:1px solid #2f333a;border-radius:18px 18px 0 0;padding:8px 20px 22px;box-shadow:0 -18px 40px rgba(0,0,0,.45);max-height:82vh;overflow:auto">
 <div style="width:38px;height:4px;border-radius:2px;background:${C.border3};margin:0 auto 14px"></div>
 <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
 <span style="min-width:0">
@@ -1132,7 +1132,7 @@ function viewPostModal() {
     });
     return `<div style="position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:${shellW()};z-index:45;display:flex;flex-direction:column;justify-content:flex-end">
 <div onclick="App.closePost()" style="position:absolute;inset:0;background:rgba(4,5,6,.72);cursor:pointer"></div>
-<div style="position:relative;background:#131518;border-top:1px solid #2f333a;border-radius:18px 18px 0 0;padding:8px 20px 22px;box-shadow:0 -18px 40px rgba(0,0,0,.45)">
+<div role="dialog" aria-modal="true" style="position:relative;background:#131518;border-top:1px solid #2f333a;border-radius:18px 18px 0 0;padding:8px 20px 22px;box-shadow:0 -18px 40px rgba(0,0,0,.45)">
 <div style="width:38px;height:4px;border-radius:2px;background:${C.border3};margin:0 auto 14px"></div>
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
 <span style="font-size:16px;font-weight:700;color:${C.text}">Postage</span>
@@ -1176,7 +1176,7 @@ function viewShareModal() {
     }
     return `<div style="position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:${shellW()};z-index:46;display:flex;flex-direction:column;justify-content:flex-end">
 <div onclick="App.setField('shareModal',false)" style="position:absolute;inset:0;background:rgba(4,5,6,.72);cursor:pointer"></div>
-<div style="position:relative;background:#131518;border-top:1px solid #2f333a;border-radius:18px 18px 0 0;padding:8px 20px 22px;box-shadow:0 -18px 40px rgba(0,0,0,.45)">
+<div role="dialog" aria-modal="true" style="position:relative;background:#131518;border-top:1px solid #2f333a;border-radius:18px 18px 0 0;padding:8px 20px 22px;box-shadow:0 -18px 40px rgba(0,0,0,.45)">
 <div style="width:38px;height:4px;border-radius:2px;background:${C.border3};margin:0 auto 14px"></div>
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
 <span style="font-size:16px;font-weight:700;color:${C.text}">${state.shareKind === 'library' ? 'Share your library' : 'Share this roll'}</span>
@@ -1222,7 +1222,7 @@ function viewMenu() {
     ];
     return `<div style="position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:${shellW()};z-index:50;display:flex;flex-direction:column;justify-content:flex-start">
 <div onclick="App.closeMenu()" style="position:absolute;inset:0;background:rgba(4,5,6,.72);cursor:pointer"></div>
-<div style="position:relative;margin:0;background:#131518;border-bottom:1px solid #2f333a;border-radius:0 0 18px 18px;padding:14px 20px 18px;box-shadow:0 18px 40px rgba(0,0,0,.45)">
+<div role="dialog" aria-modal="true" style="position:relative;margin:0;background:#131518;border-bottom:1px solid #2f333a;border-radius:0 0 18px 18px;padding:14px 20px 18px;box-shadow:0 18px 40px rgba(0,0,0,.45)">
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
 <span style="font-size:16px;font-weight:700;color:${C.text}">Menu</span>
 <button type="button" onclick="App.closeMenu()" aria-label="Close" style="width:32px;height:32px;border-radius:8px;background:#1f2228;border:0;color:${C.sub};font:inherit;font-size:15px;line-height:1;cursor:pointer">✕</button>
@@ -1252,7 +1252,7 @@ function viewSetup() {
     const regions = state.presetRegions || [];
     return `<div style="position:fixed;inset:0;z-index:60;display:flex;align-items:flex-start;justify-content:center;padding:28px 16px;overflow:auto">
 <div style="position:absolute;inset:0;background:rgba(4,5,6,.82)"></div>
-<div style="position:relative;width:100%;max-width:480px;background:#131518;border:1px solid #2f333a;border-radius:14px;padding:18px 20px 20px;box-shadow:0 30px 80px -20px #000">
+<div role="dialog" aria-modal="true" style="position:relative;width:100%;max-width:480px;background:#131518;border:1px solid #2f333a;border-radius:14px;padding:18px 20px 20px;box-shadow:0 30px 80px -20px #000">
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
 <span style="font-size:16px;font-weight:700;color:${C.text}">Set up FilmCalc</span>
 <span style="display:flex;align-items:center;gap:5px">${SETUP_STEPS.map((_, i) => `<span style="width:6px;height:6px;border-radius:50%;background:${i === step ? C.acc : '#33333a'}"></span>`).join('')}</span>
@@ -1301,7 +1301,7 @@ function viewChangelog() {
     const items = state.changelog || [];
     return `<div style="position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:${shellW()};z-index:62;display:flex;flex-direction:column;justify-content:flex-end">
 <div onclick="App.closeChangelog()" style="position:absolute;inset:0;background:rgba(4,5,6,.72);cursor:pointer"></div>
-<div style="position:relative;background:#131518;border-top:1px solid #2f333a;border-radius:18px 18px 0 0;padding:8px 20px 22px;box-shadow:0 -18px 40px rgba(0,0,0,.45)">
+<div role="dialog" aria-modal="true" style="position:relative;background:#131518;border-top:1px solid #2f333a;border-radius:18px 18px 0 0;padding:8px 20px 22px;box-shadow:0 -18px 40px rgba(0,0,0,.45)">
 <div style="width:38px;height:4px;border-radius:2px;background:${C.border3};margin:0 auto 14px"></div>
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
 <span style="font-size:16px;font-weight:700;color:${C.text}">What's new</span>
@@ -1320,7 +1320,7 @@ function viewConfirm() {
     const c = state.confirm;
     return `<div style="position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:${shellW()};z-index:64;display:flex;flex-direction:column;justify-content:flex-end">
 <div onclick="App.cancelConfirm()" style="position:absolute;inset:0;background:rgba(4,5,6,.78);cursor:pointer"></div>
-<div style="position:relative;background:#131518;border-top:1px solid ${C.redBorder};border-radius:18px 18px 0 0;padding:20px 20px 22px;box-shadow:0 -18px 40px rgba(0,0,0,.5)">
+<div role="dialog" aria-modal="true" style="position:relative;background:#131518;border-top:1px solid ${C.redBorder};border-radius:18px 18px 0 0;padding:20px 20px 22px;box-shadow:0 -18px 40px rgba(0,0,0,.5)">
 <div style="font-size:17px;font-weight:700;color:${C.text}">${escapeHtml(c.title)}</div>
 <p style="margin:8px 0 0;font-size:13px;line-height:1.55;color:${C.sub}">${escapeHtml(c.body)}</p>
 <div style="display:flex;gap:8px;margin-top:18px">
@@ -1353,7 +1353,7 @@ function viewEditor() {
         meta: isFilm ? `${b.rolls}×${b.exposures} · ${CUR()}${(parseFloat(b.filmCost) || 0).toFixed(2)} · ${b.availability}` : `${CUR()}${(parseFloat(b.devCost) || 0).toFixed(2)} dev · mail-back ${b.mailBackCost === '' ? 'n/a' : CUR() + (parseFloat(b.mailBackCost) || 0).toFixed(2)}`,
         i
     }));
-    return `<div style="position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:${shellW()};z-index:58;background:${C.shell};display:flex;flex-direction:column">
+    return `<div role="dialog" aria-modal="true" style="position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:${shellW()};z-index:58;background:${C.shell};display:flex;flex-direction:column">
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid ${C.border};background:#131518">
 <span style="font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.text}">${isFilm ? 'Edit film' : 'Edit lab'}</span>
 <button type="button" onclick="App.cancelDraft()" aria-label="Close" style="width:36px;height:36px;border-radius:8px;background:#1f2228;border:1px solid ${C.border2};color:${C.sub};font:inherit;font-size:16px;line-height:1;cursor:pointer">✕</button>
@@ -1399,7 +1399,7 @@ function viewSubEditor() {
     const i = state.subIndex;
     const sub = (isFilm ? d.bundles : d.services)[i] || {};
     const setSub = (field) => `App.setSub('${field}',this.value)`;
-    return `<div style="position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:${shellW()};z-index:59;background:${C.shell};display:flex;flex-direction:column">
+    return `<div role="dialog" aria-modal="true" style="position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:${shellW()};z-index:59;background:${C.shell};display:flex;flex-direction:column">
 <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid ${C.border};background:#131518">
 <button type="button" onclick="App.closeSub()" aria-label="Back" style="width:36px;height:36px;flex:none;border-radius:8px;background:#1f2228;border:1px solid ${C.border2};color:${C.sub};font:inherit;font-size:16px;line-height:1;cursor:pointer">‹</button>
 <span style="flex:1;font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.text}">${isFilm ? 'Purchase link' : 'Service tier'}</span>
@@ -1562,6 +1562,22 @@ const App = {
         render();
     },
     openEditor() { App.openEditorFor(); },
+    // Mirrors root's App.saveToLibrary(): opens the film editor pre-filled
+    // from whatever's currently entered on the Lookup screen, rather than
+    // writing straight to storage with no name — the user still names and
+    // confirms it via the normal editor/Save flow. Previously this button
+    // just fired a "Saved to your library" toast with no persistence at all.
+    saveCurrentRoll() {
+        const processLabel = Object.keys(PROCESS_VALUE).find(k => PROCESS_VALUE[k] === state.process) || 'C41';
+        state.draftKind = 'film';
+        state.draftKey = null;
+        state.draft = {
+            name: '', boxSpeed: state.boxSpeed || '400', maxPushPull: '1',
+            format: state.format, process: processLabel, colorType: FILM_COLOR_LABEL[state.filmColor] || 'Colour',
+            bundles: [{ storeName: '', rolls: state.rolls || '1', exposures: state.exposures || '36', filmCost: (parseFloat(state.packCost) || 0).toFixed(2), buyLink: '', availability: 'national' }]
+        };
+        render();
+    },
     hideItem() {
         const it = state.libOpen;
         if (!it) return;
@@ -1810,6 +1826,26 @@ function init() {
         state.deferredPrompt = e;
         state.installable = true;
         render();
+    });
+
+    // Escape closes whichever overlay is topmost. Innermost first (a sub-item
+    // editor is only ever open while its parent film/lab editor also is, so
+    // check subIndex before draft) — every branch here already has a real,
+    // focusable close/✕/Done button in the UI, this just adds the keyboard
+    // shortcut. Setup wizard is deliberately excluded: it's forced onboarding,
+    // not dismissable.
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        if (state.subIndex !== null) App.closeSub();
+        else if (state.draft !== null) App.cancelDraft();
+        else if (state.confirm) App.cancelConfirm();
+        else if (state.libFilterModal) App.setField('libFilterModal', false);
+        else if (state.shareModal) App.setField('shareModal', false);
+        else if (state.postModal) App.closePost();
+        else if (state.modal) App.closeModal();
+        else if (state.libOpen) App.closeLibDetail();
+        else if (state.changelogOpen) App.closeChangelog();
+        else if (state.menu) App.closeMenu();
     });
 
     if (state.setupOpen) loadPresetRegions().then(render);
