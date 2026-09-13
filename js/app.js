@@ -94,6 +94,22 @@ const PROCESSES = ['C41', 'B&W', 'E6', 'ECN-2'];
 const PROCESS_VALUE = { 'C41': 'C41', 'B&W': 'BW', 'E6': 'E6', 'ECN-2': 'ECN2' };
 const PROCESS_LABEL = { C41: 'C41', BW: 'B&W', E6: 'E6', ECN2: 'ECN-2' };
 const FRAME120 = { '6x4.5': 16, '6x6': 12, '6x7': 10, '6x8': 9, '6x9': 8, '6x12': 6, '6x17': 4 };
+// 220 is physically the same backs as 120, just twice the roll length —
+// same frame sizes, exactly double the exposures per back.
+const FRAME220 = Object.fromEntries(Object.entries(FRAME120).map(([k, v]) => [k, v * 2]));
+// 127's exposure count depends on the picture format the camera exposes,
+// not a per-back roll length like 120/220 — 4x6.5cm (the original 1912
+// standard) gives 8, 4x4cm square gives 12, 4x3cm half-frame gives 16.
+const FRAME127 = { '4x6.5': 8, '4x4': 12, '4x3': 16 };
+// Formats whose exposure count comes from picking a physical back/frame
+// size rather than typing a number — camera back UI shows for these,
+// the free-text exposures stepper shows for everything else.
+function frameTableFor(format) {
+    if (format === '120') return FRAME120;
+    if (format === '220') return FRAME220;
+    if (format === '127') return FRAME127;
+    return null;
+}
 const FRAME35 = { full: { label: 'Full frame', factor: 1 }, half: { label: 'Half frame', factor: 2 }, xpan: { label: 'XPan', factor: 0.583 } };
 const FRAME35_KEY = { full: 'v3FrameFull', half: 'v3FrameHalf', xpan: 'v3FrameXpan' };
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -140,7 +156,7 @@ const state = {
     desktopMq: null, installable: false,
     changelogOpen: false, changelog: null,
     menuInstalled: false,
-    setupOpen: !localStorage.getItem('setupSeen'), setupStep: 0, presetChecked: new Set(), presetRegions: null, setupBusy: false,
+    setupOpen: !localStorage.getItem('setupSeen'), setupStep: 0, presetChecked: new Set(), geoChecked: false, setupBusy: false,
     consent: localStorage.getItem('analyticsConsent'),
     homeLab: getHomeLab(), tier: getDefaultTierLabel(),
     upgradePct: localStorage.getItem('upgradeThresholdPercent') || '4',
@@ -168,7 +184,8 @@ function shootIso() {
     return Math.round(box * Math.pow(2, pushStops()));
 }
 function exposuresPerRoll() {
-    if (state.format === '120') return FRAME120[state.frame120] || 12;
+    const frameTable = frameTableFor(state.format);
+    if (frameTable) return frameTable[state.frame120] || Object.values(frameTable)[0];
     if (state.format === '110') return 24;
     if (state.format === 'Sheet') return 1;
     return Math.max(1, parseInt(state.exposures, 10) || 36);
@@ -181,7 +198,7 @@ function framesShot() {
     const factor = (FRAME35[state.frame35] || FRAME35.full).factor;
     return Math.max(1, Math.round(exp * factor));
 }
-function camOverride() { return state.format === '120' ? (FRAME120[state.frame120] || null) : null; }
+function camOverride() { const frameTable = frameTableFor(state.format); return frameTable ? (frameTable[state.frame120] || null) : null; }
 function mailOpts() {
     return { includeMailBack: !!state.mailBack, mailBackRollCount: Math.max(1, parseInt(state.postRolls, 10) || 1), mailToLabFee: num(state.postTo) };
 }
@@ -334,33 +351,18 @@ function computeExpired() {
     };
 }
 
-// ---------- Preset regions (real films/index.json + labs/index.json) ----------
-// Builds one checkbox row per region that has a film file, a lab file, or
-// both, keyed on country/state/city so a region present in only one index
-// still gets a row (e.g. a labs-only or retailers-only file).
-let presetRawEntries = [];
-async function loadPresetRegions() {
-    if (state.presetRegions) return state.presetRegions;
-    try {
-        const [filmsIdx, labsIdx] = await Promise.all([
-            fetch('films/index.json').then(r => r.ok ? r.json() : []),
-            fetch('labs/index.json').then(r => r.ok ? r.json() : [])
-        ]);
-        presetRawEntries = [...(filmsIdx || []), ...(labsIdx || [])];
-        const byKey = new Map();
-        const keyOf = e => [e.country || '', e.state || '', e.city || e.label].join('|');
-        const add = (entry, kind) => {
-            const key = keyOf(entry);
-            const row = byKey.get(key) || { label: entry.city || entry.state || entry.country || entry.label, country: entry.country, city: entry.city };
-            row[kind] = entry.file;
-            byKey.set(key, row);
-        };
-        (filmsIdx || []).forEach(e => add(e, 'filmsFile'));
-        (labsIdx || []).forEach(e => add(e, 'labsFile'));
-        state.presetRegions = [...byKey.values()].sort((a, b) => a.label.localeCompare(b.label));
-        if (geoGuess === undefined) detectUserLocation();
-    } catch { state.presetRegions = []; }
-    return state.presetRegions;
+// ---------- Preset indexes (real films/index.json + labs/index.json) ----------
+// Kept as two separate lists (not merged into one "region" row) so the
+// Setup wizard / Settings picker shows Film stocks and Labs as distinct
+// sections a user can tick independently — a region only having a lab
+// preset (or only a film preset) doesn't force the other kind on them.
+let presetFilmIndex = null, presetLabIndex = null;
+async function loadPresetIndexes() {
+    if (presetFilmIndex && presetLabIndex) return;
+    try { presetFilmIndex = await (await fetch('films/index.json')).json(); } catch { presetFilmIndex = []; }
+    try { presetLabIndex = await (await fetch('labs/index.json')).json(); } catch { presetLabIndex = []; }
+    if (geoGuess === undefined) detectUserLocation();
+    render();
 }
 
 // ---------- Geo-based preset defaults (mirrors root's js/app.js) ----------
@@ -372,10 +374,17 @@ async function loadPresetRegions() {
 // forward-compat so this starts working the moment that data ships, with
 // zero further app.js changes. Falls back to matching by country via the
 // visitor's IANA timezone (js/tz-country.js) otherwise.
+//
+// state.geoChecked gates the picker UI (see renderPresetPicker): the list
+// stays in a "detecting…" placeholder — nothing pre-fillable yet — until
+// this resolves one way or the other (granted+matched, granted+no-match,
+// denied, timed out, or no Geolocation API at all), so a slow permission
+// prompt can't leave checkboxes interactive for a moment before suddenly
+// jumping to pre-ticked underneath the user.
 let geoGuess = undefined;
 let geoDetectPromise = null;
 function nearestPresetCity(lat, lon) {
-    const candidates = presetRawEntries.filter(e => e.city && typeof e.lat === 'number' && typeof e.lon === 'number');
+    const candidates = [...(presetFilmIndex || []), ...(presetLabIndex || [])].filter(e => e.city && typeof e.lat === 'number' && typeof e.lon === 'number');
     let nearest = null, nearestDist = Infinity;
     candidates.forEach(e => {
         const dist = (lat - e.lat) ** 2 + (lon - e.lon) ** 2;
@@ -395,11 +404,11 @@ function detectUserLocation() {
     const finish = (g) => {
         geoGuess = g;
         if (g) {
-            (state.presetRegions || []).forEach(r => {
-                const matches = g.city ? r.city === g.city : r.country === g.country;
-                if (matches) state.presetChecked.add(r.label);
-            });
+            const matches = (e) => g.city ? e.city === g.city : e.country === g.country;
+            (presetFilmIndex || []).filter(matches).forEach(e => state.presetChecked.add(`films:${e.file}`));
+            (presetLabIndex || []).filter(matches).forEach(e => state.presetChecked.add(`labs:${e.file}`));
         }
+        state.geoChecked = true;
         render();
         return g;
     };
@@ -416,6 +425,54 @@ function detectUserLocation() {
             );
         });
     return geoDetectPromise;
+}
+
+// Checkboxes rather than a single-choice picker — someone setting up for,
+// say, Melbourne wants both the Melbourne AND the country-wide retailer
+// files in one go. Checked state lives in state.presetChecked (kind:file
+// keys, e.g. "films:melbourne-retailers.yaml") so a geo-matched pre-check
+// or the user's own tick/untick survives a re-render triggered by
+// anything else on the same screen.
+function presetCheckList(kind, entries) {
+    if (!entries.length) return `<div style="font-size:12px;color:${C.faint};padding:6px 2px">${escapeHtml(t('v3NoPresetsAvailable'))}</div>`;
+    return entries.map(f => {
+        const key = `${kind}:${f.file}`;
+        const on = state.presetChecked.has(key);
+        return `<button type="button" onclick="App.togglePresetCheck('${kind}','${jsAttr(f.file)}')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:42px;padding:0 12px;border-radius:8px;font:inherit;font-size:13px;cursor:pointer;text-align:left;background:${on ? C.accBg : C.field};border:1px solid ${on ? C.accBorder : C.border};color:${on ? C.acc : C.text2}">${escapeHtml(f.label)} <span>${on ? '✓' : ''}</span></button>`;
+    }).join('');
+}
+// Shared by the Setup wizard's presets step and Settings' Starter presets
+// card (each wraps this in its own container/footer/button). Gated on
+// state.geoChecked, not just the indexes being loaded — see
+// detectUserLocation()'s own comment for why waiting for that matters.
+function renderPresetPicker() {
+    if (!presetFilmIndex || !presetLabIndex) return `<div style="font-size:12px;color:${C.faint}">${escapeHtml(t('v3LoadingRegions'))}</div>`;
+    if (!state.geoChecked) return `<div style="font-size:12px;color:${C.faint}">${escapeHtml(t('v3DetectingRegion'))}</div>`;
+    const note = geoGuess ? t('v3GeoPreTickedNote', { place: geoGuess.city || geoGuess.country }) : t('v3PickRegionsNote');
+    return `<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-bottom:10px">${escapeHtml(note)}</div>
+<div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v2SectionFilms'))}</div>
+<div style="display:flex;flex-direction:column;gap:6px;max-height:180px;overflow:auto;margin-bottom:14px">${presetCheckList('films', presetFilmIndex)}</div>
+<div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v2SectionLabs'))}</div>
+<div style="display:flex;flex-direction:column;gap:6px;max-height:180px;overflow:auto">${presetCheckList('labs', presetLabIndex)}</div>`;
+}
+
+// State/city suggestions for the purchase-link editor's Availability
+// fields — pooled from the preset index (every state/city the shipped
+// presets actually cover) plus whatever the user has already typed into
+// their own saved bundles, so a returning value autocompletes even before
+// (or without) the preset index having loaded. Recomputed on every call
+// rather than cached: cheap (a few hundred entries at most), and always
+// reflects the latest saved bundle a keystroke ago.
+function knownStatesAndCities() {
+    const states = new Set(), cities = new Set();
+    const addFrom = (entries) => (entries || []).forEach(e => {
+        if (e.state) states.add(e.state);
+        if (e.city) cities.add(e.city);
+    });
+    addFrom(presetFilmIndex);
+    addFrom(presetLabIndex);
+    Object.values(getAllFilms()).forEach(f => addFrom(normalizeFilmBundles(f)));
+    return { states: [...states].sort(), cities: [...cities].sort() };
 }
 
 function mergeFilmsInto(all, incoming) {
@@ -488,21 +545,21 @@ ${hasErrors ? '' : `<button type="button" onclick="App.confirmImport()" style="f
 </div>`;
 }
 
-async function importPresetRegions(regions) {
+async function importPresetFiles(filmFiles, labFiles) {
     const allFilms = getAllFilms();
     const allLabs = getAllLabs();
     let filmsAdded = 0, labsAdded = 0;
-    for (const r of regions) {
+    for (const file of filmFiles) {
         try {
-            if (r.filmsFile) {
-                const doc = jsyaml.load(await (await fetch('films/' + r.filmsFile)).text());
-                if (Array.isArray(doc?.films)) { mergeFilmsInto(allFilms, doc.films); filmsAdded += doc.films.length; }
-            }
-            if (r.labsFile) {
-                const doc = jsyaml.load(await (await fetch('labs/' + r.labsFile)).text());
-                if (Array.isArray(doc?.labs)) { mergeLabsInto(allLabs, doc.labs); labsAdded += doc.labs.length; }
-            }
-        } catch { /* one bad region file shouldn't block the rest */ }
+            const doc = jsyaml.load(await (await fetch('films/' + file)).text());
+            if (Array.isArray(doc?.films)) { mergeFilmsInto(allFilms, doc.films); filmsAdded += doc.films.length; }
+        } catch { /* one bad file shouldn't block the rest */ }
+    }
+    for (const file of labFiles) {
+        try {
+            const doc = jsyaml.load(await (await fetch('labs/' + file)).text());
+            if (Array.isArray(doc?.labs)) { mergeLabsInto(allLabs, doc.labs); labsAdded += doc.labs.length; }
+        } catch { /* one bad file shouldn't block the rest */ }
     }
     setAllFilms(allFilms);
     setAllLabs(allLabs);
@@ -595,16 +652,22 @@ function viewMobileHeader() {
 
 function viewDesktopHeader() {
     const labCount = Object.keys(getAllLabs()).length, filmCount = Object.keys(getAllFilms()).length;
-    const tabs = [
-        ['lookup', t('v3NavLookup')], ['library', t('navLibrary')], ['expired', t('v3NavExpired')], ['settings', t('navSettings')]
-    ].map(([key, label]) => {
+    const tab = (key, label) => {
         const on = state.view === key;
         return `<button type="button" onclick="App.setView('${key}')" style="background:transparent;border:0;border-bottom:${on ? '2px solid #ff7a2f' : '2px solid transparent'};padding:0 0 4px;font:inherit;font-size:13px;cursor:pointer;color:${on ? C.text : C.sub};font-weight:${on ? 600 : 400}">${escapeHtml(label)}</button>`;
-    }).join('');
+    };
+    // Lookup/Expired are the calculator itself; Library/Settings are more
+    // like backend configuration for it (saved data, preferences) — kept
+    // visually separate on the right rather than lumped in with the
+    // calculator tabs on the left.
+    const frontTabs = [['lookup', t('v3NavLookup')], ['expired', t('v3NavExpired')]].map(([k, l]) => tab(k, l)).join('');
+    const backTabs = [['library', t('navLibrary')], ['settings', t('navSettings')]].map(([k, l]) => tab(k, l)).join('');
     return `<div style="display:flex;align-items:center;gap:26px;padding:16px 28px;border-bottom:1px solid ${C.border}">
 <span style="font-size:18px;font-weight:700;letter-spacing:-.01em;color:${C.text}">${escapeHtml(t('appTitle'))}</span>
-<div style="display:flex;gap:20px">${tabs}</div>
-<span style="margin-left:auto;display:flex;align-items:center;gap:16px">
+<div style="display:flex;gap:20px">${frontTabs}</div>
+<span style="margin-left:auto;display:flex;align-items:center;gap:20px">
+<div style="display:flex;gap:20px">${backTabs}</div>
+<span style="width:1px;height:16px;background:${C.border}"></span>
 <span style="font-size:12px;color:${C.faint}">${escapeHtml(t('v3HeaderLabsStocksSummary', { home: state.homeLab || t('v3NoHomeLab'), labs: labCount, stocks: filmCount }))}</span>
 <button type="button" onclick="App.openChangelog()" style="background:transparent;border:0;padding:0;font:inherit;font-size:12px;color:${C.sub};cursor:pointer">${escapeHtml(t('v3WhatsNew'))}</button>
 <button type="button" onclick="App.install()" style="height:34px;padding:0 12px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:12px;font-weight:600;cursor:pointer">${escapeHtml(t('v2ButtonInstallApp'))}</button>
@@ -858,15 +921,15 @@ ${overLimit ? `<svg style="width:13px;height:13px;flex:none;color:${C.red}" fill
 </div>
 <div>
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
-<span style="min-width:0"><span style="display:block;font-size:11px;color:${C.sub}">${state.format === '120' ? escapeHtml(t('v3CameraBackLabel')) : (state.format === 'Sheet' ? escapeHtml(t('v3FramesPerSheetLabel')) : escapeHtml(t('v3ExposuresOnRollLabel')))}</span><span style="display:block;font-size:11px;line-height:1.4;color:${C.faint};margin-top:2px">${state.format === '35mm' && state.frame35 !== 'full' ? escapeHtml(t('v3FramesShotArrow', { n: framesShot() })) : ''}</span></span>
-${(state.format === '35mm' || state.format === '127' || state.format === '220') ? `<span style="display:flex;align-items:center;gap:2px;background:${C.field};border:1px solid ${C.border};border-radius:9px;padding:3px">
+<span style="min-width:0"><span style="display:block;font-size:11px;color:${C.sub}">${frameTableFor(state.format) ? escapeHtml(t('v3CameraBackLabel')) : (state.format === 'Sheet' ? escapeHtml(t('v3FramesPerSheetLabel')) : escapeHtml(t('v3ExposuresOnRollLabel')))}</span><span style="display:block;font-size:11px;line-height:1.4;color:${C.faint};margin-top:2px">${state.format === '35mm' && state.frame35 !== 'full' ? escapeHtml(t('v3FramesShotArrow', { n: framesShot() })) : ''}</span></span>
+${state.format === '35mm' ? `<span style="display:flex;align-items:center;gap:2px;background:${C.field};border:1px solid ${C.border};border-radius:9px;padding:3px">
 <button type="button" onclick="App.incField('exposures',-1,1,99)" aria-label="${escapeHtml(t('v3OneExposureFewer'))}" style="width:40px;height:38px;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:20px;font-weight:600;line-height:1;cursor:pointer">−</button>
 <input type="text" inputmode="numeric" value="${escapeHtml(state.exposures)}" onchange="App.setField('exposures',this.value)" aria-label="${escapeHtml(t('v3ExposuresOnRollLabel'))}" style="width:46px;height:38px;background:transparent;border:0;outline:none;text-align:center;font:inherit;font-size:20px;font-weight:700;color:${C.text}">
 <button type="button" onclick="App.incField('exposures',1,1,99)" aria-label="${escapeHtml(t('v3OneExposureMore'))}" style="width:40px;height:38px;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:20px;font-weight:600;line-height:1;cursor:pointer">+</button>
 </span>` : `<span style="font-size:20px;font-weight:700;color:${C.text}">${exp}</span>`}
 </div>
-${state.format === '120' ? `<div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px;flex-wrap:wrap">
-${Object.keys(FRAME120).map(k => `<button type="button" onclick="App.setField('frame120','${k}')" style="flex:1;min-width:70px;height:44px;border-radius:6px;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:${state.frame120 === k ? '#1f2228' : 'transparent'};border:${state.frame120 === k ? '1px solid ' + C.border3 : '0'};color:${state.frame120 === k ? C.text : C.sub};font-weight:${state.frame120 === k ? 600 : 400}"><span style="font-size:13px">${k.replace('x', '×')}</span><span style="font-size:10px;font-weight:400;color:${C.faint}">${escapeHtml(t('v3ExpCount', { n: FRAME120[k] }))}</span></button>`).join('')}
+${frameTableFor(state.format) ? `<div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px;flex-wrap:wrap">
+${Object.keys(frameTableFor(state.format)).map(k => `<button type="button" onclick="App.setField('frame120','${k}')" style="flex:1;min-width:70px;height:44px;border-radius:6px;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:${state.frame120 === k ? '#1f2228' : 'transparent'};border:${state.frame120 === k ? '1px solid ' + C.border3 : '0'};color:${state.frame120 === k ? C.text : C.sub};font-weight:${state.frame120 === k ? 600 : 400}"><span style="font-size:13px">${k.replace('x', '×')}</span><span style="font-size:10px;font-weight:400;color:${C.faint}">${escapeHtml(t('v3ExpCount', { n: frameTableFor(state.format)[k] }))}</span></button>`).join('')}
 </div>` : ''}
 ${state.format === '110' || state.format === 'Sheet' ? `<div style="font-size:12px;color:${C.faint};line-height:1.5">${state.format === '110' ? escapeHtml(t('v3The110AlwaysNote')) : escapeHtml(t('v3SheetPricedOneFrameNote'))}</div>` : ''}
 </div>
@@ -983,10 +1046,7 @@ ${hiddenFilms.map(f => `<div style="display:flex;align-items:center;justify-cont
 ${hiddenLabs.map(l => `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid ${C.border}"><span style="font-size:13px;color:${C.text2}">${escapeHtml(l.name)}</span><button type="button" onclick="App.unhide('lab','${jsAttr(l.name)}')" style="height:34px;padding:0 12px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:12px;cursor:pointer">${escapeHtml(t('v3ButtonUnhide'))}</button></div>`).join('')}
 </div>`}`),
 
-        settingsCard(escapeHtml(t('v2SettingsStarterPresets')), `<div style="display:flex;flex-direction:column;gap:6px">${(state.presetRegions || []).slice(0, 8).map(r => {
-            const on = state.presetChecked.has(r.label);
-            return `<button type="button" onclick="App.togglePreset('${jsAttr(r.label)}')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:42px;padding:0 12px;border-radius:8px;font:inherit;font-size:13px;cursor:pointer;text-align:left;background:${on ? C.accBg : C.field};border:1px solid ${on ? C.accBorder : C.border};color:${on ? C.acc : C.text2}">${escapeHtml(r.label)} <span>${on ? '✓' : ''}</span></button>`;
-        }).join('') || `<div style="font-size:12px;color:${C.faint}">${escapeHtml(t('v3LoadingRegions'))}</div>`}</div>
+        settingsCard(escapeHtml(t('v2SettingsStarterPresets')), `${renderPresetPicker()}
 <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px">
 <span style="font-size:12px;color:${C.faint}">${escapeHtml(t(state.presetChecked.size === 1 ? 'v3RegionsSelectedOne' : 'v3RegionsSelected', { n: state.presetChecked.size }))}</span>
 <button type="button" onclick="App.importPresets()" style="height:40px;padding:0 14px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:600;cursor:pointer">${escapeHtml(t('v3ButtonImport'))}</button>
@@ -1374,7 +1434,13 @@ ${items.map(([key, label, meta]) => `<button type="button" onclick="App.setView(
 function viewSetup() {
     const step = state.setupStep;
     const labNames = Object.keys(getAllLabs()).filter(n => !getAllLabs()[n].hidden);
-    const regions = state.presetRegions || [];
+    // Same "stable internal marker" pattern as Settings' Home lab card
+    // (viewSettings) — untranslated so the <option value>/state.tier
+    // comparison can't drift once a locale translates the display label.
+    const CHEAPEST_QUALIFYING = '__cheapest_that_qualifies__';
+    const tierLabels = [CHEAPEST_QUALIFYING].concat(
+        [...new Set(Object.values(getAllLabs()).flatMap(l => normalizeLabServices(l).map((tier, i) => ((Array.isArray(l.services) ? l.services : [l])[i] || {}).label || tierDescription(tier))))]
+    );
     return `<div style="position:fixed;inset:0;z-index:60;display:flex;align-items:flex-start;justify-content:center;padding:28px 16px;overflow:auto">
 <div style="position:absolute;inset:0;background:rgba(4,5,6,.82)"></div>
 <div role="dialog" aria-modal="true" style="position:relative;width:100%;max-width:480px;background:#131518;border:1px solid #2f333a;border-radius:14px;padding:18px 20px 20px;box-shadow:0 30px 80px -20px #000">
@@ -1389,16 +1455,12 @@ function viewSetup() {
 </div>
 ${step === 0 ? `<select onchange="App.setLanguage(this.value)" aria-label="${escapeHtml(t('v2SettingsLanguage'))}" style="width:100%;height:46px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer">${LANGUAGE_OPTIONS.map(([code, label]) => `<option value="${code}" ${currentLocale === code ? 'selected' : ''}>${label}</option>`).join('')}</select>
 <div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:10px">${escapeHtml(t('v3LanguageRegionNote'))}</div>` : ''}
-${step === 1 ? `<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-bottom:10px">${geoGuess ? escapeHtml(t('v3GeoPreTickedNote', { place: geoGuess.city || geoGuess.country })) : escapeHtml(t('v3PickRegionsNote'))}</div>
-<div style="display:flex;flex-direction:column;gap:6px;max-height:260px;overflow:auto">${regions.length ? regions.map(r => {
-        const on = state.presetChecked.has(r.label);
-        return `<button type="button" onclick="App.togglePreset('${jsAttr(r.label)}')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:44px;padding:0 12px;border-radius:8px;font:inherit;font-size:14px;cursor:pointer;text-align:left;background:${on ? C.accBg : C.field};border:1px solid ${on ? C.accBorder : C.border};color:${on ? C.acc : C.text2}">${escapeHtml(r.label)} <span>${on ? '✓' : ''}</span></button>`;
-    }).join('') : `<div style="font-size:12px;color:${C.faint}">${escapeHtml(t('v3LoadingRegions'))}</div>`}</div>
+${step === 1 ? `${renderPresetPicker()}
 <div style="font-size:12px;color:${C.faint};margin-top:10px">${escapeHtml(t(state.presetChecked.size === 1 ? 'v3RegionsSelectedImportsOne' : 'v3RegionsSelectedImports', { n: state.presetChecked.size }))}</div>` : ''}
 ${step === 2 ? `<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v2SettingsHomeLab'))}</div>
 <select onchange="App.setField('homeLab',this.value)" aria-label="${escapeHtml(t('v2SettingsHomeLab'))}" style="width:100%;height:46px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer"><option value="">${escapeHtml(t('v3PickALab'))}</option>${labNames.map(n => `<option value="${escapeHtml(n)}" ${state.homeLab === n ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('')}</select>
 <div style="font-size:11px;color:${C.sub};margin:14px 0 6px">${escapeHtml(t('v2SetupPreferredTier'))}</div>
-<select onchange="App.setField('tier',this.value)" aria-label="${escapeHtml(t('v2SetupPreferredTier'))}" style="width:100%;height:46px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer"><option value="">${escapeHtml(t('v3CheapestThatQualifies'))}</option></select>
+<select onchange="App.setField('tier',this.value)" aria-label="${escapeHtml(t('v2SetupPreferredTier'))}" style="width:100%;height:46px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer">${tierLabels.map(l => `<option value="${escapeHtml(l === CHEAPEST_QUALIFYING ? '' : l)}" ${((state.tier || CHEAPEST_QUALIFYING) === l) ? 'selected' : ''}>${escapeHtml(l === CHEAPEST_QUALIFYING ? t('v3CheapestThatQualifies') : l)}</option>`).join('')}</select>
 <div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:10px">${escapeHtml(t('v3HomeLabExplainerNote'))}</div>` : ''}
 <div style="display:flex;gap:10px;margin-top:20px">
 ${step > 0 ? `<button type="button" onclick="App.setupBack()" style="flex:1;height:46px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v2ButtonBack'))}</button>` : ''}
@@ -1538,7 +1600,17 @@ ${isFilm ? `${fieldLabel(escapeHtml(t('v3StoreNameLabel')), `<input type="text" 
 <div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('v3PriceLabel')), `<input type="text" inputmode="decimal" value="${escapeHtml(sub.filmCost || '')}" onchange="${setSub('filmCost')}" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}</div>
 </div>
 ${fieldLabel(escapeHtml(t('v2TitlePurchaseLink')), `<input type="text" value="${escapeHtml(sub.buyLink || '')}" onchange="${setSub('buyLink')}" placeholder="https://…" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}
-${fieldLabel(escapeHtml(t('v2LabelAvailability')), selectInputHandler(setSub('availability'), sub.availability || 'national', ['national', 'state', 'city']))}` : `
+${fieldLabel(escapeHtml(t('v2LabelAvailability')), selectInputHandler(setSub('availability'), sub.availability || 'national', ['national', 'state', 'city']))}
+${(sub.availability === 'state' || sub.availability === 'city') ? (() => {
+    const { states, cities } = knownStatesAndCities();
+    const dataOptions = (values) => values.map(v => `<option value="${escapeHtml(v)}">`).join('');
+    return `<div style="display:flex;gap:10px">
+<div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('v2LabelState')), `<input type="text" value="${escapeHtml(sub.state || '')}" onchange="${setSub('state')}" list="bundle-state-options" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}</div>
+${sub.availability === 'city' ? `<div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('v2LabelCity')), `<input type="text" value="${escapeHtml(sub.city || '')}" onchange="${setSub('city')}" list="bundle-city-options" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}</div>` : ''}
+</div>
+<datalist id="bundle-state-options">${dataOptions(states)}</datalist>
+<datalist id="bundle-city-options">${dataOptions(cities)}</datalist>`;
+})() : ''}` : `
 ${fieldLabel(escapeHtml(t('v3TierNameLabel')), `<input type="text" value="${escapeHtml(sub.label || '')}" onchange="${setSub('label')}" placeholder="${escapeHtml(t('v3TierNamePlaceholder'))}" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}
 <div style="display:flex;gap:10px">
 <div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('v2LabelCostPerRoll')), `<input type="text" inputmode="decimal" value="${escapeHtml(sub.devCost || '')}" onchange="${setSub('devCost')}" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}</div>
@@ -1574,12 +1646,13 @@ const App = {
     setView(view) {
         state.view = view;
         state.menu = false;
-        // Settings' "Starter presets" card reads state.presetRegions directly
-        // with no fetch trigger of its own — without this, a returning user
-        // (setupSeen already set, so openSetup()'s own load never ran this
-        // session) hits Settings and the card is stuck on "Loading regions…"
-        // forever. loadPresetRegions() short-circuits once already loaded.
-        if (view === 'settings' && !state.presetRegions) loadPresetRegions().then(render);
+        // Settings' "Starter presets" card reads presetFilmIndex/presetLabIndex
+        // directly with no fetch trigger of its own — without this, a
+        // returning user (setupSeen already set, so openSetup()'s own load
+        // never ran this session) hits Settings and the card is stuck on
+        // "Loading regions…" forever. loadPresetIndexes() short-circuits
+        // (and renders itself) once already loaded.
+        if (view === 'settings' && !(presetFilmIndex && presetLabIndex)) loadPresetIndexes();
         render();
     },
     setFormat(label) { state.format = label; try { localStorage.setItem('globalFormat', label); } catch {} render(); },
@@ -1791,7 +1864,15 @@ const App = {
     setSub(field, val) {
         const isFilm = state.draftKind === 'film';
         const list = isFilm ? state.draft.bundles : state.draft.services;
-        list[state.subIndex][field] = val;
+        const sub = list[state.subIndex];
+        sub[field] = val;
+        // Clear the now-hidden field(s) rather than leaving a stale value
+        // saved but no longer editable — matches the select's own visible
+        // state/city fields (national hides both, state hides just city).
+        if (field === 'availability') {
+            if (val === 'national') { sub.state = ''; sub.city = ''; }
+            else if (val === 'state') { sub.city = ''; }
+        }
         render();
     },
     toggleSubHiRes() {
@@ -1852,7 +1933,7 @@ const App = {
         render();
     },
     closeChangelog() { state.changelogOpen = false; render(); },
-    openSetup() { state.setupOpen = true; state.setupStep = 0; state.menu = false; loadPresetRegions().then(render); render(); },
+    openSetup() { state.setupOpen = true; state.setupStep = 0; state.menu = false; loadPresetIndexes(); render(); },
     closeSetup() { state.setupOpen = false; try { localStorage.setItem('setupSeen', '1'); } catch {} render(); },
     setupBack() { state.setupStep = Math.max(0, state.setupStep - 1); render(); },
     async setupNext() {
@@ -1864,14 +1945,20 @@ const App = {
         state.setupStep = Math.min(SETUP_STEPS.length - 1, state.setupStep + 1);
         render();
     },
-    togglePreset(label) {
-        if (state.presetChecked.has(label)) state.presetChecked.delete(label); else state.presetChecked.add(label);
+    togglePresetCheck(kind, file) {
+        const key = `${kind}:${file}`;
+        if (state.presetChecked.has(key)) state.presetChecked.delete(key); else state.presetChecked.add(key);
         render();
     },
     async importPresets() {
-        const regions = (state.presetRegions || []).filter(r => state.presetChecked.has(r.label));
-        if (!regions.length) { say(t('v3PickAtLeastOneRegion')); return; }
-        const { filmsAdded, labsAdded } = await importPresetRegions(regions);
+        const filmFiles = [], labFiles = [];
+        state.presetChecked.forEach(key => {
+            const i = key.indexOf(':');
+            const kind = key.slice(0, i), file = key.slice(i + 1);
+            if (kind === 'films') filmFiles.push(file); else if (kind === 'labs') labFiles.push(file);
+        });
+        if (!filmFiles.length && !labFiles.length) { say(t('v3PickAtLeastOneRegion')); return; }
+        const { filmsAdded, labsAdded } = await importPresetFiles(filmFiles, labFiles);
         state.presetChecked = new Set();
         say(filmsAdded + labsAdded ? t('v3ImportedFilmsLabs', { films: filmsAdded, labs: labsAdded }) : t('v3NothingNewToImport'));
         render();
@@ -2083,7 +2170,7 @@ function init() {
         else if (state.menu) App.closeMenu();
     });
 
-    if (state.setupOpen) loadPresetRegions().then(render);
+    if (state.setupOpen) loadPresetIndexes();
 
     render();
 }
