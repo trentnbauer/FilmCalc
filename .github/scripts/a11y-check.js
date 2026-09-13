@@ -1,21 +1,26 @@
 // Runs axe-core (via @axe-core/playwright) against every top-level view
-// reachable from App.goView() and fails on any WCAG 2 A/AA violation.
+// reachable from App.setView() and fails on any WCAG 2 A/AA violation.
 // Used by .github/workflows/a11y-check.yml, which serves the repo root
 // over HTTP first (index.html loads js/*.js via relative <script src>, so
 // this can't just open the file directly - file:// script loading is
 // unreliable/CSP-restricted in a way http:// isn't).
 //
-// Only checks views reachable via a single App.goView() call from the
+// Only checks views reachable via a single App.setView() call from the
 // initial state - it doesn't drive into nested flows like the setup
 // wizard, the film/lab editor, or a lab's tier editor (those need
 // specific state set up first, e.g. an edit index). Good enough to catch
 // the class of bug this exists for (an unlabeled control, a link that
 // only differs from surrounding text by color) without turning this
 // script into a full end-to-end test suite.
+//
+// View names/method match the app's current App object — updated when
+// root's UI was swapped for the "FilmCalc 3.0" redesign (previously
+// App.goView('main'|'settings'|'library'|'expired'); now
+// App.setView('lookup'|'settings'|'library'|'expired')).
 const { chromium } = require('playwright');
 const AxeBuilder = require('@axe-core/playwright').default;
 
-const VIEWS = ['main', 'settings', 'library', 'expired'];
+const VIEWS = ['lookup', 'settings', 'library', 'expired'];
 
 const url = process.argv[2];
 if (!url) {
@@ -31,7 +36,7 @@ if (!url) {
 
     let violationCount = 0;
     for (const view of VIEWS) {
-        await page.evaluate((v) => { App.goView(v); }, view);
+        await page.evaluate((v) => { App.setView(v); }, view);
         await page.waitForTimeout(200);
 
         const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
