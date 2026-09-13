@@ -773,6 +773,8 @@ const STRINGS = {
         v3NothingHiddenNote: 'Nothing hidden. Hide a film or lab in the library to keep it out of lookups without deleting it.',
         v3ButtonUnhide: 'Unhide',
         v3LoadingRegions: 'Loading regions…',
+        v3DetectingRegion: 'Detecting your region…',
+        v3NoPresetsAvailable: 'None available yet.',
         v3RegionsSelected: '{n} regions selected',
         v3RegionsSelectedOne: '{n} region selected',
         v3ButtonImport: 'Import',
