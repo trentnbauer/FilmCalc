@@ -1,7 +1,7 @@
 name: Accessibility check
 
 # Runs axe-core (via Playwright) against the rendered app on every view
-# reachable from App.goView(), and fails on any WCAG 2 A/AA violation.
+# reachable from App.setView(), and fails on any WCAG 2 A/AA violation.
 # Catches regressions like an unlabeled <select>/<input> or a link that
 # only differs from surrounding text by color - the kind of thing that's
 # easy to introduce in a template-string-rendered UI (js/app.js has no
