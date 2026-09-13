@@ -2110,6 +2110,17 @@ if (document.readyState === 'loading') {
     init();
 }
 
+// Registered after load (not blocking init) so a slow/failed registration
+// never delays the calculator itself becoming usable — see sw.js's own
+// header comment for what it does and doesn't cache. Same registration
+// root's js/app.js does; '/sw.js' is already root-absolute so this works
+// unchanged whether this page is served from /new/ or (post-swap) from /.
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+    });
+}
+
 })();
 
 
