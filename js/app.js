@@ -1,55 +1,43 @@
-// FilmCalc app shell — rebuilt for the "FilmCalc Redesign" mockup, not
-// retrofitted onto the old one. Plain global functions, no bundler, same
-// pattern as the rest of js/*.js: shares index.html's global scope via
-// <script src>. Wholly replaces the old tab-based UI (index.html's own
-// inline script, js/film-lookup.js, js/dev-cost-ui.js, js/modals.js,
-// js/themes.js, js/select-filter.js) with a single view-switching shell
-// whose visual design and state machine come from that mockup. Reuses
-// js/dev-cost-calc.js's pure calculation engine unchanged — this file is
-// presentation + state only, no duplicated math. Still uses js/i18n.js's
-// t() for strings.
+// FilmCalc app shell — the "FilmCalc 3.0" redesign, built against the
+// Claude Design mockup "FilmCalc Lookup 4b.dc.html" (see new/README.md).
+// Developed at /new/ alongside the previous UI so it could be iterated on
+// and brought to feature parity without touching the shipped app, then
+// promoted to replace that UI here once it was. Plain global functions, no
+// bundler, whole-view innerHTML re-render on every state change, onclick/
+// onchange strings calling into the global `App` object below — same
+// architecture the previous UI used.
 //
-// Deliberately dropped from the old app (none of these are depicted in
-// the redesign mockup, and re-threading them through 1600+ lines of
-// Tailwind-classed, DOM-ID-coupled modal markup would mean building a
-// second, hidden UI behind this one just to host them):
-//   - The 11 accessibility/colour theme YAML files (js/themes.js) — this
-//     UI has one dark palette, fixed (no user-configurable accent picker;
-//     each section heading gets its own fixed colour instead — see
-//     SECTION_COLORS). Dark/light toggle exists in the header for parity
-//     with the mockup, but (same as the mockup itself) no light palette
-//     is defined yet.
-//   - "Add via AI" modal, generic YAML file-drop import.
-// Still preserved, just re-implemented against this file's own state
-// instead of the old DOM: JSON backup export/import, region-file preset
-// import (films/labs index.json + per-region YAML), hide/edit/delete for
-// saved films and labs, home lab + preferred tier + mail-back settings,
-// changelog ("What's New") popup.
+// Data layer is unchanged from the previous UI: reads/writes the exact
+// same localStorage keys (filmProfiles, labProfiles, homeLab, globalFormat,
+// globalProcess, globalFilmColor, defaultTierLabel, upgradeThresholdPercent,
+// mailBackRollCount, analyticsConsent, locale, setupSeen) and calls the
+// same pure calculation engine (js/dev-cost-calc.js, loaded before this
+// file — see index.html), so nobody's saved library changed shape in this
+// move. Uses js/i18n.js's t() for strings, same as the previous UI.
+//
+// One deliberate simplification remains from the original mockup, noted
+// here instead of at every call site: the lab/film edit modals expose the
+// fields the mockup designed a control for. Fields the mockup's edit form
+// never asks about (per-tier pushPullCost/tiffScan/noPushPull/processes,
+// per-bundle state/city) are preserved unchanged from the existing record
+// when editing, and given sensible defaults when creating a brand new
+// tier/bundle.
 
-// The muted-gray text tiers (#928e88/#9c9994/#a6a4a0/#b0aeac/#b9b8b6, plus
-// the two error/link reds #e5675c/#d2857d) were bumped from their original,
-// slightly darker values to clear WCAG AA's 4.5:1 text-contrast floor
-// against every background color in this file — the originals ranged from
-// borderline (~4.2:1) to nearly invisible (~1.9:1) against the lighter
-// panel backgrounds (#26262a is the worst case). Keeping five distinct
-// tiers on a near-black palette compresses them closer together than
-// they'd otherwise be — that's the tradeoff of AA compliance here, not
-// an oversight — but their relative brightness order (and which tier
-// each call site uses) is unchanged.
-// ---------- Small shared helpers (moved from the old index.html) ----------
+(function () {
+'use strict';
+
+// ---------- Small shared helpers (same behaviour as js/app.js's own) ----------
 function escapeHtml(str) {
     return String(str ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
-// For a value embedded as a single-quoted JS-string argument inside an
-// onclick="..." attribute (e.g. onclick="App.editFilm('${jsAttr(key)}')").
-// escapeHtml() alone isn't enough there: the browser HTML-decodes the
-// attribute (turning &#39; back into ') before handing it to the JS
-// engine as the handler body, so a name/key containing a literal quote
-// closes the string early — and a name like `x'); alert(1); //` becomes
-// live, executing JS in the page. Backslash-escape quotes/backslashes for
-// the JS-string layer first, then HTML-escape the result for the
-// attribute layer, so both the browser's HTML parser and the JS parser
-// see the value as inert data.
+// RFC 4180-ish CSV escaping — quote a field only when it actually needs it
+// (contains a comma, quote, or newline), doubling any embedded quotes.
+// Same behaviour as js/app.js's own csvField/csvLine.
+function csvField(v) {
+    const s = v === null || v === undefined ? '' : String(v);
+    return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+function csvLine(fields) { return fields.map(csvField).join(','); }
 function jsAttr(str) {
     return escapeHtml(String(str ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, '\\n'));
 }
@@ -66,131 +54,20 @@ function readJSON(key, fallback) {
         return raw === null ? fallback : JSON.parse(raw);
     } catch { return fallback; }
 }
-function writeJSON(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
-
-// RFC 4180-ish CSV escaping — quote a field only when it actually needs
-// it (contains a comma, quote, or newline), doubling any embedded quotes.
-function csvField(v) {
-    const s = v === null || v === undefined ? '' : String(v);
-    return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-}
-function csvLine(fields) { return fields.map(csvField).join(','); }
-
-// Unicode-safe base64url — plain btoa()/atob() only handle Latin1, which
-// throws on the non-ASCII city/store names real preset data actually has
-// (e.g. "Île-de-France"). URL-safe alphabet (-_ instead of +/, no padding)
-// so the result drops straight into a query param with no extra encoding.
-function b64EncodeUnicode(str) {
-    const bytes = new TextEncoder().encode(str);
-    let binary = '';
-    bytes.forEach(b => { binary += String.fromCharCode(b); });
-    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-function b64DecodeUnicode(str) {
-    const padded = str.replace(/-/g, '+').replace(/_/g, '/').padEnd(str.length + (4 - str.length % 4) % 4, '=');
-    const binary = atob(padded);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    return new TextDecoder().decode(bytes);
-}
-// Shared by App.shareLibraryLink() (copy) and renderLibraryQr() (QR code)
-// so both always encode the exact same URL. Returns null when there's
-// nothing saved yet, or the payload somehow can't be encoded.
-function buildLibraryShareUrl() {
-    const films = Object.values(getAllFilms());
-    const labs = Object.values(getAllLabs());
-    if (!films.length && !labs.length) return null;
-    try {
-        const encoded = b64EncodeUnicode(JSON.stringify({ films, labs, settings: { homeLab: getHomeLab() } }));
-        return `${location.origin}${location.pathname}?lib=${encoded}`;
-    } catch { return null; }
-}
-
+function writeJSON(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch {} }
+function num(v) { const n = parseFloat(v); return isNaN(n) ? 0 : n; }
+function money(n) { return (n || 0).toFixed(2); }
 function CUR() { return escapeHtml(localStorage.getItem('currencySymbol') || '$'); }
-
 function getAllFilms() { return readJSON('filmProfiles', {}); }
 function getAllLabs() { return readJSON('labProfiles', {}); }
-
-// ---------- Format / process option lists (options.yaml, with a fallback) ----------
-let FORMAT_OPTIONS = [
-    { value: '35mm', label: '35mm' }, { value: '120', label: '120' },
-    { value: '110', label: '110' }, { value: '127', label: '127' },
-    { value: '220', label: '220' }, { value: 'sheet', label: 'Sheet' }
-];
-let PROCESS_OPTIONS = [
-    { value: 'C41', label: 'C-41' }, { value: 'BW', label: 'B&W' },
-    { value: 'E6', label: 'E-6' }, { value: 'ECN2', label: 'ECN-2' }
-];
-// The everyday film-lookup dropdown — what the image looks like, not the
-// development chemistry (see filmColorType() in js/dev-cost-calc.js). Kept
-// separate from PROCESS_OPTIONS/state.process, which now lives under
-// "Extra fees / Advanced" as Development Type and still drives actual lab
-// tier matching, since that's genuinely chemistry-specific (a chromogenic
-// B&W stock like Ilford XP2 Super develops in C-41, not BW chemistry).
-function filmTypeOptions() {
-    return [
-        { value: 'color', label: t('v2LabelColorTypeOptionColor') },
-        { value: 'bw', label: t('expiredFilmTypeBw') },
-        { value: 'speciality', label: t('v2LabelColorTypeOptionSpeciality') },
-    ];
-}
-// [code, native-name] — every locale in js/i18n.js's STRINGS object needs an
-// entry here too, or it's translated but unreachable from either language
-// picker (Settings and the first-run Setup wizard both read this same list).
-const LANGUAGE_OPTIONS = [
-    ['en', 'English'], ['es', 'Español'], ['ja', '日本語'], ['de', 'Deutsch'], ['pt', 'Português (BR)'],
-    ['fr', 'Français'], ['ko', '한국어'], ['zh', '中文 (简体)'], ['it', 'Italiano'], ['ru', 'Русский']
-];
-// Speciality stocks (redscale, Harman Phoenix, Switch Azure, …) are
-// virtually always C-41 in practice, same as plain color — still just a
-// default, override-able same as the other two.
-const DEV_TYPE_DEFAULT = { color: 'C41', bw: 'BW', speciality: 'C41' };
-const PUSH_PULL_OPTIONS = [-3, -2, -1, 0, 1, 2, 3];
-async function loadOptions() {
-    try {
-        const res = await fetch('options.yaml');
-        if (res.ok) {
-            const parsed = jsyaml.load(await res.text());
-            if (Array.isArray(parsed?.formats) && parsed.formats.length) {
-                FORMAT_OPTIONS = parsed.formats.map(o => ({ value: String(o.value), label: String(o.label ?? o.value) }));
-            }
-            if (Array.isArray(parsed?.processes) && parsed.processes.length) {
-                PROCESS_OPTIONS = parsed.processes.map(o => ({ value: String(o.value), label: String(o.label ?? o.value) }));
-            }
-        }
-    } catch { /* keep fallback defaults */ }
-}
-
-// ---------- 120 camera back / 35mm frame size ----------
-// 120's frame count depends on the camera back, not the film stock; 35mm's
-// depends on whether the camera is half-frame/full-frame/XPan. Both are a
-// session preference (like the theme), never saved onto a film's own record.
-const FRAME120 = { '6x4.5': 16, '6x6': 12, '6x7': 10, '6x8': 9, '6x9': 8, '6x12': 6, '6x17': 4 };
-const FRAME35 = { full: { label: 'Full frame', factor: 1 }, half: { label: 'Half frame', factor: 2 }, xpan: { label: 'XPan', factor: 0.583 } };
-
-// ---------- Favourites (used by the Setup wizard, kept from js/modals.js) ----------
-let favouriteLabs = new Set(readJSON('favouriteLabs', []));
-let favouriteFilms = new Set(readJSON('favouriteFilms', []));
-function isFavLab(name) { return favouriteLabs.has(name); }
-function isFavFilm(key) { return favouriteFilms.has(key); }
-function toggleFavFilm(key) {
-    if (favouriteFilms.has(key)) favouriteFilms.delete(key); else favouriteFilms.add(key);
-    writeJSON('favouriteFilms', [...favouriteFilms]);
-}
-function toggleFavLab(name) {
-    if (favouriteLabs.has(name)) favouriteLabs.delete(name); else favouriteLabs.add(name);
-    writeJSON('favouriteLabs', [...favouriteLabs]);
-}
-function labDirectionsUrl(labName) {
-    const lab = getAllLabs()[labName];
-    if (!lab || !lab.address) return '';
-    return 'https://maps.google.com/?q=' + encodeURIComponent(lab.address);
-}
-
+function setAllFilms(v) { writeJSON('filmProfiles', v); }
+function setAllLabs(v) { writeJSON('labProfiles', v); }
+function getHomeLab() { return localStorage.getItem('homeLab') || ''; }
+function setHomeLab(name) { try { localStorage.setItem('homeLab', name || ''); } catch {} }
+function getDefaultTierLabel() { return localStorage.getItem('defaultTierLabel') || ''; }
+function setDefaultTierLabel(label) { try { localStorage.setItem('defaultTierLabel', label || ''); } catch {} }
 const turnaroundLabels = { next_day: 'Next day', same_week: 'Same week', longer: 'Longer' };
-// Human label for a service tier that was never given one (older/community
-// data has no `label` field) — used as its identity for "preferred tier"
-// matching and shown wherever a tier needs a name.
+const turnaroundValues = { 'Next day': 'next_day', 'Same week': 'same_week', 'Longer': 'longer' };
 function tierDescription(tier) {
     const parts = [];
     if (tier.highResScan) parts.push('Hi-res');
@@ -198,167 +75,145 @@ function tierDescription(tier) {
     parts.push(turnaroundLabels[tier.turnaroundTime] || tier.turnaroundTime || 'Same week');
     return parts.join(' · ') || 'Service';
 }
-
-// ---------- Home lab / preferred tier (Settings + Setup) ----------
-function getHomeLab() { return localStorage.getItem('homeLab') || ''; }
-function setHomeLab(name) { localStorage.setItem('homeLab', name || ''); }
-function getDefaultTierLabel() { return localStorage.getItem('defaultTierLabel') || ''; }
-function setDefaultTierLabel(label) { localStorage.setItem('defaultTierLabel', label || ''); }
-// Back-compat with the old { lab, tierIndex } pref the Setup modal wrote —
-// migrated once into the new homeLab/defaultTierLabel keys.
-function migrateLegacyDefaultLabPref() {
-    if (localStorage.getItem('homeLab') !== null) return;
-    const legacy = readJSON('defaultLabPref', null);
-    if (!legacy || !legacy.lab) return;
-    setHomeLab(legacy.lab);
-    const lab = getAllLabs()[legacy.lab];
-    if (lab) {
-        const raw = Array.isArray(lab.services) && lab.services.length ? lab.services : [lab];
-        const tiers = normalizeLabServices(lab);
-        const t = tiers[legacy.tierIndex];
-        const rawT = raw[legacy.tierIndex];
-        if (t) setDefaultTierLabel((rawT && rawT.label) || tierDescription(t));
-    }
+function labDirectionsUrl(lab) {
+    if (!lab || !lab.address) return '';
+    const ios = /iP(hone|ad|od)|Macintosh/.test(navigator.userAgent || '');
+    const q = encodeURIComponent(lab.address);
+    return ios ? 'https://maps.apple.com/?q=' + q : 'https://www.google.com/maps/search/?api=1&query=' + q;
 }
+function filmKeyOf(f) { return filmKey(f.name, f.boxSpeed, f.format); }
+
+// ---------- Option lists (fixed set the mockup designed UI for) ----------
+const FORMATS = ['35mm', '120', '110', '127', '220', 'Sheet'];
+const FORMAT_VALUE = { '35mm': '35mm', '120': '120', '110': '110', '127': '127', '220': '220', 'Sheet': 'sheet' };
+const FORMAT_LABEL = { '35mm': '35mm', '120': '120', '110': '110', '127': '127', '220': '220', 'sheet': 'Sheet' };
+const FILM_COLORS = ['Colour', 'B&W', 'Speciality'];
+const FILM_COLOR_VALUE = { 'Colour': 'color', 'B&W': 'bw', 'Speciality': 'speciality' };
+const FILM_COLOR_LABEL = { color: 'Colour', bw: 'B&W', speciality: 'Speciality' };
+const PROCESSES = ['C41', 'B&W', 'E6', 'ECN-2'];
+const PROCESS_VALUE = { 'C41': 'C41', 'B&W': 'BW', 'E6': 'E6', 'ECN-2': 'ECN2' };
+const PROCESS_LABEL = { C41: 'C41', BW: 'B&W', E6: 'E6', ECN2: 'ECN-2' };
+const FRAME120 = { '6x4.5': 16, '6x6': 12, '6x7': 10, '6x8': 9, '6x9': 8, '6x12': 6, '6x17': 4 };
+const FRAME35 = { full: { label: 'Full frame', factor: 1 }, half: { label: 'Half frame', factor: 2 }, xpan: { label: 'XPan', factor: 0.583 } };
+const FRAME35_KEY = { full: 'v3FrameFull', half: 'v3FrameHalf', xpan: 'v3FrameXpan' };
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const LANGUAGE_OPTIONS = [
+    ['en', 'English'], ['es', 'Español'], ['ja', '日本語'], ['de', 'Deutsch'], ['pt', 'Português (BR)'],
+    ['fr', 'Français'], ['ko', '한국어'], ['zh', '中文 (简体)'], ['it', 'Italiano'], ['ru', 'Русский']
+];
+// Internal step tokens, not display text — kept untranslated/stable since
+// only .length and array index matter structurally. Display label comes
+// from setupStepLabel() below, computed fresh each render (unlike a
+// top-level translated const, which would go stale if the locale changes
+// after this module first loads).
+const SETUP_STEPS = ['language', 'presets', 'homeLab'];
+function setupStepLabel(key) {
+    return key === 'language' ? t('v3SetupStepLanguage') : key === 'presets' ? t('v3SetupStepPresets') : t('v3SetupStepHomeLab');
+}
+const YEARS_PER_STOP = { c41: { cold: 15, controlled: 10, uncontrolled: 5 }, bw: { cold: 20, controlled: 13, uncontrolled: 7 }, e6: { cold: 10, controlled: 7, uncontrolled: 3 } };
+const EXPIRED_PROCESSES = [['C-41 colour', 'c41'], ['B&W', 'bw'], ['E-6 slide', 'e6']];
+const STORAGE_OPTIONS = [
+    ['Cold stored', 'cold', 'Fridge or freezer since new; ages slowest.'],
+    ['Climate controlled', 'controlled', 'Indoors at steady room temperature, out of sunlight; the normal rate.'],
+    ['Uncontrolled', 'uncontrolled', 'Shed, garage, roof space or a hot car; ages fastest.']
+];
+const STORAGE_LABEL_KEY = { cold: 'v3StorageColdLabel', controlled: 'v3StorageControlledLabel', uncontrolled: 'v3StorageUncontrolledLabel' };
+const STORAGE_HELP_KEY = { cold: 'v3StorageColdHelp', controlled: 'v3StorageControlledHelp', uncontrolled: 'v3StorageUncontrolledHelp' };
 
 // ---------- App state ----------
 const state = {
-    view: 'main', // main | expired | library | settings
-    draft: null, draftKind: null, draftKey: null,
-    // Index into draft.bundles (film) or draft.services (lab) currently open
-    // in the full-screen sub-editor, or null when showing the list view.
-    subEditIndex: null,
-    setupOpen: false, setupStep: 0, setupBusy: false, // 0=language, 1=import presets, 2=home lab
-    changelogOpen: false, changelogShowNumbers: null, // null = show full history (manual open); array = just-merged-since-last-visit (auto popup)
-    // Which starter-preset checkboxes are ticked, keyed "kind:file" (e.g.
-    // "films:melbourne-retailers.yaml") — controlled, unlike most of this
-    // screen's markup, specifically so a geo-matched pre-check (see
-    // detectUserLocation()) survives a re-render triggered by something
-    // else on the same Settings page instead of snapping back on every
-    // unrelated keystroke.
-    presetChecked: new Set(),
-    extrasOpen: false, expandedLab: null, expandedFilm: null,
+    view: 'lookup', desktop: false, menu: false, modal: false,
     format: localStorage.getItem('globalFormat') || '35mm',
-    process: localStorage.getItem('globalProcess') || 'C41',
-    // Named filmColor, NOT filmType — state.filmType already exists below,
-    // owned by the Expired Film calculator ('c41'/'bw'/'e6', a different
-    // concept). Reusing that key here silently collided: the second
-    // `filmType:` in this same object literal won the init value, and every
-    // onchange/onclick sharing App.setField('filmType', …) fought over one
-    // slot instead of two.
     filmColor: localStorage.getItem('globalFilmColor') || 'color',
-    boxSpeed: '', pushPull: '0', packCost: '', postage: '', rolls: '1', exposures: '36',
-    onceOff: '', perRoll: '',
-    frame35: localStorage.getItem('globalCamera35Type') || 'full',
+    process: localStorage.getItem('globalProcess') || 'C41',
+    boxSpeed: '', packCost: '', postage: '', rolls: '1', exposures: '36',
     frame120: localStorage.getItem('globalCamera120Type') || '6x7',
-    fHiRes: readJSON('reqFilters', {}).hiRes || false,
-    fTiff: readJSON('reqFilters', {}).tiff || false,
-    fRush: readJSON('reqFilters', {}).rush || false,
-    fMail: readJSON('reqFilters', {}).mail || false,
-    fWeek: readJSON('reqFilters', {}).week || false,
-    isoFilter: 'shoot',
-    loadedFilmKey: '',
-    loadedStoreName: '',
-    loadedBuyLink: '',
-    presetCountryFilter: '',
-    presetCountryFilterTouched: false,
-    mailRolls: localStorage.getItem('mailBackRollCount') || '1',
+    frame35: localStorage.getItem('globalCamera35Type') || 'full',
+    pushPull: '0',
+    tab: 'labs', fHiRes: (readJSON('reqFilters', {}) || {}).hiRes || false, fRush: (readJSON('reqFilters', {}) || {}).rush || false,
+    includePush: true,
+    postModal: false, postTo: '', postRolls: localStorage.getItem('mailBackRollCount') || '1', mailBack: false,
+    shareModal: false, copied: false, shareKind: 'roll',
+    libTab: 'films', libSearch: '', libFilter: 'All', libProcess: 'All', libFormat: 'All', libIso: 'All', libOpen: null, libFilterModal: false,
+    draft: null, draftKind: null, draftKey: null, subIndex: null, confirm: null, toast: '',
+    pendingImport: null, lastImportSnapshot: null, importNote: '',
+    desktopMq: null, installable: false,
+    changelogOpen: false, changelog: null,
+    menuInstalled: false,
+    setupOpen: !localStorage.getItem('setupSeen'), setupStep: 0, presetChecked: new Set(), presetRegions: null, setupBusy: false,
+    consent: localStorage.getItem('analyticsConsent'),
+    homeLab: getHomeLab(), tier: getDefaultTierLabel(),
     upgradePct: localStorage.getItem('upgradeThresholdPercent') || '4',
-    libProcess: 'all', libFormat: 'all', libTab: 'films', libSearch: '',
-    dark: localStorage.getItem('lightMode') !== '1',
-    expBox: '400', expiryMonth: String(new Date().getMonth() + 1), expiryYear: '', filmType: 'c41', storage: 'controlled',
-    importNote: '',
-    // Set by App.importYamlFile() once a custom-uploaded file parses and
-    // validates, holding what WOULD be imported so the user can see and
-    // confirm it before anything touches localStorage — see
-    // App.confirmImport()/cancelImport(). null when no import is pending.
-    pendingImport: null,
-    // Snapshot of filmProfiles/labProfiles taken right before the most
-    // recent import was written, so App.undoLastImport() can put it back.
-    // Session-only (not persisted) — deliberately simple, one level of undo.
-    lastImportSnapshot: null,
-    // Mobile-shell-only fields (harmless on desktop, which never reads them).
-    menuOpen: false, toast: '', allowPushPull: true,
-    // Lab names pinned into the side-by-side compare panel below the
-    // ranking list — session-only (not persisted), capped at 3 so the
-    // panel stays readable. See App.toggleCompareLab().
-    compareLabs: [],
-    showLibraryQr: false
+    theme: localStorage.getItem('newUiTheme') || 'system',
+    expBox: '400', expMonth: MONTHS[new Date().getMonth()], expYear: '', expProcess: 'c41', storage: 'controlled'
 };
 let toastTimer = null;
-function flash(msg) {
-    state.toast = msg;
+function say(text) {
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => { state.toast = ''; render(); }, 1800);
-}
-function persistFilters() {
-    writeJSON('reqFilters', { hiRes: state.fHiRes, tiff: state.fTiff, rush: state.fRush, mail: state.fMail, week: state.fWeek });
+    state.toast = text;
+    render();
+    toastTimer = setTimeout(() => { state.toast = ''; render(); }, 2400);
 }
 
-function num(v) { const n = parseFloat(v); return isNaN(n) ? 0 : n; }
-function money(n) { return (n || 0).toFixed(2); }
-
-function pushPullStops(s) { return parseInt(s.pushPull) || 0; }
-// The ISO the roll is actually shot at, derived from Box Speed + the
-// push/pull stops selector — replaces the old free-text "Shooting at
-// (Target ISO)" field, which this ISO is still shown/used as internally.
-function effectiveShootIso(s) {
-    const box = parseFloat(s.boxSpeed);
+// ---------- Calculation adapters over js/dev-cost-calc.js ----------
+// Mirrors js/app.js's rankLabs()/computeFilmRows()/computeCheaperFilm()/
+// computeExpired(), against this file's own state field names, and using
+// the exact same pure functions (normalizeLabServices, normalizeFilmBundles,
+// computeCostPerPhoto, effectiveMailBackFee, tierMatchesFilmProcess) from
+// js/dev-cost-calc.js so the math can never drift from root's.
+function pushStops() { return parseInt(state.pushPull, 10) || 0; }
+function shootIso() {
+    const box = parseFloat(state.boxSpeed);
     if (!box) return 0;
-    return Math.round(box * Math.pow(2, pushPullStops(s)));
+    return Math.round(box * Math.pow(2, pushStops()));
 }
-
-function currentExposuresPerRoll(s) {
-    if (s.format === '120') return FRAME120[s.frame120] || 12;
-    const factor = (FRAME35[s.frame35] || FRAME35.full).factor;
-    return Math.max(1, Math.round((Math.round(num(s.exposures)) || 36) * factor));
+function exposuresPerRoll() {
+    if (state.format === '120') return FRAME120[state.frame120] || 12;
+    if (state.format === '110') return 24;
+    if (state.format === 'Sheet') return 1;
+    return Math.max(1, parseInt(state.exposures, 10) || 36);
 }
-
-function camOverrideExposures(s) {
-    return s.format === '120' ? (FRAME120[s.frame120] || null) : null;
+// Frames actually taken — half frame doubles a 35mm roll, XPan halves it
+// (roughly), 120/110/Sheet already return an exact frame count above.
+function framesShot() {
+    const exp = exposuresPerRoll();
+    if (state.format !== '35mm') return exp;
+    const factor = (FRAME35[state.frame35] || FRAME35.full).factor;
+    return Math.max(1, Math.round(exp * factor));
 }
-
-function mailOpts(s) {
-    return { includeMailBack: !!s.fMail, mailBackRollCount: Math.max(1, parseInt(s.mailRolls) || 1), mailToLabFee: 0 };
+function camOverride() { return state.format === '120' ? (FRAME120[state.frame120] || null) : null; }
+function mailOpts() {
+    return { includeMailBack: !!state.mailBack, mailBackRollCount: Math.max(1, parseInt(state.postRolls, 10) || 1), mailToLabFee: num(state.postTo) };
 }
-
-function tierWhy(t, s, stopsAbs) {
-    if (!tierMatchesFilmProcess(t, { process: s.process })) return 'not ' + (PROCESS_OPTIONS.find(o => o.value === s.process)?.label || s.process);
-    if (s.fHiRes && !t.highResScan) return 'not hi-res';
-    if (s.fTiff && !t.tiffScan) return 'no TIFF';
-    if (s.fRush && t.turnaroundTime !== 'next_day') return 'not next day';
-    if (s.fWeek && t.turnaroundTime === 'longer') return 'slower than a week';
-    if (s.fMail && t.mailBackCost === null) return 'no mail-back';
-    if (stopsAbs > 0 && t.noPushPull) return 'no push/pull';
+function tierWhy(tier, stopsAbs) {
+    if (!tierMatchesFilmProcess(tier, { process: state.process })) return t('v3TierNotProcess', { process: PROCESS_LABEL[state.process] || state.process });
+    if (state.fHiRes && !tier.highResScan) return t('v3TierNotHiRes');
+    if (state.fRush && tier.turnaroundTime !== 'next_day') return t('v3TierNotNextDay');
+    if (stopsAbs > 0 && tier.noPushPull) return t('v3TierNoPushPull');
     return '';
 }
-
 function pushFeeFor(t, stopsAbs) {
     if (!stopsAbs || t.noPushPull) return 0;
     return t.pushPullType === 'flat' ? t.pushPullCost : t.pushPullCost * stopsAbs;
 }
 
-// Ranks every saved (non-hidden) lab for the roll currently entered on the
-// main view. Mirrors js/film-lookup.js's updateLabComparison() math, but
-// picks each lab's *preferred* tier (Settings > Preferred service tier,
-// matched by label) ahead of its cheapest qualifying one, and returns
-// structured data for the new template instead of building HTML strings.
-function rankLabs(s) {
-    const rolls = Math.max(1, Math.round(num(s.rolls)) || 1);
-    const stopsSigned = pushPullStops(s);
+// Ranks every saved, non-hidden lab for the roll currently entered.
+function rankLabs() {
+    const rolls = Math.max(1, Math.round(num(state.rolls)) || 1);
+    const stopsSigned = pushStops();
     const stopsAbs = Math.abs(stopsSigned);
-    const filmPerRoll = num(s.packCost) / rolls + num(s.postage) / rolls + num(s.perRoll) + num(s.onceOff) / rolls;
-    const exp = currentExposuresPerRoll(s);
+    const filmPerRoll = num(state.packCost) / rolls + num(state.postage) / rolls;
+    const exp = framesShot();
     const allLabs = getAllLabs();
-    const opts = mailOpts(s);
-    const preferredLabel = getDefaultTierLabel();
+    const opts = mailOpts();
+    const preferredLabel = state.tier;
 
     const ranked = Object.keys(allLabs).filter(n => !allLabs[n].hidden).map(name => {
         const lab = allLabs[name];
         const rawTiers = Array.isArray(lab.services) && lab.services.length ? lab.services : [lab];
         const tiers = normalizeLabServices(lab).map((t, i) => {
             const label = (rawTiers[i] && rawTiers[i].label) || tierDescription(t);
-            const why = tierWhy(t, s, stopsAbs);
+            const why = tierWhy(t, stopsAbs);
             const pushFee = pushFeeFor(t, stopsAbs);
             const mailFee = effectiveMailBackFee(t, opts);
             return { ...t, label, why, ok: !why, pushFee, mailFee, cost: t.devCost + pushFee + mailFee };
@@ -367,258 +222,165 @@ function rankLabs(s) {
         const pick = (preferredLabel && okTiers.find(t => t.label === preferredLabel)) || okTiers[0];
         if (!pick) return null;
         const roll = pick.cost + filmPerRoll;
-        return { name, lab, tiers, pick, cheapestTier: okTiers[0], roll, cpp: roll / exp, devCpp: pick.cost / exp, filmPerRoll };
+        return { name, lab, tiers, pick, roll, cpp: roll / exp, filmPerRoll };
     }).filter(Boolean).sort((a, b) => a.cpp - b.cpp);
 
     return { ranked, filmPerRoll, exp, stopsSigned, stopsAbs };
 }
 
-// Every saved film stock able to shoot at the current target ISO, priced at
-// the home lab (falling back to cheapest) including whatever push/pull fee
-// it takes to get there. Mirrors js/dev-cost-calc.js's
-// computeIsoPriceOptions(), simplified to one lab at a time (the home lab)
-// instead of "best lab per film" — the new design shows one ranked list
-// under one lab context, not a per-film lab search.
-function computeFilmRows(s, home) {
+// Every saved film able to shoot in the active format/colour, priced at
+// the home lab (falling back to cheapest) including whatever push/pull it
+// takes to reach the box speed actually entered.
+function computeFilmRows(home) {
     const allFilms = getAllFilms();
-    const shootIso = effectiveShootIso(s) || num(s.boxSpeed);
-    const camOverride = camOverrideExposures(s);
-    const rows = Object.values(allFilms).filter(f => !f.hidden && (f.format || '35mm') === s.format && filmColorType(f) === s.filmColor).map(f => {
+    const iso = shootIso() || num(state.boxSpeed);
+    const override = camOverride();
+    const rows = Object.values(allFilms).filter(f => !f.hidden && (f.format || '35mm') === FORMAT_VALUE[state.format] && filmColorType(f) === state.filmColor).map(f => {
         const boxSpeed = parseFloat(f.boxSpeed) || 0;
         if (!boxSpeed) return null;
-        const stopsSigned = shootIso ? Math.round(Math.log2(shootIso / boxSpeed)) : 0;
-        const stopsAbs = s.isoFilter === 'shoot' ? Math.abs(stopsSigned) : 0;
-        if (s.isoFilter === 'shoot' && Math.abs(stopsSigned) > 2) return null;
-        if (s.isoFilter !== 'shoot' && s.isoFilter !== 'all' && String(boxSpeed) !== s.isoFilter) return null;
+        const stopsSigned = iso ? Math.round(Math.log2(iso / boxSpeed)) : 0;
+        const stopsAbs = Math.abs(stopsSigned);
+        const limit = parseFloat(f.maxPushPull ?? 1);
+        const overLimit = iso ? stopsAbs > limit : false;
+        if (iso && stopsAbs > 2 && !state.includePush) return null;
+        if (!state.includePush && iso && stopsAbs > 0) return null;
 
         let bestBundle = null, bestCpp = null;
-        const bundles = normalizeFilmBundles(f, camOverride);
-        bundles.forEach(b => {
+        normalizeFilmBundles(f, override).forEach(b => {
             const cpp = computeCostPerPhoto(b.filmCost, b.rolls, b.exposures);
             if (cpp !== null && cpp > 0 && (bestCpp === null || cpp < bestCpp)) { bestCpp = cpp; bestBundle = b; }
         });
         if (!bestBundle) return null;
 
-        const devPerRoll = home ? home.pick.devCost + pushFeeFor(home.pick, stopsAbs) + home.pick.mailFee : 0;
-        const perFrame = (bestBundle.filmCost / bestBundle.rolls + devPerRoll) / bestBundle.exposures;
-        return { f, bundle: bestBundle, bundles, stopsAbs, dir: stopsSigned > 0 ? 'push' : 'pull', packPrice: bestBundle.filmCost, perRoll: bestBundle.filmCost / bestBundle.rolls, perFrame, exposures: bestBundle.exposures };
-    }).filter(Boolean).sort((a, b) => (a.stopsAbs === 0 ? 0 : 1) - (b.stopsAbs === 0 ? 0 : 1) || a.stopsAbs - b.stopsAbs || a.perRoll - b.perRoll);
+        const pushRate = home ? home.pick.pushPullType : null;
+        const fee = (home && stopsAbs) ? pushFeeFor(home.pick, stopsAbs) : 0;
+        const feeBlocked = home && stopsAbs > 0 && home.pick.noPushPull;
+        const devPerRoll = home ? home.pick.devCost + fee + home.pick.mailFee : 0;
+        const perRoll = bestBundle.filmCost / bestBundle.rolls;
+        const perFrame = (perRoll + devPerRoll) / bestBundle.exposures;
+        return { f, bundle: bestBundle, stopsAbs, overLimit, feeBlocked, dir: stopsSigned > 0 ? 'push' : 'pull', perRoll, perFrame, exposures: bestBundle.exposures };
+    }).filter(Boolean).sort((a, b) => a.perRoll - b.perRoll);
     return rows;
 }
 
-// The cheapest saved film stock, re-costed at the home lab (+ whatever
-// push/pull it needs) to reach the current shooting ISO — a "you could pay
-// less" nudge. Mirrors js/film-lookup.js's updateCheaperAlternative().
-// Returns up to two options: the cheapest at native box speed, and the
-// cheapest reachable by pushing/pulling (within that stock's own
-// maxPushPull), so a box-speed option doesn't get hidden behind a
-// marginally-cheaper push/pull one or vice versa.
-function computeCheaperFilm(s, home) {
-    const target = effectiveShootIso(s) || num(s.boxSpeed);
-    const loaded = getAllFilms()[s.loadedFilmKey];
+// The cheapest saved film, re-costed at the home lab, that beats the roll
+// currently entered by more than the configured upgrade threshold.
+function computeCheaperFilm(home) {
+    const target = shootIso() || num(state.boxSpeed);
     const curCpp = home ? home.cpp : null;
-    if (!target || !home) return { has: false, label: `Cheapest film at ISO ${target || '—'}`, text: 'Enter a box speed to compare.', options: [] };
-
-    const camOverride = camOverrideExposures(s);
+    if (!target || !home || !(curCpp > 0)) {
+        return { has: false, headline: t('v3CheaperFilmHeadline'), note: t('v3CheaperFilmEmptyNote'), tone: 'grey' };
+    }
+    const override = camOverride();
     let bestNative = null, bestPushPull = null;
-    Object.values(getAllFilms()).filter(f => !f.hidden && (f.format || '35mm') === s.format && filmColorType(f) === s.filmColor).forEach(f => {
+    Object.values(getAllFilms()).filter(f => !f.hidden && (f.format || '35mm') === FORMAT_VALUE[state.format] && filmColorType(f) === state.filmColor).forEach(f => {
         const boxSpeed = parseFloat(f.boxSpeed) || 0;
         if (!boxSpeed) return;
         const stopsSigned = Math.round(Math.log2(target / boxSpeed));
         const stopsAbs = Math.abs(stopsSigned);
         const maxPushPull = parseFloat(f.maxPushPull ?? 1);
         if (stopsAbs > maxPushPull) return;
+        if (stopsAbs > 0 && home.pick.noPushPull) return;
         let bestBundle = null, bestCpp = null;
-        normalizeFilmBundles(f, camOverride).forEach(b => {
+        normalizeFilmBundles(f, override).forEach(b => {
             const cpp = computeCostPerPhoto(b.filmCost, b.rolls, b.exposures);
             if (cpp !== null && cpp > 0 && (bestCpp === null || cpp < bestCpp)) { bestCpp = cpp; bestBundle = b; }
         });
         if (!bestBundle) return;
-        const dev = home.pick.devCost + pushFeeFor(home.pick, stopsAbs) + home.pick.mailFee;
+        const fee = pushFeeFor(home.pick, stopsAbs);
+        const dev = home.pick.devCost + fee + home.pick.mailFee;
         const cpp = (bestBundle.filmCost / bestBundle.rolls + dev) / bestBundle.exposures;
         const cand = { f, bundle: bestBundle, stopsSigned, stopsAbs, cpp };
         if (stopsAbs === 0) { if (!bestNative || cpp < bestNative.cpp) bestNative = cand; }
         else if (!bestPushPull || cpp < bestPushPull.cpp) bestPushPull = cand;
     });
-
-    const minSavingsPct = Math.max(0, num(s.upgradePct) || 0);
-    const mk = (key, cand) => {
-        if (!cand || curCpp === null || curCpp <= 0) return null;
-        const savingsPct = (1 - cand.cpp / curCpp) * 100;
-        if (!(savingsPct > minSavingsPct + 1e-9)) return null;
+    const minPct = Math.max(0, num(state.upgradePct));
+    const pick = [bestNative, bestPushPull]
+        .filter(c => c && (1 - c.cpp / curCpp) * 100 > minPct)
+        .sort((a, b) => a.cpp - b.cpp)[0];
+    if (pick) {
+        const pct = Math.round((1 - pick.cpp / curCpp) * 100);
+        const how = pick.stopsSigned === 0 ? t('v3AtBoxSpeed') : t(pick.stopsSigned > 0 ? 'v3PushHow' : 'v3PullHow', { n: pick.stopsAbs });
         return {
-            key,
-            text: `${cand.f.name} — ${CUR()}${money(cand.cpp)}/frame from ${cand.bundle.storeName || 'saved library'}, saves ${((curCpp - cand.cpp) * 100).toFixed(0)}c a frame${cand.stopsAbs ? ` (${cand.stopsAbs} stop ${cand.stopsSigned > 0 ? 'push' : 'pull'})` : ''}`,
-            url: sanitizeUrl(cand.bundle.buyLink), load: () => App.loadFilm(filmKey(cand.f.name, cand.f.boxSpeed, cand.f.format), cand.stopsSigned)
+            has: true, tone: 'warn', headline: t('v3CheaperAtIsoHeadline', { iso: target }),
+            note: t('v3CheaperAtIsoNote', { name: pick.f.name, how, amount: CUR() + money(pick.cpp), lab: home.name, pct }),
+            buyLabel: pick.bundle.storeName ? t('v3BuyAtStore', { store: pick.bundle.storeName }) : t('v3FindThisStock'),
+            buyLink: pick.bundle.buyLink,
+            loadLabel: t('v3LoadFilm', { name: pick.f.name }),
+            pick: pick.f, pickStops: pick.stopsSigned,
+            overpay: t('v3PayingMoreOverpay', { amount: CUR() + money(curCpp - pick.cpp), pct: Math.round((curCpp / pick.cpp - 1) * 100) })
         };
-    };
-    const options = [mk('native', bestNative), mk('pushPull', bestPushPull)].filter(Boolean);
-    if (options.length) return { has: true, label: `Cheaper film at ISO ${target}`, options };
-    return { has: false, label: `Cheapest film at ISO ${target}`, text: loaded ? 'Nothing in your library beats what you have loaded.' : 'Nothing in your library beats what you have entered.', options: [] };
-}
-
-function computeExpired(s) {
-    const boxSpeed = num(s.expBox) || 400;
-    const month = Math.min(12, Math.max(1, parseInt(s.expiryMonth) || 1));
-    const year = parseInt(s.expiryYear, 10);
-    if (!year) return { rated: 'ISO —', note: 'Enter an expiry year', ageNote: 'enter a year' };
-    const now = new Date();
-    const yearsExpired = Math.max(0, (now.getFullYear() - year) + (now.getMonth() + 1 - month) / 12);
-    const YEARS_PER_STOP = { c41: { cold: 15, controlled: 10, uncontrolled: 5 }, bw: { cold: 20, controlled: 13, uncontrolled: 7 }, e6: { cold: 10, controlled: 7, uncontrolled: 3 } };
-    const yearsPerStop = (YEARS_PER_STOP[s.filmType] || YEARS_PER_STOP.c41)[s.storage] || YEARS_PER_STOP.c41.controlled;
-    const ageStopsLoss = yearsExpired / yearsPerStop;
-    const highSpeedStops = boxSpeed > 400 ? Math.floor(Math.log2(boxSpeed / 400)) * 0.5 : 0;
-    const stopsLoss = Math.round((ageStopsLoss + highSpeedStops) * 2) / 2;
-    const rated = Math.max(1, Math.round(boxSpeed / Math.pow(2, stopsLoss)));
-    return { rated: 'ISO ' + rated, note: `${stopsLoss.toFixed(1)} stops of compensation`, ageNote: `${yearsExpired.toFixed(1)} yrs past expiry` };
-}
-
-// ==================== Rendering ====================
-// Visual language ported from "FilmCalc Redesign.dc.html" — same colors,
-// type, spacing. Whole-view re-render on every state change (innerHTML
-// replace), same as the source mockup; interactivity is wired via
-// onclick/oninput/onchange strings calling into the global `App` object
-// below, since there's no framework here to bind real closures.
-const MONO = "font-family:'IBM Plex Mono',monospace";
-const NARROW = "font-family:'Archivo Narrow',Archivo,sans-serif";
-// Each of the three main section headings gets its own fixed colour
-// (heading text + the dot beside it) instead of the shared --acc, so
-// which section you're in stays legible while scrolling past one long
-// page — a companion to making the headings themselves bigger.
-const SECTION_COLORS = { lookup: '#ff7a2f', labs: '#5fa8d3', films: '#8fbf6a' };
-function btnTone(on, color) { return on ? { bg: '#1c1512', border: '#5a3a1c', color: color || 'var(--acc)' } : { bg: '#141416', border: '#2c2c30', color: '#928e88' }; }
-function pill(label, on, onclick, color) {
-    const b = btnTone(on, color);
-    return `<button type="button" onclick="${onclick}" style="background:${b.bg};border:1px solid ${b.border};border-radius:20px;padding:5px 11px;color:${b.color};font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${escapeHtml(label)}</button>`;
-}
-
-
-// The 5 "Requires" filter chips map 1:1 onto tierWhy()'s checks above — a
-// tier only qualifies when it satisfies every filter that's on.
-function requireFilters() {
-    return [
-        { key: 'fHiRes', label: t('v2FilterHiRes') },
-        { key: 'fTiff', label: t('v2FilterTiff') },
-        { key: 'fRush', label: t('v2FilterNextDay') },
-        { key: 'fWeek', label: t('v2FilterSameWeek') },
-        { key: 'fMail', label: t('v2LabelMailBack') }
-    ];
-}
-
-function procLabel(v) { return (PROCESS_OPTIONS.find(o => o.value === v) || {}).label || v; }
-function formatLabel(v) { return (FORMAT_OPTIONS.find(o => o.value === v) || {}).label || v; }
-function filmTypeLabel(v) { return (filmTypeOptions().find(o => o.value === v) || {}).label || v; }
-
-const FIELD_INPUT = "width:100%;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:7px 9px;color:#eae7e1;font-size:13px";
-function turnaroundOptions() {
-    return [
-        { value: 'next_day', label: t('v2FilterNextDay') },
-        { value: 'same_week', label: t('v2FilterSameWeek') },
-        { value: 'longer', label: t('turnaroundLongerLabel') },
-    ];
-}
-
-// ---------- Changelog ("What's New") ----------
-// Footer link pops up recent changes, generated at build time into
-// changelog.json from merged PR titles (see .github/scripts/generate-
-// changelog.py and build-github-page.yml). Auto-popup appears when new
-// entries have landed since this browser last saw the changelog; a
-// first-ever visit gets its baseline set quietly (no popup — nobody wants
-// the whole project history flagged as "new" the first time they open the
-// app). Tracks the actual SET of seen PR numbers in localStorage (not a
-// single high-watermark number) so an out-of-order merge (an older PR
-// landing after a newer one) still gets flagged correctly.
-let changelogEntries = [];
-async function loadChangelog() {
-    try {
-        const res = await fetch('changelog.json');
-        if (res.ok) changelogEntries = await res.json();
-    } catch (e) { /* offline / no changelog.json — nothing to show */ }
-    if (!Array.isArray(changelogEntries) || changelogEntries.length === 0) return;
-
-    const isFirstEverVisit = localStorage.getItem('changelogSeenPRs') === null;
-    const seen = new Set(readJSON('changelogSeenPRs', []));
-    const newEntries = changelogEntries.filter(e => !seen.has(e.number));
-    if (newEntries.length === 0) return;
-    if (isFirstEverVisit) {
-        markChangelogSeen(changelogEntries.map(e => e.number)); // quiet baseline, no popup
-    } else {
-        state.changelogOpen = true;
-        state.changelogShowNumbers = newEntries.map(e => e.number);
-        markChangelogSeen(changelogEntries.map(e => e.number));
-        render();
     }
-}
-function markChangelogSeen(numbers) {
-    const seen = new Set(readJSON('changelogSeenPRs', []));
-    numbers.forEach(n => seen.add(n));
-    localStorage.setItem('changelogSeenPRs', JSON.stringify([...seen]));
-}
-
-// ---------- Starter presets (films/index.json + labs/index.json) ----------
-// The region YAML files under films/ and labs/ are community-contributed
-// retailer/lab price lists — still nothing imports without an explicit
-// Next/"Import selected" click, but the checkboxes that look like they
-// match the visitor's own region start pre-ticked (see detectUserLocation
-// below) instead of making everyone hunt a flat list of filenames for
-// their own city. Fetched lazily the first time Settings → Data is
-// opened, cached for the session.
-let presetFilmIndex = null, presetLabIndex = null;
-async function loadPresetIndexes() {
-    if (presetFilmIndex && presetLabIndex) return;
-    try { presetFilmIndex = await (await fetch('films/index.json')).json(); } catch { presetFilmIndex = []; }
-    try { presetLabIndex = await (await fetch('labs/index.json')).json(); } catch { presetLabIndex = []; }
-    render();
+    return {
+        has: false, tone: 'grey', headline: t('v3NothingCheaperHeadline', { iso: target }),
+        note: t('v3NothingCheaperNote', { pct: minPct, pushSuffix: home.pick.pushPullCost ? t('v3AndPushFeesSuffix') : '' })
+    };
 }
 
-// State/city suggestions for the purchase-link editor's Availability
-// fields — pooled from the preset index (every state/city the shipped
-// presets actually cover) plus whatever the user has already typed into
-// their own saved bundles, so a returning value autocompletes even before
-// (or without) the preset index having loaded. Recomputed on every call
-// rather than cached: cheap (a few hundred entries at most), and always
-// reflects the latest saved bundle a keystroke ago.
-function knownStatesAndCities() {
-    const states = new Set(), cities = new Set();
-    const addFrom = (entries) => (entries || []).forEach(e => {
-        if (e.state) states.add(e.state);
-        if (e.city) cities.add(e.city);
-    });
-    addFrom(presetFilmIndex);
-    addFrom(presetLabIndex);
-    Object.values(getAllFilms()).forEach(f => addFrom(normalizeFilmBundles(f)));
-    return { states: [...states].sort(), cities: [...cities].sort() };
+function computeExpired() {
+    const boxSpeed = num(state.expBox) || 400;
+    const month = MONTHS.indexOf(state.expMonth) + 1;
+    const year = parseInt(state.expYear, 10);
+    if (!year) return { rated: t('v3IsoDash'), note: t('v3EnterExpiryYear'), age: t('v3EnterAYear') };
+    const now = new Date();
+    const years = Math.max(0, (now.getFullYear() - year) + (now.getMonth() + 1 - month) / 12);
+    const per = (YEARS_PER_STOP[state.expProcess] || YEARS_PER_STOP.c41)[state.storage] || YEARS_PER_STOP.c41.controlled;
+    const high = boxSpeed > 400 ? Math.floor(Math.log2(boxSpeed / 400)) * 0.5 : 0;
+    const stops = Math.round((years / per + high) * 2) / 2;
+    return {
+        rated: t('v3IsoValue', { iso: Math.max(1, Math.round(boxSpeed / Math.pow(2, stops))) }),
+        note: t('v3StopsOfCompensation', { n: stops.toFixed(1) }),
+        age: t('v3YrsPastExpiry', { n: years.toFixed(1) })
+    };
 }
 
-// ---------- Geo-based preset defaults ----------
-// Detection never leaves the device: no reverse-geocoding service, no
-// IP-lookup API, no network request of any kind. Either way this only
-// ever *pre-ticks* checkboxes in presetCheckList() below — it's still the
-// user's call what actually gets imported.
-//
-// Fully automatic w.r.t. films/labs coverage — no per-city/per-country
-// table to maintain here. City-level matching is nearest-neighbour against
-// the lat/lon every city-scoped preset file already carries (DATA_SPEC.md),
-// passed straight through into films/index.json & labs/index.json at
-// build time — so a new city YAML geo-matches the moment it's added, with
-// zero app.js changes. Country-level matching (used when Geolocation is
-// denied, or granted but no known city is close enough) instead reads the
-// visitor's IANA timezone against js/tz-country.js's TZ_COUNTRY table,
-// which is comprehensive across the whole tz database rather than scoped
-// to current presets, so it likewise needs no updates as countries are
-// added — it just starts matching once that country's `country:` field
-// text lines up with TZ_COUNTRY's.
+// ---------- Preset regions (real films/index.json + labs/index.json) ----------
+// Builds one checkbox row per region that has a film file, a lab file, or
+// both, keyed on country/state/city so a region present in only one index
+// still gets a row (e.g. a labs-only or retailers-only file).
+let presetRawEntries = [];
+async function loadPresetRegions() {
+    if (state.presetRegions) return state.presetRegions;
+    try {
+        const [filmsIdx, labsIdx] = await Promise.all([
+            fetch('films/index.json').then(r => r.ok ? r.json() : []),
+            fetch('labs/index.json').then(r => r.ok ? r.json() : [])
+        ]);
+        presetRawEntries = [...(filmsIdx || []), ...(labsIdx || [])];
+        const byKey = new Map();
+        const keyOf = e => [e.country || '', e.state || '', e.city || e.label].join('|');
+        const add = (entry, kind) => {
+            const key = keyOf(entry);
+            const row = byKey.get(key) || { label: entry.city || entry.state || entry.country || entry.label, country: entry.country, city: entry.city };
+            row[kind] = entry.file;
+            byKey.set(key, row);
+        };
+        (filmsIdx || []).forEach(e => add(e, 'filmsFile'));
+        (labsIdx || []).forEach(e => add(e, 'labsFile'));
+        state.presetRegions = [...byKey.values()].sort((a, b) => a.label.localeCompare(b.label));
+        if (geoGuess === undefined) detectUserLocation();
+    } catch { state.presetRegions = []; }
+    return state.presetRegions;
+}
+
+// ---------- Geo-based preset defaults (mirrors root's js/app.js) ----------
+// Detection never leaves the device: no reverse-geocoding, no IP lookup, no
+// network request of any kind. Only ever *pre-ticks* checkboxes below — the
+// user still chooses what actually gets imported. City-level matching needs
+// lat/lon on index.json entries, which the shipped files don't carry yet
+// (root doesn't get real city-level matches today either) — kept for
+// forward-compat so this starts working the moment that data ships, with
+// zero further app.js changes. Falls back to matching by country via the
+// visitor's IANA timezone (js/tz-country.js) otherwise.
+let geoGuess = undefined;
+let geoDetectPromise = null;
 function nearestPresetCity(lat, lon) {
-    const candidates = [...(presetFilmIndex || []), ...(presetLabIndex || [])]
-        .filter(e => e.city && typeof e.lat === 'number' && typeof e.lon === 'number');
+    const candidates = presetRawEntries.filter(e => e.city && typeof e.lat === 'number' && typeof e.lon === 'number');
     let nearest = null, nearestDist = Infinity;
     candidates.forEach(e => {
         const dist = (lat - e.lat) ** 2 + (lon - e.lon) ** 2;
         if (dist < nearestDist) { nearestDist = dist; nearest = e; }
     });
-    // ~2.5 degrees squared ≈ 275km at the equator — comfortably wider than
-    // the gap between any two shipped cities, so this only fires for a
-    // genuinely nearby match, not "whichever city happens to be least far".
     return nearestDist <= 6.25 ? nearest : null;
 }
 function guessLocationFromTimezone() {
@@ -627,65 +389,15 @@ function guessLocationFromTimezone() {
         return country ? { country } : null;
     } catch { return null; }
 }
-
-// ---------- Library → "Nearest to you" ----------
-// Separate from detectUserLocation() above — that one only ever resolves
-// to a coarse {country, city} guess for pre-ticking the import checklist.
-// This wants the visitor's actual coordinates, to sort already-*saved*
-// labs (Library → Labs) by real distance rather than a preset-file match.
-// Same one-time-cache shape as geoGuess: undefined = not attempted,
-// null = attempted and failed/denied, {lat,lon} = have it.
-let userCoords = undefined;
-function requestUserCoords() {
-    if (userCoords !== undefined) return Promise.resolve(userCoords);
-    if (!navigator.geolocation) { userCoords = null; return Promise.resolve(null); }
-    return new Promise(resolve => {
-        navigator.geolocation.getCurrentPosition(
-            (pos) => { userCoords = { lat: pos.coords.latitude, lon: pos.coords.longitude }; resolve(userCoords); },
-            () => { userCoords = null; resolve(null); },
-            { timeout: 5000, maximumAge: 3600000 }
-        );
-    });
-}
-function haversineKm(lat1, lon1, lat2, lon2) {
-    const R = 6371, toRad = d => d * Math.PI / 180;
-    const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
-    const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-// undefined = not attempted yet; null = attempted, matched nothing.
-// Resolved at most once per page load — geoGuess's own presence is the
-// cache, so a second call while one's already in flight (or already
-// resolved) just returns the same promise/value instead of re-prompting.
-let geoGuess = undefined;
-let geoDetectPromise = null;
 function detectUserLocation() {
     if (geoGuess !== undefined) return Promise.resolve(geoGuess);
     if (geoDetectPromise) return geoDetectPromise;
     const finish = (g) => {
         geoGuess = g;
         if (g) {
-            // Only seeds the filter if the user hasn't touched the dropdown
-            // yet (see App.setPresetCountryFilter) — same one-time-seed
-            // rule as the checkbox pre-ticking below.
-            if (!state.presetCountryFilterTouched && g.country) state.presetCountryFilter = g.country;
-            // One-time seed, not a live binding — from here on,
-            // state.presetChecked only changes via the user's own clicks
-            // (App.togglePresetCheck), so a manual uncheck sticks even
-            // though geoGuess itself never changes for the rest of the
-            // session.
-            [...presetFilmIndex, ...presetLabIndex].forEach(f => {
-                // A country-wide catch-all (no city of its own, e.g.
-                // "Australian-Retailers") matches on country alone; a
-                // file scoped to a specific city (e.g. "Adelaide
-                // Retailers") needs that exact city, not just the same
-                // country — otherwise every Australian file would match
-                // an Australian visitor regardless of which city.
-                const matches = f.city ? f.city === g.city : f.country === g.country;
-                if (matches) {
-                    const kind = presetFilmIndex.includes(f) ? 'films' : 'labs';
-                    state.presetChecked.add(`${kind}:${f.file}`);
-                }
+            (state.presetRegions || []).forEach(r => {
+                const matches = g.city ? r.city === g.city : r.country === g.country;
+                if (matches) state.presetChecked.add(r.label);
             });
         }
         render();
@@ -706,324 +418,23 @@ function detectUserLocation() {
     return geoDetectPromise;
 }
 
-const SECTION_STYLE = "border-top:1px solid #212125;background:#131315;padding:12px 14px";
-function settingsSection(title, body) {
-    return `<div style="${SECTION_STYLE}"><div style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#928e88;margin-bottom:10px">${title}</div>${body}</div>`;
+function mergeFilmsInto(all, incoming) {
+    incoming.forEach(f => {
+        const key = filmKeyOf(f);
+        if (all[key]) {
+            const existingLinks = new Set((all[key].bundles || []).map(b => b.buyLink));
+            const newBundles = (f.bundles || []).filter(b => !existingLinks.has(b.buyLink));
+            all[key] = { ...all[key], bundles: (all[key].bundles || []).concat(newBundles) };
+        } else {
+            all[key] = { ...f, key };
+        }
+    });
+}
+function mergeLabsInto(all, incoming) {
+    incoming.forEach(l => { if (!all[l.name]) all[l.name] = l; });
 }
 
-// ---------- PWA install prompt ----------
-// Chrome/Edge/Android fire beforeinstallprompt only if the tab is still
-// open when the browser decides the install criteria are met — capture it
-// once, then replay it from a normal button click in Settings (this fires
-// well before Settings is ever opened, so App.installApp() below always
-// has an event to replay by the time a user finds the button).
-let deferredInstallPrompt = null;
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredInstallPrompt = e;
-    render();
-});
-window.addEventListener('appinstalled', () => {
-    deferredInstallPrompt = null;
-    render();
-});
-function isStandaloneDisplay() {
-    try { return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; }
-    catch { return false; }
-}
-function isIOSDevice() {
-    return /iP(hone|ad|od)/.test(navigator.userAgent || navigator.platform || '');
-}
-// Settings → "Install App": a real button wherever beforeinstallprompt was
-// captured (Chrome/Edge/Android), static Share-sheet instructions on iOS
-// Safari (which never fires that event at all), nothing once already
-// installed or on a browser that supports neither path.
-function renderInstallSection() {
-    if (isStandaloneDisplay()) return '';
-    if (deferredInstallPrompt) {
-        return settingsSection(t('v2SettingsInstallApp'), `
-<div style="font-size:10px;color:#b0aeac;margin-bottom:8px">${escapeHtml(t('v2InstallAppDesc'))}</div>
-<button type="button" onclick="App.installApp()" style="background:#1c1512;border:1px solid #5a3a1c;border-radius:5px;padding:6px 11px;color:var(--acc);font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${escapeHtml(t('v2ButtonInstallApp'))}</button>
-`);
-    }
-    if (isIOSDevice()) {
-        return settingsSection(t('v2SettingsInstallApp'), `
-<div style="font-size:10px;color:#b0aeac">${escapeHtml(t('v2InstallAppIOSHint'))}</div>
-`);
-    }
-    return '';
-}
-
-// Settings → Data → "Show QR" toggle target. Encodes the same URL
-// App.shareLibraryLink() copies (see buildLibraryShareUrl()) as an SVG QR
-// code via the qrcode-generator library (index.html). QR codes have a hard
-// data-capacity ceiling, so a large library can genuinely fail to fit —
-// that's caught and reported plainly rather than left as a silent blank
-// box or thrown error.
-function renderLibraryQr(s) {
-    if (!s.showLibraryQr) return '';
-    const url = buildLibraryShareUrl();
-    if (!url) return `<div style="font-size:10px;color:#b0aeac;margin-top:8px">Nothing saved to share yet.</div>`;
-    if (typeof qrcode !== 'function') return `<div style="font-size:10px;color:#b0aeac;margin-top:8px">QR code library didn't load — try again once you're back online.</div>`;
-    try {
-        const qr = qrcode(0, 'M');
-        qr.addData(url);
-        qr.make();
-        const svg = qr.createSvgTag({ cellSize: 4, margin: 2 });
-        return `<div style="margin-top:10px;padding:10px;background:#fff;border-radius:8px;display:inline-block;line-height:0">${svg}</div>`;
-    } catch {
-        return `<div style="font-size:10px;color:#c98a4b;margin-top:8px">Library link is too large to fit in a QR code — use Copy library link or Export backup instead.</div>`;
-    }
-}
-
-function renderSettingsView(s) {
-    const labNames = Object.keys(getAllLabs());
-    const tierLabels = [...new Set(Object.values(getAllLabs()).flatMap(l => normalizeLabServices(l).map((t, i) => ((Array.isArray(l.services) ? l.services : [l])[i] || {}).label || tierDescription(t))))];
-    const hidden = [
-        ...Object.entries(getAllFilms()).filter(([, f]) => f.hidden).map(([key, f]) => ({ kind: 'film', key, name: f.name })),
-        ...Object.entries(getAllLabs()).filter(([, l]) => l.hidden).map(([key, l]) => ({ kind: 'lab', key, name: l.name }))
-    ];
-    return `<div style="padding:16px 18px 20px;display:flex;flex-direction:column;gap:1px;border:1px solid #26262a;border-radius:8px;overflow:hidden">
-${settingsSection(t('v2SettingsLanguage'), `
-<select onchange="App.setLanguage(this.value)" aria-label="${escapeHtml(t('v2SettingsLanguage'))}" style="${FIELD_INPUT};max-width:280px;margin-bottom:8px">
-${LANGUAGE_OPTIONS.map(([code, label]) => `<option value="${code}" ${currentLocale === code ? 'selected' : ''}>${escapeHtml(label)}</option>`).join('')}
-</select>
-<div style="font-size:10px;color:#b0aeac">${escapeHtml(t('translationDisclaimer'))}</div>
-`)}
-${settingsSection(t('v2SettingsHomeLab'), `
-<select onchange="App.setHomeLab(this.value)" aria-label="${escapeHtml(t('v2SettingsHomeLab'))}" style="${FIELD_INPUT};max-width:280px;margin-bottom:10px">
-<option value="">No home lab set</option>
-${labNames.map(n => `<option value="${escapeHtml(n)}" ${s.homeLab === n ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('')}
-</select>
-<div style="font-size:10px;color:#b0aeac;margin-bottom:8px">The lab whose price is shown as the headline cost per frame on every lookup.</div>
-<select onchange="App.setDefaultTier(this.value)" aria-label="Default tier" style="${FIELD_INPUT};max-width:280px">
-<option value="">Cheapest that qualifies</option>
-${tierLabels.map(l => `<option value="${escapeHtml(l)}" ${s.defaultTier === l ? 'selected' : ''}>${escapeHtml(l)}</option>`).join('')}
-</select>
-<div style="font-size:10px;color:#b0aeac;margin-top:6px">Preferred service tier — used whenever a lab offers it, otherwise its cheapest qualifying tier.</div>
-`)}
-${settingsSection(t('v2SettingsCalculator'), `
-<div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
-<label style="display:block"><div style="font-size:10px;color:#928e88;margin-bottom:5px">${t('v2SettingsUpgradePct')}</div><input value="${s.upgradePct}" oninput="App.setSetting('upgradePct',this.value)" data-fkey="upgradePct" inputmode="decimal" style="${FIELD_INPUT};width:80px;${MONO}"></label>
-</div>
-`)}
-${settingsSection(t('v2SettingsHiddenPresets'), `
-<div style="font-size:10px;color:#b0aeac;margin-bottom:8px">${hidden.length} hidden</div>
-${hidden.length ? hidden.map(h => `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid #212125">
-<span style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#b0aeac;width:36px">${h.kind === 'film' ? t('v2SectionFilms') : t('v2SectionLabs')}</span>
-<span style="flex:1;font-size:12px;color:#c9c5bd">${escapeHtml(h.name)}</span>
-<button type="button" onclick="App.toggleHidden('${h.kind}','${jsAttr(h.key)}')" style="background:#1a1a1d;border:1px solid #33333a;border-radius:4px;padding:4px 9px;color:#928e88;font-size:9px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonShow')}</button>
-</div>`).join('') : `<div style="font-size:11px;color:#b0aeac">Nothing hidden. Hide a film or lab in the library to keep it out of lookups without deleting it.</div>`}
-`)}
-${settingsSection(t('v2SettingsStarterPresets'), renderPresetImport())}
-${settingsSection(t('v2SettingsData'), `
-<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-<button type="button" onclick="App.shareLibraryLink()" title="Copy a link that offers to import your whole saved library" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonShareLibraryLink')}</button>
-<button type="button" onclick="App.toggleLibraryQr()" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${s.showLibraryQr ? t('v2ButtonHideQr') : t('v2ButtonShowQr')}</button>
-<button type="button" onclick="App.exportBackup()" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonExportBackup')}</button>
-<button type="button" onclick="App.exportCsv()" title="Spreadsheet-friendly export for tracking spend — not for re-importing" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonExportCsv')}</button>
-<label style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonImportBackup')}<input type="file" accept="application/json" onchange="App.importBackup(this.files[0])" style="display:none"></label>
-<label style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonImportYaml')}<input type="file" accept=".yaml,.yml,text/yaml" onchange="App.importYamlFile(this.files[0])" style="display:none"></label>
-<button type="button" onclick="App.openSetup()" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonRerunSetup')}</button>
-<button type="button" onclick="App.deleteAllData()" style="background:transparent;border:1px solid #5a2420;border-radius:5px;padding:6px 11px;color:#e5675c;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonDeleteAllData')}</button>
-</div>
-${renderLibraryQr(s)}
-${renderImportPreview(s)}
-<div style="font-size:10px;color:#928e88;min-height:12px">${escapeHtml(s.importNote)}${s.lastImportSnapshot ? ` <a href="javascript:void(0)" onclick="App.undoLastImport()" style="color:var(--acc);text-decoration:underline;cursor:pointer">Undo</a>` : ''}</div>
-<div style="margin-top:10px;font-size:10px;color:#b0aeac">Drag <a href="javascript:void(window.open('https://filmcalc.app/?add='+encodeURIComponent(location.href)))" style="text-decoration:underline;cursor:move">↗ Add to FilmCalc</a> to your bookmarks bar — click it from any shop or lab page to jump back here with that page's link ready to paste in.</div>
-`)}
-${renderInstallSection()}
-${settingsSection(t('v2SettingsPrivacy'), (() => {
-    let consent;
-    try { consent = localStorage.getItem('analyticsConsent'); } catch (e) { consent = null; }
-    const statusKey = consent === 'granted' ? 'v2AnalyticsStatusGranted' : consent === 'denied' ? 'v2AnalyticsStatusDenied' : 'v2AnalyticsStatusUnset';
-    return `<div style="font-size:10px;color:#b0aeac;margin-bottom:8px">${escapeHtml(t('v2SettingsAnalyticsCurrentChoice'))}: <strong style="color:#c9c5bd">${escapeHtml(t(statusKey))}</strong></div>
-<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-<button type="button" onclick="App.resetAnalyticsConsent()" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${escapeHtml(t('v2ButtonResetConsent'))}</button>
-<a href="/privacy.html" style="font-size:10px;color:var(--acc);text-decoration:underline">${escapeHtml(t('v2ConsentPrivacyLink'))}</a>
-</div>`;
-})())}
-${settingsSection(t('v2SettingsReportData'), `
-<div style="font-size:10px;color:#b0aeac;margin-bottom:8px">${escapeHtml(t('v2ReportDataDesc'))}</div>
-<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-<button type="button" onclick="App.reportInaccurateData('film')" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${escapeHtml(t('v2ButtonReportFilm'))}</button>
-<button type="button" onclick="App.reportInaccurateData('lab')" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${escapeHtml(t('v2ButtonReportLab'))}</button>
-</div>
-`)}
-</div>`;
-}
-
-// First-run onboarding, also reachable from Settings → Data → "Re-run
-// setup". Kept deliberately small — home lab, preferred tier, language —
-// everything else already has its own home in Settings.
-// Three steps, in this order because each depends on the previous one
-// having happened: presets need to import BEFORE the home-lab step so
-// that dropdown actually has labs in it (it used to sit next to the
-// import controls on one page, so a brand new user always saw it blank —
-// nothing had been imported yet at the point it rendered).
-const SETUP_STEPS = ['language', 'presets', 'homeLab'];
-function renderSetupModal(s) {
-    const step = SETUP_STEPS[s.setupStep] || 'language';
-    const labNames = Object.keys(getAllLabs());
-    const tierLabels = [...new Set(Object.values(getAllLabs()).flatMap(l => normalizeLabServices(l).map((t, i) => ((Array.isArray(l.services) ? l.services : [l])[i] || {}).label || tierDescription(t))))];
-    const dots = SETUP_STEPS.map((_, i) => `<span style="width:6px;height:6px;border-radius:50%;background:${i === s.setupStep ? 'var(--acc)' : '#33333a'}"></span>`).join('');
-    let stepTitle, stepBody;
-    if (step === 'language') {
-        stepTitle = t('v2SetupStepLanguage');
-        stepBody = `<select onchange="App.setLanguage(this.value)" aria-label="${escapeHtml(t('v2SettingsLanguage'))}" style="${FIELD_INPUT}">
-${LANGUAGE_OPTIONS.map(([code, label]) => `<option value="${code}" ${currentLocale === code ? 'selected' : ''}>${escapeHtml(label)}</option>`).join('')}
-</select>`;
-    } else if (step === 'presets') {
-        stepTitle = t('v2SetupStepImport');
-        stepBody = `<div style="border:1px solid #26262a;border-radius:8px;background:#131315;padding:12px">
-${renderPresetImport(false)}
-<div style="margin-top:10px;padding-top:10px;border-top:1px solid #212125">
-<label style="display:inline-flex;align-items:center;background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${t('v2ButtonImportYaml')}<input type="file" accept=".yaml,.yml,text/yaml" onchange="App.importYamlFile(this.files[0])" style="display:none"></label>
-</div>
-${renderImportPreview(s)}
-${s.importNote ? `<div style="margin-top:8px;font-size:10px;color:#928e88">${escapeHtml(s.importNote)}</div>` : ''}
-</div>`;
-    } else {
-        stepTitle = t('v2SetupStepHomeLab');
-        stepBody = `<div style="display:flex;flex-direction:column;gap:14px">
-<div>
-<div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#928e88;margin-bottom:6px">${t('v2SettingsHomeLab')}</div>
-<select onchange="App.setHomeLab(this.value)" aria-label="${escapeHtml(t('v2SettingsHomeLab'))}" style="${FIELD_INPUT}">
-<option value="">—</option>
-${labNames.map(n => `<option value="${escapeHtml(n)}" ${s.homeLab === n ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('')}
-</select>
-${!labNames.length ? `<div style="margin-top:6px;font-size:10px;color:#b0aeac">${t('v2SetupNoLabsYet')}</div>` : ''}
-</div>
-<div>
-<div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#928e88;margin-bottom:6px">${t('v2SetupPreferredTier')}</div>
-<select onchange="App.setDefaultTier(this.value)" aria-label="${escapeHtml(t('v2SetupPreferredTier'))}" style="${FIELD_INPUT}">
-<option value="">Cheapest that qualifies</option>
-${tierLabels.map(l => `<option value="${escapeHtml(l)}" ${s.defaultTier === l ? 'selected' : ''}>${escapeHtml(l)}</option>`).join('')}
-</select>
-</div>
-</div>`;
-    }
-    const backBtn = s.setupStep > 0 ? `<button type="button" ${s.setupBusy ? 'disabled' : ''} onclick="App.setupGoto(${s.setupStep - 1})" style="flex:1;background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:9px 16px;color:#928e88;font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;${s.setupBusy ? 'opacity:.5;cursor:default' : ''}">${t('v2ButtonBack')}</button>` : '';
-    // On the presets step, Next both imports whatever's ticked AND
-    // advances — no separate "Import selected" click needed first. Target
-    // step is baked into the onclick at render time (like every other
-    // setup nav button) so a stale in-flight import can't clobber a step
-    // the user has since navigated to; setupBusy also disables Back and
-    // blocks re-entry so a double-click can't start a second import.
-    const nextAction = step === 'presets' ? `App.setupNextFromPresets(${s.setupStep + 1})` : `App.setupGoto(${s.setupStep + 1})`;
-    const nextBtn = s.setupStep < SETUP_STEPS.length - 1
-        ? `<button type="button" ${s.setupBusy ? 'disabled' : ''} onclick="${nextAction}" style="flex:2;background:#1c1512;border:1px solid #5a3a1c;border-radius:5px;padding:9px 16px;color:var(--acc);font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;${s.setupBusy ? 'opacity:.5;cursor:default' : ''}">${t('v2ButtonNext')}</button>`
-        : `<button type="button" onclick="App.closeSetup()" style="flex:2;background:#1c1512;border:1px solid #5a3a1c;border-radius:5px;padding:9px 16px;color:var(--acc);font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2ButtonDone')}</button>`;
-    return `<div style="position:fixed;inset:0;z-index:70;background:rgba(6,6,7,.74);display:flex;align-items:flex-start;justify-content:center;padding:64px 16px;overflow:auto"><div style="width:100%;max-width:460px;background:linear-gradient(180deg,#151517,#111113);border:1px solid #33333a;border-radius:10px;box-shadow:0 30px 80px -20px #000;padding:18px 20px 20px">
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-<div style="${NARROW};font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#eae7e1">${t('v2SetupTitle')}</div>
-<div style="display:flex;align-items:center;gap:5px">${dots}</div>
-</div>
-<p style="margin:0 0 14px;font-size:12px;color:#a6a4a0">${t('v2SetupIntro')}</p>
-<div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#928e88;margin-bottom:8px">${stepTitle}</div>
-${stepBody}
-<div style="display:flex;gap:10px;margin-top:18px">${backBtn}${nextBtn}</div>
-</div></div>`;
-}
-
-// onlyNumbers: null shows the full history (manual footer-link open);
-// an array (from the auto-popup in loadChangelog()) restricts the list to
-// just what's new since this browser's last visit.
-function renderChangelogModal(s) {
-    const all = Array.isArray(changelogEntries) ? changelogEntries : [];
-    const entries = s.changelogShowNumbers ? all.filter(e => s.changelogShowNumbers.includes(e.number)) : all;
-    const rows = entries.length ? entries.map(e => `<a href="${escapeHtml(e.url)}" target="_blank" rel="noopener noreferrer" style="display:block;padding:10px 0;border-top:1px solid #212125;color:#c9c5bd;text-decoration:none">
-<span style="display:block;font-size:13px;line-height:1.4">${escapeHtml(e.title)}</span>
-<span style="${MONO};display:block;font-size:10px;color:#928e88;margin-top:3px">#${e.number} · ${escapeHtml(new Date(e.mergedAt).toLocaleDateString())}</span>
-</a>`).join('') : `<p style="font-size:12px;color:#928e88;text-align:center;padding:16px 0">${escapeHtml(s.changelogShowNumbers ? t('noNewChanges') : t('noChangelogAvailable'))}</p>`;
-    return `<div onclick="if(event.target===this)App.closeChangelogModal()" style="position:fixed;inset:0;z-index:75;background:rgba(6,6,7,.74);display:flex;align-items:flex-start;justify-content:center;padding:64px 16px;overflow:auto"><div style="width:100%;max-width:460px;max-height:calc(100vh - 128px);display:flex;flex-direction:column;background:linear-gradient(180deg,#151517,#111113);border:1px solid #33333a;border-radius:10px;box-shadow:0 30px 80px -20px #000;padding:18px 20px 20px">
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-<div style="${NARROW};font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#eae7e1">${escapeHtml(t('whatsNewHeading'))}</div>
-<button type="button" onclick="App.closeChangelogModal()" aria-label="Close" style="background:transparent;border:0;color:#928e88;font-size:18px;line-height:1;cursor:pointer;padding:4px">×</button>
-</div>
-<p style="margin:0 0 4px;font-size:11px;color:#928e88">${escapeHtml(t('whatsNewHelp'))}</p>
-<div style="overflow:auto;flex:1;margin-top:4px">${rows}</div>
-<button type="button" onclick="App.closeChangelogModal()" style="margin-top:16px;background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:9px 16px;color:#928e88;font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${escapeHtml(t('v2ButtonDone'))}</button>
-</div></div>`;
-}
-
-// Checkboxes rather than a single-choice <select> — a user setting up
-// FilmCalc for, say, Melbourne wants both the Melbourne AND the
-// Australia-wide retailer files in one go, not one picked-import-repick
-// cycle per file (issue: the old single-select forced exactly one region
-// at a time). Checked state lives in state.presetChecked (not a plain
-// uncontrolled checkbox) so a geo-matched pre-check, or the user's own
-// tick/untick, survives a re-render triggered by anything else on the
-// same Settings page.
-function presetCheckList(kind, entries) {
-    return entries.map(f => {
-        const key = `${kind}:${f.file}`;
-        return `<label style="display:flex;align-items:center;gap:8px;padding:6px 2px;font-size:12px;color:#c9c5bd;cursor:pointer"><input type="checkbox" class="preset-check" data-kind="${kind}" value="${escapeHtml(f.file)}" onchange="App.togglePresetCheck('${kind}','${jsAttr(f.file)}',this.checked)" ${state.presetChecked.has(key) ? 'checked' : ''} style="width:16px;height:16px;accent-color:var(--acc);cursor:pointer">${escapeHtml(f.label)}</label>`;
-    }).join('');
-}
-// Shows what a custom-uploaded YAML file (App.importYamlFile) WOULD do to
-// the library, with nothing written to localStorage yet — the user reviews
-// counts/names/errors and either confirms (App.confirmImport) or cancels.
-// Renders nothing when there's no pending import.
-function renderImportPreview(s) {
-    const p = s.pendingImport;
-    if (!p) return '';
-    const rowsFor = (entries, label) => !entries.length ? '' : `<div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#928e88;margin:8px 0 4px">${label} (${entries.length})</div>
-<div style="display:flex;flex-direction:column;gap:2px;max-height:120px;overflow:auto">${entries.map(e => `<div style="font-size:11px;color:#c9c5bd;display:flex;justify-content:space-between;gap:8px"><span>${escapeHtml(e.name)}</span>${e.exists ? '<span style="color:#928e88;font-size:9px;letter-spacing:.08em;text-transform:uppercase">updates existing</span>' : ''}</div>`).join('')}</div>`;
-    const hasErrors = p.errors.length > 0;
-    return `<div style="margin-top:10px;border:1px solid ${hasErrors ? '#5a2420' : '#26262a'};border-radius:8px;background:#131315;padding:12px">
-<div style="font-size:11px;color:#c9c5bd;margin-bottom:2px">Reviewing <strong>${escapeHtml(p.fileName)}</strong> — nothing saved yet.</div>
-${rowsFor(p.filmEntries, 'Films')}
-${rowsFor(p.labEntries, 'Labs')}
-${hasErrors ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid #33221f"><div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#e5675c;margin-bottom:4px">Can't import — fix these and re-upload</div><div style="display:flex;flex-direction:column;gap:2px;max-height:120px;overflow:auto">${p.errors.map(e => `<div style="font-size:11px;color:#e5675c">${escapeHtml(e)}</div>`).join('')}</div></div>` : ''}
-<div style="display:flex;gap:8px;margin-top:12px">
-${hasErrors ? '' : `<button type="button" onclick="App.confirmImport()" style="flex:1;background:#1c1512;border:1px solid #5a3a1c;border-radius:5px;padding:7px 11px;color:var(--acc);font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">Confirm import</button>`}
-<button type="button" onclick="App.cancelImport()" style="${hasErrors ? 'flex:1' : ''};background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:7px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">Cancel</button>
-</div>
-</div>`;
-}
-// showImportButton: false on the Setup wizard's presets step, where Next
-// itself imports whatever's ticked (see App.setupNextFromPresets) — a
-// separate button there would just be a redundant extra click. Settings'
-// own Starter Presets section has no such Next button, so it keeps one.
-function renderPresetImport(showImportButton = true) {
-    if (!presetFilmIndex || !presetLabIndex) { loadPresetIndexes(); return `<div style="font-size:11px;color:#b0aeac">Loading…</div>`; }
-    if (geoGuess === undefined) detectUserLocation();
-    // sw.js caches this screen's data (stale-while-revalidate) so it still
-    // works offline once loaded before — but a cached price can be stale,
-    // so say so explicitly rather than showing it as if it were live.
-    const offlineNote = (typeof navigator !== 'undefined' && navigator.onLine === false)
-        ? `<div style="font-size:10px;color:#c98a4b;margin-bottom:8px">You're offline — showing presets from your last visit, which may not reflect the latest prices.</div>`
-        : '';
-    const geoNote = geoGuess
-        ? `Pre-ticked below: whatever looks like it covers ${escapeHtml(geoGuess.city || geoGuess.country)}, guessed from your device's location or timezone — that guess never leaves this device. Tick or untick anything; only what's ticked when you import actually gets added.`
-        : `Community-contributed regional film/lab price lists shipped with FilmCalc — tick any that apply to you (more than one is fine) to add real data instead of typing it all by hand.`;
-    // Country filter (issue #452) — the flat file list gets unwieldy as
-    // more regions ship, so narrow it to one country at a time. Options
-    // come from whatever countries the shipped indexes actually contain,
-    // not a hardcoded list, so a new region file just shows up on its own.
-    const countries = [...new Set([...presetFilmIndex, ...presetLabIndex].map(f => f.country).filter(Boolean))].sort();
-    const filter = state.presetCountryFilter;
-    const matchesFilter = f => !filter || f.country === filter;
-    const filteredFilms = presetFilmIndex.filter(matchesFilter);
-    const filteredLabs = presetLabIndex.filter(matchesFilter);
-    const countrySelect = countries.length > 1 ? `<select onchange="App.setPresetCountryFilter(this.value)" aria-label="Filter by country" style="${FIELD_INPUT};max-width:280px;margin-bottom:8px">
-<option value="" ${!filter ? 'selected' : ''}>All countries</option>
-${countries.map(c => `<option value="${escapeHtml(c)}" ${filter === c ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('')}
-</select>` : '';
-    return `${offlineNote}<div style="font-size:10px;color:#b0aeac;margin-bottom:8px">${geoNote}</div>
-<div style="font-size:10px;color:#928e88;margin-bottom:8px;font-style:italic">${escapeHtml(t('v2ImportDisclaimer'))}</div>
-${countrySelect}
-<div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#928e88;margin-bottom:4px">Films${filteredFilms.length !== presetFilmIndex.length ? ` (${filteredFilms.length} of ${presetFilmIndex.length})` : ''}</div>
-<div style="display:flex;flex-direction:column;max-height:160px;overflow:auto;border:1px solid #26262a;border-radius:6px;padding:4px 8px;margin-bottom:10px">${filteredFilms.length ? presetCheckList('films', filteredFilms) : `<div style="font-size:11px;color:#b0aeac;padding:6px 2px">No films for this country yet.</div>`}</div>
-<div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#928e88;margin-bottom:4px">Labs${filteredLabs.length !== presetLabIndex.length ? ` (${filteredLabs.length} of ${presetLabIndex.length})` : ''}</div>
-<div style="display:flex;flex-direction:column;max-height:160px;overflow:auto;border:1px solid #26262a;border-radius:6px;padding:4px 8px;margin-bottom:10px">${filteredLabs.length ? presetCheckList('labs', filteredLabs) : `<div style="font-size:11px;color:#b0aeac;padding:6px 2px">No labs for this country yet.</div>`}</div>
-${showImportButton ? `<button type="button" onclick="App.importPresetSelected()" style="background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:6px 11px;color:#928e88;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">Import selected</button>` : ''}`;
-}
-
-// ---------- Merge helpers (ported from the old js/modals.js import path —
-// pure data functions, no DOM, safe to duplicate in this presentation-only
-// file rather than pull in the rest of that DOM-coupled module) ----------
+// ---------- Custom file import (mirrors root's js/app.js, same behaviour) ----------
 function mergeFilmBundles(existing, incoming) {
     const keyOf = b => `${b.storeName || ''}|${b.rolls}|${b.exposures}`;
     const byKey = new Map((existing || []).map(b => [keyOf(b), b]));
@@ -1039,705 +450,1460 @@ function mergeFilmProfiles(saved, incoming) {
     });
     return saved;
 }
-function migrateFilmProfileKeys() {
-    const saved = readJSON('filmProfiles', {});
-    const remapped = {};
-    let changed = false;
-    Object.keys(saved).forEach(oldKey => {
-        const film = saved[oldKey];
-        if (!film || !film.name) return;
-        const newKey = filmKey(film.name, film.boxSpeed, film.format);
-        if (newKey !== oldKey) changed = true;
-        if (remapped[newKey]) {
-            remapped[newKey] = { ...film, bundles: mergeFilmBundles(remapped[newKey].bundles, film.bundles) };
-            changed = true;
-        } else {
-            remapped[newKey] = film;
-        }
-    });
-    if (changed) writeJSON('filmProfiles', remapped);
-}
-
-function renderFooter(s) {
-    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding:0 2px;flex-wrap:wrap">
-<span style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#b9b8b6">FilmCalc</span>
-<span style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#b9b8b6;${MONO}">${formatLabel(s.format)} · ${procLabel(s.process)}</span>
-</div>`;
-}
-// ==================== Top-level render ====================
-// Every state change does a full innerHTML replace (no framework, no
-// virtual DOM) — the simplest thing that works for a form this size, but
-// it destroys and recreates the currently-focused <input> on every single
-// keystroke. On mobile that reads as "the keyboard closes as you type"
-// (the OS dismisses the keyboard the instant the focused element is
-// removed from the DOM), and on desktop it silently drops cursor
-// position. Fix: every input/select this file renders that fires
-// App.set*() on input/change carries a stable data-fkey identifying which
-// field it is; capture the focused element's fkey + text selection right
-// before the innerHTML swap, then refocus the matching element (by the
-// same fkey) afterwards, restoring the caret. Deterministic because
-// render() is a pure function of state — the field with a given fkey
-// lands in the same place in the new markup as long as its position in
-// state hasn't changed shape (e.g. a draft's bundle/tier array order).
-function captureFocus(root) {
-    const el = document.activeElement;
-    if (!el || !root.contains(el) || !el.hasAttribute('data-fkey')) return null;
-    const focus = { key: el.getAttribute('data-fkey') };
-    if (typeof el.selectionStart === 'number') { focus.start = el.selectionStart; focus.end = el.selectionEnd; }
-    return focus;
-}
-function restoreFocus(root, focus) {
-    if (!focus) return;
-    const el = root.querySelector(`[data-fkey="${focus.key}"]`);
-    if (!el) return;
-    el.focus({ preventScroll: true });
-    if (focus.start !== undefined && typeof el.setSelectionRange === 'function') {
-        try { el.setSelectionRange(focus.start, focus.end); } catch { /* not a text-selectable input */ }
+// Bridges the current { bundles: [...] } schema with the older flat
+// single-bundle schema, same as root's js/app.js version — every film in
+// films/*.yaml already uses the nested schema, this just keeps older
+// community files working too.
+function buildFilmProfilesFromEntries(entries) {
+    const hasNestedBundles = entries.some(f => Array.isArray(f.bundles));
+    const result = {};
+    if (hasNestedBundles) {
+        entries.forEach(f => { if (f.name) result[filmKeyOf(f)] = { ...f, maxPushPull: f.maxPushPull ?? 1 }; });
+    } else {
+        entries.forEach(f => {
+            if (!f.name) return;
+            const key = filmKey(f.name, f.boxSpeed, f.format);
+            const bundle = { rolls: f.rolls, exposures: f.exposures, filmCost: f.filmCost, storeName: f.storeName, buyLink: f.buyLink };
+            if (result[key]) result[key].bundles.push(bundle);
+            else result[key] = { name: f.name, boxSpeed: f.boxSpeed, maxPushPull: f.maxPushPull ?? 1, process: f.process || 'C41', format: f.format || '35mm', bundles: [bundle] };
+        });
     }
+    return result;
 }
-
-// One markup tree (renderMobile()) for every viewport — desktop used to
-// get a second, hand-written layout below this width, but a feature added
-// to one tree routinely never made it to the other (e.g. push/pull).
-// Centering the mobile shell in a capped-width column, rather than
-// stretching it, is the "desktop" experience now. This column used to be
-// `contain:layout`, on the theory that it'd scope position:fixed
-// descendants (menu drawer, toast) to the column instead of the raw
-// viewport — but `contain:layout` makes an element the *containing block*
-// for those descendants, which redefines "fixed" as "fixed to this box",
-// not just the box's left/right edges: the toast's `bottom:16px` measured
-// from the bottom of the (content-height, not viewport-height) column
-// instead of the screen, landing off-screen on any page taller than one
-// viewport, and every such element scrolled away with the page instead of
-// staying put. Dropped; the toast and menu drawer now do their own
-// column-width clamping (see renderMobileToast/renderMobileMenu) while
-// staying genuinely `position:fixed` to the viewport.
-function render() {
-    const root = document.getElementById('app');
-    if (!root) return;
-    const focus = captureFocus(root);
-    // Light mode isn't a real second palette (every colour in this file is a
-    // literal hex, not a CSS variable) — invert+hue-rotate the whole app
-    // instead of re-deriving 350+ colours by hand. Filter lives on #app
-    // itself (outside innerHTML) so it survives the re-render below.
-    root.style.filter = state.dark ? '' : 'invert(1) hue-rotate(180deg)';
-    root.innerHTML = `
-<div style="min-height:100vh;display:flex;justify-content:center;background:#0b0b0c">
-<div style="width:100%;max-width:960px;min-height:100vh">
-${renderMobile(state)}
+function renderImportPreview() {
+    const p = state.pendingImport;
+    if (!p) return '';
+    const rowsFor = (entries, label) => !entries.length ? '' : `<div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:${C.faint};margin:8px 0 4px">${escapeHtml(label)} (${entries.length})</div>
+<div style="display:flex;flex-direction:column;gap:2px;max-height:120px;overflow:auto">${entries.map(e => `<div style="font-size:11px;color:${C.text2};display:flex;justify-content:space-between;gap:8px"><span>${escapeHtml(e.name)}</span>${e.exists ? `<span style="color:${C.faint};font-size:9px;letter-spacing:.08em;text-transform:uppercase">${escapeHtml(t('v3UpdatesExisting'))}</span>` : ''}</div>`).join('')}</div>`;
+    const hasErrors = p.errors.length > 0;
+    return `<div style="margin-top:10px;border:1px solid ${hasErrors ? C.redBorder : C.border};border-radius:8px;background:${C.field};padding:12px">
+<div style="font-size:11px;color:${C.text2};margin-bottom:2px">${escapeHtml(t('v3ReviewingFile', { name: p.fileName }))}</div>
+${rowsFor(p.filmEntries, t('v2SectionFilms'))}
+${rowsFor(p.labEntries, t('v2SectionLabs'))}
+${hasErrors ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid ${C.redBorder}"><div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:${C.red};margin-bottom:4px">${escapeHtml(t('v3ImportErrorsHeading'))}</div><div style="display:flex;flex-direction:column;gap:2px;max-height:120px;overflow:auto">${p.errors.map(e => `<div style="font-size:11px;color:${C.red}">${escapeHtml(e)}</div>`).join('')}</div></div>` : ''}
+<div style="display:flex;gap:8px;margin-top:12px">
+${hasErrors ? '' : `<button type="button" onclick="App.confirmImport()" style="flex:1;background:${C.accBg};border:1px solid ${C.accBorder};border-radius:8px;padding:9px 13px;color:${C.acc};font-size:12px;cursor:pointer">${escapeHtml(t('v3ConfirmImport'))}</button>`}
+<button type="button" onclick="App.cancelImport()" style="${hasErrors ? 'flex:1' : ''}background:transparent;border:1px solid ${C.border2};border-radius:8px;padding:9px 13px;color:${C.text2};font-size:12px;cursor:pointer">${escapeHtml(t('cancelButton'))}</button>
 </div>
 </div>`;
-    restoreFocus(root, focus);
 }
 
-// ==================== Bulk library YAML export ====================
-// Serializes saved films/labs into DATA_SPEC.md-shaped YAML list entries
-// (no file-level label/country/state/city wrapper — App.submitLibrary()
-// below hands these to library-intake.yml, which places each entry in the
-// right file the same way film-lab-intake.yml already does for a single
-// submission). Hand-rolled rather than pulling in a YAML library: every
-// scalar is either a known-safe bare number/boolean or run through
-// yamlScalar(), which is conservative enough to always produce valid YAML
-// regardless of what a user typed into a store name or address.
-function yamlScalar(v) {
-    if (v === null || v === undefined || v === '') return "''";
-    if (typeof v === 'number' || typeof v === 'boolean') return String(v);
-    const s = String(v);
-    // Bare (unquoted) only when nothing in it could be misread as YAML
-    // syntax — a leading indicator char, a ": "/" #" sequence, a
-    // bool/null-lookalike keyword, a bare number, or edge whitespace.
-    const unsafe = /^[\s\-?:,\[\]{}#&*!|>'"%@`]/.test(s) || /:\s|\s#/.test(s) ||
-        /^(true|false|null|~|yes|no|on|off)$/i.test(s) || /^-?\d+(\.\d+)?$/.test(s) || s !== s.trim();
-    return unsafe ? `'${s.replace(/'/g, "''")}'` : s;
+async function importPresetRegions(regions) {
+    const allFilms = getAllFilms();
+    const allLabs = getAllLabs();
+    let filmsAdded = 0, labsAdded = 0;
+    for (const r of regions) {
+        try {
+            if (r.filmsFile) {
+                const doc = jsyaml.load(await (await fetch('films/' + r.filmsFile)).text());
+                if (Array.isArray(doc?.films)) { mergeFilmsInto(allFilms, doc.films); filmsAdded += doc.films.length; }
+            }
+            if (r.labsFile) {
+                const doc = jsyaml.load(await (await fetch('labs/' + r.labsFile)).text());
+                if (Array.isArray(doc?.labs)) { mergeLabsInto(allLabs, doc.labs); labsAdded += doc.labs.length; }
+            }
+        } catch { /* one bad region file shouldn't block the rest */ }
+    }
+    setAllFilms(allFilms);
+    setAllLabs(allLabs);
+    return { filmsAdded, labsAdded };
 }
 
-function serializeFilmEntryYaml(f) {
-    // Not `parseFloat(...) || 1` — maxPushPull: 0 is a real, meaningful value
-    // (a stock that shouldn't be pushed at all, e.g. Ektar 100) and `0 || 1`
-    // would silently turn it into 1.
-    const maxPushPullNum = parseFloat(f.maxPushPull ?? 1);
-    const lines = [
-        `- name: ${yamlScalar(f.name)}`,
-        `  boxSpeed: ${parseFloat(f.boxSpeed) || 0}`,
-        `  maxPushPull: ${Number.isFinite(maxPushPullNum) ? maxPushPullNum : 1}`,
-        `  process: ${yamlScalar(f.process)}`
+// ---------- Rendering ----------
+// Visual language ported from the "FilmCalc Lookup 4b" Claude Design
+// mockup — same colours, spacing, copy. Whole-view innerHTML re-render on
+// every state change, same pattern as root's js/app.js.
+const C = {
+    bg: '#08090a', shell: '#0e0f11', panel: '#16181b', panel2: '#131518', field: '#0e0f11',
+    border: '#26292e', border2: '#2f333a', border3: '#3a3e45',
+    text: '#eceef1', text2: '#c8ccd2', sub: '#9aa0a8', faint: '#6a7078',
+    acc: '#ff7a2f', accBg: '#241a13', accBorder: '#5a3a1c',
+    blue: '#5fa8d3', green: '#8fbf6a', red: '#ef6a54', redBg: '#1c1210', redBorder: '#5a2420'
+};
+// Light mode isn't a second palette (every colour in C/this file is a
+// literal hex) — invert+hue-rotate the whole app instead, same trick
+// root's js/app.js uses. Own localStorage key ('newUiTheme', tri-state
+// system/light/dark) rather than reusing root's binary 'lightMode', since
+// root has no "system" concept — keeps this preview's toggle independent.
+function systemPrefersDark() {
+    try { return !window.matchMedia || window.matchMedia('(prefers-color-scheme: dark)').matches; } catch { return true; }
+}
+function isDarkNow() {
+    if (state.theme === 'light') return false;
+    if (state.theme === 'dark') return true;
+    return systemPrefersDark();
+}
+function render() {
+    const el = document.getElementById('app');
+    if (!el) return;
+    el.style.filter = isDarkNow() ? '' : 'invert(1) hue-rotate(180deg)';
+    el.innerHTML = viewShell();
+}
+
+function fmtDate(iso) {
+    try {
+        const d = new Date(iso);
+        return d.getDate() + ' ' + MONTHS[d.getMonth()] + ' ' + d.getFullYear();
+    } catch { return ''; }
+}
+
+// Each item is either a plain value (used as both the button's value and
+// its display label — untranslated technical terms like format/process
+// names) or a [value, label] pair (a translated display label decoupled
+// from the English value onPick() needs).
+function seg(list, current, onPick) {
+    return list.map(item => {
+        const [value, label] = Array.isArray(item) ? item : [item, item];
+        const on = value === current;
+        return `<button type="button" onclick="${onPick(value)}" style="flex:1;height:38px;border-radius:6px;font:inherit;font-size:13px;cursor:pointer;background:${on ? '#1f2228' : 'transparent'};border:${on ? '1px solid #3a3e45' : '0'};color:${on ? C.text : C.sub};font-weight:${on ? 600 : 400}">${escapeHtml(label)}</button>`;
+    }).join('');
+}
+
+function shellW() {
+    return state.desktop ? '1440px' : '430px';
+}
+
+function viewShell() {
+    const desktop = state.desktop;
+    const shellWidth = shellW();
+    return `<div style="position:relative;max-width:${shellWidth};margin:0 auto;min-height:100vh;background:${C.shell};padding-bottom:28px;overflow:hidden">
+${desktop ? viewDesktopHeader() : viewMobileHeader()}
+${viewBody()}
+${state.modal && !desktop ? viewRollDetails() : ''}
+${state.postModal ? viewPostModal() : ''}
+${state.shareModal ? viewShareModal() : ''}
+${state.libFilterModal ? viewLibFilterModal() : ''}
+${state.libOpen ? viewLibDetail() : ''}
+${state.menu && !desktop ? viewMenu() : ''}
+${state.setupOpen ? viewSetup() : ''}
+${!state.setupOpen && state.consent === null ? viewConsent() : ''}
+${state.changelogOpen ? viewChangelog() : ''}
+${state.confirm ? viewConfirm() : ''}
+${state.draft ? viewEditor() : ''}
+${state.draft && state.subIndex !== null ? viewSubEditor() : ''}
+${state.toast ? `<div style="position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:70;width:100%;max-width:${shellW()};padding:0 16px;box-sizing:border-box"><div style="padding:13px 16px;border-radius:10px;background:#1f2228;border:1px solid #3a3e45;box-shadow:0 14px 30px rgba(0,0,0,.5);font-size:13px;color:${C.text};text-align:center">${escapeHtml(state.toast)}</div></div>` : ''}
+</div>`;
+}
+
+function viewMobileHeader() {
+    const title = state.view === 'expired' ? t('v3TitleExpiredFilm') : state.view === 'settings' ? t('navSettings') : state.view === 'library' ? t('navLibrary') : t('appTitle');
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px">
+<span style="font-size:17px;font-weight:700;letter-spacing:-.01em;color:${C.text}">${escapeHtml(title)}</span>
+<button type="button" onclick="App.openMenu()" aria-label="${escapeHtml(t('v3MenuHeading'))}" style="width:44px;height:44px;margin-right:-12px;display:flex;align-items:center;justify-content:center;background:transparent;border:0;color:${C.sub};cursor:pointer"><svg style="width:20px;height:20px" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"></path></svg></button>
+</div>`;
+}
+
+function viewDesktopHeader() {
+    const labCount = Object.keys(getAllLabs()).length, filmCount = Object.keys(getAllFilms()).length;
+    const tabs = [
+        ['lookup', t('v3NavLookup')], ['library', t('navLibrary')], ['expired', t('v3NavExpired')], ['settings', t('navSettings')]
+    ].map(([key, label]) => {
+        const on = state.view === key;
+        return `<button type="button" onclick="App.setView('${key}')" style="background:transparent;border:0;border-bottom:${on ? '2px solid #ff7a2f' : '2px solid transparent'};padding:0 0 4px;font:inherit;font-size:13px;cursor:pointer;color:${on ? C.text : C.sub};font-weight:${on ? 600 : 400}">${escapeHtml(label)}</button>`;
+    }).join('');
+    return `<div style="display:flex;align-items:center;gap:26px;padding:16px 28px;border-bottom:1px solid ${C.border}">
+<span style="font-size:18px;font-weight:700;letter-spacing:-.01em;color:${C.text}">${escapeHtml(t('appTitle'))}</span>
+<div style="display:flex;gap:20px">${tabs}</div>
+<span style="margin-left:auto;display:flex;align-items:center;gap:16px">
+<span style="font-size:12px;color:${C.faint}">${escapeHtml(t('v3HeaderLabsStocksSummary', { home: state.homeLab || t('v3NoHomeLab'), labs: labCount, stocks: filmCount }))}</span>
+<button type="button" onclick="App.openChangelog()" style="background:transparent;border:0;padding:0;font:inherit;font-size:12px;color:${C.sub};cursor:pointer">${escapeHtml(t('v3WhatsNew'))}</button>
+<button type="button" onclick="App.install()" style="height:34px;padding:0 12px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:12px;font-weight:600;cursor:pointer">${escapeHtml(t('v2ButtonInstallApp'))}</button>
+</span>
+</div>`;
+}
+
+function viewLookup() {
+    const desktop = state.desktop;
+    const r = rankLabs();
+    const home = r.ranked.find(l => l.name === state.homeLab) || r.ranked[0];
+    const filmRows = computeFilmRows(home);
+    const exp = r.exp;
+    const perRoll = r.filmPerRoll;
+    const homeDev = home ? home.pick.devCost : 0;
+    const homePush = home ? home.pick.pushFee : 0;
+    const homeFee = home ? home.pick.mailFee : 0;
+    const rollTotal = (perRoll + homeDev + homePush + homeFee) || 1;
+    const best = r.ranked[0];
+    const homeCpp = home ? home.cpp : 0;
+    const saveC = best ? (homeCpp - best.cpp) * 100 : 0;
+    const cheaper = computeCheaperFilm(home);
+    const pushStopsAbs = Math.abs(pushStops());
+    const loadedFilm = Object.values(getAllFilms()).find(f => !f.hidden && parseInt(f.boxSpeed, 10) === (parseInt(state.boxSpeed, 10) || -1) && (f.format || '35mm') === FORMAT_VALUE[state.format]);
+    const pushLimit = loadedFilm ? parseFloat(loadedFilm.maxPushPull ?? 1) : 1;
+    const overPush = pushStopsAbs > pushLimit;
+
+    const summaryCard = `<div style="margin:18px 20px 0;background:${C.panel};border:1px solid ${C.border};border-radius:10px;overflow:hidden">
+<div style="padding:18px 20px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+${home && home.lab.address ? `<button type="button" onclick="App.openMaps()" aria-label="${escapeHtml(t('v3DirectionsToLab', { name: home.name }))}" style="display:flex;align-items:center;gap:6px;background:transparent;border:0;padding:0;font:inherit;font-size:12px;color:${C.sub};cursor:pointer">
+<svg style="width:13px;height:13px;flex:none" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s7-6.3 7-11a7 7 0 10-14 0c0 4.7 7 11 7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+<span>${escapeHtml(home.name)} <span style="color:${C.acc}">${escapeHtml(t('v3HomeSuffix'))}</span></span>
+</button>` : `<span style="font-size:12px;color:${C.sub}">${home ? escapeHtml(home.name) + ' ' + escapeHtml(t('v3HomeSuffix')) : escapeHtml(t('v3NoHomeLabSet'))}</span>`}
+<span style="font-size:12px;color:${C.blue}">${best && saveC > 0.05 ? escapeHtml(t('v3SaveVsBestName', { name: best.name.split(' ')[0], amount: saveC.toFixed(1) })) : (home ? escapeHtml(t('v3CheapestAlready')) : '')}</span>
+</div>
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-top:8px">
+<div style="display:flex;align-items:baseline;gap:5px"><span style="font-size:24px;font-weight:500;color:${C.sub}">${CUR()}</span><span style="font-size:66px;font-weight:700;line-height:.84;color:${cheaper.tone === 'warn' ? C.red : C.text};letter-spacing:-.035em">${home ? money(homeCpp) : '—'}</span><span style="font-size:12px;color:${C.sub}">${escapeHtml(t('v3PerFrame'))}</span></div>
+<div style="text-align:right;padding-bottom:6px"><div style="font-size:11px;color:${C.sub}">${escapeHtml(t('v3TotalCost'))}</div><div style="font-size:24px;font-weight:600;color:${C.text}">${CUR()}${home ? money(perRoll + homeDev + homePush + homeFee) : '0.00'}</div></div>
+</div>
+${cheaper.tone === 'warn' ? `<div style="display:flex;align-items:center;gap:7px;margin-top:10px;padding:7px 10px;border-radius:8px;background:${C.redBg};border:1px solid ${C.redBorder}">
+<svg style="width:13px;height:13px;flex:none;color:${C.red}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5L2.8 20h18.4L12 4.5z"></path><path stroke-linecap="round" d="M12 10v4.2"></path><circle cx="12" cy="17.2" r="1" fill="currentColor" stroke="none"></circle></svg>
+<span style="font-size:12px;color:${C.red}">${escapeHtml(cheaper.overpay || '')}</span>
+</div>` : ''}
+<div style="display:flex;height:4px;margin-top:16px;border-radius:2px;overflow:hidden;background:${C.field}"><div style="background:${cheaper.tone === 'warn' ? C.red : C.green};width:${Math.round((perRoll / rollTotal) * 100)}%"></div><div style="background:${C.blue};width:${Math.round((homeDev / rollTotal) * 100)}%"></div><div style="background:#b3541a;width:${Math.round((homePush / rollTotal) * 100)}%"></div><div style="flex:1;background:#ff9a5c"></div></div>
+<div style="display:flex;gap:12px;margin-top:10px">
+<div style="flex:1"><div style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:2px;background:${cheaper.tone === 'warn' ? C.red : C.green}"></span><span style="font-size:11px;color:${C.sub}">${escapeHtml(t('v3LabelFilm'))}</span></div><div style="font-size:15px;font-weight:600;color:${cheaper.tone === 'warn' ? C.red : C.text};margin-top:3px">${CUR()}${money(perRoll)}</div></div>
+<div style="flex:1"><div style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:2px;background:${C.blue}"></span><span style="font-size:11px;color:${C.sub}">${escapeHtml(t('v3LabelDev'))}</span></div><div style="font-size:15px;font-weight:600;color:${C.text};margin-top:3px">${CUR()}${money(homeDev)}</div></div>
+<div style="flex:1.2;min-width:0">
+<div style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;flex:none;border-radius:2px;background:#ff9a5c"></span><span style="font-size:11px;color:${C.sub}">${escapeHtml(t('v3LabelFees'))}</span></div>
+${(homePush <= 0 && homeFee <= 0) ? `<div style="font-size:15px;font-weight:600;color:${C.faint};margin-top:3px">${escapeHtml(t('v3FeesNone'))}</div>` : `<div style="display:flex;gap:10px;margin-top:3px">
+${homePush > 0 ? `<span style="min-width:0"><span style="display:block;font-size:15px;font-weight:600;color:${C.text}">${CUR()}${money(homePush)}</span><span style="display:flex;align-items:center;gap:4px;margin-top:2px"><span style="width:6px;height:6px;flex:none;border-radius:2px;background:#b3541a"></span><span style="font-size:10px;color:${C.faint}">${escapeHtml(t('v3FeePush'))}</span></span></span>` : ''}
+${homeFee > 0 ? `<span style="min-width:0"><span style="display:block;font-size:15px;font-weight:600;color:${C.text}">${CUR()}${money(homeFee)}</span><span style="display:flex;align-items:center;gap:4px;margin-top:2px"><span style="width:6px;height:6px;flex:none;border-radius:2px;background:#ff9a5c"></span><span style="font-size:10px;color:${C.faint}">${escapeHtml(t('v3FeePost'))}</span></span></span>` : ''}
+</div>`}
+</div>
+</div>
+</div>
+<div style="padding:13px 20px 15px;background:${overPush ? C.redBg : (cheaper.tone === 'warn' ? C.redBg : C.panel)};border-top:1px solid ${overPush || cheaper.tone === 'warn' ? C.redBorder : C.border}">
+<div style="display:flex;align-items:center;gap:7px">
+${overPush || cheaper.tone === 'warn' ? `<svg style="width:15px;height:15px;flex:none;color:${C.red}" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5L2.8 20h18.4L12 4.5z"></path><path stroke-linecap="round" d="M12 10v4.2"></path><circle cx="12" cy="17.2" r="1" fill="currentColor" stroke="none"></circle></svg>` : ''}
+<span style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${overPush || cheaper.tone === 'warn' ? C.red : C.sub}">${overPush ? escapeHtml(t(pushLimit === 1 ? 'v3PushedPastLimitOne' : 'v3PushedPastLimit', { n: pushLimit })) : escapeHtml(cheaper.headline)}</span>
+</div>
+<div style="font-size:14px;line-height:1.5;color:${C.text2};margin-top:5px">${overPush ? escapeHtml(t('v3PushExpectGrain')) : escapeHtml(cheaper.note)}</div>
+${(cheaper.has && !overPush) ? `<div style="display:flex;gap:8px;margin-top:12px">
+<button type="button" onclick="App.loadCheaper()" style="flex:1;min-width:0;height:42px;border-radius:8px;background:transparent;border:1px solid ${C.redBorder};color:${C.red};font:inherit;font-size:13px;font-weight:600;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 12px">${escapeHtml(cheaper.loadLabel)}</button>
+${cheaper.buyLink ? `<a href="${sanitizeUrl(cheaper.buyLink)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(cheaper.buyLabel)}" title="${escapeHtml(cheaper.buyLabel)}" style="flex:none;width:46px;height:42px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid ${C.border2};color:${C.text2};text-decoration:none">
+<svg style="width:18px;height:18px" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4h2.2l2.1 10.4a1.5 1.5 0 001.5 1.2h8.4a1.5 1.5 0 001.5-1.2L20.5 7H6"></path><circle cx="10" cy="19.5" r="1.4"></circle><circle cx="17" cy="19.5" r="1.4"></circle></svg>
+</a>` : ''}
+</div>` : ''}
+</div>
+</div>`;
+
+    const chips = state.tab === 'labs'
+        ? [chip(escapeHtml(t('dcHiResScanLabel')), state.fHiRes, () => `App.toggleFlag('fHiRes')`), chip(escapeHtml(t('v2FilterNextDay')), state.fRush, () => `App.toggleFlag('fRush')`)]
+        : [
+            `<button type="button" style="height:32px;padding:0 11px;display:flex;align-items:center;gap:6px;border-radius:8px;font:inherit;font-size:12px;background:${C.panel};border:1px solid ${C.border2};color:${C.sub}">${shootIso() ? escapeHtml(t('v3IsoValue', { iso: shootIso() })) : escapeHtml(t('v3AnyIsoCheapestFirst'))}</button>`,
+            chip(escapeHtml(t('v3PushPullChip')), state.includePush, () => `App.toggleFlag('includePush')`)
+        ];
+
+    const totalLabs = Object.keys(getAllLabs()).filter(n => !getAllLabs()[n].hidden).length;
+    const rows = state.tab === 'labs'
+        ? r.ranked.map((x, i) => `<button type="button" onclick="App.openLibDetail(App.labDetail('${jsAttr(x.name)}'))" style="display:flex;align-items:center;gap:12px;width:100%;padding:14px 0;background:transparent;border:0;border-top:${i === 0 ? '2px solid ' + C.blue : '1px solid ' + C.border};font:inherit;text-align:left;cursor:pointer">
+<span style="flex:1;min-width:0"><span style="display:block;font-size:16px;color:${C.text}">${escapeHtml(x.name)}${x.name === state.homeLab ? ' ' + escapeHtml(t('v3HomeSuffix')) : ''}</span><span style="display:block;font-size:12px;color:${C.faint};margin-top:3px">${CUR()}${money(x.pick.devCost)} · ${escapeHtml(x.pick.label.toLowerCase())} · ${(turnaroundLabels[x.pick.turnaroundTime] || '').toLowerCase()}</span></span>
+<span style="text-align:right;flex:none"><span style="display:block;font-size:24px;font-weight:600;color:${i === 0 ? C.blue : C.text2}">${money(x.cpp)}</span><span style="display:block;font-size:11px;color:${i === 0 ? C.blue : C.faint};margin-top:2px">${i === 0 ? escapeHtml(t('v3TagCheapestLower')) : '+' + ((x.cpp - best.cpp) * 100).toFixed(1) + 'c'}</span></span>
+<span style="color:${C.border3};font-size:18px;flex:none">›</span>
+</button>`).join('')
+        : filmRows.map((row, i) => {
+            const st = row.f;
+            const meta = row.overLimit
+                ? t('v3MetaOverLimit', { iso: st.boxSpeed, process: PROCESS_LABEL[st.process], limit: parseFloat(st.maxPushPull ?? 1) })
+                : row.feeBlocked
+                    ? t('v3MetaFeeBlocked', { iso: st.boxSpeed, process: PROCESS_LABEL[st.process], lab: home ? home.name.split(' ')[0] : t('v3GenericLab') })
+                    : t('v3MetaNormal', { iso: st.boxSpeed, process: PROCESS_LABEL[st.process], pushPart: row.stopsAbs ? t('v3MetaPushPart', { sign: row.dir === 'push' ? '+' : '-', n: row.stopsAbs }) : t('v3MetaNativePart'), amount: CUR() + money(row.perFrame) });
+            return `<button type="button" onclick="App.openLibDetail(App.filmDetail('${jsAttr(filmKeyOf(st))}'))" style="display:flex;align-items:center;gap:12px;width:100%;padding:14px 0;background:transparent;border:0;border-top:${i === 0 ? '2px solid ' + C.green : '1px solid ' + C.border};font:inherit;text-align:left;cursor:pointer">
+<span style="flex:1;min-width:0"><span style="display:block;font-size:16px;color:${row.overLimit ? C.sub : C.text}">${escapeHtml(st.name)}</span><span style="display:block;font-size:12px;color:${C.faint};margin-top:3px">${escapeHtml(meta)}</span></span>
+<span style="text-align:right;flex:none"><span style="display:block;font-size:24px;font-weight:600;color:${row.overLimit ? '#8a5c50' : (i === 0 ? C.green : C.text2)}">${money(row.perRoll)}</span><span style="display:block;font-size:11px;color:${C.faint};margin-top:2px">${escapeHtml(t('v3PerRollAmount', { amount: CUR() }))}</span></span>
+<span style="color:${C.border3};font-size:18px;flex:none">›</span>
+</button>`;
+        }).join('');
+
+    const labsList = `<div>
+<div style="margin:14px 20px 0">
+<div style="display:flex;gap:4px;padding:4px;background:${C.panel};border:1px solid ${C.border};border-radius:10px">
+<button type="button" onclick="App.setField('tab','labs')" style="flex:1;height:40px;border-radius:7px;border:0;display:flex;align-items:center;justify-content:center;gap:7px;font:inherit;font-size:13px;cursor:pointer;background:${state.tab === 'labs' ? '#1f2228' : 'transparent'};color:${state.tab === 'labs' ? C.text : C.sub};font-weight:${state.tab === 'labs' ? 600 : 400}">${escapeHtml(t('v2SectionLabs'))} <span style="font-size:11px;font-weight:400;color:${C.faint}">${r.ranked.length}</span></button>
+<button type="button" onclick="App.setField('tab','stock')" style="flex:1;height:40px;border-radius:7px;border:0;display:flex;align-items:center;justify-content:center;gap:7px;font:inherit;font-size:13px;cursor:pointer;background:${state.tab === 'stock' ? '#1f2228' : 'transparent'};color:${state.tab === 'stock' ? C.text : C.sub};font-weight:${state.tab === 'stock' ? 600 : 400}">${escapeHtml(t('v3TabStock'))} <span style="font-size:11px;font-weight:400;color:${C.faint}">${filmRows.length}</span></button>
+</div>
+<div style="display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap">
+${chips.join('')}
+<span style="margin-left:auto;font-size:11px;color:${C.faint}">${state.tab === 'labs' ? escapeHtml(t('v3LabsShownOfTotal', { shown: r.ranked.length, total: totalLabs })) : escapeHtml(t('v3StocksCount', { n: filmRows.length }))}</span>
+</div>
+<div style="margin-top:6px">
+${rows || `<div style="margin-top:10px;padding:22px 18px;border:1px dashed ${C.border2};border-radius:10px;text-align:center">
+<div style="font-size:14px;font-weight:600;color:${C.text2}">${state.tab === 'labs' ? escapeHtml(t('v3NoLabsMatchFilters')) : escapeHtml(t('v3NoStockMatchesCombination'))}</div>
+<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:6px">${state.tab === 'labs' ? escapeHtml(t('v3ClearFilterOrAddLab')) : escapeHtml(t('v3FormatColorEmptyLibrary', { format: state.format, color: FILM_COLOR_LABEL[state.filmColor] }))}</div>
+<button type="button" onclick="App.setView('library')" style="height:42px;padding:0 16px;margin-top:14px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text};font:inherit;font-size:13px;cursor:pointer">${state.tab === 'labs' ? escapeHtml(t('v2ButtonNewLab')) : escapeHtml(t('v3ButtonAddFilmStock'))}</button>
+</div>`}
+</div>
+</div>
+</div>`;
+
+    const actions = `<div style="padding:10px 20px 0">
+<div style="display:flex;gap:8px;margin-top:10px">
+<button type="button" onclick="App.openPost()" aria-label="${escapeHtml(t('v3Postage'))}" title="${escapeHtml(t('v3Postage'))}" style="flex:1;height:46px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;font:inherit;background:${state.mailBack ? C.accBg : 'transparent'};border:1px solid ${state.mailBack ? C.accBorder : C.border2};color:${state.mailBack ? C.acc : C.text2}">
+<svg style="width:18px;height:18px" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"></rect><path stroke-linecap="round" stroke-linejoin="round" d="M3.5 7.5l8.5 6 8.5-6"></path></svg>
+<span style="font-size:10px;letter-spacing:.04em">${state.mailBack ? CUR() + money(homeFee) : escapeHtml(t('v3Postage'))}</span>
+</button>
+<button type="button" onclick="App.saveCurrentRoll()" aria-label="${escapeHtml(t('v2ButtonSaveToLibrary'))}" title="${escapeHtml(t('v2ButtonSaveToLibrary'))}" style="flex:1;height:46px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;cursor:pointer">
+<svg style="width:18px;height:18px" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 4h11l3 3v13a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1z"></path><path stroke-linecap="round" d="M8 4v5h7M8 16h8"></path></svg>
+<span style="font-size:10px;letter-spacing:.04em">${escapeHtml(t('v3ButtonSaveShort'))}</span>
+</button>
+<button type="button" onclick="App.openShare()" aria-label="${escapeHtml(t('v2ButtonShareLink'))}" title="${escapeHtml(t('v2ButtonShareLink'))}" style="flex:1;height:46px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;cursor:pointer">
+<svg style="width:18px;height:18px" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 0L8 8m4-4l4 4M5 14v4a2 2 0 002 2h10a2 2 0 002-2v-4"></path></svg>
+<span style="font-size:10px;letter-spacing:.04em">${escapeHtml(t('v3ButtonShareShort'))}</span>
+</button>
+<button type="button" onclick="App.clearAll()" aria-label="${escapeHtml(t('v2ButtonClear'))}" title="${escapeHtml(t('v2ButtonClear'))}" style="flex:1;height:46px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;cursor:pointer">
+<svg style="width:18px;height:18px" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"></path></svg>
+<span style="font-size:10px;letter-spacing:.04em">${escapeHtml(t('v2ButtonClear'))}</span>
+</button>
+</div>
+</div>`;
+
+    const left = `<div>
+<div style="padding:4px 20px 0;display:flex;gap:10px">
+<label style="flex:1;display:block">
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v2LabelBoxSpeed'))}</div>
+<div style="height:56px;background:${C.panel};border:1px solid ${C.border};border-radius:8px;display:flex;align-items:center;justify-content:flex-end;padding:0 12px">
+<input type="text" inputmode="numeric" value="${escapeHtml(state.boxSpeed)}" onchange="App.setField('boxSpeed',this.value)" aria-label="${escapeHtml(t('v2LabelBoxSpeed'))}" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:28px;font-weight:600;color:${C.text}">
+</div>
+</label>
+<label style="flex:1.25;display:block">
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v3PackPrice'))}</div>
+<div style="height:56px;background:${C.panel};border:1px solid ${C.acc};border-radius:8px;display:flex;align-items:center;gap:3px;padding:0 12px">
+<span style="font-size:17px;color:${C.sub}">${CUR()}</span>
+<input type="text" inputmode="decimal" value="${escapeHtml(state.packCost)}" onchange="App.setField('packCost',this.value)" aria-label="${escapeHtml(t('v3PackPrice'))}" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:28px;font-weight:600;color:${C.text}">
+</div>
+</label>
+</div>
+${!desktop ? `<div style="padding:10px 20px 0">
+<button type="button" onclick="App.openModal()" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px;padding:9px 14px;background:${C.panel};border:1px solid ${C.border};border-radius:10px;font:inherit;text-align:left;cursor:pointer">
+<span style="display:flex;flex-direction:column;gap:3px;min-width:0">
+<span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+<span style="font-size:13px;color:${C.text}">${escapeHtml(state.format)}</span><span style="color:${C.border3}">·</span><span style="font-size:13px;color:${C.text}">${escapeHtml(FILM_COLOR_LABEL[state.filmColor])}</span><span style="color:${C.border3}">·</span><span style="font-size:13px;color:${C.acc}">${escapeHtml(PROCESS_LABEL[state.process])}</span>
+</span>
+<span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+<span style="font-size:12px;color:${C.sub}">${escapeHtml(t(state.rolls === '1' ? 'v3RollsCountOne' : 'v3RollsCount', { n: state.rolls }))}</span><span style="color:${C.border3}">·</span><span style="font-size:12px;color:${C.sub}">${escapeHtml(t('v3ExpCount', { n: exposuresPerRoll() }))}</span>
+</span>
+</span>
+<span style="font-size:12px;color:${C.sub};white-space:nowrap">${escapeHtml(t('v3ChangeChevron'))}</span>
+</button>
+</div>` : `<div style="padding:10px 20px 0">${viewRollDetails()}</div>`}
+${actions}
+</div>`;
+
+    return `<div style="display:grid;grid-template-columns:${desktop ? '380px minmax(0,1fr)' : '1fr'};gap:20px;align-items:start;padding-top:4px">
+${left}
+<div>
+${summaryCard}
+${labsList}
+</div>
+</div>`;
+}
+
+function chip(label, on, onClickExpr) {
+    return `<button type="button" onclick="${onClickExpr()}" style="height:32px;padding:0 11px;display:flex;align-items:center;gap:6px;border-radius:8px;font:inherit;font-size:12px;cursor:pointer;background:${on ? C.panel : 'transparent'};border:1px ${on ? 'solid' : 'dashed'} ${on ? C.border2 : C.border3};color:${on ? C.blue : C.sub}">${label} <span style="color:${C.faint}">${on ? '✕' : ''}</span></button>`;
+}
+
+function viewBody() {
+    if (state.view === 'expired') return viewExpired();
+    if (state.view === 'settings') return viewSettings();
+    if (state.view === 'library') return viewLibrary();
+    return viewLookup();
+}
+
+// The "Roll details" bottom sheet on mobile; the same markup renders
+// inline (no sheet chrome) as the left column on desktop.
+function viewRollDetails() {
+    const desktop = state.desktop;
+    const loadedFilm = Object.values(getAllFilms()).find(f => !f.hidden && parseInt(f.boxSpeed, 10) === (parseInt(state.boxSpeed, 10) || -1) && (f.format || '35mm') === FORMAT_VALUE[state.format]);
+    const pushLimit = loadedFilm ? parseFloat(loadedFilm.maxPushPull ?? 1) : 1;
+    const stops = pushStops();
+    const overLimit = Math.abs(stops) > pushLimit;
+    const shotIso = Math.round((parseInt(state.boxSpeed, 10) || 0) * Math.pow(2, stops));
+    const cameraDisabled = state.format !== '35mm';
+    const exp = exposuresPerRoll();
+
+    const body = `<div style="display:flex;flex-direction:column;gap:14px">
+<div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('formatLabel'))}</div>
+<div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${seg(FORMATS, state.format, l => `App.setFormat('${l}')`)}</div>
+</div>
+<div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v3FilmTypeLabel'))}</div>
+<div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${seg([['Colour', t('v3FilmColorColour')], ['B&W', t('v3FilmColorBW')], ['Speciality', t('v3FilmColorSpeciality')]], FILM_COLOR_LABEL[state.filmColor], l => `App.setFilmColor('${l}')`)}</div>
+</div>
+<div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v3DevelopmentLabel'))}</div>
+<div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${seg(PROCESSES, PROCESS_LABEL[state.process], l => `App.setField('process','${PROCESS_VALUE[l]}')`)}</div>
+</div>
+<div style="display:flex;gap:10px">
+<div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:5px;margin-bottom:6px">
+${overLimit ? `<svg style="width:13px;height:13px;flex:none;color:${C.red}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5L2.8 20h18.4L12 4.5z"></path><path stroke-linecap="round" d="M12 10v4.2"></path><circle cx="12" cy="17.2" r="1" fill="currentColor" stroke="none"></circle></svg>` : ''}
+<span style="font-size:11px;color:${overLimit ? C.red : C.sub}">${escapeHtml(t('v2LabelPushPull'))}</span>
+</div>
+<div style="display:flex;align-items:center;gap:2px;height:44px;background:${C.field};border:1px solid ${overLimit ? C.redBorder : C.border};border-radius:8px;padding:3px;box-sizing:border-box">
+<button type="button" onclick="App.incField('pushPull',-1,-3,3)" aria-label="${escapeHtml(t('v3OneStopLess'))}" style="width:38px;height:36px;flex:none;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:19px;font-weight:600;line-height:1;cursor:pointer">−</button>
+<span style="flex:1;text-align:center;font-size:18px;font-weight:700;color:${overLimit ? C.red : C.text}">${stops > 0 ? '+' + stops : stops}</span>
+<button type="button" onclick="App.incField('pushPull',1,-3,3)" aria-label="${escapeHtml(t('v3OneStopMore'))}" style="width:38px;height:36px;flex:none;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:19px;font-weight:600;line-height:1;cursor:pointer">+</button>
+</div>
+</div>
+<label style="flex:1;display:block"><div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v3CameraLabel'))}</div><select onchange="App.setField('frame35',this.value)" ${cameraDisabled ? 'disabled' : ''} aria-label="${escapeHtml(t('v3CameraTypeLabel'))}" style="width:100%;box-sizing:border-box;height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};opacity:${cameraDisabled ? '.45' : '1'};cursor:${cameraDisabled ? 'not-allowed' : 'pointer'}">${Object.keys(FRAME35).map(k => `<option value="${k}" ${state.frame35 === k ? 'selected' : ''}>${escapeHtml(t(FRAME35_KEY[k]))}</option>`).join('')}</select></label>
+</div>
+<div style="font-size:12px;line-height:1.5;color:${overLimit ? C.red : C.faint}">${overLimit ? escapeHtml(t(pushLimit === 1 ? 'v3PushOverLimitOne' : 'v3PushOverLimit', { iso: shotIso, limit: pushLimit })) : (stops === 0 ? escapeHtml(t('v3DevelopedAtBoxSpeed')) : escapeHtml(t('v3ShootingAtIsoHidden', { iso: shotIso })))}</div>
+<div style="height:1px;background:${C.border}"></div>
+<div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+<span style="font-size:11px;color:${C.sub}">${escapeHtml(t('v3RollsInThePack'))}</span>
+<span style="display:flex;align-items:center;gap:2px;background:${C.field};border:1px solid ${C.border};border-radius:9px;padding:3px">
+<button type="button" onclick="App.incField('rolls',-1,1,99)" aria-label="${escapeHtml(t('v3OneRollFewer'))}" style="width:40px;height:38px;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:20px;font-weight:600;line-height:1;cursor:pointer">−</button>
+<input type="text" inputmode="numeric" value="${escapeHtml(state.rolls)}" onchange="App.setField('rolls',this.value)" aria-label="${escapeHtml(t('v3RollsInThePack'))}" style="width:46px;height:38px;background:transparent;border:0;outline:none;text-align:center;font:inherit;font-size:20px;font-weight:700;color:${C.text}">
+<button type="button" onclick="App.incField('rolls',1,1,99)" aria-label="${escapeHtml(t('v3OneRollMore'))}" style="width:40px;height:38px;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:20px;font-weight:600;line-height:1;cursor:pointer">+</button>
+</span>
+</div>
+</div>
+<div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v3Postage'))}</div>
+<div style="height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;display:flex;align-items:center;gap:3px;padding:0 12px">
+<span style="font-size:15px;color:${C.sub}">$</span>
+<input type="text" inputmode="decimal" value="${escapeHtml(state.postage)}" onchange="App.setField('postage',this.value)" aria-label="${escapeHtml(t('v3Postage'))}" placeholder="3.95" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:17px;font-weight:600;color:${C.text}">
+</div>
+<div style="font-size:11px;line-height:1.5;color:${C.faint};margin-top:4px">${escapeHtml(t('v3PostageHelp'))}</div>
+</div>
+<div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
+<span style="min-width:0"><span style="display:block;font-size:11px;color:${C.sub}">${state.format === '120' ? escapeHtml(t('v3CameraBackLabel')) : (state.format === 'Sheet' ? escapeHtml(t('v3FramesPerSheetLabel')) : escapeHtml(t('v3ExposuresOnRollLabel')))}</span><span style="display:block;font-size:11px;line-height:1.4;color:${C.faint};margin-top:2px">${state.format === '35mm' && state.frame35 !== 'full' ? escapeHtml(t('v3FramesShotArrow', { n: framesShot() })) : ''}</span></span>
+${(state.format === '35mm' || state.format === '127' || state.format === '220') ? `<span style="display:flex;align-items:center;gap:2px;background:${C.field};border:1px solid ${C.border};border-radius:9px;padding:3px">
+<button type="button" onclick="App.incField('exposures',-1,1,99)" aria-label="${escapeHtml(t('v3OneExposureFewer'))}" style="width:40px;height:38px;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:20px;font-weight:600;line-height:1;cursor:pointer">−</button>
+<input type="text" inputmode="numeric" value="${escapeHtml(state.exposures)}" onchange="App.setField('exposures',this.value)" aria-label="${escapeHtml(t('v3ExposuresOnRollLabel'))}" style="width:46px;height:38px;background:transparent;border:0;outline:none;text-align:center;font:inherit;font-size:20px;font-weight:700;color:${C.text}">
+<button type="button" onclick="App.incField('exposures',1,1,99)" aria-label="${escapeHtml(t('v3OneExposureMore'))}" style="width:40px;height:38px;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:20px;font-weight:600;line-height:1;cursor:pointer">+</button>
+</span>` : `<span style="font-size:20px;font-weight:700;color:${C.text}">${exp}</span>`}
+</div>
+${state.format === '120' ? `<div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px;flex-wrap:wrap">
+${Object.keys(FRAME120).map(k => `<button type="button" onclick="App.setField('frame120','${k}')" style="flex:1;min-width:70px;height:44px;border-radius:6px;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:${state.frame120 === k ? '#1f2228' : 'transparent'};border:${state.frame120 === k ? '1px solid ' + C.border3 : '0'};color:${state.frame120 === k ? C.text : C.sub};font-weight:${state.frame120 === k ? 600 : 400}"><span style="font-size:13px">${k.replace('x', '×')}</span><span style="font-size:10px;font-weight:400;color:${C.faint}">${escapeHtml(t('v3ExpCount', { n: FRAME120[k] }))}</span></button>`).join('')}
+</div>` : ''}
+${state.format === '110' || state.format === 'Sheet' ? `<div style="font-size:12px;color:${C.faint};line-height:1.5">${state.format === '110' ? escapeHtml(t('v3The110AlwaysNote')) : escapeHtml(t('v3SheetPricedOneFrameNote'))}</div>` : ''}
+</div>
+</div>`;
+
+    if (desktop) return body;
+    return `<div style="position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:${shellW()};z-index:40;display:flex;flex-direction:column;justify-content:flex-end">
+<div onclick="App.closeModal()" style="position:absolute;inset:0;background:rgba(4,5,6,.72);cursor:pointer"></div>
+<div role="dialog" aria-modal="true" style="position:relative;background:#131518;border-top:1px solid #2f333a;border-radius:18px 18px 0 0;padding:8px 20px 22px;box-shadow:0 -18px 40px rgba(0,0,0,.45)">
+<div style="width:38px;height:4px;border-radius:2px;background:${C.border3};margin:0 auto 14px"></div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+<span style="font-size:16px;font-weight:700;color:${C.text}">${escapeHtml(t('v3RollDetailsHeading'))}</span>
+<button type="button" onclick="App.closeModal()" aria-label="${escapeHtml(t('closeLabel'))}" style="width:32px;height:32px;border-radius:8px;background:#1f2228;border:0;color:${C.sub};font:inherit;font-size:15px;line-height:1;cursor:pointer">✕</button>
+</div>
+${body}
+<button type="button" onclick="App.closeModal()" style="width:100%;height:48px;margin-top:18px;border-radius:10px;background:${C.text};border:0;color:${C.shell};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${escapeHtml(t('v2ButtonDone'))}</button>
+</div>
+</div>`;
+}
+
+function viewExpired() {
+    const desktop = state.desktop;
+    const ex = computeExpired();
+    const form = `<div style="max-width:${desktop ? '560px' : 'none'}">
+<p style="margin:0 0 14px;font-size:14px;line-height:1.55;color:${C.sub}">${escapeHtml(t('v3ExpiredIntro'))}</p>
+<div style="display:flex;gap:10px">
+<label style="flex:1;display:block">
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v2LabelBoxSpeed'))}</div>
+<div style="height:56px;background:${C.panel};border:1px solid ${C.border};border-radius:8px;display:flex;align-items:center;padding:0 12px">
+<input type="text" inputmode="numeric" value="${escapeHtml(state.expBox)}" onchange="App.setField('expBox',this.value)" aria-label="${escapeHtml(t('v2LabelBoxSpeed'))}" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:28px;font-weight:600;color:${C.text}">
+</div>
+</label>
+<label style="flex:1.25;display:block">
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v3ExpiredFieldLabel'))}</div>
+<div style="height:56px;background:${C.panel};border:1px solid ${C.acc};border-radius:8px;display:flex;align-items:center;gap:6px;padding:0 10px 0 12px">
+<select onchange="App.setField('expMonth',this.value)" aria-label="${escapeHtml(t('v3ExpiryMonth'))}" style="background:transparent;border:0;outline:none;font:inherit;font-size:15px;color:${C.text2};cursor:pointer">${MONTHS.map(m => `<option value="${m}" ${state.expMonth === m ? 'selected' : ''}>${m}</option>`).join('')}</select>
+<input type="text" inputmode="numeric" value="${escapeHtml(state.expYear)}" onchange="App.setField('expYear',this.value)" aria-label="${escapeHtml(t('v3ExpiryYear'))}" placeholder="2006" style="width:100%;min-width:0;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:28px;font-weight:600;color:${C.text}">
+</div>
+</label>
+</div>
+<div style="margin-top:14px">
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v3DevelopmentLabel'))}</div>
+<div style="display:flex;gap:4px;padding:4px;background:${C.panel};border:1px solid ${C.border};border-radius:9px">${seg(EXPIRED_PROCESSES.map(p => p[0]), EXPIRED_PROCESSES.find(p => p[1] === state.expProcess)[0], l => `App.setField('expProcess','${EXPIRED_PROCESSES.find(p => p[0] === l)[1]}')`)}</div>
+</div>
+<div style="margin-top:14px">
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v3HowStoredLabel'))}</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+${STORAGE_OPTIONS.map(([label, value, help]) => {
+    const on = state.storage === value;
+    return `<button type="button" onclick="App.setField('storage','${value}')" style="width:100%;text-align:left;border-radius:10px;padding:12px 14px;cursor:pointer;font:inherit;background:${on ? C.accBg : C.panel};border:1px solid ${on ? C.accBorder : C.border}">
+<span style="display:block;font-size:15px;color:${on ? C.acc : C.text2}">${escapeHtml(t(STORAGE_LABEL_KEY[value]))}</span>
+<span style="display:block;font-size:12px;line-height:1.45;color:${C.faint};margin-top:4px">${escapeHtml(t(STORAGE_HELP_KEY[value]))}</span>
+</button>`;
+}).join('')}
+</div>
+</div>
+</div>`;
+    const result = `<div style="max-width:${desktop ? '560px' : 'none'}">
+<div style="margin-top:16px;padding:18px 20px;background:${C.panel};border:1px solid ${C.border};border-radius:10px">
+<div style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.acc}">${escapeHtml(t('v2ExpiredRateItAt'))}</div>
+<div style="font-size:56px;font-weight:700;line-height:.9;color:${C.text};letter-spacing:-.03em;margin-top:8px">${escapeHtml(ex.rated)}</div>
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid ${C.border}">
+<span style="font-size:13px;color:${C.text2}">${escapeHtml(ex.note)}</span>
+<span style="font-size:12px;color:${C.faint}">${escapeHtml(ex.age)}</span>
+</div>
+</div>
+<p style="margin:12px 0 0;font-size:12px;line-height:1.55;color:${C.faint}">${escapeHtml(t('v3ExpiredGuideNote'))}</p>
+</div>`;
+    return `<div style="padding:6px 20px 0;display:grid;grid-template-columns:${desktop ? '1fr 1fr' : '1fr'};gap:20px;align-items:start">${form}${result}</div>`;
+}
+
+function settingsCard(title, body) {
+    return `<div style="padding:14px;background:${C.panel};border:1px solid ${C.border};border-radius:10px">
+<div style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.sub};margin-bottom:10px">${title}</div>
+${body}
+</div>`;
+}
+
+function viewSettings() {
+    const desktop = state.desktop;
+    const labNames = Object.keys(getAllLabs()).filter(n => !getAllLabs()[n].hidden);
+    const home = rankLabs().ranked.find(l => l.name === state.homeLab) || rankLabs().ranked[0];
+    // Stable internal marker, never displayed directly — kept untranslated
+    // so the <option value>/state.tier comparison below can't drift once a
+    // locale actually translates v3CheapestThatQualifies to something else.
+    const CHEAPEST_QUALIFYING = '__cheapest_that_qualifies__';
+    const tierLabels = [CHEAPEST_QUALIFYING].concat(
+        [...new Set(Object.values(getAllLabs()).flatMap(l => normalizeLabServices(l).map((tier, i) => ((Array.isArray(l.services) ? l.services : [l])[i] || {}).label || tierDescription(tier))))]
+    );
+    const allFilms = getAllFilms(), allLabs = getAllLabs();
+    const hiddenFilms = Object.values(allFilms).filter(f => f.hidden);
+    const hiddenLabs = Object.values(allLabs).filter(l => l.hidden);
+
+    const cards = [
+        settingsCard(escapeHtml(t('appearanceHeading')), `<div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${seg([['system', t('v3ThemeSystem')], ['light', t('v3ThemeLight')], ['dark', t('v3ThemeDark')]], state.theme, v => `App.setTheme('${v}')`)}</div>
+<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:8px">${escapeHtml(t('v3ThemeSystemHelp'))}</div>`),
+
+        settingsCard(escapeHtml(t('v2SettingsLanguage')), `<select onchange="App.setLanguage(this.value)" aria-label="${escapeHtml(t('v2SettingsLanguage'))}" style="width:100%;height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer">${LANGUAGE_OPTIONS.map(([code, label]) => `<option value="${code}" ${currentLocale === code ? 'selected' : ''}>${label}</option>`).join('')}</select>
+<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:8px">${escapeHtml(t('v3TranslationsDisclaimer'))}</div>`),
+
+        settingsCard(escapeHtml(t('v2SettingsHomeLab')), `<select onchange="App.setField('homeLab',this.value)" aria-label="${escapeHtml(t('v2SettingsHomeLab'))}" style="width:100%;height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer"><option value="">${escapeHtml(t('v3PickALab'))}</option>${labNames.map(n => `<option value="${escapeHtml(n)}" ${state.homeLab === n ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('')}</select>
+<div style="font-size:11px;color:${C.sub};margin:12px 0 6px">${escapeHtml(t('v2SetupPreferredTier'))}</div>
+<select onchange="App.setField('tier',this.value)" aria-label="${escapeHtml(t('v2SetupPreferredTier'))}" style="width:100%;height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer">${tierLabels.map(l => `<option value="${escapeHtml(l === CHEAPEST_QUALIFYING ? '' : l)}" ${((state.tier || CHEAPEST_QUALIFYING) === l) ? 'selected' : ''}>${escapeHtml(l === CHEAPEST_QUALIFYING ? t('v3CheapestThatQualifies') : l)}</option>`).join('')}</select>
+<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:8px">${home && home.pick ? escapeHtml(t('v3HomeTierSummary', { name: home.name, tier: home.pick.label.toLowerCase(), amount: CUR() + money(home.pick.devCost) })) : escapeHtml(t('v3HomeTierDefaultNote'))}</div>`),
+
+        settingsCard(escapeHtml(t('v2SettingsCalculator')), `<div style="display:flex;gap:10px">
+<label style="flex:1;display:block"><div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v2SettingsUpgradePct'))}</div><div style="height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;display:flex;align-items:center;gap:4px;padding:0 12px"><input type="text" inputmode="numeric" value="${escapeHtml(state.upgradePct)}" onchange="App.setField('upgradePct',this.value)" aria-label="${escapeHtml(t('v2SettingsUpgradePct'))}" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:17px;font-weight:600;color:${C.text}"><span style="font-size:13px;color:${C.faint}">%</span></div></label>
+<label style="flex:1;display:block"><div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v2SettingsMailRolls'))}</div><div style="height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;display:flex;align-items:center;padding:0 12px"><input type="text" inputmode="numeric" value="${escapeHtml(state.postRolls)}" onchange="App.setField('postRolls',this.value)" aria-label="${escapeHtml(t('v2SettingsMailRolls'))}" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:17px;font-weight:600;color:${C.text}"></div></label>
+</div>`),
+
+        settingsCard(escapeHtml(t('v2SettingsHiddenPresets')), `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.sub}"></span><span style="font-size:12px;color:${C.faint}">${hiddenFilms.length + hiddenLabs.length ? escapeHtml(t('v3HiddenCount', { n: hiddenFilms.length + hiddenLabs.length })) : escapeHtml(t('v3NoneHidden'))}</span></div>
+${!hiddenFilms.length && !hiddenLabs.length ? `<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:8px">${escapeHtml(t('v3NothingHiddenNote'))}</div>` : `<div style="margin-top:8px">
+${hiddenFilms.map(f => `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid ${C.border}"><span style="font-size:13px;color:${C.text2}">${escapeHtml(f.name)}</span><button type="button" onclick="App.unhide('film','${jsAttr(filmKeyOf(f))}')" style="height:34px;padding:0 12px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:12px;cursor:pointer">${escapeHtml(t('v3ButtonUnhide'))}</button></div>`).join('')}
+${hiddenLabs.map(l => `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid ${C.border}"><span style="font-size:13px;color:${C.text2}">${escapeHtml(l.name)}</span><button type="button" onclick="App.unhide('lab','${jsAttr(l.name)}')" style="height:34px;padding:0 12px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:12px;cursor:pointer">${escapeHtml(t('v3ButtonUnhide'))}</button></div>`).join('')}
+</div>`}`),
+
+        settingsCard(escapeHtml(t('v2SettingsStarterPresets')), `<div style="display:flex;flex-direction:column;gap:6px">${(state.presetRegions || []).slice(0, 8).map(r => {
+            const on = state.presetChecked.has(r.label);
+            return `<button type="button" onclick="App.togglePreset('${jsAttr(r.label)}')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:42px;padding:0 12px;border-radius:8px;font:inherit;font-size:13px;cursor:pointer;text-align:left;background:${on ? C.accBg : C.field};border:1px solid ${on ? C.accBorder : C.border};color:${on ? C.acc : C.text2}">${escapeHtml(r.label)} <span>${on ? '✓' : ''}</span></button>`;
+        }).join('') || `<div style="font-size:12px;color:${C.faint}">${escapeHtml(t('v3LoadingRegions'))}</div>`}</div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px">
+<span style="font-size:12px;color:${C.faint}">${escapeHtml(t(state.presetChecked.size === 1 ? 'v3RegionsSelectedOne' : 'v3RegionsSelected', { n: state.presetChecked.size }))}</span>
+<button type="button" onclick="App.importPresets()" style="height:40px;padding:0 14px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:600;cursor:pointer">${escapeHtml(t('v3ButtonImport'))}</button>
+</div>`),
+
+        settingsCard(escapeHtml(t('v3YourDataHeading')), `<div style="display:flex;flex-wrap:wrap;gap:8px">
+<button type="button" onclick="App.shareLibrary()" style="height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v3ShareLibraryLink'))}</button>
+<button type="button" onclick="App.exportJson()" style="height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v3ExportJson'))}</button>
+<button type="button" onclick="App.exportCsv()" title="${escapeHtml(t('v3ExportCsvTitle'))}" style="height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v2ButtonExportCsv'))}</button>
+<label style="display:inline-flex;align-items:center;height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v2ButtonImportBackup'))}<input type="file" accept="application/json" onchange="App.importBackup(this.files[0])" style="display:none"></label>
+<label style="display:inline-flex;align-items:center;height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v2ButtonImportYaml'))}<input type="file" accept=".yaml,.yml,text/yaml" onchange="App.importYamlFile(this.files[0])" style="display:none"></label>
+<button type="button" onclick="App.openSetup()" style="height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v2ButtonRerunSetup'))}</button>
+</div>
+<button type="button" onclick="App.confirmDeleteAll()" style="width:100%;height:42px;margin-top:10px;border-radius:8px;background:transparent;border:1px solid ${C.redBorder};color:#e07a6a;font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v2ButtonDeleteAllData'))}</button>
+${renderImportPreview()}
+<div style="font-size:11px;color:${C.faint};min-height:14px;margin-top:8px">${escapeHtml(state.importNote || '')}${state.lastImportSnapshot ? ` <a href="javascript:void(0)" onclick="App.undoLastImport()" style="color:${C.acc};text-decoration:underline;cursor:pointer">${escapeHtml(t('v3ButtonUndo'))}</a>` : ''}</div>`),
+
+        settingsCard(escapeHtml(t('v2SettingsInstallApp')), `<div style="font-size:12px;line-height:1.5;color:${C.faint}">${escapeHtml(t('v3InstallAppDesc'))}</div>
+<button type="button" onclick="App.install()" style="height:42px;padding:0 14px;margin-top:12px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:600;cursor:pointer">${escapeHtml(t('v2ButtonInstallApp'))}</button>`),
+
+        settingsCard(escapeHtml(t('v2SettingsPrivacy')), `<div style="font-size:12px;color:${C.faint}">${escapeHtml(t('v3AnalyticsCookiesLabel'))} <span style="color:${C.text2}">${state.consent === 'granted' ? escapeHtml(t('v2AnalyticsStatusGranted')) : state.consent === 'denied' ? escapeHtml(t('v2AnalyticsStatusDenied')) : escapeHtml(t('v2AnalyticsStatusUnset'))}</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center">
+<button type="button" onclick="App.resetConsent()" style="height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v2ButtonResetConsent'))}</button>
+<a href="privacy.html" style="font-size:13px">${escapeHtml(t('v2ConsentPrivacyLink'))}</a>
+</div>`),
+
+        settingsCard(escapeHtml(t('v2SettingsReportData')), `<div style="font-size:12px;line-height:1.5;color:${C.faint}">${escapeHtml(t('v3ReportBadDataDesc'))}</div>
+<button type="button" onclick="App.reportIssue()" style="height:42px;padding:0 14px;margin-top:12px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v3ButtonReportIssue'))}</button>`)
     ];
-    // Every locally-saved film carries an explicit colorType (the editor
-    // always writes one, never leaves it unset) — only worth a line in the
-    // export when it says something the process alone wouldn't already
-    // imply, matching DATA_SPEC.md's "omit it and the app infers" idiom.
-    const impliedColorType = f.process === 'BW' ? 'bw' : 'color';
-    if (f.colorType && f.colorType !== impliedColorType) lines.push(`  colorType: ${yamlScalar(f.colorType)}`);
-    lines.push(`  format: ${yamlScalar(f.format || '35mm')}`, `  hidden: false`, `  bundles:`);
-    normalizeFilmBundles(f).forEach(b => {
-        lines.push(
-            `  - rolls: ${parseInt(b.rolls) || 1}`,
-            `    exposures: ${parseInt(b.exposures) || 36}`,
-            `    filmCost: ${parseFloat(b.filmCost) || 0}`,
-            `    storeName: ${yamlScalar(b.storeName)}`,
-            `    buyLink: ${yamlScalar(b.buyLink)}`
-        );
-        const availability = b.availability || 'national';
-        if (availability !== 'national') {
-            lines.push(`    availability: ${yamlScalar(availability)}`);
-            if (b.state) lines.push(`    state: ${yamlScalar(b.state)}`);
-            if (b.city) lines.push(`    city: ${yamlScalar(b.city)}`);
-        }
-    });
-    return lines.join('\n');
+    return `<div style="padding:6px 20px 0;display:grid;grid-template-columns:${desktop ? '1fr 1fr' : '1fr'};gap:10px;align-items:start">${cards.join('')}</div>`;
 }
 
-function serializeLabEntryYaml(l) {
-    const lines = [`- name: ${yamlScalar(l.name)}`, `  hidden: false`, `  address: ${yamlScalar(l.address || '')}`];
-    if (l.phone) lines.push(`  phone: ${yamlScalar(l.phone)}`);
-    if (l.email) lines.push(`  email: ${yamlScalar(l.email)}`);
-    lines.push(`  website: ${yamlScalar(l.website || '')}`, `  services:`);
-    normalizeLabServices(l).forEach(sv => {
-        lines.push(
-            `  - devCost: ${parseFloat(sv.devCost) || 0}`,
-            `    pushPullCost: ${parseFloat(sv.pushPullCost) || 0}`,
-            `    pushPullType: ${yamlScalar(sv.pushPullType || 'per_stop')}`,
-            `    turnaroundTime: ${yamlScalar(sv.turnaroundTime || 'same_week')}`,
-            `    highResScan: ${!!sv.highResScan}`,
-            `    tiffScan: ${!!sv.tiffScan}`,
-            `    noPushPull: ${!!sv.noPushPull}`
-        );
-        if (sv.mailBackCost !== null && sv.mailBackCost !== undefined && sv.mailBackCost !== '') {
-            lines.push(`    mailBackCost: ${parseFloat(sv.mailBackCost) || 0}`);
-        }
-        lines.push(`    processes:`);
-        (sv.processes && sv.processes.length ? sv.processes : ['C41']).forEach(p => lines.push(`    - ${yamlScalar(p)}`));
-    });
-    return lines.join('\n');
+// ---------- Library ----------
+function App_filmDetail(key) {
+    const f = getAllFilms()[key];
+    if (!f) return null;
+    const bundles = f.bundles || [];
+    return {
+        kind: 'film', key, name: f.name,
+        meta: t(bundles.length === 1 ? 'v3PriceCountOne' : 'v3PriceCount', { n: bundles.length }) + (bundles[0] ? (bundles[0].storeName || t('v3UnnamedStore')) : '—'),
+        facts: [
+            { k: t('v3FactSpeed'), v: t('v3IsoValue', { iso: f.boxSpeed }) },
+            { k: t('v3FactProcess'), v: PROCESS_LABEL[f.process] || f.process },
+            { k: t('v3FactCategory'), v: FILM_COLOR_LABEL[filmColorType(f)] },
+            { k: t('formatLabel'), v: FORMAT_LABEL[f.format || '35mm'] || f.format }
+        ],
+        rows: bundles.slice().sort((a, b) => (a.filmCost / (a.rolls || 1)) - (b.filmCost / (b.rolls || 1))).map((b, i) => ({
+            name: b.storeName || t('v3UnnamedStore'), meta: t(i === 0 ? 'v3CheapestSavedPrice' : 'v3SavedPrice'),
+            price: CUR() + money(b.filmCost / (parseInt(b.rolls) || 1)), color: i === 0 ? C.green : C.text2,
+            href: sanitizeUrl(b.buyLink), cta: '↗', isLink: !!b.buyLink
+        }))
+    };
+}
+function App_labDetail(name) {
+    const l = getAllLabs()[name];
+    if (!l) return null;
+    const tiers = normalizeLabServices(l);
+    const rawTiers = Array.isArray(l.services) && l.services.length ? l.services : [l];
+    const sorted = tiers.map((tier, i) => ({ ...tier, label: (rawTiers[i] && rawTiers[i].label) || tierDescription(tier) })).sort((a, b) => a.devCost - b.devCost);
+    return {
+        kind: 'lab', key: name, name: name + (name === state.homeLab ? ' ' + t('v3HomeSuffix') : ''),
+        meta: l.address || '',
+        facts: [
+            { k: t('v3FactTiers'), v: String(tiers.length) },
+            { k: t('v3FactAddress'), v: l.address || t('v3NotSaved') }
+        ],
+        rows: sorted.map(tier => ({
+            name: tier.label, meta: (turnaroundLabels[tier.turnaroundTime] || '') + (tier.highResScan ? t('v3HiResSuffix') : t('v3NoScansSuffix')),
+            price: CUR() + money(tier.devCost), color: tier.turnaroundTime === 'next_day' ? C.acc : C.text2,
+            href: '', cta: '', isLink: false
+        }))
+    };
 }
 
-// ==================== Controller ====================
-const App = {
-    toggleDark() { state.dark = !state.dark; localStorage.setItem('lightMode', state.dark ? '0' : '1'); render(); },
+function viewLibrary() {
+    const desktop = state.desktop;
+    const allFilms = getAllFilms(), allLabs = getAllLabs();
+    const films = Object.entries(allFilms).filter(([, f]) => !f.hidden);
+    const labs = Object.entries(allLabs).filter(([, l]) => !l.hidden);
+    const q = state.libSearch.trim().toLowerCase();
 
-    setField(key, value) {
-        state[key] = value;
-        // Switching Color/B&W resets Development Type to that type's usual
-        // chemistry (C-41 for Color, BW for B&W) — the common case for
-        // both. A chromogenic B&W stock like Ilford XP2 Super still needs
-        // Development Type overridden to C-41 by hand afterwards, in Extra
-        // fees / Advanced.
-        if (key === 'filmColor') state.process = DEV_TYPE_DEFAULT[value] || 'C41';
-        if (key === 'format' || key === 'process' || key === 'filmColor') persistScope();
-        if (key === 'frame35') localStorage.setItem('globalCamera35Type', value);
-        if (key === 'frame120') localStorage.setItem('globalCamera120Type', value);
-        render();
-    },
-    toggleExtras() { state.extrasOpen = !state.extrasOpen; render(); },
-    toggleMenu() { state.menuOpen = !state.menuOpen; render(); },
-    closeMenu() { state.menuOpen = false; render(); },
-    goView(name) { state.view = name; state.menuOpen = false; render(); },
-    togglePushPull() { state.allowPushPull = !state.allowPushPull; render(); },
-    toggleFlag(key) {
-        state[key] = !state[key];
-        if (key.startsWith('f')) persistFilters();
-        if (key === 'fMail' && state.fMail) state.extrasOpen = true;
-        render();
-    },
-    toggleLab(name) { state.expandedLab = state.expandedLab === name ? null : name; render(); },
-    // Pins/unpins a lab into the side-by-side compare panel (see
-    // renderMobileLookup's compareRows). Capped at 3 — trying to add a
-    // 4th just flashes instead of silently bumping the oldest pick, so
-    // the user picks what to drop themselves.
-    toggleCompareLab(name) {
-        const i = state.compareLabs.indexOf(name);
-        if (i !== -1) { state.compareLabs.splice(i, 1); render(); return; }
-        if (state.compareLabs.length >= 3) { flash('Compare up to 3 at a time — remove one first'); return; }
-        state.compareLabs.push(name);
-        render();
-    },
-    clearCompareLabs() { state.compareLabs = []; render(); },
-    // Library → Labs → "Nearest to you". Only sorts labs that already
-    // carry lat/lon (attached at import time from the preset file's
-    // header — see importPresetSelected()/confirmImport()); a hand-added
-    // lab with no coordinates just sorts to the end, same as it not
-    // having a distance at all.
-    findNearestLabs() {
-        requestUserCoords().then(coords => {
-            if (!coords) { flash('Could not get your location'); return; }
-            render();
-        });
-    },
-    toggleFilm(key) { state.expandedFilm = state.expandedFilm === key ? null : key; render(); },
-
-    // pushPull: the stops of push/pull the loaded film should be shot at
-    // (0 for a normal native-ISO load). Left unset by a plain library load —
-    // the previous push/pull was tuned for whatever stock was loaded
-    // before, and silently carrying it over onto a different stock's own
-    // box speed produces a bogus "N stops of push/pull" warning (issue: a
-    // cheaper-film suggestion at the same *effective* ISO loaded clean, but
-    // the old pull amount stuck around against the new stock's native
-    // rating). The cheaper-film suggestion (mk() above) passes its own
-    // candidate's required stops instead, since that candidate may
-    // legitimately need pushing/pulling to reach the target ISO.
-    loadFilm(key, pushPull = 0) {
-        const f = getAllFilms()[key];
-        if (!f) return;
-        const bundles = normalizeFilmBundles(f);
-        const best = bundles.slice().sort((a, b) => a.filmCost / a.rolls - b.filmCost / b.rolls)[0];
-        this._applyFilm(f, best, pushPull);
-    },
-    loadFilmBundle(key, storeName, rolls, exposures) {
-        const f = getAllFilms()[key];
-        if (!f) return;
-        const bundle = normalizeFilmBundles(f).find(b => b.storeName === storeName && b.rolls === rolls && b.exposures === exposures) || normalizeFilmBundles(f)[0];
-        this._applyFilm(f, bundle, 0);
-    },
-    _applyFilm(f, bundle, pushPull = 0) {
-        state.format = f.format || '35mm';
-        state.process = f.process || 'C41';
-        state.filmColor = filmColorType(f);
-        state.boxSpeed = String(f.boxSpeed || '');
-        state.pushPull = String(pushPull);
-        state.packCost = String(bundle.filmCost || '');
-        state.rolls = String(bundle.rolls || 1);
-        state.exposures = String(bundle.exposures || 36);
-        state.loadedFilmKey = filmKey(f.name, f.boxSpeed, f.format);
-        state.loadedStoreName = bundle.storeName || '';
-        state.loadedBuyLink = bundle.buyLink || '';
-        persistScope();
-        flash('Loaded ' + f.name);
-        render();
-    },
-    loadCheaperFilm(key) {
-        const r = rankLabs(state);
-        const home = r.ranked.find(l => l.name === state.homeLab) || r.ranked[0];
-        const cheaper = computeCheaperFilm(state, home);
-        const opt = (cheaper.options || []).find(o => o.key === key) || (cheaper.options || [])[0];
-        if (opt) opt.load();
-    },
-
-    saveToLibrary() {
-        const rolls = Math.max(1, parseInt(state.rolls) || 1);
-        state.draft = {
-            name: '', boxSpeed: state.boxSpeed || '', process: state.process, colorType: state.filmColor, format: state.format,
-            maxPushPull: '2', hidden: false,
-            bundles: [{ storeName: '', rolls, exposures: parseInt(state.exposures) || 36, filmCost: parseFloat(state.packCost) || 0, buyLink: '' }]
-        };
-        state.draftKind = 'film'; state.draftKey = null;
-        render();
-    },
-    shareLink() {
-        const p = new URLSearchParams({
-            format: state.format, process: state.process, filmColor: state.filmColor, boxSpeed: state.boxSpeed, pushPull: state.pushPull,
-            packCost: state.packCost, postage: state.postage, rolls: state.rolls, exposures: state.exposures
-        });
-        const url = `${location.origin}${location.pathname}?${p.toString()}`;
-        if (navigator.clipboard) navigator.clipboard.writeText(url).catch(() => { });
-        flash('Link copied');
-        render();
-    },
-    clearForm() {
-        Object.assign(state, { boxSpeed: '', pushPull: '0', packCost: '', postage: '', rolls: '1', exposures: '36', onceOff: '', perRoll: '', loadedFilmKey: '', loadedStoreName: '', loadedBuyLink: '' });
-        render();
-    },
-
-    newFilm() {
-        state.draft = { name: '', boxSpeed: '', process: state.process, colorType: state.filmColor, format: state.format, maxPushPull: '2', hidden: false, bundles: [{ storeName: '', rolls: 1, exposures: 36, filmCost: 0, buyLink: '', availability: 'national', state: '', city: '' }] };
-        state.draftKind = 'film'; state.draftKey = null; state.subEditIndex = null;
-        render();
-    },
-    newLab() {
-        state.draft = { name: '', address: '', website: '', phone: '', email: '', source: '', hidden: false, services: [{ devCost: '', pushPullCost: '', pushPullType: 'per_stop', turnaroundTime: 'same_week', highResScan: false, tiffScan: false, noPushPull: false, mailBackCost: null, processes: ['C41'] }] };
-        state.draftKind = 'lab'; state.draftKey = null; state.subEditIndex = null;
-        render();
-    },
-    editFilm(key) {
-        const f = getAllFilms()[key];
-        if (!f) return;
-        state.draft = { ...f, bundles: normalizeFilmBundles(f).map(b => ({ ...b })), maxPushPull: String(f.maxPushPull ?? 1) };
-        state.draftKind = 'film'; state.draftKey = key; state.subEditIndex = null;
-        render();
-    },
-    editLab(name) {
-        const l = getAllLabs()[name];
-        if (!l) return;
-        const rawTiers = Array.isArray(l.services) && l.services.length ? l.services : [l];
-        state.draft = { ...l, name, services: normalizeLabServices(l).map((t, i) => ({ ...t, label: (rawTiers[i] && rawTiers[i].label) || tierDescription(t) })) };
-        state.draftKind = 'lab'; state.draftKey = name; state.subEditIndex = null;
-        render();
-    },
-    setDraftField(field, value) { state.draft[field] = value; render(); },
-    setBundleField(i, field, value) {
-        const b = state.draft.bundles[i];
-        b[field] = (field === 'rolls' || field === 'exposures') ? parseInt(value) || 0 : value;
-        // Scope narrows to national/state/city: drop the now-irrelevant locality
-        // fields rather than leaving stale text hidden behind the selector.
-        if (field === 'availability') {
-            if (value === 'national') { b.state = ''; b.city = ''; }
-            else if (value === 'state') { b.city = ''; }
-        }
-        render();
-    },
-    editBundle(i) {
-        state.subEditIndex = i;
-        if (!presetFilmIndex || !presetLabIndex) loadPresetIndexes(); // seeds the State/City suggestion list
-        render();
-    },
-    closeBundleEditor() { state.subEditIndex = null; render(); },
-    addBundle() {
-        state.draft.bundles.push({ storeName: '', rolls: 1, exposures: parseInt(state.draft.bundles[0]?.exposures) || 36, filmCost: 0, buyLink: '', availability: 'national', state: '', city: '' });
-        state.subEditIndex = state.draft.bundles.length - 1;
-        render();
-    },
-    removeBundle(i) { state.draft.bundles.splice(i, 1); state.subEditIndex = null; render(); },
-    setTierField(i, field, value) { state.draft.services[i][field] = value; render(); },
-    toggleTierFlag(i, flag) { state.draft.services[i][flag] = !state.draft.services[i][flag]; render(); },
-    toggleTierProcess(i, proc) {
-        const t = state.draft.services[i];
-        t.processes = t.processes.includes(proc) ? t.processes.filter(p => p !== proc) : [...t.processes, proc];
-        render();
-    },
-    editTier(i) { state.subEditIndex = i; render(); },
-    closeTierEditor() { state.subEditIndex = null; render(); },
-    addTier() {
-        state.draft.services.push({ label: '', devCost: '', pushPullCost: '', pushPullType: 'per_stop', turnaroundTime: 'same_week', highResScan: false, tiffScan: false, noPushPull: false, mailBackCost: null, processes: ['C41'] });
-        state.subEditIndex = state.draft.services.length - 1;
-        render();
-    },
-    removeTier(i) { state.draft.services.splice(i, 1); state.subEditIndex = null; render(); },
-
-    saveDraft() {
-        const d = state.draft;
-        if (state.draftKind === 'film') {
-            if (!d.name.trim()) return;
-            const saved = readJSON('filmProfiles', {});
-            const newKey = filmKey(d.name, d.boxSpeed, d.format);
-            if (state.draftKey && state.draftKey !== newKey) delete saved[state.draftKey];
-            // Not `parseFloat(...) || 1` — maxPushPull: 0 is a real, meaningful
-            // value (a stock that shouldn't be pushed at all), and an empty/
-            // cleared field should default to 1, not save as NaN.
-            const draftMaxPushPull = parseFloat(d.maxPushPull);
-            saved[newKey] = {
-                name: d.name.trim(), boxSpeed: parseFloat(d.boxSpeed) || 0, process: d.process, colorType: d.colorType, format: d.format,
-                maxPushPull: Number.isFinite(draftMaxPushPull) ? draftMaxPushPull : 1, hidden: !!d.hidden,
-                bundles: d.bundles.map(b => {
-                    const availability = b.availability || 'national';
-                    return {
-                        storeName: b.storeName || '', rolls: parseInt(b.rolls) || 1, exposures: parseInt(b.exposures) || 36, filmCost: parseFloat(b.filmCost) || 0, buyLink: b.buyLink || '',
-                        availability,
-                        state: availability !== 'national' ? (b.state || '') : '',
-                        city: availability === 'city' ? (b.city || '') : ''
-                    };
+    let groups = [];
+    if (state.libTab === 'films') {
+        const list = films
+            .filter(([, f]) => !q || f.name.toLowerCase().indexOf(q) > -1)
+            .filter(([, f]) => state.libFilter === 'All' || FILM_COLOR_LABEL[filmColorType(f)] === state.libFilter)
+            .filter(([, f]) => state.libFormat === 'All' || (FORMAT_LABEL[f.format || '35mm'] || f.format) === state.libFormat)
+            .filter(([, f]) => state.libProcess === 'All' || (PROCESS_LABEL[f.process] || f.process) === state.libProcess)
+            .filter(([, f]) => state.libIso === 'All' || String(f.boxSpeed) === state.libIso)
+            .map(([key, f]) => ({ key, f }))
+            .sort((a, b) => (parseInt(a.f.boxSpeed) || 0) - (parseInt(b.f.boxSpeed) || 0));
+        const isos = [...new Set(list.map(x => parseInt(x.f.boxSpeed) || 0))];
+        groups = isos.map(iso => {
+            const items = list.filter(x => (parseInt(x.f.boxSpeed) || 0) === iso);
+            return {
+                title: t('v3IsoValue', { iso }), count: t(items.length === 1 ? 'v3StockCountOne' : 'v3StockCount', { n: items.length }),
+                items: items.map(({ key, f }) => {
+                    const bundles = f.bundles || [];
+                    const cheapest = bundles.length ? Math.min(...bundles.map(b => b.filmCost / (parseInt(b.rolls) || 1))) : 0;
+                    return { key, kind: 'film', name: f.name, meta: (PROCESS_LABEL[f.process] || f.process) + ' · ' + t(bundles.length === 1 ? 'v3PriceCountBareOne' : 'v3PriceCountBare', { n: bundles.length || 0 }), price: CUR() + money(cheapest), unit: t('v3PerRollUnit'), accent: String(f.boxSpeed) === state.boxSpeed ? C.acc : C.faint };
                 })
             };
-            writeJSON('filmProfiles', saved);
-            state.loadedFilmKey = newKey;
+        });
+    } else {
+        const list = labs
+            .filter(([name]) => !q || name.toLowerCase().indexOf(q) > -1)
+            .filter(([, l]) => {
+                if (state.libFilter === 'All') return true;
+                const tiers = normalizeLabServices(l);
+                if (state.libFilter === 'Hi-res') return tiers.some(tier => tier.highResScan);
+                if (state.libFilter === 'Next day') return tiers.some(tier => tier.turnaroundTime === 'next_day');
+                if (state.libFilter === 'Mail-back') return tiers.some(tier => tier.mailBackCost !== null);
+                return true;
+            });
+        if (list.length) {
+            groups = [{
+                title: t('v3SavedLabsTitle'), count: t(list.length === 1 ? 'v3LabCountOne' : 'v3LabCount', { n: list.length }),
+                items: list.map(([name, l]) => {
+                    const tiers = normalizeLabServices(l).sort((a, b) => a.devCost - b.devCost);
+                    return { key: name, kind: 'lab', name: name + (name === state.homeLab ? ' ' + t('v3HomeSuffix') : ''), meta: l.address || '', price: CUR() + money(tiers[0] ? tiers[0].devCost : 0), unit: t('v3FromUnit'), accent: name === state.homeLab ? C.acc : C.faint };
+                })
+            }];
+        }
+    }
+
+    const searchBar = `<div style="display:flex;align-items:center;gap:10px;height:44px;padding:0 12px;background:${C.panel};border:1px solid ${C.border};border-radius:10px;flex:1;min-width:0">
+<svg style="width:16px;height:16px;flex:none;color:${C.faint}" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"></circle><path stroke-linecap="round" d="M20 20l-4.2-4.2"></path></svg>
+<input type="text" value="${escapeHtml(state.libSearch)}" onchange="App.setField('libSearch',this.value)" placeholder="${escapeHtml(t(state.libTab === 'films' ? 'v3SearchStocksPlaceholder' : 'v3SearchLabsPlaceholder', { n: state.libTab === 'films' ? films.length : labs.length }))}" aria-label="${escapeHtml(t('v3SearchLibraryLabel'))}" style="width:100%;background:transparent;border:0;outline:none;font:inherit;font-size:14px;color:${C.text}">
+</div>`;
+
+    const filterSummary = state.libTab === 'films'
+        ? [state.libFilter, state.libFormat, state.libIso === 'All' ? 'All' : t('v3IsoValue', { iso: state.libIso }), state.libProcess].filter(x => x !== 'All').join(' · ') || t('v3AllFilms')
+        : (state.libFilter === 'All' ? t('v3AllLabs') : state.libFilter);
+
+    const filterBtn = `<button type="button" onclick="App.setField('libFilterModal',true)" style="width:${desktop ? '210px' : '100%'};flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;height:44px;padding:0 14px;background:${C.panel};border:1px solid ${C.border};border-radius:10px;font:inherit;cursor:pointer">
+<span style="display:flex;align-items:center;gap:8px;min-width:0">
+<svg style="width:14px;height:14px;flex:none;color:${C.faint}" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 6h16M7 12h10M10 18h4"></path></svg>
+<span style="font-size:13px;color:${C.text};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(filterSummary)}</span>
+</span>
+<span style="font-size:12px;color:${C.sub};white-space:nowrap">${escapeHtml(t('v3FilterChevron'))}</span>
+</button>`;
+
+    const list = groups.length === 0
+        ? `<div style="margin-top:16px;padding:24px 18px;border:1px dashed ${C.border2};border-radius:10px;text-align:center">
+<div style="font-size:14px;font-weight:600;color:${C.text2}">${escapeHtml(t('v3NoMatches'))}</div>
+<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:6px">${escapeHtml(t('v3NothingMatchesSearch', { query: state.libSearch }))}</div>
+</div>`
+        : groups.map(g => `<div style="margin-top:18px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+<span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.sub}">${g.title}</span>
+<span style="font-size:11px;color:${C.faint}">${g.count}</span>
+</div>
+<div style="margin-top:6px;display:grid;grid-template-columns:${desktop ? 'repeat(auto-fill, minmax(300px, 1fr))' : '1fr'};gap:${desktop ? '10px' : '0'}">
+${g.items.map(it => `<button type="button" onclick="App.openLibDetailByKey('${it.kind}','${jsAttr(it.key)}')" style="display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;padding:${desktop ? '14px 16px' : '14px 0'};border:${desktop ? '1px solid ' + C.border : '0'};border-top:1px solid ${C.border};border-radius:${desktop ? '10px' : '0'};background:${desktop ? C.panel : 'transparent'};font:inherit;text-align:left;cursor:pointer">
+<span style="width:3px;height:32px;border-radius:2px;flex:none;background:${it.accent}"></span>
+<span style="flex:1;min-width:0"><span style="display:block;font-size:15px;color:${C.text}">${escapeHtml(it.name)}</span><span style="display:block;font-size:12px;color:${C.faint};margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(it.meta)}</span></span>
+<span style="text-align:right;flex:none"><span style="display:block;font-size:19px;font-weight:600;color:${C.text}">${it.price}</span><span style="display:block;font-size:10px;color:${C.faint}">${it.unit}</span></span>
+<span style="color:${C.border3};font-size:18px;flex:none">›</span>
+</button>`).join('')}
+</div>
+</div>`).join('');
+
+    return `<div style="padding:4px 20px 0">
+<div style="display:flex;flex-direction:${desktop ? 'row' : 'column'};align-items:stretch;gap:10px">
+<div style="display:flex;gap:4px;padding:4px;background:${C.panel};border:1px solid ${C.border};border-radius:10px;flex:${desktop ? '0 0 260px' : '1'}">
+<button type="button" onclick="App.setLibTab('films')" style="flex:1;height:40px;border-radius:7px;border:0;display:flex;align-items:center;justify-content:center;gap:7px;font:inherit;font-size:13px;cursor:pointer;background:${state.libTab === 'films' ? '#1f2228' : 'transparent'};color:${state.libTab === 'films' ? C.text : C.sub};font-weight:${state.libTab === 'films' ? 600 : 400}">${escapeHtml(t('v2SectionFilms'))} <span style="font-size:11px;font-weight:400;color:${C.faint}">${films.length}</span></button>
+<button type="button" onclick="App.setLibTab('labs')" style="flex:1;height:40px;border-radius:7px;border:0;display:flex;align-items:center;justify-content:center;gap:7px;font:inherit;font-size:13px;cursor:pointer;background:${state.libTab === 'labs' ? '#1f2228' : 'transparent'};color:${state.libTab === 'labs' ? C.text : C.sub};font-weight:${state.libTab === 'labs' ? 600 : 400}">${escapeHtml(t('v2SectionLabs'))} <span style="font-size:11px;font-weight:400;color:${C.faint}">${labs.length}</span></button>
+</div>
+${searchBar}
+${filterBtn}
+</div>
+${list}
+<button type="button" onclick="App.addLibItem()" style="width:100%;height:48px;margin-top:20px;border-radius:10px;background:transparent;border:1px dashed ${C.border3};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${state.libTab === 'films' ? escapeHtml(t('v3ButtonAddFilmStock')) : escapeHtml(t('v2ButtonNewLab'))}</button>
+</div>`;
+}
+
+function viewLibFilterModal() {
+    const filters = state.libTab === 'films' ? ['All', 'Colour', 'B&W', 'Speciality'] : ['All', 'Hi-res', 'Next day', 'Mail-back'];
+    const chipRow = (label, current, onClickField) => filters.map(l => {
+        const on = current === l;
+        return `<button type="button" onclick="App.setField('${onClickField}','${l}')" style="height:38px;padding:0 14px;border-radius:9px;font:inherit;font-size:13px;cursor:pointer;background:${on ? C.text : 'transparent'};border:1px solid ${on ? C.text : C.border2};color:${on ? C.shell : C.sub}">${l}</button>`;
+    }).join('');
+    const allFilms = Object.values(getAllFilms());
+    const formats = ['All', '35mm', '120', '110', '127', '220', 'Sheet'];
+    const isos = ['All'].concat([...new Set(allFilms.map(f => String(f.boxSpeed)))].sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0)));
+    const processes = ['All', 'C41', 'B&W', 'E6', 'ECN-2'];
+    return `<div style="position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:${shellW()};z-index:46;display:flex;flex-direction:column;justify-content:flex-end">
+<div onclick="App.setField('libFilterModal',false)" style="position:absolute;inset:0;background:rgba(4,5,6,.72);cursor:pointer"></div>
+<div role="dialog" aria-modal="true" style="position:relative;background:#131518;border-top:1px solid #2f333a;border-radius:18px 18px 0 0;padding:8px 20px 22px;box-shadow:0 -18px 40px rgba(0,0,0,.45)">
+<div style="width:38px;height:4px;border-radius:2px;background:${C.border3};margin:0 auto 14px"></div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+<span style="font-size:16px;font-weight:700;color:${C.text}">${state.libTab === 'films' ? escapeHtml(t('v3FilterFilmsHeading')) : escapeHtml(t('v3FilterLabsHeading'))}</span>
+<button type="button" onclick="App.setField('libFilterModal',false)" aria-label="${escapeHtml(t('closeLabel'))}" style="width:32px;height:32px;border-radius:8px;background:#1f2228;border:0;color:${C.sub};font:inherit;font-size:15px;line-height:1;cursor:pointer">✕</button>
+</div>
+<div style="display:flex;flex-direction:column;gap:14px">
+<div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${state.libTab === 'films' ? escapeHtml(t('v3FilmTypeLabel')) : escapeHtml(t('v3OffersLabel'))}</div>
+<div style="display:flex;gap:6px;flex-wrap:wrap">${chipRow(null, state.libFilter, 'libFilter')}</div>
+</div>
+${state.libTab === 'films' ? `<div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('formatLabel'))}</div>
+<div style="display:flex;gap:6px;flex-wrap:wrap">${formats.map(l => `<button type="button" onclick="App.setField('libFormat','${l}')" style="height:38px;padding:0 14px;border-radius:9px;font:inherit;font-size:13px;cursor:pointer;background:${state.libFormat === l ? C.text : 'transparent'};border:1px solid ${state.libFormat === l ? C.text : C.border2};color:${state.libFormat === l ? C.shell : C.sub}">${l}</button>`).join('')}</div>
+</div>
+<div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v2LabelBoxSpeed'))}</div>
+<div style="display:flex;gap:6px;flex-wrap:wrap">${isos.map(l => `<button type="button" onclick="App.setField('libIso','${l}')" style="height:38px;padding:0 14px;border-radius:9px;font:inherit;font-size:13px;cursor:pointer;background:${state.libIso === l ? '#16231a' : 'transparent'};border:1px solid ${state.libIso === l ? '#33422a' : C.border2};color:${state.libIso === l ? C.green : C.sub}">${l === 'All' ? l : escapeHtml(t('v3IsoValue', { iso: l }))}</button>`).join('')}</div>
+</div>
+<div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('processLabel'))}</div>
+<div style="display:flex;gap:6px;flex-wrap:wrap">${processes.map(l => `<button type="button" onclick="App.setField('libProcess','${l}')" style="height:38px;padding:0 14px;border-radius:9px;font:inherit;font-size:13px;cursor:pointer;background:${state.libProcess === l ? C.accBg : 'transparent'};border:1px solid ${state.libProcess === l ? C.accBorder : C.border2};color:${state.libProcess === l ? C.acc : C.sub}">${l}</button>`).join('')}</div>
+</div>` : ''}
+</div>
+<div style="display:flex;gap:8px;margin-top:18px">
+<button type="button" onclick="App.resetLibFilters()" style="flex:1;height:48px;border-radius:10px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v3ButtonReset'))}</button>
+<button type="button" onclick="App.setField('libFilterModal',false)" style="flex:2;height:48px;border-radius:10px;background:${C.text};border:0;color:${C.shell};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${escapeHtml(t('v3ButtonShowResults'))}</button>
+</div>
+</div>
+</div>`;
+}
+
+function viewLibDetail() {
+    const it = state.libOpen;
+    if (!it) return '';
+    const mapsHref = it.kind === 'lab' && it.meta
+        ? (/iP(hone|ad|od)|Macintosh/.test(navigator.userAgent || '') ? 'https://maps.apple.com/?q=' + encodeURIComponent(it.meta) : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(it.meta))
+        : '';
+    return `<div style="position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:${shellW()};z-index:47;display:flex;flex-direction:column;justify-content:flex-end">
+<div onclick="App.closeLibDetail()" style="position:absolute;inset:0;background:rgba(4,5,6,.72);cursor:pointer"></div>
+<div role="dialog" aria-modal="true" style="position:relative;background:#131518;border-top:1px solid #2f333a;border-radius:18px 18px 0 0;padding:8px 20px 22px;box-shadow:0 -18px 40px rgba(0,0,0,.45);max-height:82vh;overflow:auto">
+<div style="width:38px;height:4px;border-radius:2px;background:${C.border3};margin:0 auto 14px"></div>
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+<span style="min-width:0">
+<span style="display:block;font-size:18px;font-weight:700;color:${C.text}">${escapeHtml(it.name)}</span>
+${mapsHref ? `<a href="${mapsHref}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:5px;margin-top:4px;font-size:12px;color:${C.blue};text-decoration:none"><svg style="width:12px;height:12px;flex:none" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s7-6.3 7-11a7 7 0 10-14 0c0 4.7 7 11 7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg><span>${escapeHtml(it.meta)}</span></a>` : (it.kind === 'film' ? `<span style="display:block;font-size:12px;color:${C.faint};margin-top:3px">${escapeHtml(it.meta)}</span>` : '')}
+</span>
+<button type="button" onclick="App.closeLibDetail()" aria-label="${escapeHtml(t('closeLabel'))}" style="width:32px;height:32px;flex:none;border-radius:8px;background:#1f2228;border:0;color:${C.sub};font:inherit;font-size:15px;line-height:1;cursor:pointer">✕</button>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:14px">${it.facts.map(f => `<span style="display:flex;align-items:baseline;gap:6px;padding:7px 11px;border-radius:8px;background:${C.field};border:1px solid ${C.border}"><span style="font-size:11px;color:${C.faint}">${escapeHtml(f.k)}</span><span style="font-size:13px;font-weight:600;color:${C.text}">${escapeHtml(f.v)}</span></span>`).join('')}</div>
+<div style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.sub};margin:18px 0 4px">${it.kind === 'film' ? escapeHtml(t('v2LabelWhereToBuy')) : escapeHtml(t('v3ServiceTiersHeading'))}</div>
+<div>
+${it.rows.length === 0 ? `<div style="padding:12px 0;border-top:1px solid ${C.border};font-size:12px;color:${C.faint}">${it.kind === 'film' ? escapeHtml(t('v2EmptyNoPurchaseLinks')) : escapeHtml(t('v2EmptyNoServiceTiers'))}</div>` : it.rows.map(r => it.kind === 'film' && r.isLink
+        ? `<a href="${r.href}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid ${C.border};text-decoration:none"><span style="flex:1;min-width:0"><span style="display:block;font-size:14px;color:${C.text}">${escapeHtml(r.name)}</span><span style="display:block;font-size:11px;color:${C.faint};margin-top:2px">${escapeHtml(r.meta)}</span></span><span style="font-size:17px;font-weight:600;color:${r.color}">${r.price}</span><span style="font-size:14px;color:${C.faint};flex:none">${r.cta}</span></a>`
+        : `<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid ${C.border}"><span style="flex:1;min-width:0"><span style="display:block;font-size:14px;color:${C.text}">${escapeHtml(r.name)}</span><span style="display:block;font-size:11px;color:${C.faint};margin-top:2px">${escapeHtml(r.meta)}</span></span><span style="font-size:17px;font-weight:600;color:${r.color}">${r.price}</span></div>`
+    ).join('')}
+</div>
+<div style="display:flex;gap:8px;margin-top:18px">
+<button type="button" onclick="App.loadIntoLookup()" style="flex:2;height:46px;border-radius:10px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${escapeHtml(t('v3ButtonLoadIntoLookup'))}</button>
+<button type="button" onclick="App.openEditorFor()" style="flex:1;height:46px;border-radius:10px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v2ButtonEdit'))}</button>
+</div>
+<div style="display:flex;gap:8px;margin-top:8px">
+<button type="button" onclick="App.hideItem()" style="flex:1;height:42px;border-radius:10px;background:transparent;border:1px solid ${C.border2};color:${C.sub};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v3ButtonHideFromLookups'))}</button>
+<button type="button" onclick="App.confirmDeleteItem()" style="flex:1;height:42px;border-radius:10px;background:transparent;border:1px solid ${C.redBorder};color:#e07a6a;font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('deleteButton'))}</button>
+</div>
+</div>
+</div>`;
+}
+
+function viewPostModal() {
+    const r = rankLabs();
+    const home = r.ranked.find(l => l.name === state.homeLab) || r.ranked[0];
+    const shipRolls = Math.max(1, parseInt(state.postRolls, 10) || 1);
+    const homeMailBack = home && home.pick ? (home.pick.mailBackCost || 0) : 0;
+    const allLabs = getAllLabs();
+    const rows = Object.keys(allLabs).filter(n => !allLabs[n].hidden).map(name => {
+        const tiers = normalizeLabServices(allLabs[name]);
+        const cheapestMail = tiers.length ? Math.min(...tiers.map(t => t.mailBackCost === null ? Infinity : t.mailBackCost)) : Infinity;
+        return { name, price: isFinite(cheapestMail) ? CUR() + money(cheapestMail) : t('v3NotApplicable') };
+    });
+    return `<div style="position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:${shellW()};z-index:45;display:flex;flex-direction:column;justify-content:flex-end">
+<div onclick="App.closePost()" style="position:absolute;inset:0;background:rgba(4,5,6,.72);cursor:pointer"></div>
+<div role="dialog" aria-modal="true" style="position:relative;background:#131518;border-top:1px solid #2f333a;border-radius:18px 18px 0 0;padding:8px 20px 22px;box-shadow:0 -18px 40px rgba(0,0,0,.45)">
+<div style="width:38px;height:4px;border-radius:2px;background:${C.border3};margin:0 auto 14px"></div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+<span style="font-size:16px;font-weight:700;color:${C.text}">${escapeHtml(t('v3Postage'))}</span>
+<button type="button" onclick="App.closePost()" aria-label="${escapeHtml(t('closeLabel'))}" style="width:32px;height:32px;border-radius:8px;background:#1f2228;border:0;color:${C.sub};font:inherit;font-size:15px;line-height:1;cursor:pointer">✕</button>
+</div>
+<p style="margin:0 0 16px;font-size:13px;line-height:1.55;color:${C.sub}">${escapeHtml(t('v3PostageModalIntro'))}</p>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;background:${C.field};border:1px solid ${C.border};border-radius:10px">
+<span><span style="display:block;font-size:14px;color:${C.text}">${escapeHtml(t('v3MailingItIn'))}</span><span style="display:block;font-size:12px;color:${C.faint};margin-top:2px">${escapeHtml(t('v3MailingOffNote'))}</span></span>
+<button type="button" onclick="App.toggleFlag('mailBack')" aria-pressed="${state.mailBack}" style="width:52px;height:30px;flex:none;border-radius:15px;border:0;padding:3px;cursor:pointer;display:flex;align-items:center;justify-content:${state.mailBack ? 'flex-end' : 'flex-start'};background:${state.mailBack ? C.accBorder : C.border}"><span style="width:24px;height:24px;border-radius:50%;background:${state.mailBack ? C.acc : C.faint}"></span></button>
+</div>
+${state.mailBack ? `<label style="display:block;margin-top:12px"><div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v3PostToLabCostLabel'))}</div><div style="height:52px;background:${C.field};border:1px solid ${C.border};border-radius:8px;display:flex;align-items:center;gap:3px;padding:0 12px"><span style="font-size:15px;color:${C.faint}">${CUR()}</span><input type="text" inputmode="decimal" value="${escapeHtml(state.postTo)}" onchange="App.setField('postTo',this.value)" aria-label="${escapeHtml(t('v3PostToLabAriaLabel'))}" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:22px;font-weight:600;color:${C.text}"></div></label>
+<div style="margin-top:12px;border:1px solid ${C.border};border-radius:10px;overflow:hidden">
+<div style="padding:9px 12px;background:${C.field};font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:${C.faint}">${escapeHtml(t('v3ReturnPostageFromLab'))}</div>
+${rows.map(m => `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-top:1px solid ${C.border}"><span style="font-size:13px;color:${C.text2}">${escapeHtml(m.name)}</span><span style="font-size:13px;font-weight:600;color:${C.text}">${m.price}</span></div>`).join('')}
+</div>` : ''}
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px">
+<span style="font-size:11px;color:${C.sub}">${escapeHtml(t('v3RollsInSatchel'))}</span>
+<span style="display:flex;align-items:center;gap:2px;background:${C.field};border:1px solid ${C.border};border-radius:9px;padding:3px">
+<button type="button" onclick="App.incField('postRolls',-1,1,99)" aria-label="${escapeHtml(t('v3OneRollFewer'))}" style="width:40px;height:38px;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:20px;font-weight:600;line-height:1;cursor:pointer">−</button>
+<input type="text" inputmode="numeric" value="${shipRolls}" onchange="App.setField('postRolls',this.value)" aria-label="${escapeHtml(t('v3RollsInSatchel'))}" style="width:46px;height:38px;background:transparent;border:0;outline:none;text-align:center;font:inherit;font-size:20px;font-weight:700;color:${C.text}">
+<button type="button" onclick="App.incField('postRolls',1,1,99)" aria-label="${escapeHtml(t('v3OneRollMore'))}" style="width:40px;height:38px;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:20px;font-weight:600;line-height:1;cursor:pointer">+</button>
+</span>
+</div>
+<div style="margin-top:14px;padding:12px 14px;border-radius:10px;background:#1a1410;border:1px solid #3a2a1c;font-size:13px;color:#ffb184">${state.mailBack ? escapeHtml(t(shipRolls === 1 ? 'v3PostageSplitNoteOne' : 'v3PostageSplitNote', { in: CUR() + money(num(state.postTo)), back: CUR() + money(homeMailBack), rolls: shipRolls, each: CUR() + money((num(state.postTo) + homeMailBack) / shipRolls) })) : escapeHtml(t('v3DropOffNoPostage'))}</div>
+<button type="button" onclick="App.closePost()" style="width:100%;height:48px;margin-top:18px;border-radius:10px;background:${C.text};border:0;color:${C.shell};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${escapeHtml(t('v2ButtonDone'))}</button>
+</div>
+</div>`;
+}
+
+function viewShareModal() {
+    const param = state.shareKind === 'library' ? 'lib' : 'roll';
+    const url = location.origin + location.pathname + '?' + param + '=' + encodeURIComponent(b64EncodeShare());
+    let qrHtml = `<div style="width:172px;height:172px;display:flex;align-items:center;justify-content:center;font-size:12px;color:${C.faint}">${escapeHtml(t('v3Generating'))}</div>`;
+    if (typeof qrcode === 'function') {
+        try {
+            const qr = qrcode(0, 'M');
+            qr.addData(url);
+            qr.make();
+            qrHtml = qr.createSvgTag({ cellSize: 4, margin: 2 });
+        } catch { qrHtml = `<div style="font-size:11px;color:${C.faint};max-width:172px">${escapeHtml(t('v3LinkTooLongForQr'))}</div>`; }
+    }
+    return `<div style="position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:${shellW()};z-index:46;display:flex;flex-direction:column;justify-content:flex-end">
+<div onclick="App.setField('shareModal',false)" style="position:absolute;inset:0;background:rgba(4,5,6,.72);cursor:pointer"></div>
+<div role="dialog" aria-modal="true" style="position:relative;background:#131518;border-top:1px solid #2f333a;border-radius:18px 18px 0 0;padding:8px 20px 22px;box-shadow:0 -18px 40px rgba(0,0,0,.45)">
+<div style="width:38px;height:4px;border-radius:2px;background:${C.border3};margin:0 auto 14px"></div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+<span style="font-size:16px;font-weight:700;color:${C.text}">${state.shareKind === 'library' ? escapeHtml(t('v3ShareYourLibrary')) : escapeHtml(t('v3ShareThisRoll'))}</span>
+<button type="button" onclick="App.setField('shareModal',false)" aria-label="${escapeHtml(t('closeLabel'))}" style="width:32px;height:32px;border-radius:8px;background:#1f2228;border:0;color:${C.sub};font:inherit;font-size:15px;line-height:1;cursor:pointer">✕</button>
+</div>
+<p style="margin:0 0 16px;font-size:13px;line-height:1.55;color:${C.sub}">${state.shareKind === 'library' ? escapeHtml(t('v3ShareLibraryIntro')) : escapeHtml(t('v3ShareRollIntro'))}</p>
+<div style="display:flex;justify-content:center"><div style="padding:12px;background:#ffffff;border-radius:12px;line-height:0">${qrHtml}</div></div>
+<div style="margin-top:16px;padding:12px 14px;border-radius:10px;background:${C.field};border:1px solid ${C.border};font-size:12px;line-height:1.5;color:${C.sub};word-break:break-all">${escapeHtml(url)}</div>
+<div style="display:flex;gap:8px;margin-top:12px">
+<button type="button" onclick="App.copyLink('${jsAttr(url)}')" style="flex:2;height:48px;border-radius:10px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${state.copied ? escapeHtml(t('v3CopiedCheck')) : escapeHtml(t('v3CopyLink'))}</button>
+<button type="button" onclick="App.setField('shareModal',false)" style="flex:1;height:48px;border-radius:10px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v2ButtonDone'))}</button>
+</div>
+</div>
+</div>`;
+}
+function b64EncodeShare() {
+    try {
+        if (state.shareKind === 'library') {
+            const films = Object.values(getAllFilms());
+            const labs = Object.values(getAllLabs());
+            return btoa(unescape(encodeURIComponent(JSON.stringify({ films, labs, settings: { homeLab: getHomeLab() } })))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        }
+        return btoa(unescape(encodeURIComponent(JSON.stringify({
+            format: state.format, filmColor: state.filmColor, process: state.process,
+            boxSpeed: state.boxSpeed, packCost: state.packCost, postage: state.postage, rolls: state.rolls, exposures: state.exposures,
+            frame120: state.frame120, frame35: state.frame35, pushPull: state.pushPull
+        })))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    } catch { return ''; }
+}
+function b64DecodeShare(str) {
+    try {
+        const padded = str.replace(/-/g, '+').replace(/_/g, '/').padEnd(str.length + (4 - str.length % 4) % 4, '=');
+        return JSON.parse(decodeURIComponent(escape(atob(padded))));
+    } catch { return null; }
+}
+
+function viewMenu() {
+    const items = [
+        ['lookup', t('v3NavLookup'), t('v3MenuLookupMeta')],
+        ['library', t('navLibrary'), t('v3MenuLibraryMeta')],
+        ['expired', t('v3TitleExpiredFilm'), t('v3MenuExpiredMeta')],
+        ['settings', t('navSettings'), t('v3MenuSettingsMeta')]
+    ];
+    return `<div style="position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:${shellW()};z-index:50;display:flex;flex-direction:column;justify-content:flex-start">
+<div onclick="App.closeMenu()" style="position:absolute;inset:0;background:rgba(4,5,6,.72);cursor:pointer"></div>
+<div role="dialog" aria-modal="true" style="position:relative;margin:0;background:#131518;border-bottom:1px solid #2f333a;border-radius:0 0 18px 18px;padding:14px 20px 18px;box-shadow:0 18px 40px rgba(0,0,0,.45)">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+<span style="font-size:16px;font-weight:700;color:${C.text}">${escapeHtml(t('v3MenuHeading'))}</span>
+<button type="button" onclick="App.closeMenu()" aria-label="${escapeHtml(t('closeLabel'))}" style="width:32px;height:32px;border-radius:8px;background:#1f2228;border:0;color:${C.sub};font:inherit;font-size:15px;line-height:1;cursor:pointer">✕</button>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+${items.map(([key, label, meta]) => `<button type="button" onclick="App.setView('${key}')" style="width:100%;text-align:left;padding:12px 14px;border-radius:10px;border:1px solid ${C.border};font:inherit;cursor:pointer;background:${state.view === key ? C.panel : 'transparent'}"><span style="display:block;font-size:15px;color:${state.view === key ? C.acc : C.text}">${escapeHtml(label)}</span><span style="display:block;font-size:12px;color:${C.faint};margin-top:3px">${escapeHtml(meta)}</span></button>`).join('')}
+<button type="button" onclick="App.install()" style="display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 14px;border-radius:10px;border:1px solid ${C.accBorder};background:${C.accBg};font:inherit;cursor:pointer">
+<svg style="width:18px;height:18px;flex:none;color:${C.acc}" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v10m0 0l-3.5-3.5M12 14l3.5-3.5M5 17v2a1 1 0 001 1h12a1 1 0 001-1v-2"></path></svg>
+<span style="flex:1;min-width:0"><span style="display:block;font-size:15px;color:${C.acc}">${state.installable ? escapeHtml(t('v3InstallFilmCalc')) : escapeHtml(t('v3AddToHomeScreen'))}</span><span style="display:block;font-size:12px;color:#a87a52;margin-top:3px">${state.installable ? escapeHtml(t('v3WorksOfflineNote')) : escapeHtml(t('v3ShareAddHomeScreenNote'))}</span></span>
+</button>
+<button type="button" onclick="App.openChangelog()" style="width:100%;text-align:left;padding:12px 14px;border-radius:10px;border:1px solid ${C.border};background:transparent;font:inherit;cursor:pointer">
+<span style="display:block;font-size:15px;color:${C.text}">${escapeHtml(t('v3WhatsNew'))}</span>
+<span style="display:block;font-size:12px;color:${C.faint};margin-top:3px">${escapeHtml(t('v3RecentChangesNote'))}</span>
+</button>
+<button type="button" onclick="App.openSetup()" style="width:100%;text-align:left;padding:12px 14px;border-radius:10px;border:1px dashed ${C.border3};background:transparent;font:inherit;cursor:pointer">
+<span style="display:block;font-size:15px;color:${C.text}">${escapeHtml(t('v3RunSetupAgain'))}</span>
+<span style="display:block;font-size:12px;color:${C.faint};margin-top:3px">${escapeHtml(t('v3SetupMenuMeta'))}</span>
+</button>
+</div>
+</div>
+</div>`;
+}
+
+function viewSetup() {
+    const step = state.setupStep;
+    const labNames = Object.keys(getAllLabs()).filter(n => !getAllLabs()[n].hidden);
+    const regions = state.presetRegions || [];
+    return `<div style="position:fixed;inset:0;z-index:60;display:flex;align-items:flex-start;justify-content:center;padding:28px 16px;overflow:auto">
+<div style="position:absolute;inset:0;background:rgba(4,5,6,.82)"></div>
+<div role="dialog" aria-modal="true" style="position:relative;width:100%;max-width:480px;background:#131518;border:1px solid #2f333a;border-radius:14px;padding:18px 20px 20px;box-shadow:0 30px 80px -20px #000">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+<span style="font-size:16px;font-weight:700;color:${C.text}">${escapeHtml(t('v2SetupTitle'))}</span>
+<span style="display:flex;align-items:center;gap:5px">${SETUP_STEPS.map((_, i) => `<span style="width:6px;height:6px;border-radius:50%;background:${i === step ? C.acc : '#33333a'}"></span>`).join('')}</span>
+</div>
+<p style="margin:8px 0 16px;font-size:13px;line-height:1.55;color:${C.sub}">${escapeHtml(t('v3SetupThreeQuestionsNote'))}</p>
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px">
+<span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.acc}">${escapeHtml(setupStepLabel(SETUP_STEPS[step]))}</span>
+<span style="font-size:11px;color:${C.faint}">${escapeHtml(t('v3StepOfTotal', { n: step + 1, total: SETUP_STEPS.length }))}</span>
+</div>
+${step === 0 ? `<select onchange="App.setLanguage(this.value)" aria-label="${escapeHtml(t('v2SettingsLanguage'))}" style="width:100%;height:46px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer">${LANGUAGE_OPTIONS.map(([code, label]) => `<option value="${code}" ${currentLocale === code ? 'selected' : ''}>${label}</option>`).join('')}</select>
+<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:10px">${escapeHtml(t('v3LanguageRegionNote'))}</div>` : ''}
+${step === 1 ? `<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-bottom:10px">${geoGuess ? escapeHtml(t('v3GeoPreTickedNote', { place: geoGuess.city || geoGuess.country })) : escapeHtml(t('v3PickRegionsNote'))}</div>
+<div style="display:flex;flex-direction:column;gap:6px;max-height:260px;overflow:auto">${regions.length ? regions.map(r => {
+        const on = state.presetChecked.has(r.label);
+        return `<button type="button" onclick="App.togglePreset('${jsAttr(r.label)}')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:44px;padding:0 12px;border-radius:8px;font:inherit;font-size:14px;cursor:pointer;text-align:left;background:${on ? C.accBg : C.field};border:1px solid ${on ? C.accBorder : C.border};color:${on ? C.acc : C.text2}">${escapeHtml(r.label)} <span>${on ? '✓' : ''}</span></button>`;
+    }).join('') : `<div style="font-size:12px;color:${C.faint}">${escapeHtml(t('v3LoadingRegions'))}</div>`}</div>
+<div style="font-size:12px;color:${C.faint};margin-top:10px">${escapeHtml(t(state.presetChecked.size === 1 ? 'v3RegionsSelectedImportsOne' : 'v3RegionsSelectedImports', { n: state.presetChecked.size }))}</div>` : ''}
+${step === 2 ? `<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v2SettingsHomeLab'))}</div>
+<select onchange="App.setField('homeLab',this.value)" aria-label="${escapeHtml(t('v2SettingsHomeLab'))}" style="width:100%;height:46px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer"><option value="">${escapeHtml(t('v3PickALab'))}</option>${labNames.map(n => `<option value="${escapeHtml(n)}" ${state.homeLab === n ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('')}</select>
+<div style="font-size:11px;color:${C.sub};margin:14px 0 6px">${escapeHtml(t('v2SetupPreferredTier'))}</div>
+<select onchange="App.setField('tier',this.value)" aria-label="${escapeHtml(t('v2SetupPreferredTier'))}" style="width:100%;height:46px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer"><option value="">${escapeHtml(t('v3CheapestThatQualifies'))}</option></select>
+<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:10px">${escapeHtml(t('v3HomeLabExplainerNote'))}</div>` : ''}
+<div style="display:flex;gap:10px;margin-top:20px">
+${step > 0 ? `<button type="button" onclick="App.setupBack()" style="flex:1;height:46px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v2ButtonBack'))}</button>` : ''}
+${step === SETUP_STEPS.length - 1
+        ? `<button type="button" onclick="App.closeSetup()" style="flex:2;height:46px;border-radius:8px;background:${C.text};border:0;color:${C.shell};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${escapeHtml(t('v2ButtonDone'))}</button>`
+        : `<button type="button" onclick="App.setupNext()" style="flex:2;height:46px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${escapeHtml(t('v2ButtonNext'))}</button>`}
+</div>
+</div>
+</div>`;
+}
+
+function viewConsent() {
+    return `<div style="position:fixed;left:50%;transform:translateX(-50%);bottom:12px;z-index:55;width:100%;max-width:${shellW()};padding:0 12px;box-sizing:border-box">
+<div style="background:${C.panel};border:1px solid ${C.border2};border-radius:12px;padding:14px 16px;box-shadow:0 18px 40px rgba(0,0,0,.5)">
+<div style="font-size:13px;line-height:1.55;color:${C.text2}">${escapeHtml(t('v3ConsentMessage'))} <a href="privacy.html">${escapeHtml(t('v2ConsentPrivacyLink'))}</a></div>
+<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+<button type="button" onclick="App.declineConsent()" style="height:40px;padding:0 14px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v2ConsentDecline'))}</button>
+<button type="button" onclick="App.acceptConsent()" style="height:40px;padding:0 14px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:600;cursor:pointer">${escapeHtml(t('v3ConsentAllow'))}</button>
+</div>
+</div>
+</div>`;
+}
+
+function viewChangelog() {
+    const items = state.changelog || [];
+    return `<div style="position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:${shellW()};z-index:62;display:flex;flex-direction:column;justify-content:flex-end">
+<div onclick="App.closeChangelog()" style="position:absolute;inset:0;background:rgba(4,5,6,.72);cursor:pointer"></div>
+<div role="dialog" aria-modal="true" style="position:relative;background:#131518;border-top:1px solid #2f333a;border-radius:18px 18px 0 0;padding:8px 20px 22px;box-shadow:0 -18px 40px rgba(0,0,0,.45)">
+<div style="width:38px;height:4px;border-radius:2px;background:${C.border3};margin:0 auto 14px"></div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+<span style="font-size:16px;font-weight:700;color:${C.text}">${escapeHtml(t('v3WhatsNew'))}</span>
+<button type="button" onclick="App.closeChangelog()" aria-label="${escapeHtml(t('closeLabel'))}" style="width:32px;height:32px;border-radius:8px;background:#1f2228;border:0;color:${C.sub};font:inherit;font-size:15px;line-height:1;cursor:pointer">✕</button>
+</div>
+<p style="margin:0 0 8px;font-size:12px;color:${C.faint}">${escapeHtml(t('v3ChangelogIntro'))}</p>
+<div style="max-height:320px;overflow:auto">
+${items.length ? items.slice(0, 30).map(c => `<div style="padding:12px 0;border-top:1px solid ${C.border}"><div style="font-size:14px;line-height:1.45;color:${C.text2}">${escapeHtml(c.title)}</div><div style="font-size:11px;color:${C.faint};margin-top:3px">#${c.number} · ${fmtDate(c.mergedAt)}</div></div>`).join('') : `<div style="padding:12px 0;font-size:12px;color:${C.faint}">${escapeHtml(t('v3LoadingEllipsis'))}</div>`}
+</div>
+<button type="button" onclick="App.closeChangelog()" style="width:100%;height:48px;margin-top:16px;border-radius:10px;background:${C.text};border:0;color:${C.shell};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${escapeHtml(t('v2ButtonDone'))}</button>
+</div>
+</div>`;
+}
+
+function viewConfirm() {
+    const c = state.confirm;
+    return `<div style="position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:${shellW()};z-index:64;display:flex;flex-direction:column;justify-content:flex-end">
+<div onclick="App.cancelConfirm()" style="position:absolute;inset:0;background:rgba(4,5,6,.78);cursor:pointer"></div>
+<div role="dialog" aria-modal="true" style="position:relative;background:#131518;border-top:1px solid ${C.redBorder};border-radius:18px 18px 0 0;padding:20px 20px 22px;box-shadow:0 -18px 40px rgba(0,0,0,.5)">
+<div style="font-size:17px;font-weight:700;color:${C.text}">${escapeHtml(c.title)}</div>
+<p style="margin:8px 0 0;font-size:13px;line-height:1.55;color:${C.sub}">${escapeHtml(c.body)}</p>
+<div style="display:flex;gap:8px;margin-top:18px">
+<button type="button" onclick="App.runConfirm()" style="flex:1;height:48px;border-radius:10px;background:#2a1513;border:1px solid ${C.redBorder};color:${C.red};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${escapeHtml(c.cta)}</button>
+<button type="button" onclick="App.cancelConfirm()" style="width:120px;height:48px;border-radius:10px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('cancelButton'))}</button>
+</div>
+</div>
+</div>`;
+}
+
+function fieldLabel(label, inner) {
+    return `<label style="display:block"><div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:${C.sub};margin-bottom:6px">${label}</div>${inner}</label>`;
+}
+function textInput(field, value, placeholder) {
+    return `<input type="text" value="${escapeHtml(value)}" onchange="App.setDraft('${field}',this.value)" ${placeholder ? `placeholder="${escapeHtml(placeholder)}"` : ''} style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`;
+}
+function selectInputHandler(onchangeAttr, value, options) {
+    return `<select onchange="${onchangeAttr}" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer">${options.map(o => `<option value="${escapeHtml(o)}" ${value === o ? 'selected' : ''}>${escapeHtml(o)}</option>`).join('')}</select>`;
+}
+function selectInput(field, value, options) {
+    return selectInputHandler(`App.setDraft('${field}',this.value)`, value, options);
+}
+
+function viewEditor() {
+    const d = state.draft;
+    const isFilm = state.draftKind === 'film';
+    const subList = isFilm ? d.bundles : d.services;
+    const subRows = subList.map((b, i) => ({
+        title: isFilm ? (b.storeName || t('v3UnnamedStore')) : (b.label || t('v3UnnamedTier')),
+        meta: isFilm ? `${b.rolls}×${b.exposures} · ${CUR()}${(parseFloat(b.filmCost) || 0).toFixed(2)} · ${b.availability}` : t('v3DevMailBackMeta', { dev: CUR() + (parseFloat(b.devCost) || 0).toFixed(2), mailBack: b.mailBackCost === '' ? t('v3NotApplicable') : CUR() + (parseFloat(b.mailBackCost) || 0).toFixed(2) }),
+        i
+    }));
+    return `<div role="dialog" aria-modal="true" style="position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:${shellW()};z-index:58;background:${C.shell};display:flex;flex-direction:column">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid ${C.border};background:#131518">
+<span style="font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.text}">${isFilm ? escapeHtml(t('v3EditFilmHeading')) : escapeHtml(t('v3EditLabHeading'))}</span>
+<button type="button" onclick="App.cancelDraft()" aria-label="${escapeHtml(t('closeLabel'))}" style="width:36px;height:36px;border-radius:8px;background:#1f2228;border:1px solid ${C.border2};color:${C.sub};font:inherit;font-size:16px;line-height:1;cursor:pointer">✕</button>
+</div>
+<div style="flex:1;overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+${fieldLabel(escapeHtml(t('v2LabelName')), textInput('name', d.name))}
+${isFilm ? `<div style="display:flex;gap:10px">
+<div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('v2LabelBoxSpeed')), textInput('boxSpeed', d.boxSpeed))}</div>
+<div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('v3MaxPushPullLabel')), textInput('maxPushPull', d.maxPushPull))}</div>
+</div>
+<div style="display:flex;gap:10px">
+<div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('formatLabel')), selectInput('format', d.format, FORMATS))}</div>
+<div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('processLabel')), selectInput('process', d.process, PROCESSES))}</div>
+</div>
+${fieldLabel(escapeHtml(t('v2LabelType')), selectInput('colorType', d.colorType, FILM_COLORS))}` : `
+${fieldLabel(escapeHtml(t('v3AddressLabel')), textInput('address', d.address, t('v3AddressPlaceholder')))}
+${fieldLabel(escapeHtml(t('v3WebsiteLabel')), textInput('website', d.website, 'https://…'))}
+<div style="display:flex;gap:10px">
+<div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('v3PhoneLabel')), textInput('phone', d.phone))}</div>
+<div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('v3EmailLabel')), textInput('email', d.email))}</div>
+</div>
+${fieldLabel(escapeHtml(t('v2LabelPriceSource')), textInput('source', d.source, 'https://…'))}`}
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px">
+<span style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:${C.sub}">${isFilm ? escapeHtml(t('v2LabelWhereToBuy')) : escapeHtml(t('v3ServiceTiersHeading'))}</span>
+<button type="button" onclick="App.addSub()" style="height:36px;padding:0 14px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:12px;cursor:pointer">${isFilm ? escapeHtml(t('v2ButtonAddPrice')) : escapeHtml(t('v3ButtonAddTier'))}</button>
+</div>
+${subRows.length === 0 ? `<div style="font-size:12px;color:${C.faint};padding:2px">${isFilm ? escapeHtml(t('v2EmptyNoPurchaseLinks')) : escapeHtml(t('v2EmptyNoServiceTiers'))}</div>` : ''}
+${subRows.map(r => `<button type="button" onclick="App.openSub(${r.i})" style="display:flex;align-items:center;gap:10px;width:100%;padding:12px;background:${C.panel};border:1px solid ${C.border};border-radius:10px;font:inherit;text-align:left;cursor:pointer">
+<span style="flex:1;min-width:0"><span style="display:block;font-size:14px;color:${C.text}">${escapeHtml(r.title)}</span><span style="display:block;font-size:12px;color:${C.faint};margin-top:3px">${escapeHtml(r.meta)}</span></span>
+<svg style="width:14px;height:14px;flex:none;color:${C.faint}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 4.5l3 3M4 20l4-1 10-10-3-3L5 16l-1 4z"></path></svg>
+</button>`).join('')}
+</div>
+<div style="display:flex;gap:10px;padding:12px 16px;border-top:1px solid ${C.border};background:#131518">
+<button type="button" onclick="App.saveDraft()" style="flex:1;height:50px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${isFilm ? escapeHtml(t('v2ButtonSaveFilm')) : escapeHtml(t('v2ButtonSaveLab'))}</button>
+<button type="button" onclick="App.cancelDraft()" style="width:110px;height:50px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('cancelButton'))}</button>
+</div>
+</div>`;
+}
+
+function viewSubEditor() {
+    const d = state.draft;
+    const isFilm = state.draftKind === 'film';
+    const i = state.subIndex;
+    const sub = (isFilm ? d.bundles : d.services)[i] || {};
+    const setSub = (field) => `App.setSub('${field}',this.value)`;
+    return `<div role="dialog" aria-modal="true" style="position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:${shellW()};z-index:59;background:${C.shell};display:flex;flex-direction:column">
+<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid ${C.border};background:#131518">
+<button type="button" onclick="App.closeSub()" aria-label="${escapeHtml(t('v3BackAriaLabel'))}" style="width:36px;height:36px;flex:none;border-radius:8px;background:#1f2228;border:1px solid ${C.border2};color:${C.sub};font:inherit;font-size:16px;line-height:1;cursor:pointer">‹</button>
+<span style="flex:1;font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.text}">${isFilm ? escapeHtml(t('v2TitlePurchaseLink')) : escapeHtml(t('v2TitleServiceTier'))}</span>
+<button type="button" onclick="App.removeSub()" aria-label="${escapeHtml(t('deleteButton'))}" style="width:36px;height:36px;flex:none;border-radius:8px;background:transparent;border:1px solid ${C.redBorder};color:#e07a6a;font:inherit;font-size:16px;line-height:1;cursor:pointer">✕</button>
+</div>
+<div style="flex:1;overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+${isFilm ? `${fieldLabel(escapeHtml(t('v3StoreNameLabel')), `<input type="text" value="${escapeHtml(sub.storeName || '')}" onchange="${setSub('storeName')}" placeholder="${escapeHtml(t('v3WhereYouBuyItPlaceholder'))}" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}
+<div style="display:flex;gap:10px">
+<div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('v3RollsLabel')), `<input type="text" inputmode="numeric" value="${escapeHtml(sub.rolls || '')}" onchange="${setSub('rolls')}" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}</div>
+<div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('v3ExposuresLabel')), `<input type="text" inputmode="numeric" value="${escapeHtml(sub.exposures || '')}" onchange="${setSub('exposures')}" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}</div>
+<div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('v3PriceLabel')), `<input type="text" inputmode="decimal" value="${escapeHtml(sub.filmCost || '')}" onchange="${setSub('filmCost')}" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}</div>
+</div>
+${fieldLabel(escapeHtml(t('v2TitlePurchaseLink')), `<input type="text" value="${escapeHtml(sub.buyLink || '')}" onchange="${setSub('buyLink')}" placeholder="https://…" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}
+${fieldLabel(escapeHtml(t('v2LabelAvailability')), selectInputHandler(setSub('availability'), sub.availability || 'national', ['national', 'state', 'city']))}` : `
+${fieldLabel(escapeHtml(t('v3TierNameLabel')), `<input type="text" value="${escapeHtml(sub.label || '')}" onchange="${setSub('label')}" placeholder="${escapeHtml(t('v3TierNamePlaceholder'))}" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}
+<div style="display:flex;gap:10px">
+<div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('v2LabelCostPerRoll')), `<input type="text" inputmode="decimal" value="${escapeHtml(sub.devCost || '')}" onchange="${setSub('devCost')}" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}</div>
+<div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('v2LabelMailBack')), `<input type="text" inputmode="decimal" value="${escapeHtml(sub.mailBackCost || '')}" onchange="${setSub('mailBackCost')}" placeholder="${escapeHtml(t('v3NotApplicable'))}" style="width:100%;box-sizing:border-box;height:48px;background:${C.panel};border:1px solid ${C.border2};border-radius:8px;padding:0 12px;font:inherit;font-size:16px;color:${C.text};outline:none">`)}</div>
+</div>
+${fieldLabel(escapeHtml(t('turnaroundRowLabel')), selectInputHandler(setSub('turnaround'), sub.turnaround || 'Same week', ['Next day', 'Same week', 'Longer']))}
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;background:${C.panel};border:1px solid ${C.border};border-radius:10px">
+<span style="font-size:14px;color:${C.text}">${escapeHtml(t('v3IncludesHiResScans'))}</span>
+<button type="button" onclick="App.toggleSubHiRes()" style="width:52px;height:30px;flex:none;border-radius:15px;border:0;padding:3px;cursor:pointer;display:flex;align-items:center;justify-content:${sub.hiRes ? 'flex-end' : 'flex-start'};background:${sub.hiRes ? C.accBorder : C.border}"><span style="width:24px;height:24px;border-radius:50%;background:${sub.hiRes ? C.acc : C.faint}"></span></button>
+</div>`}
+<button type="button" onclick="App.closeSub()" style="height:48px;margin-top:6px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${escapeHtml(t('v2ButtonDone'))}</button>
+</div>
+</div>`;
+}
+
+// ---------- Handlers ----------
+const App = {
+    say,
+    setField(key, val) {
+        state[key] = val;
+        if (key === 'homeLab') setHomeLab(val);
+        if (key === 'tier') setDefaultTierLabel(val);
+        if (key === 'upgradePct') try { localStorage.setItem('upgradeThresholdPercent', val); } catch {}
+        if (key === 'rolls') state.rolls = String(Math.min(99, Math.max(1, parseInt(val, 10) || 1)));
+        if (key === 'exposures') state.exposures = String(Math.min(99, Math.max(1, parseInt(val, 10) || 1)));
+        if (key === 'postRolls') {
+            state.postRolls = String(Math.min(99, Math.max(1, parseInt(val, 10) || 1)));
+            try { localStorage.setItem('mailBackRollCount', state.postRolls); } catch {}
+        }
+        if (key === 'libFilterModal' && val === true) { /* keep current tab's filters */ }
+        render();
+    },
+    setView(view) {
+        state.view = view;
+        state.menu = false;
+        // Settings' "Starter presets" card reads state.presetRegions directly
+        // with no fetch trigger of its own — without this, a returning user
+        // (setupSeen already set, so openSetup()'s own load never ran this
+        // session) hits Settings and the card is stuck on "Loading regions…"
+        // forever. loadPresetRegions() short-circuits once already loaded.
+        if (view === 'settings' && !state.presetRegions) loadPresetRegions().then(render);
+        render();
+    },
+    setFormat(label) { state.format = label; try { localStorage.setItem('globalFormat', label); } catch {} render(); },
+    setFilmColor(label) { state.filmColor = FILM_COLOR_VALUE[label]; try { localStorage.setItem('globalFilmColor', state.filmColor); } catch {} render(); },
+    incField(key, delta, min, max) {
+        const cur = parseInt(state[key], 10) || 0;
+        state[key] = String(Math.min(max, Math.max(min, cur + delta)));
+        if (key === 'frame120') {} // not used with incField
+        render();
+    },
+    toggleFlag(key) {
+        state[key] = !state[key];
+        if (key === 'fHiRes' || key === 'fRush') {
+            const cur = readJSON('reqFilters', {}) || {};
+            writeJSON('reqFilters', Object.assign({}, cur, { hiRes: state.fHiRes, rush: state.fRush }));
+        }
+        render();
+    },
+    openModal() { state.modal = true; render(); },
+    closeModal() { state.modal = false; render(); },
+    openPost() { state.postModal = true; render(); },
+    closePost() { state.postModal = false; render(); },
+    openShare() { state.shareModal = true; state.shareKind = 'roll'; state.copied = false; render(); },
+    shareLibrary() { state.shareModal = true; state.shareKind = 'library'; state.copied = false; render(); },
+    copyLink(url) {
+        try { navigator.clipboard.writeText(url); } catch {}
+        state.copied = true;
+        render();
+    },
+    openMaps() {
+        const home = rankLabs().ranked.find(l => l.name === state.homeLab) || rankLabs().ranked[0];
+        const href = home ? labDirectionsUrl(home.lab) : '';
+        if (!href) { say(t('v3NoAddressSavedToast')); return; }
+        window.open(href, '_blank', 'noopener');
+    },
+    loadCheaper() {
+        const home = rankLabs().ranked.find(l => l.name === state.homeLab) || rankLabs().ranked[0];
+        const cheaper = computeCheaperFilm(home);
+        if (!cheaper.pick) return;
+        state.boxSpeed = String(cheaper.pick.boxSpeed);
+        state.pushPull = String(cheaper.pickStops);
+        state.format = Object.keys(FORMAT_VALUE).find(k => FORMAT_VALUE[k] === (cheaper.pick.format || '35mm')) || state.format;
+        state.filmColor = filmColorType(cheaper.pick);
+        say(t('v3NameLoadedToast', { name: cheaper.pick.name }));
+    },
+    labDetail: App_labDetail,
+    filmDetail: App_filmDetail,
+    openLibDetail(item) { if (item) { state.libOpen = item; render(); } },
+    openLibDetailByKey(kind, key) { App.openLibDetail(kind === 'film' ? App_filmDetail(key) : App_labDetail(key)); },
+    closeLibDetail() { state.libOpen = null; render(); },
+    setLibTab(tab) { state.libTab = tab; state.libFilter = 'All'; state.libFormat = 'All'; state.libProcess = 'All'; state.libIso = 'All'; render(); },
+    resetLibFilters() { state.libFilter = 'All'; state.libFormat = 'All'; state.libProcess = 'All'; state.libIso = 'All'; render(); },
+    loadIntoLookup() {
+        const it = state.libOpen;
+        if (!it) return;
+        if (it.kind === 'film') {
+            const f = getAllFilms()[it.key];
+            if (f) {
+                state.boxSpeed = String(f.boxSpeed);
+                state.format = Object.keys(FORMAT_VALUE).find(k => FORMAT_VALUE[k] === (f.format || '35mm')) || state.format;
+                state.filmColor = filmColorType(f);
+                state.process = f.process || state.process;
+                const bundles = f.bundles || [];
+                if (bundles.length) state.packCost = String(bundles.slice().sort((a, b) => a.filmCost / (a.rolls || 1) - b.filmCost / (b.rolls || 1))[0].filmCost);
+            }
+            say(t('v3NameLoadedToast', { name: f ? f.name : t('v3StockFallbackName') }));
         } else {
-            if (!d.name.trim()) return;
-            const saved = readJSON('labProfiles', {});
-            if (state.draftKey && state.draftKey !== d.name.trim()) delete saved[state.draftKey];
-            saved[d.name.trim()] = {
-                name: d.name.trim(), address: d.address || '', website: d.website || '', phone: d.phone || '', email: d.email || '', source: d.source || '', hidden: !!d.hidden,
-                services: d.services.map(t => ({
-                    label: t.label || '', devCost: parseFloat(t.devCost) || 0, pushPullCost: parseFloat(t.pushPullCost) || 0, pushPullType: t.pushPullType || 'per_stop',
-                    turnaroundTime: t.turnaroundTime || 'same_week', highResScan: !!t.highResScan, tiffScan: !!t.tiffScan, noPushPull: !!t.noPushPull,
-                    mailBackCost: (t.mailBackCost === '' || t.mailBackCost === null || t.mailBackCost === undefined) ? null : parseFloat(t.mailBackCost),
-                    processes: t.processes && t.processes.length ? t.processes : ['C41']
+            const name = it.key;
+            App.setField('homeLab', name);
+            say(t('v3NameSetAsHomeLabToast', { name }));
+        }
+        state.libOpen = null;
+        state.view = 'lookup';
+        render();
+    },
+    openEditorFor() {
+        const it = state.libOpen;
+        if (!it) return;
+        if (it.kind === 'film') {
+            const f = getAllFilms()[it.key];
+            if (!f) return;
+            state.draftKind = 'film'; state.draftKey = it.key;
+            state.draft = {
+                name: f.name, boxSpeed: String(f.boxSpeed), maxPushPull: String(f.maxPushPull ?? 1),
+                format: Object.keys(FORMAT_VALUE).find(k => FORMAT_VALUE[k] === (f.format || '35mm')) || '35mm',
+                process: Object.keys(PROCESS_VALUE).find(k => PROCESS_VALUE[k] === f.process) || 'C41',
+                colorType: FILM_COLOR_LABEL[filmColorType(f)],
+                bundles: (f.bundles || []).map(b => ({ ...b, rolls: String(b.rolls), exposures: String(b.exposures), filmCost: (parseFloat(b.filmCost) || 0).toFixed(2) }))
+            };
+        } else {
+            const l = getAllLabs()[it.key];
+            if (!l) return;
+            const rawTiers = Array.isArray(l.services) && l.services.length ? l.services : [l];
+            state.draftKind = 'lab'; state.draftKey = it.key;
+            state.draft = {
+                name: l.name, address: l.address || '', website: l.website || '', phone: l.phone || '', email: l.email || '', source: l.source || '',
+                services: normalizeLabServices(l).map((t, idx) => ({
+                    ...t, label: (rawTiers[idx] && rawTiers[idx].label) || tierDescription(t),
+                    devCost: t.devCost.toFixed(2), mailBackCost: t.mailBackCost === null ? '' : t.mailBackCost.toFixed(2),
+                    turnaround: turnaroundLabels[t.turnaroundTime] || 'Same week', hiRes: t.highResScan
                 }))
             };
-            writeJSON('labProfiles', saved);
-            if (state.draftKey && state.homeLab === state.draftKey) state.homeLab = d.name.trim();
         }
-        state.draft = null; state.draftKind = null; state.draftKey = null; state.subEditIndex = null;
-        flash('Saved');
+        state.libOpen = null;
         render();
     },
-    cancelDraft() { state.draft = null; state.draftKind = null; state.draftKey = null; state.subEditIndex = null; render(); },
-
-    // Opens GitHub's "Add a film stock"/"Add a lab" issue form (see
-    // .github/ISSUE_TEMPLATE/) in a new tab, prefilled from the current
-    // draft — same trick contributing.md's own Claude-prompt links use
-    // (GitHub issue forms read field values straight out of the query
-    // string by each field's `id`). Submitting there needs no git, no YAML,
-    // and no manual file upload: film-lab-intake.yml turns it into a PR
-    // for a maintainer to review automatically. This is genuinely easier
-    // than generating a YAML snippet in-app for the user to paste
-    // themselves, since the structured form is what that workflow expects.
-    suggestToPresets() {
+    openEditor() { App.openEditorFor(); },
+    // Mirrors root's App.saveToLibrary(): opens the film editor pre-filled
+    // from whatever's currently entered on the Lookup screen, rather than
+    // writing straight to storage with no name — the user still names and
+    // confirms it via the normal editor/Save flow. Previously this button
+    // just fired a "Saved to your library" toast with no persistence at all.
+    saveCurrentRoll() {
+        const processLabel = Object.keys(PROCESS_VALUE).find(k => PROCESS_VALUE[k] === state.process) || 'C41';
+        state.draftKind = 'film';
+        state.draftKey = null;
+        state.draft = {
+            name: '', boxSpeed: state.boxSpeed || '400', maxPushPull: '1',
+            format: state.format, process: processLabel, colorType: FILM_COLOR_LABEL[state.filmColor] || 'Colour',
+            bundles: [{ storeName: '', rolls: state.rolls || '1', exposures: state.exposures || '36', filmCost: (parseFloat(state.packCost) || 0).toFixed(2), buyLink: '', availability: 'national' }]
+        };
+        render();
+    },
+    hideItem() {
+        const it = state.libOpen;
+        if (!it) return;
+        if (it.kind === 'film') {
+            const all = getAllFilms();
+            if (all[it.key]) { all[it.key] = { ...all[it.key], hidden: true }; setAllFilms(all); }
+        } else {
+            const all = getAllLabs();
+            if (all[it.key]) { all[it.key] = { ...all[it.key], hidden: true }; setAllLabs(all); }
+        }
+        state.libOpen = null;
+        say(t('v3NameHiddenToast', { name: it.name.replace(' ' + t('v3HomeSuffix'), '') }));
+    },
+    unhide(kind, key) {
+        if (kind === 'film') {
+            const all = getAllFilms();
+            if (all[key]) { all[key] = { ...all[key], hidden: false }; setAllFilms(all); }
+        } else {
+            const all = getAllLabs();
+            if (all[key]) { all[key] = { ...all[key], hidden: false }; setAllLabs(all); }
+        }
+        render();
+    },
+    confirmDeleteItem() {
+        const it = state.libOpen;
+        if (!it) return;
+        const name = it.name.replace(' ' + t('v3HomeSuffix'), '');
+        state.confirm = {
+            title: t('v3DeleteNameConfirmTitle', { name }),
+            body: it.kind === 'film' ? t('v3DeleteFilmConfirmBody') : t('v3DeleteLabConfirmBody'),
+            cta: t('deleteButton'),
+            run: () => {
+                if (it.kind === 'film') { const all = getAllFilms(); delete all[it.key]; setAllFilms(all); }
+                else { const all = getAllLabs(); delete all[it.key]; setAllLabs(all); }
+                state.confirm = null; state.libOpen = null;
+                say(t('v3NameDeletedToast', { name }));
+            }
+        };
+        render();
+    },
+    confirmDeleteAll() {
+        state.confirm = {
+            title: t('v3DeleteEverythingConfirmTitle'),
+            body: t('v3DeleteEverythingConfirmBody'),
+            cta: t('v3DeleteEverythingCta'),
+            run: () => {
+                setAllFilms({}); setAllLabs({});
+                setHomeLab(''); setDefaultTierLabel('');
+                state.homeLab = ''; state.tier = '';
+                state.confirm = null;
+                say(t('v3LibraryDeletedToast'));
+            }
+        };
+        render();
+    },
+    runConfirm() { if (state.confirm) state.confirm.run(); render(); },
+    cancelConfirm() { state.confirm = null; render(); },
+    addLibItem() {
+        state.draftKind = state.libTab === 'films' ? 'film' : 'lab';
+        state.draftKey = null;
+        state.draft = state.libTab === 'films'
+            ? { name: '', boxSpeed: '400', maxPushPull: '1', format: '35mm', process: 'C41', colorType: 'Colour', bundles: [] }
+            : { name: '', address: '', website: '', phone: '', email: '', source: '', services: [] };
+        render();
+    },
+    setDraft(key, val) { state.draft[key] = val; render(); },
+    addSub() {
+        const isFilm = state.draftKind === 'film';
+        const list = isFilm ? state.draft.bundles : state.draft.services;
+        const blank = isFilm
+            ? { storeName: '', rolls: '1', exposures: '36', filmCost: '', buyLink: '', availability: 'national' }
+            : { label: '', devCost: '', mailBackCost: '', turnaround: 'Same week', hiRes: true, pushPullCost: 0, pushPullType: 'per_stop', tiffScan: false, noPushPull: false, processes: [state.draft.process ? PROCESS_VALUE[state.draft.process] : 'C41'] };
+        list.push(blank);
+        state.subIndex = list.length - 1;
+        render();
+    },
+    openSub(i) { state.subIndex = i; render(); },
+    closeSub() { state.subIndex = null; render(); },
+    removeSub() {
+        const isFilm = state.draftKind === 'film';
+        const list = isFilm ? state.draft.bundles : state.draft.services;
+        list.splice(state.subIndex, 1);
+        state.subIndex = null;
+        render();
+    },
+    setSub(field, val) {
+        const isFilm = state.draftKind === 'film';
+        const list = isFilm ? state.draft.bundles : state.draft.services;
+        list[state.subIndex][field] = val;
+        render();
+    },
+    toggleSubHiRes() {
+        const list = state.draft.services;
+        list[state.subIndex].hiRes = !list[state.subIndex].hiRes;
+        render();
+    },
+    saveDraft() {
         const d = state.draft;
-        if (!d || !d.name || !d.name.trim()) { flash('Add a name first'); return; }
-        const base = 'https://github.com/trentnbauer/FilmCalc/issues/new';
-        // Same convenience prefill submitLibrary() already uses for its
-        // 'country' param — a device-local timezone guess, editable before
-        // submitting, never used to silently decide anything on its own.
-        const guess = guessLocationFromTimezone() || {};
-        let template, params;
+        if (!d || !d.name) { say(t('v3NameItBeforeSaving')); return; }
         if (state.draftKind === 'film') {
-            const b = (d.bundles && d.bundles[0]) || {};
-            // storeName/colorType have no dedicated issue-form field (only
-            // name/country/availability/state/city/source do), so they
-            // still go in the freeform details block — but availability/
-            // state/city themselves come from the actual dropdown/input
-            // fields below instead of being buried in prose, since the
-            // form (and film-lab-intake.yml's prompt) already expects
-            // them there. These come straight from the bundle editor's
-            // own Availability field (bundleLabel('Availability') in
-            // renderBundleEditor), not guessed — same precision as what
-            // ends up in films/*.yaml itself.
-            const details = [
-                `- Format (35mm / 120 / 110 / …): ${d.format || ''}`,
-                `- Box speed (ISO): ${d.boxSpeed || ''}`,
-                `- Process (C41 / BW / E6 / ECN-2): ${d.process || ''}`,
-                d.colorType ? `- Color type (color / bw / speciality): ${d.colorType}` : null,
-                `- Exposures per roll: ${b.exposures || ''}`,
-                `- Push/pull limit in stops (maxPushPull): ${d.maxPushPull || ''}`,
-                `- Regular price (not sale price): ${b.filmCost || ''}`,
-                `- Store name: ${b.storeName || ''}`,
-                `- Where to buy (link): ${b.buyLink || ''}`
-            ].filter(Boolean).join('\n');
-            const availabilityLabel = {
-                national: 'Country-wide (walk-in price, no postage anywhere)',
-                state: 'State/region-wide only',
-                city: 'City-only (mail order/local pickup — postage applies elsewhere)'
-            }[b.availability || 'national'];
-            template = '01 add a film stock.yml';
-            params = {
-                name: d.name.trim(), 'film-details': details, source: b.buyLink || '',
-                country: guess.country || '', availability: availabilityLabel,
-                state: b.state || '', city: b.city || ''
+            const format = FORMAT_VALUE[d.format] || '35mm';
+            const filmObj = {
+                name: d.name, boxSpeed: parseInt(d.boxSpeed, 10) || 400, maxPushPull: parseFloat(d.maxPushPull) || 1,
+                process: PROCESS_VALUE[d.process] || 'C41', colorType: FILM_COLOR_VALUE[d.colorType] || 'color', format, hidden: false,
+                bundles: d.bundles.map(b => ({ rolls: parseInt(b.rolls) || 1, exposures: parseInt(b.exposures) || 36, filmCost: parseFloat(b.filmCost) || 0, storeName: b.storeName || '', buyLink: b.buyLink || '', availability: b.availability || 'national', state: b.state || '', city: b.city || '' }))
             };
+            const all = getAllFilms();
+            const newKey = filmKeyOf(filmObj);
+            if (state.draftKey && state.draftKey !== newKey) delete all[state.draftKey];
+            all[newKey] = filmObj;
+            setAllFilms(all);
         } else {
-            // country here is only ever the same device-local guess as
-            // above, not derived from the lab's own address — a lab can
-            // easily be somewhere other than the contributor's own
-            // location (a mail-in lab, or adding one on someone else's
-            // behalf), so unlike availability/state/city for films this
-            // is a starting point to edit, not sourced from precise data.
-            const details = (d.services || []).map(t => [
-                `- Address: ${d.address || ''}`,
-                `- Phone: ${d.phone || ''}`,
-                `- Email: ${d.email || ''}`,
-                `- Website: ${d.website || ''}`,
-                `- Service tier: ${t.label || tierDescription(t)}`,
-                `  - Development cost per roll: ${t.devCost || ''}`,
-                `  - Push/pull fee (and whether it's per-stop or flat): ${t.pushPullCost || ''} (${t.pushPullType || ''})`,
-                `  - Push/pull unavailable on this tier? (yes/no): ${t.noPushPull ? 'yes' : 'no'}`,
-                `  - Turnaround (next day / same week / longer): ${t.turnaroundTime || ''}`,
-                `  - Hi-res scan? (yes/no): ${t.highResScan ? 'yes' : 'no'}`,
-                `  - TIFF/lossless scan? (yes/no): ${t.tiffScan ? 'yes' : 'no'}`,
-                `  - Mail-back return postage (blank if unknown/walk-in only, 0 if free): ${t.mailBackCost ?? ''}`,
-                `  - Processes handled (C41 / BW / E6 / ECN-2): ${(t.processes || []).join(', ')}`
-            ].join('\n')).join('\n');
-            template = '02 add a lab.yml';
-            params = { name: d.name.trim(), 'lab-details': details, source: d.website || '', country: guess.country || '' };
+            const labObj = {
+                name: d.name, address: d.address || '', website: d.website || '', phone: d.phone || '', email: d.email || '', source: d.source || '', hidden: false,
+                services: d.services.map(tier => ({
+                    label: tier.label || t('v3UnnamedTier'), devCost: parseFloat(tier.devCost) || 0,
+                    pushPullCost: parseFloat(tier.pushPullCost) || 0, pushPullType: tier.pushPullType || 'per_stop',
+                    turnaroundTime: turnaroundValues[tier.turnaround] || 'same_week',
+                    highResScan: !!tier.hiRes, tiffScan: !!tier.tiffScan, noPushPull: !!tier.noPushPull,
+                    mailBackCost: tier.mailBackCost === '' || tier.mailBackCost === undefined ? null : (parseFloat(tier.mailBackCost) || 0),
+                    processes: Array.isArray(tier.processes) && tier.processes.length ? tier.processes : ['C41']
+                }))
+            };
+            const all = getAllLabs();
+            if (state.draftKey && state.draftKey !== d.name) delete all[state.draftKey];
+            all[d.name] = labObj;
+            setAllLabs(all);
         }
-        // encodeURIComponent (not URLSearchParams, which encodes spaces as
-        // "+") to match the %20-style encoding contributing.md's own
-        // Claude-prompt links already use for this GitHub issue form.
-        const qs = Object.entries({ template, ...params }).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
-        window.open(`${base}?${qs}`, '_blank', 'noopener');
+        const name = d.name;
+        state.draft = null; state.draftKind = null; state.draftKey = null; state.subIndex = null;
+        say(t('v3NameSavedToast', { name }));
     },
-
-    // Bulk counterpart of suggestToPresets() above — for the whole saved
-    // library instead of one draft. Deliberately copy-paste rather than
-    // URL-prefilled: an earlier version tried to prefill the "Submit my
-    // library" issue form (see .github/ISSUE_TEMPLATE/09 submit my
-    // library.yml) via the query string, which has a length ceiling well
-    // below what a real library produces — the fallback for that (copy to
-    // clipboard, alert the user to paste it) was itself the whole
-    // mechanism in disguise, just conditionally skipped for small
-    // libraries. Always doing it removes an entire class of "worked in my
-    // small test, broke on a real library" bug, and it's one fewer thing
-    // for a contributor to get right vs "click three fields into place."
-    // library-intake.yml reads the single pasted block (marked with
-    // "# films-yaml"/"# labs-yaml" section headers) and splits it across
-    // the right films/*.yaml and labs/*.yaml files, same as
-    // film-lab-intake.yml already does per single-item issue.
-    submitLibrary() {
-        const films = Object.values(getAllFilms()).filter(f => !f.hidden && f.name && f.name.trim() && (f.bundles || []).some(b => (b.storeName || '').trim() || (b.buyLink || '').trim()));
-        const labs = Object.values(getAllLabs()).filter(l => !l.hidden && l.name && l.name.trim());
-        if (!films.length && !labs.length) { flash('Nothing worth submitting yet — add a store/buy link first'); return; }
-        const filmsYaml = films.map(serializeFilmEntryYaml).join('\n');
-        const labsYaml = labs.map(serializeLabEntryYaml).join('\n');
-        const combined = [filmsYaml && `# films-yaml\n${filmsYaml}`, labsYaml && `# labs-yaml\n${labsYaml}`].filter(Boolean).join('\n\n');
-        const country = (guessLocationFromTimezone() || {}).country || '';
-        const base = 'https://github.com/trentnbauer/FilmCalc/issues/new';
-        const qs = Object.entries({ template: '09 submit my library.yml', country }).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
-        const openForm = () => window.open(`${base}?${qs}`, '_blank', 'noopener');
-        // A blocking alert() (not a toast) is deliberate: a toast on the
-        // page behind the new tab that's about to steal focus is easy to
-        // miss entirely — a submitted issue with a silently-empty library
-        // box is exactly how this shipped broken the first time.
-        if (navigator.clipboard) {
-            navigator.clipboard.writeText(combined).then(() => {
-                alert('Your saved library has been copied to your clipboard.\n\nPaste it into the box on the page that opens next, BEFORE submitting.');
-                openForm();
-            }).catch(() => {
-                alert('Copying to your clipboard failed.\n\nUse Settings → Export to get your data another way.');
-            });
-        } else {
-            alert('This browser doesn\'t support copying to the clipboard automatically.\n\nUse Settings → Export to get your data another way.');
-        }
+    cancelDraft() { state.draft = null; state.draftKind = null; state.draftKey = null; state.subIndex = null; render(); },
+    clearAll() {
+        state.boxSpeed = ''; state.packCost = ''; state.postage = ''; state.rolls = '1'; state.exposures = '36';
+        state.pushPull = '0'; state.postTo = ''; state.mailBack = false; state.tab = 'labs';
+        state.fHiRes = false; state.fRush = false;
+        render();
     },
-
-    toggleHidden(kind, key) {
-        if (kind === 'film') {
-            const saved = readJSON('filmProfiles', {});
-            const f = getAllFilms()[key];
-            if (!f) return;
-            saved[key] = { ...f, hidden: !f.hidden };
-            writeJSON('filmProfiles', saved);
-        } else {
-            const saved = readJSON('labProfiles', {});
-            const l = getAllLabs()[key];
-            if (!l) return;
-            saved[key] = { ...l, hidden: !l.hidden };
-            writeJSON('labProfiles', saved);
+    openMenu() { state.menu = true; render(); },
+    closeMenu() { state.menu = false; render(); },
+    openChangelog() {
+        state.changelogOpen = true; state.menu = false;
+        if (!state.changelog) {
+            fetch('changelog.json').then(r => r.ok ? r.json() : []).then(list => { state.changelog = list; render(); }).catch(() => { state.changelog = []; render(); });
         }
         render();
     },
-    removeItem(kind, key) {
-        if (!window.confirm('Delete this permanently? This cannot be undone.')) return;
-        if (kind === 'film') {
-            const saved = readJSON('filmProfiles', {});
-            delete saved[key];
-            writeJSON('filmProfiles', saved);
-        } else {
-            const saved = readJSON('labProfiles', {});
-            delete saved[key];
-            writeJSON('labProfiles', saved);
+    closeChangelog() { state.changelogOpen = false; render(); },
+    openSetup() { state.setupOpen = true; state.setupStep = 0; state.menu = false; loadPresetRegions().then(render); render(); },
+    closeSetup() { state.setupOpen = false; try { localStorage.setItem('setupSeen', '1'); } catch {} render(); },
+    setupBack() { state.setupStep = Math.max(0, state.setupStep - 1); render(); },
+    async setupNext() {
+        if (state.setupStep === 1 && state.presetChecked.size && !state.setupBusy) {
+            state.setupBusy = true; render();
+            await App.importPresets();
+            state.setupBusy = false;
         }
+        state.setupStep = Math.min(SETUP_STEPS.length - 1, state.setupStep + 1);
         render();
     },
-
-    setHomeLab(name) { state.homeLab = name; setHomeLab(name); render(); },
-    setDefaultTier(label) { state.defaultTier = label; setDefaultTierLabel(label); render(); },
-    setLanguage(code) {
-        setLocale(code);
-        localStorage.setItem('locale', code);
+    togglePreset(label) {
+        if (state.presetChecked.has(label)) state.presetChecked.delete(label); else state.presetChecked.add(label);
         render();
     },
-    // Cookie-consent banner (privacy.html has the full explanation). GA
-    // itself never loads until 'granted' is written here — see
-    // js/ga-loader.js, which reads this same key on every page load.
-    // window.__loadGAIfConsented, defined by that script, is called
-    // directly on accept so analytics starts this session too, not just
-    // on the next visit.
-    acceptAnalytics() {
-        try { localStorage.setItem('analyticsConsent', 'granted'); } catch (e) { /* private mode etc. */ }
+    async importPresets() {
+        const regions = (state.presetRegions || []).filter(r => state.presetChecked.has(r.label));
+        if (!regions.length) { say(t('v3PickAtLeastOneRegion')); return; }
+        const { filmsAdded, labsAdded } = await importPresetRegions(regions);
+        state.presetChecked = new Set();
+        say(filmsAdded + labsAdded ? t('v3ImportedFilmsLabs', { films: filmsAdded, labs: labsAdded }) : t('v3NothingNewToImport'));
+        render();
+    },
+    setLanguage(code) { setLocale(code); try { localStorage.setItem('locale', code); } catch {} render(); },
+    setTheme(value) { state.theme = value; try { localStorage.setItem('newUiTheme', value); } catch {} render(); },
+    resetConsent() { state.consent = null; try { localStorage.removeItem('analyticsConsent'); } catch {} render(); },
+    acceptConsent() {
+        state.consent = 'granted';
+        try { localStorage.setItem('analyticsConsent', 'granted'); } catch {}
         if (typeof window.__loadGAIfConsented === 'function') window.__loadGAIfConsented();
         render();
     },
-    declineAnalytics() {
-        try { localStorage.setItem('analyticsConsent', 'denied'); } catch (e) { /* private mode etc. */ }
-        render();
+    declineConsent() { state.consent = 'denied'; try { localStorage.setItem('analyticsConsent', 'denied'); } catch {} render(); },
+    install() {
+        if (state.deferredPrompt) { state.deferredPrompt.prompt(); state.deferredPrompt = null; return; }
+        const ios = /iP(hone|ad|od)/.test(navigator.userAgent || '');
+        say(ios ? t('v3InstallIosToast') : t('v3InstallBrowserToast'));
     },
-    // Settings → Privacy "change my choice" — clears the saved answer so
-    // the banner reappears. Doesn't retroactively unload GA if it's
-    // already running this session (the script itself has no "undo"); a
-    // fresh Decline just prevents it loading on the next visit.
-    resetAnalyticsConsent() {
-        try { localStorage.removeItem('analyticsConsent'); } catch (e) { /* private mode etc. */ }
-        render();
+    exportJson() {
+        try {
+            const blob = new Blob([JSON.stringify({ films: getAllFilms(), labs: getAllLabs() }, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'filmcalc-library.json';
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            say(t('v3LibraryExportedJson'));
+        } catch { say(t('v3ExportFailedToast')); }
     },
-    dismissNewUiPromo() {
-        try { localStorage.setItem('newUiPromptSeen', '1'); } catch (e) { /* private mode etc. */ }
-        render();
-    },
-    tryNewUi() {
-        try { localStorage.setItem('newUiPromptSeen', '1'); } catch (e) { /* private mode etc. */ }
-        window.location.href = '/new/';
-    },
-    // Settings → "Install App" — replays the deferred beforeinstallprompt
-    // event captured below. Only ever called from a button that's only
-    // rendered while deferredInstallPrompt is non-null, so there's always
-    // a prompt to replay here.
-    installApp() {
-        if (!deferredInstallPrompt) return;
-        const promptEvent = deferredInstallPrompt;
-        promptEvent.prompt();
-        promptEvent.userChoice.finally(() => {
-            deferredInstallPrompt = null;
-            render();
-        });
-    },
-    // Settings → "Report inaccurate data" — opens a pre-filled GitHub issue
-    // using the repo's "05 incorrect data.yml" form template, so a wrong
-    // preset price/detail gets reported through the same structured flow a
-    // manual bug report would use, without the user having to find it
-    // themselves. kind just seeds the title so triage can tell films from
-    // labs at a glance; the template's own dropdown still asks for specifics.
-    reportInaccurateData(kind) {
-        const title = kind === 'lab' ? '[Data] Lab: ' : '[Data] Film: ';
-        const url = 'https://github.com/trentnbauer/FilmCalc/issues/new'
-            + '?template=' + encodeURIComponent('05 incorrect data.yml')
-            + '&title=' + encodeURIComponent(title);
-        window.open(url, '_blank', 'noopener');
-    },
-    openSetup() { state.setupOpen = true; state.setupStep = 0; state.setupBusy = false; render(); },
-    closeSetup() { state.setupOpen = false; state.setupStep = 0; state.setupBusy = false; localStorage.setItem('setupSeen', '1'); render(); },
-    // Manual footer-link open always shows the full history (null), unlike
-    // the auto-popup in loadChangelog() which restricts to just what's new.
-    openChangelog() { state.changelogShowNumbers = null; state.changelogOpen = true; render(); },
-    closeChangelogModal() { state.changelogOpen = false; render(); },
-    setupGoto(step) { state.setupStep = step; render(); },
-    // Next on the presets step used to require a separate "Import
-    // selected" click first. Now Next itself imports whatever's ticked
-    // (if anything) and only then advances, so there's one action instead
-    // of two. Nothing ticked just advances immediately — presets are
-    // optional, so Next shouldn't block on an empty selection.
-    setupNextFromPresets(targetStep) {
-        if (state.setupBusy) return;
-        const hasChecked = document.querySelectorAll('.preset-check:checked').length > 0;
-        if (!hasChecked) { state.setupStep = targetStep; render(); return; }
-        state.setupBusy = true;
-        App.importPresetSelected().then(() => {
-            state.setupBusy = false;
-            state.setupStep = targetStep;
-            render();
-        });
-    },
-    setSetting(key, value) {
-        state[key] = value;
-        if (key === 'mailRolls') localStorage.setItem('mailBackRollCount', value);
-        if (key === 'upgradePct') localStorage.setItem('upgradeThresholdPercent', value);
-        render();
-    },
-
-    // Copies a URL that, when opened, offers to import the visitor's whole
-    // saved library (films + labs + home lab) through the same review-first
-    // pendingImport pipeline as a dropped YAML file — see
-    // restoreFromShareLink(). Payload isn't compressed, just base64url —
-    // fine for a personal library's worth of films/labs; a very large one
-    // makes a long URL, same tradeoff the single-calc Share button already
-    // accepts.
-    shareLibraryLink() {
-        const url = buildLibraryShareUrl();
-        if (!url) { flash('Nothing saved to share yet'); return; }
-        if (navigator.clipboard) navigator.clipboard.writeText(url).catch(() => { });
-        flash('Library link copied');
-        render();
-    },
-    // Shows/hides the QR code for the same URL shareLibraryLink() copies —
-    // see renderLibraryQr(). Kept as a separate toggle rather than always
-    // rendering it since generating a QR for a large library isn't free
-    // and most visitors just want the Copy button.
-    toggleLibraryQr() {
-        state.showLibraryQr = !state.showLibraryQr;
-        render();
-    },
-    exportBackup() {
-        const data = { films: getAllFilms(), labs: getAllLabs(), homeLab: getHomeLab(), defaultTierLabel: getDefaultTierLabel() };
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'filmcalc-backup.json';
-        a.click();
-        URL.revokeObjectURL(a.href);
-    },
-    // A spreadsheet-friendly export, separate from Export backup (JSON) —
-    // that one round-trips through Import backup for restore; this one is
-    // for opening in Excel/Sheets/Numbers to track actual spend or feed a
-    // budget, not for re-importing into FilmCalc. Two labelled sections
-    // (films, then labs) in one file rather than two downloads, since most
-    // spreadsheet apps happily open a CSV with a blank-line-separated
-    // second table and it's one click instead of two.
+    // Mirrors root's App.exportCsv() — a spreadsheet-friendly spend export,
+    // not meant for re-importing (that's exportJson()'s job).
     exportCsv() {
         const filmRows = [];
         Object.values(getAllFilms()).forEach(f => {
@@ -1751,7 +1917,7 @@ const App = {
                 labRows.push([l.name, tierDescription(t), t.devCost, t.pushPullCost ?? '', t.pushPullType || '', t.turnaroundTime || '', (t.processes || []).join('|')]);
             });
         });
-        if (!filmRows.length && !labRows.length) { flash('Nothing saved to export'); return; }
+        if (!filmRows.length && !labRows.length) { say(t('v3NothingSavedToExport')); return; }
         const lines = [
             'FILMS',
             csvLine(['Name', 'ISO', 'Process', 'Format', 'Store', 'Rolls', 'Exposures', 'Pack cost', 'Cost per roll']),
@@ -1762,166 +1928,36 @@ const App = {
             ...labRows.map(csvLine),
         ];
         const blob = new Blob([lines.join('\r\n')], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'filmcalc-export.csv';
-        a.click();
-        URL.revokeObjectURL(a.href);
+        a.href = url; a.download = 'filmcalc-export.csv';
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
     },
+    // Direct, trusted restore of a self-exported JSON backup (exportJson()'s
+    // counterpart) — overwrites by key, no review step, matching root's
+    // App.importBackup(). Distinct from importYamlFile(): that one is for an
+    // untrusted community-style films/labs YAML and goes through the
+    // pendingImport review pipeline instead.
     importBackup(file) {
         if (!file) return;
         const reader = new FileReader();
         reader.onload = () => {
             try {
                 const parsed = JSON.parse(reader.result);
-                if (parsed.films && typeof parsed.films === 'object') writeJSON('filmProfiles', mergeFilmProfiles(readJSON('filmProfiles', {}), parsed.films));
-                if (parsed.labs && typeof parsed.labs === 'object') writeJSON('labProfiles', { ...readJSON('labProfiles', {}), ...parsed.labs });
+                if (parsed.films && typeof parsed.films === 'object') setAllFilms(mergeFilmProfiles(getAllFilms(), parsed.films));
+                if (parsed.labs && typeof parsed.labs === 'object') setAllLabs({ ...getAllLabs(), ...parsed.labs });
                 if (parsed.homeLab) setHomeLab(parsed.homeLab);
                 if (parsed.defaultTierLabel) setDefaultTierLabel(parsed.defaultTierLabel);
-                state.homeLab = getHomeLab(); state.defaultTier = getDefaultTierLabel();
-                state.importNote = 'Backup imported.';
+                state.homeLab = getHomeLab(); state.tier = getDefaultTierLabel();
+                state.importNote = t('v3BackupImportedNote');
             } catch {
-                state.importNote = 'That file isn\'t a valid FilmCalc backup.';
+                state.importNote = t('v3InvalidBackupNote');
             }
             render();
         };
         reader.readAsText(file);
     },
-    deleteAllData() {
-        if (!window.confirm('Delete every saved film, lab, and home-lab preference from this browser? This cannot be undone.')) return;
-        ['filmProfiles', 'labProfiles', 'homeLab', 'defaultTierLabel', 'favouriteFilms', 'favouriteLabs'].forEach(k => localStorage.removeItem(k));
-        state.homeLab = ''; state.defaultTier = ''; state.expandedLab = null; state.expandedFilm = null; state.loadedFilmKey = ''; state.loadedStoreName = ''; state.loadedBuyLink = '';
-        state.importNote = 'All saved data deleted.';
-        render();
-    },
-    togglePresetCheck(kind, file, checked) {
-        const key = `${kind}:${file}`;
-        if (checked) state.presetChecked.add(key); else state.presetChecked.delete(key);
-    },
-    // Import screen's country filter (issue #452 — the flat file list gets
-    // unwieldy as more regions ship). '' means "All countries". Marking it
-    // touched stops the geo-guess in detectUserLocation() from silently
-    // overriding a choice the user already made, including picking "All"
-    // explicitly after a guess had narrowed it.
-    setPresetCountryFilter(value) {
-        state.presetCountryFilter = value;
-        state.presetCountryFilterTouched = true;
-        render();
-    },
-    // Imports every checked region file — films AND labs together in one
-    // pass, not one button per kind, since importing triggers a full
-    // re-render (state.presetChecked, not the checkboxes' own DOM state,
-    // is what survives that). Fetched in parallel, merged one after
-    // another so a film/lab shared across two chosen files (e.g. a
-    // national + a city retailer file) combines instead of the second
-    // overwriting the first.
-    // Bundled region files are already schema-checked in CI before they
-    // ever reach main, so this doesn't show the user a full preview the
-    // way importYamlFile()'s untrusted-upload path does — but it still
-    // runs the same validators (loadDataSchema() below) before writing
-    // anything, as a second line of defence against a file that passed
-    // CI under an older schema version, or any other drift between what
-    // was validated at merge time and what's actually being served now.
-    // A file that fails is skipped and reported the same way a fetch
-    // failure already was, rather than silently merging entries the
-    // calculator would then have to paper over with `|| 0`-style
-    // fallbacks downstream. It also confirms once, below, before
-    // overwriting anything the current library already has a different
-    // (presumably locally-edited) copy of.
-    importPresetSelected() {
-        const filmFiles = [...document.querySelectorAll('.preset-check[data-kind="films"]:checked')].map(el => el.value);
-        const labFiles = [...document.querySelectorAll('.preset-check[data-kind="labs"]:checked')].map(el => el.value);
-        if (!filmFiles.length && !labFiles.length) { state.importNote = 'Tick at least one region first.'; render(); return; }
-        const fetchAll = (kind, files) => Promise.all(files.map(file => fetch(`${kind}/${file}`).then(r => r.text()).then(text => ({ file, parsed: jsyaml.load(text) || {} })).catch(() => ({ file, parsed: null }))));
-        return loadDataSchema().then(schema => Promise.all([fetchAll('films', filmFiles), fetchAll('labs', labFiles)]).then(([filmResults, labResults]) => {
-            const existingFilms = readJSON('filmProfiles', {});
-            const existingLabs = readJSON('labProfiles', {});
-            const failed = [];
-            const filmEntriesByFile = filmResults.map(({ file, parsed }) => {
-                if (!parsed) { failed.push(file); return null; }
-                const entries = Array.isArray(parsed.films) ? parsed.films : [];
-                if (validateFilmEntries(entries, schema).length) { failed.push(file); return null; }
-                return entries;
-            });
-            // Carries the file-level lat/lon along with each file's lab
-            // entries (not just the bare array) — individual lab entries
-            // don't have their own coordinates, only the file header does
-            // (DATA_SPEC.md), so this is the only point that still has
-            // both in scope at once. See App.nearestSavedLab() for what
-            // consumes it.
-            const labEntriesByFile = labResults.map(({ file, parsed }) => {
-                if (!parsed) { failed.push(file); return null; }
-                const entries = Array.isArray(parsed.labs) ? parsed.labs : [];
-                if (validateLabEntries(entries, schema).length) { failed.push(file); return null; }
-                return { entries, lat: parsed.lat, lon: parsed.lon };
-            });
-            // Re-importing a region you've already got, or one that
-            // overlaps a film/lab you've since customized locally,
-            // otherwise silently overwrites those local edits (bundles
-            // merge by store/rolls/exposures identity, but every other
-            // field — maxPushPull, colorType, a hand-corrected price —
-            // just gets replaced; labs have no merge logic at all). One
-            // confirm, only when there's actually something that would
-            // change, rather than a preview for every import.
-            let changedFilms = 0, changedLabs = 0;
-            filmEntriesByFile.forEach(entries => {
-                if (!entries) return;
-                Object.entries(buildFilmProfilesFromEntries(entries)).forEach(([key, incoming]) => {
-                    const existing = existingFilms[key];
-                    if (existing && JSON.stringify(existing) !== JSON.stringify(incoming)) changedFilms++;
-                });
-            });
-            labEntriesByFile.forEach(f => {
-                if (!f) return;
-                f.entries.forEach(l => {
-                    if (!l.name) return;
-                    const existing = existingLabs[l.name];
-                    const incoming = (f.lat != null && f.lon != null) ? { ...l, lat: f.lat, lon: f.lon } : l;
-                    if (existing && JSON.stringify(existing) !== JSON.stringify(incoming)) changedLabs++;
-                });
-            });
-            if (changedFilms || changedLabs) {
-                const parts = [];
-                if (changedFilms) parts.push(`${changedFilms} film${changedFilms === 1 ? '' : 's'}`);
-                if (changedLabs) parts.push(`${changedLabs} lab${changedLabs === 1 ? '' : 's'}`);
-                const proceed = window.confirm(`This will overwrite ${parts.join(' and ')} you've already saved with the preset's version — any local edits to them will be lost. Continue?`);
-                if (!proceed) { state.importNote = 'Import cancelled.'; render(); return; }
-            }
-
-            state.lastImportSnapshot = { filmProfiles: existingFilms, labProfiles: existingLabs };
-            let filmCount = 0, labCount = 0;
-            filmEntriesByFile.forEach(entries => {
-                if (!entries) return;
-                writeJSON('filmProfiles', mergeFilmProfiles(readJSON('filmProfiles', {}), buildFilmProfilesFromEntries(entries)));
-                filmCount += entries.length;
-            });
-            labEntriesByFile.forEach(f => {
-                if (!f) return;
-                const saved = readJSON('labProfiles', {});
-                f.entries.forEach(l => {
-                    if (!l.name) return;
-                    saved[l.name] = (f.lat != null && f.lon != null) ? { ...l, lat: f.lat, lon: f.lon } : l;
-                });
-                writeJSON('labProfiles', saved);
-                labCount += f.entries.length;
-            });
-            const parts = [];
-            if (filmCount) parts.push(`${filmCount} film entr${filmCount === 1 ? 'y' : 'ies'}`);
-            if (labCount) parts.push(`${labCount} lab${labCount === 1 ? '' : 's'}`);
-            const total = filmFiles.length + labFiles.length;
-            state.importNote = (parts.length ? `Imported ${parts.join(' and ')}` : 'Nothing to import') + ` from ${total} region file${total === 1 ? '' : 's'}.` + (failed.length ? ` Couldn't load ${failed.join(', ')}.` : '');
-            render();
-        }));
-    },
-
-    // Restores the generic "drop a config.yaml / films.yaml / labs.yaml"
-    // import path — accepts any of the three shapes: a combined config.yaml
-    // ({ films, labs, settings }) or a standalone films.yaml/labs.yaml
-    // (a bare films: [...] or labs: [...] list). Unlike the bundled presets
-    // (already schema-checked in CI before they ever reach main), a custom
-    // file is untrusted input — this only PARSES and VALIDATES it into
-    // state.pendingImport for review; nothing touches localStorage until
-    // the user reviews the preview and hits Confirm (App.confirmImport()).
     importYamlFile(file) {
         if (!file) return;
         const reader = new FileReader();
@@ -1929,13 +1965,13 @@ const App = {
             loadDataSchema().then(() => {
                 let parsed;
                 try { parsed = jsyaml.load(reader.result) || {}; }
-                catch { state.importNote = `${file.name} isn't valid YAML.`; render(); return; }
+                catch { state.importNote = t('v3FileNotValidYaml', { name: file.name }); render(); return; }
                 if (!Array.isArray(parsed.films) && !Array.isArray(parsed.labs)) {
-                    state.importNote = `${file.name} had no films or labs to import.`;
+                    state.importNote = t('v3FileNoFilmsOrLabs', { name: file.name });
                     render();
                     return;
                 }
-                const preview = buildImportPreview(parsed, readJSON('filmProfiles', {}), readJSON('labProfiles', {}));
+                const preview = buildImportPreview(parsed, getAllFilms(), getAllLabs());
                 state.pendingImport = { fileName: file.name, parsed, ...preview };
                 state.importNote = '';
                 render();
@@ -1943,873 +1979,133 @@ const App = {
         };
         reader.readAsText(file);
     },
-
-    // Writes state.pendingImport (already reviewed by the user) into
-    // localStorage, snapshotting what was there first so App.undoLastImport()
-    // can put it back.
     confirmImport() {
         const p = state.pendingImport;
         if (!p) return;
-        state.lastImportSnapshot = { filmProfiles: readJSON('filmProfiles', {}), labProfiles: readJSON('labProfiles', {}) };
+        state.lastImportSnapshot = { filmProfiles: getAllFilms(), labProfiles: getAllLabs() };
         let filmCount = 0, labCount = 0;
         if (Array.isArray(p.parsed.films)) {
-            writeJSON('filmProfiles', mergeFilmProfiles(readJSON('filmProfiles', {}), buildFilmProfilesFromEntries(p.parsed.films)));
+            setAllFilms(mergeFilmProfiles(getAllFilms(), buildFilmProfilesFromEntries(p.parsed.films)));
             filmCount = p.parsed.films.length;
         }
         if (Array.isArray(p.parsed.labs)) {
-            const saved = readJSON('labProfiles', {});
-            const { lat, lon } = p.parsed;
-            p.parsed.labs.forEach(l => {
-                if (!l.name) return;
-                saved[l.name] = (lat != null && lon != null && l.lat == null) ? { ...l, lat, lon } : l;
-            });
-            writeJSON('labProfiles', saved);
+            const saved = getAllLabs();
+            p.parsed.labs.forEach(l => { if (l.name) saved[l.name] = l; });
+            setAllLabs(saved);
             labCount = p.parsed.labs.length;
         }
-        if (p.parsed.settings && typeof p.parsed.settings === 'object') {
-            if (p.parsed.settings.homeLab) setHomeLab(p.parsed.settings.homeLab);
-            if (p.parsed.settings.upgradeThresholdPercent !== undefined) localStorage.setItem('upgradeThresholdPercent', p.parsed.settings.upgradeThresholdPercent);
-            state.homeLab = getHomeLab();
-        }
-        state.importNote = `Imported ${filmCount} film entr${filmCount === 1 ? 'y' : 'ies'} and ${labCount} lab${labCount === 1 ? '' : 's'} from ${p.fileName}.`;
+        state.importNote = t('v3ImportedEntriesNote', {
+            films: t(filmCount === 1 ? 'v3FilmEntryCountOne' : 'v3FilmEntryCount', { n: filmCount }),
+            labs: t(labCount === 1 ? 'v3LabEntryCountOne' : 'v3LabEntryCount', { n: labCount }),
+            fileName: p.fileName
+        });
         state.pendingImport = null;
         render();
     },
     cancelImport() { state.pendingImport = null; render(); },
     undoLastImport() {
         if (!state.lastImportSnapshot) return;
-        writeJSON('filmProfiles', state.lastImportSnapshot.filmProfiles);
-        writeJSON('labProfiles', state.lastImportSnapshot.labProfiles);
+        setAllFilms(state.lastImportSnapshot.filmProfiles);
+        setAllLabs(state.lastImportSnapshot.labProfiles);
         state.lastImportSnapshot = null;
         state.homeLab = getHomeLab();
-        state.importNote = 'Import undone.';
+        state.importNote = t('v3ImportUndoneNote');
         render();
+    },
+    reportIssue() {
+        const url = 'https://github.com/trentnbauer/FilmCalc/issues/new?labels=data&title=' + encodeURIComponent('Data report from /new preview');
+        window.open(url, '_blank', 'noopener');
     }
 };
-// buildFilmProfilesFromEntries: bridges the current { bundles: [...] }
-// schema with the older flat single-bundle schema, same as js/modals.js's
-// version — every film in films/*.yaml already uses the nested schema per
-// DATA_SPEC.md, but this keeps older community files working too.
-function buildFilmProfilesFromEntries(entries) {
-    const hasNestedBundles = entries.some(f => Array.isArray(f.bundles));
-    const result = {};
-    if (hasNestedBundles) {
-        // maxPushPull is optional in the source YAML (DATA_SPEC.md) — default
-        // it here, at the point a film enters storage, rather than leaving it
-        // undefined and trusting every future reader (the editor, the export
-        // serializer, ...) to remember its own `?? 1` fallback.
-        entries.forEach(f => { if (f.name) result[filmKey(f.name, f.boxSpeed, f.format)] = { ...f, maxPushPull: f.maxPushPull ?? 1 }; });
-    } else {
-        entries.forEach(f => {
-            if (!f.name) return;
-            const key = filmKey(f.name, f.boxSpeed, f.format);
-            const bundle = { rolls: f.rolls, exposures: f.exposures, filmCost: f.filmCost, storeName: f.storeName, buyLink: f.buyLink };
-            if (result[key]) result[key].bundles.push(bundle);
-            else result[key] = { name: f.name, boxSpeed: f.boxSpeed, maxPushPull: f.maxPushPull ?? 1, process: f.process || 'C41', format: f.format || '35mm', bundles: [bundle] };
-        });
-    }
-    return result;
-}
+window.App = App;
 
-function persistScope() {
-    localStorage.setItem('globalFormat', state.format);
-    localStorage.setItem('globalProcess', state.process);
-    localStorage.setItem('globalFilmColor', state.filmColor);
-}
-
-// ==================== Init ====================
-function restoreFromShareLink() {
-    const p = new URLSearchParams(location.search);
-    if (![...p.keys()].length) return;
-    ['format', 'process', 'filmColor', 'boxSpeed', 'pushPull', 'packCost', 'postage', 'rolls', 'exposures'].forEach(k => {
-        if (p.has(k)) state[k] = p.get(k);
-    });
-    // A shared library link (App.shareLibraryLink()) — routed through the
-    // exact same review-first pendingImport pipeline as a dropped YAML
-    // file (see App.importYamlFile()/confirmImport()), so nothing here
-    // touches localStorage directly; it only ever queues a preview. Lands
-    // the visitor on Settings so that preview is actually visible instead
-    // of silently waiting on a screen they may never open.
-    if (p.has('lib')) {
-        try {
-            const parsed = JSON.parse(b64DecodeUnicode(p.get('lib')));
-            if (Array.isArray(parsed.films) || Array.isArray(parsed.labs)) {
-                const preview = buildImportPreview(parsed, readJSON('filmProfiles', {}), readJSON('labProfiles', {}));
-                state.pendingImport = { fileName: 'Shared library link', parsed, ...preview };
-                state.view = 'settings';
-            }
-        } catch { /* malformed/truncated link — same as no lib param */ }
-    }
-    history.replaceState(null, '', location.pathname);
-}
-
-// ==================== Mobile shell ====================
-// A structurally different layout, not a CSS-narrowed version of the
-// desktop one — sticky header with a live cost summary, hamburger nav,
-// full-screen edit takeovers, a bottom toast. Built from the "FilmCalc
-// Mobile 1b" mockup. Shares `state`, the App.* handlers, and the real
-// calc engine (rankLabs/computeFilmRows/computeExpired/computeCheaperFilm)
-// with the desktop render path — only the markup differs.
-const M_LABEL = "font-family:'Archivo Narrow',Archivo,sans-serif;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#a9a59e";
-const M_INPUT = "box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px;color:#eae7e1;font-size:16px;" + MONO;
-const M_ROW = "display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 14px;border-top:1px solid #212125";
-const M_CARD = "border:1px solid #26262a;border-radius:10px;background:#131315;overflow:hidden";
-
-// <label> (not <div>) so the row's control(s) get an accessible name from
-// the visible label text for free — no matching id/for pair needed, and it
-// still covers rows built from >1 control (e.g. a select + its unit
-// <span>, or a select + an adjoining input) since implicit label
-// association isn't limited to a single descendant the way for/id is.
-function mRow(label, controlHtml, first, wide) {
-    return `<label class="m-row${wide ? ' m-row-wide' : ''}" style="${first ? M_ROW.replace(';border-top:1px solid #212125', '') : M_ROW}">
-<span class="narrow" style="${M_LABEL}">${label}</span>
-<div style="display:flex;align-items:center;gap:8px">${controlHtml}</div>
-</label>`;
-}
-
-function mSectionHead(label, trailing, color) {
-    color = color || 'var(--acc)';
-    return `<div style="display:flex;align-items:center;gap:10px;margin:36px 0 14px">
-<div style="width:6px;height:6px;background:${color};border-radius:50%"></div>
-<div style="${NARROW};font-size:16px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:${color}">${label}</div>
-<div style="flex:1;height:1px;background:#26262a"></div>
-${trailing || ''}
-</div>`;
-}
-
-function renderMobileHeader(s) {
-    const viewLabel = { library: 'Library', expired: 'Expired', settings: 'Settings' }[s.view] || '';
-    const eb = btnTone(s.view === 'expired'), lb = btnTone(s.view === 'library'), sb = btnTone(s.view === 'settings');
-    const desktopNav = `
-<button type="button" onclick="App.goView('expired')" style="background:${eb.bg};border:1px solid ${eb.border};border-radius:5px;padding:6px 10px;color:${eb.color};font-size:10px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2NavExpiredCalc')}</button>
-<button type="button" onclick="App.goView('library')" style="background:${lb.bg};border:1px solid ${lb.border};border-radius:5px;padding:6px 10px;color:${lb.color};font-size:10px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${t('v2NavLibrary')}</button>
-<a href="https://github.com/trentnbauer/FilmCalc/wiki" target="_blank" rel="noopener noreferrer" title="${t('v2NavWiki')}" style="display:flex;align-items:center;justify-content:center;width:29px;height:29px;background:#141416;border:1px solid #2c2c30;border-radius:5px;color:#928e88;box-sizing:border-box">
-<svg style="width:15px;height:15px" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.5c-1.5-1.4-3.6-2-5.5-2A5.5 5.5 0 003 5v13a5.5 5.5 0 013.5-1.5c1.9 0 4 .6 5.5 2m0-12c1.5-1.4 3.6-2 5.5-2A5.5 5.5 0 0121 5v13a5.5 5.5 0 00-3.5-1.5c-1.9 0-4 .6-5.5 2m0-12v12"></path></svg>
-</a>
-<button type="button" onclick="App.toggleDark()" title="${t('v2NavToggleDark')}" aria-label="${escapeHtml(t('v2NavToggleDark'))}" style="display:flex;align-items:center;justify-content:center;width:29px;height:29px;background:#141416;border:1px solid #2c2c30;border-radius:5px;color:#ffb020;cursor:pointer;padding:0;box-sizing:border-box">
-<svg style="width:15px;height:15px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"></circle><path stroke-linecap="round" d="M12 2.5v2.25M12 19.25v2.25M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.25M19.25 12h2.25M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"></path></svg>
-</button>
-<button type="button" onclick="App.goView('settings')" title="${t('v2NavSettings')}" aria-label="${escapeHtml(t('v2NavSettings'))}" style="display:flex;align-items:center;justify-content:center;width:29px;height:29px;background:${sb.bg};border:1px solid ${sb.border};border-radius:5px;color:${sb.color};cursor:pointer;padding:0;box-sizing:border-box">
-<svg style="width:15px;height:15px" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-</button>`;
-    return `<div style="position:sticky;top:0;z-index:20;background:#0e0e10;border-bottom:1px solid #26262a">
-<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px">
-<button type="button" onclick="App.goView('main')" style="display:flex;align-items:center;gap:9px;background:transparent;border:0;padding:0;cursor:pointer">
-<span style="width:26px;height:26px;border-radius:50%;background:linear-gradient(160deg,#2b2b2f,#131315);border:1px solid #3a3a3f;display:flex;align-items:center;justify-content:center"><span style="width:9px;height:9px;border-radius:50%;border:2px solid var(--acc)"></span></span>
-<span style="${NARROW};font-weight:700;font-size:15px;letter-spacing:.2em;color:#c9c5bd;text-transform:uppercase">Filmcalc</span>
-</button>
-<nav class="desktop-nav" style="display:none;align-items:center;gap:6px;flex-wrap:wrap">${desktopNav}</nav>
-<div style="display:flex;align-items:center;gap:8px">
-<span class="mobile-view-label" style="${MONO};font-size:12px;color:#9c9994">${escapeHtml(viewLabel)}</span>
-<button type="button" class="hamburger-btn" onclick="App.toggleMenu()" aria-label="Menu" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#928e88;padding:0;cursor:pointer">
-<svg style="width:20px;height:20px" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"></path></svg>
-</button>
-</div>
-</div>
-${renderMobileSummary(s)}
-</div>`;
-}
-
-function renderMobileSummary(s) {
-    if (s.view !== 'main') return '';
-    const r = rankLabs(s);
-    const cheapest = r.ranked[0] || null;
-    const home = r.ranked.find(l => l.name === s.homeLab) || cheapest;
-    const formatLabel = FORMAT_OPTIONS.find(o => o.value === s.format)?.label || s.format;
-    const colorLabel = filmTypeOptions().find(o => o.value === s.filmColor)?.label || '';
-    const loadedFilm = getAllFilms()[s.loadedFilmKey];
-    const filmLine = `${loadedFilm ? escapeHtml(loadedFilm.name) + ' · ' : ''}${escapeHtml(formatLabel)} · ${escapeHtml(colorLabel)}`;
-    if (!home) {
-        return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px 11px;border-top:1px solid #1c1c20;background:#131315">
-<div>
-<div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9c9994">${filmLine}</div>
-<div style="${MONO};font-size:13px;color:#b0aeac;margin-top:4px">No lab or film stock data for this process</div>
-</div>
-<div style="${MONO};font-size:14px;color:#b0aeac">N/A</div>
-</div>`;
-    }
-    const homeLine = home.name === s.homeLab ? `${escapeHtml(home.name)} · home` : escapeHtml(home.name);
-    const filmPct = Math.max(6, Math.min(100, (home.filmPerRoll / home.roll) * 100));
-    const pushText = home.pick.pushFee > 0
-        ? `+ ${CUR()}${money(home.pick.pushFee)} ${r.stopsSigned < 0 ? 'pull' : 'push'}`
-        : (home.pick.mailFee > 0 ? `+ ${CUR()}${money(home.pick.mailFee)} mail` : '');
-    return `<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:9px 12px 11px;border-top:1px solid #1c1c20;background:#131315">
-<div>
-<div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9c9994">${homeLine}</div>
-<div style="font-size:10px;color:#b0aeac;margin-top:1px">${filmLine}</div>
-<div style="display:flex;align-items:baseline;gap:3px;margin-top:2px"><span style="${MONO};font-size:14px;color:#a6a4a0">${CUR()}</span><span style="${MONO};font-size:26px;line-height:1;color:#eae7e1">${money(home.cpp)}</span><span style="font-size:12px;color:#9c9994">/frame</span></div>
-<div style="${MONO};display:flex;flex-direction:column;gap:2px;margin-top:6px;font-size:12px;color:#928e88">
-<span>Roll <span style="color:#c9c5bd">${CUR()}${money(home.filmPerRoll)}</span></span>
-<span>Dev <span style="color:#c9c5bd">${CUR()}${money(home.pick.devCost)}</span> <span style="color:var(--acc)">${pushText}</span></span>
-</div>
-</div>
-<div style="text-align:right">
-<div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9c9994">Cheapest</div>
-<div style="display:flex;align-items:baseline;gap:6px;justify-content:flex-end;margin-top:2px"><span style="${MONO};font-size:18px;color:var(--acc)">${CUR()}${money(cheapest.cpp)}</span></div>
-<div style="font-size:12px;color:#928e88;margin-top:2px">${escapeHtml(cheapest.name)}</div>
-<div style="${MONO};margin-top:6px;font-size:12px;color:#9c9994">Roll total<br><span style="color:#c9c5bd;font-size:14px">${CUR()}${money(home.roll)}</span></div>
-</div>
-</div>
-<div style="height:3px;background:#0f0f11;display:flex"><div style="background:var(--acc);width:${filmPct}%"></div></div>`;
-}
-
-function renderMobileMenu(s) {
-    if (!s.menuOpen) return '';
-    const items = [
-        ['main', 'Film lookup'], ['library', 'Library'], ['expired', 'Expired calc'], ['settings', 'Settings']
-    ].map(([view, label]) => {
-        const on = s.view === view;
-        return `<button type="button" onclick="App.goView('${view}')" style="height:52px;display:flex;align-items:center;padding:0 14px;border-radius:8px;font-size:15px;letter-spacing:.08em;text-transform:uppercase;text-align:left;cursor:pointer;${on ? 'background:#1c1512;border:1px solid #5a3a1c;color:var(--acc)' : 'background:#1a1a1d;border:1px solid #2c2c30;color:#c9c5bd'}">${label}</button>`;
-    }).join('');
-    return `<div onclick="App.closeMenu()" style="position:fixed;top:0;left:50%;transform:translateX(-50%);width:min(960px,100%);height:100%;z-index:40;background:rgba(6,6,7,.66);display:flex;justify-content:flex-end">
-<div onclick="event.stopPropagation()" style="width:264px;height:100%;background:#131315;border-left:1px solid #2c2c30;padding:14px 12px;display:flex;flex-direction:column;gap:8px;box-sizing:border-box">
-<div style="${NARROW};font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#9c9994;padding:4px 8px 8px">Menu</div>
-${items}
-<a href="https://github.com/trentnbauer/FilmCalc/wiki" target="_blank" rel="noopener noreferrer" style="height:52px;display:flex;align-items:center;padding:0 14px;background:#1a1a1d;border:1px solid #2c2c30;border-radius:8px;color:#c9c5bd;font-size:15px;letter-spacing:.08em;text-transform:uppercase">Wiki ↗</a>
-</div>
-</div>`;
-}
-
-function renderMobileToast(s) {
-    if (!s.toast) return '';
-    return `<div role="status" aria-live="polite" style="position:fixed;left:50%;transform:translateX(-50%);bottom:16px;width:calc(100% - 24px);max-width:936px;z-index:60;padding:14px;background:#1c1512;border:1px solid #5a3a1c;border-radius:10px;color:var(--acc);font-size:14px;text-align:center;box-sizing:border-box">${escapeHtml(s.toast)}</div>`;
-}
-
-function renderMobileFooter(s) {
-    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:20px;padding:0 14px">
-<span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#b9b8b6">FilmCalc · <button type="button" onclick="App.openChangelog()" style="background:transparent;border:0;padding:0;font:inherit;letter-spacing:inherit;text-transform:inherit;color:#928e88;text-decoration:underline;cursor:pointer">${escapeHtml(t('whatsNewHeading'))}</button> · <a href="/privacy.html" style="color:#928e88;text-decoration:underline">${escapeHtml(t('v2ConsentPrivacyLink'))}</a> · <a href="/terms.html" style="color:#928e88;text-decoration:underline">${escapeHtml(t('v2TermsLink'))}</a></span>
-<span style="${MONO};font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#b9b8b6">${formatLabel(s.format)} · ${procLabel(s.process)}</span>
-</div>`;
-}
-
-// Cookie-consent banner — shown until the visitor answers (localStorage
-// 'analyticsConsent' unset), then never again. Read directly from
-// localStorage each render rather than mirrored into `state`, same
-// pattern currentLocale uses in js/i18n.js — one source of truth, no
-// risk of the banner and the actual GA-loaded state drifting apart.
-function renderConsentBanner() {
-    let consent;
-    try { consent = localStorage.getItem('analyticsConsent'); } catch (e) { consent = 'denied'; }
-    if (consent !== null) return '';
-    return `<div style="position:fixed;left:12px;right:12px;bottom:12px;z-index:70;max-width:520px;margin:0 auto;background:#141416;border:1px solid #2c2c30;border-radius:10px;padding:14px 16px;box-shadow:0 20px 50px -15px #000;display:flex;flex-direction:column;gap:10px">
-<div style="font-size:12px;line-height:1.5;color:#c9c5bd">${escapeHtml(t('v2ConsentMessage'))} <a href="/privacy.html" style="color:var(--acc);text-decoration:underline">${escapeHtml(t('v2ConsentPrivacyLink'))}</a></div>
-<div style="display:flex;gap:8px;justify-content:flex-end">
-<button type="button" onclick="App.declineAnalytics()" style="background:transparent;border:1px solid #33333a;border-radius:6px;padding:7px 14px;color:#928e88;font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${escapeHtml(t('v2ConsentDecline'))}</button>
-<button type="button" onclick="App.acceptAnalytics()" style="background:#1c1512;border:1px solid #5a3a1c;border-radius:6px;padding:7px 14px;color:var(--acc);font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${escapeHtml(t('v2ConsentAccept'))}</button>
-</div>
-</div>`;
-}
-
-// One-time nudge toward the /new preview build. Shown at most once ever
-// (localStorage 'newUiPromptSeen', set on either button) and never at the
-// same time as the consent banner or setup/changelog modals — those all
-// compete for the same attention, and stacking prompts on a first visit
-// is worse than deferring this one to the next render/reload.
-function shouldShowNewUiPromo(s) {
-    if (s.setupOpen || s.changelogOpen) return false;
-    if (localStorage.getItem('newUiPromptSeen') !== null) return false;
+// ---------- Restore a shared roll/library link ----------
+function restoreFromQuery() {
     try {
-        if (localStorage.getItem('analyticsConsent') === null) return false;
-    } catch (e) { /* private mode etc. — fall through and show it */ }
-    return true;
-}
-
-function renderNewUiPromoModal() {
-    return `<div onclick="if(event.target===this)App.dismissNewUiPromo()" style="position:fixed;inset:0;z-index:72;background:rgba(6,6,7,.74);display:flex;align-items:flex-start;justify-content:center;padding:64px 16px;overflow:auto"><div style="width:100%;max-width:420px;background:linear-gradient(180deg,#151517,#111113);border:1px solid #33333a;border-radius:10px;box-shadow:0 30px 80px -20px #000;padding:18px 20px 20px">
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-<div style="${NARROW};font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#eae7e1">${escapeHtml(t('v2NewUiPromoTitle'))}</div>
-<button type="button" onclick="App.dismissNewUiPromo()" aria-label="Close" style="background:transparent;border:0;color:#928e88;font-size:18px;line-height:1;cursor:pointer;padding:4px">×</button>
-</div>
-<p style="margin:0;font-size:12px;line-height:1.6;color:#a6a4a0">${escapeHtml(t('v2NewUiPromoMessage'))}</p>
-<div style="display:flex;gap:10px;margin-top:18px">
-<button type="button" onclick="App.dismissNewUiPromo()" style="flex:1;background:#141416;border:1px solid #2c2c30;border-radius:5px;padding:9px 16px;color:#928e88;font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${escapeHtml(t('v2NewUiPromoDismiss'))}</button>
-<button type="button" onclick="App.tryNewUi()" style="flex:2;background:#1c1512;border:1px solid #5a3a1c;border-radius:5px;padding:9px 16px;color:var(--acc);font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${escapeHtml(t('v2NewUiPromoTry'))}</button>
-</div>
-</div></div>`;
-}
-
-function renderMobileLookup(s) {
-    const is120 = s.format === '120', is35 = s.format === '35mm';
-    const r = rankLabs(s);
-    const home = r.ranked.find(l => l.name === s.homeLab) || r.ranked[0];
-    const filmRows = computeFilmRows(s, home);
-    const rolls = Math.max(1, Math.round(num(s.rolls)) || 1);
-    const stopsAbs = r.stopsAbs;
-    const loaded = getAllFilms()[s.loadedFilmKey];
-    const limit = loaded ? parseFloat(loaded.maxPushPull ?? 1) : 2;
-    const pushWarn = stopsAbs > limit;
-    const cheaper = computeCheaperFilm(s, home);
-
-    const expShown = is120 ? String(FRAME120[s.frame120] || '') : s.exposures;
-    const cameraControl = is120
-        ? `<select onchange="App.setField('frame120',this.value)" style="width:96px;${M_INPUT};height:44px;font-family:'IBM Plex Mono',monospace;font-size:15px">${Object.keys(FRAME120).map(k => `<option value="${k}" ${s.frame120 === k ? 'selected' : ''}>${k}</option>`).join('')}</select>`
-        : `<span style="width:26px"></span>`;
-
-    // Requires chips
-    const chips = requireFilters().map(f => {
-        const on = s[f.key];
-        return `<button type="button" onclick="App.toggleFlag('${f.key}')" aria-pressed="${on ? 'true' : 'false'}" style="flex:none;height:36px;border-radius:20px;padding:0 14px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;${on ? `background:#1c1512;border:1px solid #5a3a1c;color:${SECTION_COLORS.labs}` : 'background:#141416;border:1px solid #2c2c30;color:#928e88'}">${f.label}</button>`;
-    }).join('');
-    const totalLabs = Object.keys(getAllLabs()).filter(n => !getAllLabs()[n].hidden).length;
-    const filterNote = r.ranked.length < totalLabs
-        ? `${totalLabs - r.ranked.length} lab${totalLabs - r.ranked.length === 1 ? '' : 's'} hidden by these filters`
-        : `All saved labs qualify`;
-
-    const labRows = r.ranked.map((l, i) => {
-        const cheapest = r.ranked[0];
-        const isHome = l.name === s.homeLab;
-        const open = s.expandedLab === l.name;
-        const isCompared = s.compareLabs.includes(l.name);
-        const tag = i === 0 ? 'Cheapest' : `+${((l.cpp - cheapest.cpp) * 100).toFixed(0)}c`;
-        const cardBorder = i === 0 ? '#5a3a1c' : '#26262a', cardBg = i === 0 ? '#17140f' : '#131315';
-        const priceColor = i === 0 ? SECTION_COLORS.labs : '#c9c5bd';
-        const tagColor = (i === 0 || isHome) ? SECTION_COLORS.labs : '#9c9994';
-        const detail = `${escapeHtml(l.pick.label)} · ${CUR()}${money(l.pick.devCost)}` +
-            (l.pick.pushFee ? ` + ${CUR()}${money(l.pick.pushFee)} ${r.stopsSigned < 0 ? 'pull' : 'push'}` : '') +
-            (l.pick.mailFee ? ` + ${CUR()}${money(l.pick.mailFee)} mail` : '');
-        const tierRows = l.tiers.map(t => {
-            const picked = t === l.pick;
-            const color = picked ? SECTION_COLORS.labs : (t.ok ? '#c9c5bd' : '#55534e');
-            return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px;border:1px solid #26262a;border-radius:8px;background:#0f0f11">
-<span><span style="display:block;font-size:14px;color:${color}">${escapeHtml(t.label)}</span><span style="${MONO};display:block;font-size:12px;color:#9c9994;margin-top:3px">${t.ok ? (picked ? 'used here' : 'qualifies') : escapeHtml(t.why)}</span></span>
-<span style="${MONO};font-size:15px;color:${color}">${CUR()}${money(t.cost)}</span>
-</div>`;
-        }).join('');
-        return `<div style="border-radius:10px;overflow:hidden;border:1px solid ${cardBorder};background:${cardBg}">
-<div style="display:flex;align-items:stretch">
-<button type="button" onclick="App.toggleCompareLab('${jsAttr(l.name)}')" aria-pressed="${isCompared ? 'true' : 'false'}" title="${isCompared ? 'Remove from compare' : 'Add to compare'}" style="flex:none;width:38px;display:flex;align-items:center;justify-content:center;background:transparent;border:0;border-right:1px solid ${cardBorder};cursor:pointer;color:${isCompared ? SECTION_COLORS.labs : '#4a4844'}">
-<svg style="width:16px;height:16px" fill="${isCompared ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-</button>
-<button type="button" onclick="App.toggleLab('${jsAttr(l.name)}')" style="flex:1;min-width:0;background:transparent;border:0;padding:14px;text-align:left;cursor:pointer">
-<div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
-<span style="font-size:16px;color:#eae7e1">${escapeHtml(l.name)}</span>
-<span style="${MONO};font-size:20px;color:${priceColor}">${CUR()}${money(l.cpp)}</span>
-</div>
-<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:6px">
-<span style="${MONO};font-size:12px;color:#928e88">${detail}</span>
-<span style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:${tagColor}">${tag}</span>
-</div>
-</button>
-</div>
-${open ? `<div style="padding:0 14px 14px">
-<div style="${MONO};font-size:12px;color:#9c9994;margin-bottom:8px">${escapeHtml(l.lab.address || 'address not saved')}</div>
-<div style="display:flex;flex-direction:column;gap:6px">${tierRows}</div>
-<div style="display:flex;gap:8px;margin-top:10px">
-<button type="button" onclick="App.editLab('${jsAttr(l.name)}')" style="flex:1;height:44px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#928e88;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${escapeHtml(t('v2ButtonEditLab'))}</button>
-${labDirectionsUrl(l.name) ? `<a href="${labDirectionsUrl(l.name)}" target="_blank" rel="noopener noreferrer" style="flex:1;height:44px;display:flex;align-items:center;justify-content:center;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:${SECTION_COLORS.labs};font-size:12px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none">Directions ↗</a>` : ''}
-</div>
-</div>` : ''}
-</div>`;
-    }).join('');
-
-    // Side-by-side panel for whatever's pinned via the compare toggle on
-    // each lab card above. Reads straight off r.ranked (same tiers/pick
-    // already computed for the list), so it's always consistent with what
-    // the cards show — no separate calculation path to drift out of sync.
-    const comparedLabs = s.compareLabs.map(name => r.ranked.find(l => l.name === name)).filter(Boolean);
-    const compareCheapest = comparedLabs.length ? Math.min(...comparedLabs.map(l => l.cpp)) : 0;
-    const comparePanel = comparedLabs.length >= 2 ? `<div style="margin-top:10px">
-${mSectionHead(`Comparing ${comparedLabs.length}`, `<a href="javascript:void(0)" onclick="App.clearCompareLabs()" style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#928e88;text-decoration:underline;cursor:pointer">Clear</a>`, SECTION_COLORS.labs)}
-<div style="display:flex;gap:8px;flex-wrap:wrap">${comparedLabs.map(l => {
-        const cheap = l.cpp <= compareCheapest + 0.001;
-        return `<div style="flex:1;min-width:140px;border:1px solid ${cheap ? '#5a3a1c' : '#26262a'};border-radius:8px;background:${cheap ? '#17140f' : '#0f0f11'};padding:12px">
-<div style="display:flex;align-items:start;justify-content:space-between;gap:6px;margin-bottom:8px">
-<span style="font-size:13px;color:#eae7e1;line-height:1.3">${escapeHtml(l.name)}</span>
-<button type="button" onclick="App.toggleCompareLab('${jsAttr(l.name)}')" title="Remove from compare" style="flex:none;background:transparent;border:0;color:#928e88;cursor:pointer;font-size:16px;line-height:1;padding:0">×</button>
-</div>
-<div style="${MONO};font-size:20px;color:${cheap ? SECTION_COLORS.labs : '#c9c5bd'};margin-bottom:8px">${CUR()}${money(l.cpp)}<span style="font-size:10px;color:#9c9994"> /photo</span></div>
-<div style="${MONO};font-size:11px;color:#9c9994;line-height:1.7">
-${escapeHtml(l.pick.label)}<br>
-Dev: ${CUR()}${money(l.pick.devCost)}<br>
-${l.pick.pushFee ? `Push/pull: ${CUR()}${money(l.pick.pushFee)}<br>` : ''}${l.pick.mailFee ? `Mail: ${CUR()}${money(l.pick.mailFee)}<br>` : ''}
-</div>
-</div>`;
-    }).join('')}</div>
-</div>` : '';
-
-    const isoValues = [...new Set(Object.values(getAllFilms()).filter(f => !f.hidden && (f.format || '35mm') === s.format && filmColorType(f) === s.filmColor).map(f => parseFloat(f.boxSpeed) || 0))].sort((a, b) => a - b);
-    const shownFilmRows = s.isoFilter === 'shoot' && !s.allowPushPull ? filmRows.filter(row => row.stopsAbs === 0) : filmRows;
-    const cheapestFilmPerRoll = shownFilmRows.length ? Math.min(...shownFilmRows.map(row => row.perRoll)) : 0;
-    const filmCards = shownFilmRows.map(row => {
-        const f = row.f;
-        const key = filmKey(f.name, f.boxSpeed, f.format);
-        const open = s.expandedFilm === key;
-        const cheap = row.perRoll <= cheapestFilmPerRoll + 0.001;
-        const meta = `${f.boxSpeed} · ${procLabel(f.process)} · ${row.exposures}exp${row.stopsAbs ? ` · ${row.stopsAbs} stop ${row.dir}` : ''}`;
-        const bundles = row.bundles.slice().sort((a, b) => a.filmCost / a.rolls - b.filmCost / b.rolls).map(b => `
-<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;background:#0f0f11;border:1px solid #26262a;border-radius:8px">
-<button type="button" onclick="App.loadFilmBundle('${jsAttr(key)}','${jsAttr(b.storeName)}',${b.rolls},${b.exposures})" style="flex:1;min-width:0;background:transparent;border:0;padding:0;text-align:left;cursor:pointer"><span style="display:block;font-size:14px;color:#c9c5bd">${escapeHtml(b.storeName || 'Unnamed store')}</span><span style="${MONO};display:block;font-size:12px;color:#9c9994;margin-top:3px">${b.rolls}×${b.exposures} · ${CUR()}${money(b.filmCost)} · ${CUR()}${money(b.filmCost / b.rolls)}/roll</span></button>
-<a href="${sanitizeUrl(b.buyLink)}" target="_blank" rel="noopener noreferrer" style="height:40px;display:flex;align-items:center;padding:0 14px;background:#1c1512;border:1px solid #5a3a1c;border-radius:8px;color:${SECTION_COLORS.films};font-size:12px;letter-spacing:.14em;text-transform:uppercase">Buy ↗</a>
-</div>`).join('');
-        return `<div style="border-radius:10px;overflow:hidden;border:1px solid ${cheap ? '#5a3a1c' : '#26262a'};background:${cheap ? '#17140f' : '#131315'}">
-<button type="button" onclick="App.toggleFilm('${jsAttr(key)}')" style="width:100%;background:transparent;border:0;padding:14px;text-align:left;cursor:pointer">
-<div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
-<span><span style="display:block;font-size:16px;color:#eae7e1">${escapeHtml(f.name)}</span><span style="${MONO};display:block;font-size:12px;color:#9c9994;margin-top:4px">${meta}</span></span>
-<span style="${MONO};font-size:20px;color:${cheap ? SECTION_COLORS.films : '#c9c5bd'}">${CUR()}${money(row.perRoll)}</span>
-</div>
-</button>
-${open ? `<div style="padding:0 14px 14px;display:flex;flex-direction:column;gap:6px">
-<div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9c9994">Where to buy</div>
-${bundles}
-<button type="button" onclick="App.editFilm('${jsAttr(key)}')" style="height:44px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#928e88;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${escapeHtml(t('v2ButtonEditFilm'))}</button>
-</div>` : ''}
-</div>`;
-    }).join('');
-
-    const shootIso = effectiveShootIso(s) || num(s.boxSpeed);
-
-    return `<div style="padding:16px 12px 0">
-<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-<div style="width:6px;height:6px;background:${SECTION_COLORS.lookup};border-radius:50%"></div>
-<div style="${NARROW};font-size:16px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:${SECTION_COLORS.lookup}">Film lookup</div>
-<div style="flex:1;height:1px;background:#26262a"></div>
-</div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-<select onchange="App.setField('format',this.value)" aria-label="Format" style="height:44px;${M_INPUT}">${FORMAT_OPTIONS.map(o => `<option value="${o.value}" ${s.format === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>
-<select onchange="App.setField('filmColor',this.value)" aria-label="${escapeHtml(t('v2LabelType'))}" style="height:44px;${M_INPUT}">${filmTypeOptions().map(o => `<option value="${o.value}" ${s.filmColor === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>
-</div>
-<div class="field-grid" style="${M_CARD}">
-${mRow('Box speed', `<input value="${escapeHtml(s.boxSpeed)}" oninput="App.setField('boxSpeed',this.value)" data-fkey="m-boxSpeed" inputmode="numeric" placeholder="400" style="width:96px;height:44px;text-align:right;${M_INPUT}"><span style="width:26px;font-size:12px;text-transform:uppercase;color:#9c9994">ISO</span>`, true)}
-${mRow('Push/pull', `<select onchange="App.setField('pushPull',this.value)" style="width:96px;height:44px;text-align:right;${M_INPUT}">${PUSH_PULL_OPTIONS.map(n => `<option value="${n}" ${String(s.pushPull) === String(n) ? 'selected' : ''}>${n > 0 ? '+' + n : n}</option>`).join('')}</select><span style="width:26px;font-size:12px;text-transform:uppercase;color:#9c9994">stop</span>`)}
-${mRow('Development type', `<select onchange="App.setField('process',this.value)" style="width:96px;height:44px;text-align:right;${M_INPUT}">${PROCESS_OPTIONS.map(o => `<option value="${o.value}" ${s.process === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select><span style="width:26px"></span>`)}
-${!is120 ? mRow('Exposures', `<input value="${escapeHtml(expShown)}" oninput="App.setField('exposures',this.value)" data-fkey="m-exposures" inputmode="numeric" placeholder="36" style="width:96px;height:44px;text-align:right;${M_INPUT}"><span style="width:26px"></span>`) : ''}
-${!is35 ? mRow('Camera', cameraControl) : ''}
-${mRow('Pack price', `<div style="display:flex;align-items:center;width:96px;height:44px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px"><span style="${MONO};font-size:15px;color:#a6a4a0">${CUR()}</span><input value="${escapeHtml(s.packCost)}" oninput="App.setField('packCost',this.value)" data-fkey="m-packCost" inputmode="decimal" placeholder="50.00" style="width:100%;min-width:0;text-align:right;background:transparent;border:0;color:#eae7e1;font-size:16px;${MONO}"></div><span style="width:26px"></span>`)}
-${mRow('Pack of', `<input value="${escapeHtml(s.rolls)}" oninput="App.setField('rolls',this.value)" data-fkey="m-rolls" inputmode="numeric" placeholder="1" style="width:96px;height:44px;text-align:right;${M_INPUT}"><span style="width:26px;font-size:12px;text-transform:uppercase;color:#9c9994">Rl</span>`)}
-${mRow('Postage', `<div style="display:flex;align-items:center;width:96px;height:44px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px"><span style="${MONO};font-size:15px;color:#a6a4a0">${CUR()}</span><input value="${escapeHtml(s.postage)}" oninput="App.setField('postage',this.value)" data-fkey="m-postage" inputmode="decimal" placeholder="3.95" style="width:100%;min-width:0;text-align:right;background:transparent;border:0;color:#eae7e1;font-size:16px;${MONO}"></div><span style="width:26px"></span>`)}
-<button type="button" onclick="App.toggleExtras()" aria-expanded="${s.extrasOpen ? 'true' : 'false'}" style="width:100%;height:48px;display:flex;align-items:center;justify-content:space-between;background:#0f0f11;border:0;border-top:1px solid #212125;padding:0 14px;color:#928e88;font-size:12px;letter-spacing:.16em;text-transform:uppercase;cursor:pointer"><span>Extra fees / Advanced</span><span style="${MONO};font-size:16px">${s.extrasOpen ? '–' : '+'}</span></button>
-${s.extrasOpen ? `<div style="background:#0f0f11;border-top:1px solid #212125">
-${mRow('Mail-back', `<button type="button" onclick="App.toggleFlag('fMail')" role="switch" aria-checked="${s.fMail ? 'true' : 'false'}" aria-label="Mail-back" style="width:56px;height:32px;border-radius:16px;border:1px solid #33333a;position:relative;cursor:pointer;padding:0;background:${s.fMail ? 'var(--acc)' : '#1a1a1d'}"><span style="position:absolute;top:3px;width:24px;height:24px;border-radius:50%;background:#eae7e1;transition:left .15s;left:${s.fMail ? '29px' : '3px'}"></span></button><span style="width:26px"></span>`, true)}
-${s.fMail ? mRow(t('v2SettingsMailRolls'), `<input value="${escapeHtml(s.mailRolls)}" oninput="App.setSetting('mailRolls',this.value)" data-fkey="mailRolls" inputmode="numeric" style="width:96px;height:44px;text-align:right;${M_INPUT}"><span style="width:26px"></span>`) : ''}
-</div>` : ''}
-</div>
-<div style="${MONO};margin-top:8px;font-size:12px;color:#9c9994;line-height:1.5">${CUR()}${money(num(s.packCost) / rolls)} per roll · ${rolls} roll${rolls === 1 ? '' : 's'} · ${CUR()}${money(num(s.postage) / rolls)} postage · ${r.exp} shots</div>
-${pushWarn ? `<div style="display:flex;align-items:center;gap:9px;margin-top:10px;padding:12px 14px;border:1px solid #5a3a1c;border-radius:10px;background:#17140f">
-<span style="width:7px;height:7px;border-radius:50%;background:var(--acc);flex-shrink:0"></span>
-<span style="font-size:13px;line-height:1.45;color:#ffa268">${stopsAbs} stops of ${r.stopsSigned > 0 ? 'push' : 'pull'} — ${loaded ? `${escapeHtml(loaded.name)} is rated for ${limit === 0 ? 'no push/pull' : '±' + limit}` : 'most stocks hold ±2'}, so expect heavy grain and contrast shift.</span>
-</div>` : ''}
-<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;padding:12px 14px;border:1px solid ${cheaper.has ? '#5a3a1c' : '#2d4a24'};border-radius:10px;background:${cheaper.has ? '#17140f' : '#12190f'}">
-<div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:${SECTION_COLORS.films}">${escapeHtml(cheaper.label)}</div>
-${cheaper.has ? cheaper.options.map((o, i) => `
-<div style="display:flex;flex-direction:column;gap:6px;${i > 0 ? 'padding-top:8px;border-top:1px solid #26262a' : ''}">
-<div style="font-size:13px;line-height:1.45;color:#c9c5bd">${escapeHtml(o.text)}</div>
-<div style="display:flex;gap:10px">
-<button type="button" onclick="App.loadCheaperFilm('${o.key}')" style="flex:1;height:40px;background:transparent;border:1px solid #5a3a1c;border-radius:8px;color:${SECTION_COLORS.films};font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Load</button>
-<a href="${escapeHtml(o.url)}" target="_blank" rel="noopener noreferrer" style="flex:1;height:40px;display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid #5a3a1c;border-radius:8px;color:${SECTION_COLORS.films};font-size:12px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none">Buy ↗</a>
-</div>
-</div>`).join('') : `<div style="font-size:13px;line-height:1.45;color:#c9c5bd">${escapeHtml(cheaper.text)}</div>`}
-</div>
-${s.loadedBuyLink ? `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding:12px 14px;border:1px solid #26262a;border-radius:10px;background:#131315">
-<span style="font-size:12px;color:#928e88">Loaded from ${escapeHtml(s.loadedStoreName || 'saved library')}</span>
-<a href="${escapeHtml(sanitizeUrl(s.loadedBuyLink))}" target="_blank" rel="noopener noreferrer" style="height:36px;display:flex;align-items:center;padding:0 14px;background:#1c1512;border:1px solid #5a3a1c;border-radius:8px;color:${SECTION_COLORS.films};font-size:12px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none">Buy ↗</a>
-</div>` : ''}
-<div style="display:flex;align-items:center;gap:10px;margin-top:14px">
-<button type="button" onclick="App.saveToLibrary()" style="flex:1;height:44px;background:#1c1512;border:1px solid #5a3a1c;border-radius:8px;color:var(--acc);font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Save to library</button>
-<button type="button" onclick="App.shareLink()" title="Copy a link that reopens this lookup with the same values" style="flex:1;height:44px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#928e88;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Share</button>
-<button type="button" onclick="App.clearForm()" style="flex:1;height:44px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#928e88;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Clear</button>
-</div>
-
-${mSectionHead('Saved lab costs', `<span style="${MONO};font-size:12px;color:#9c9994">${r.ranked.length} of ${totalLabs}</span>`, SECTION_COLORS.labs)}
-<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-<span style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#9c9994;white-space:nowrap">Requires</span>
-${chips}
-</div>
-<div style="${MONO};margin:-2px 0 10px;font-size:12px;color:#9c9994">${filterNote}</div>
-<div style="display:flex;flex-direction:column;gap:8px">${labRows || `<div style="padding:14px;font-size:12px;color:#b0aeac;background:#131315;border:1px solid #26262a;border-radius:10px">No labs saved yet — add one.</div>`}</div>
-${comparePanel}
-
-${mSectionHead('Saved film stock', null, SECTION_COLORS.films)}
-<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-<select onchange="App.setField('isoFilter',this.value)" aria-label="Filter saved film stock by ISO" style="height:36px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 8px;color:#c9c5bd;font-size:13px;${MONO}">
-<option value="shoot" ${s.isoFilter === 'shoot' ? 'selected' : ''}>Shooting ${shootIso || '—'}</option>
-<option value="all" ${s.isoFilter === 'all' ? 'selected' : ''}>All</option>
-${isoValues.map(v => `<option value="${v}" ${s.isoFilter === String(v) ? 'selected' : ''}>${v}</option>`).join('')}
-</select>
-</div>
-<button type="button" onclick="App.togglePushPull()" style="display:flex;align-items:center;gap:10px;width:100%;height:44px;padding:0 12px;margin-bottom:10px;border-radius:8px;cursor:pointer;text-align:left;${s.allowPushPull ? `background:#17140f;border:1px solid #5a3a1c;color:${SECTION_COLORS.films}` : 'background:#141416;border:1px solid #2c2c30;color:#928e88'}">
-<span style="display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:4px;font-size:13px;${s.allowPushPull ? `background:${SECTION_COLORS.films};border:1px solid ${SECTION_COLORS.films};color:#131315` : 'background:#1a1a1d;border:1px solid #33333a;color:transparent'}">✓</span>
-<span style="font-size:13px;letter-spacing:.08em;text-transform:uppercase">Include push/pull stocks</span>
-</button>
-<div style="display:flex;flex-direction:column;gap:8px">${filmCards || `<div style="padding:14px;font-size:12px;color:#b0aeac;background:#131315;border:1px solid #26262a;border-radius:10px">No film stock saved for ${formatLabel(s.format)} · ${filmTypeLabel(s.filmColor)} yet.</div>`}</div>
-<div style="${MONO};margin-top:10px;font-size:12px;line-height:1.5;color:#b0aeac">Per-roll price is the cheapest saved price for each stock, plus the push/pull stops needed to reach your shooting ISO.</div>
-</div>`;
-}
-
-function mLibCard(kind, key, name, meta, price, hidden) {
-    return `<div style="border:1px solid #26262a;border-radius:10px;background:#131315;padding:14px">
-<div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
-<span><span style="display:block;font-size:16px;color:${hidden ? '#a6a4a0' : '#eae7e1'}">${escapeHtml(name)}</span><span style="${MONO};display:block;font-size:12px;color:#9c9994;margin-top:4px">${meta}</span></span>
-<span style="${MONO};font-size:17px;color:#c9c5bd">${price}</span>
-</div>
-<div style="display:flex;gap:8px;margin-top:12px">
-<button type="button" onclick="App.toggleHidden('${kind}','${jsAttr(key)}')" style="flex:1;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#928e88;font-size:12px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${hidden ? t('v2ButtonShow') : t('v2ButtonHide')}</button>
-<button type="button" onclick="App.${kind === 'film' ? 'editFilm' : 'editLab'}('${jsAttr(key)}')" style="flex:1;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#928e88;font-size:12px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer">${escapeHtml(t('v2ButtonEdit'))}</button>
-<button type="button" onclick="App.removeItem('${kind}','${jsAttr(key)}')" style="width:52px;height:44px;display:flex;align-items:center;justify-content:center;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#928e88;cursor:pointer;padding:0"><svg style="width:16px;height:16px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 7h14M10 7V5h4v2M6 7l1 13h10l1-13M10 11v6M14 11v6"></path></svg></button>
-</div>
-</div>`;
-}
-
-function renderMobileLibrary(s) {
-    const allFilms = getAllFilms(), allLabs = getAllLabs();
-    const filmCount = Object.keys(allFilms).length, labCount = Object.keys(allLabs).length;
-    const tab = s.libTab === 'labs' ? 'labs' : 'films';
-    const filmsTone = btnTone(tab === 'films'), labsTone = btnTone(tab === 'labs');
-    const emptyCard = `<div style="padding:14px;font-size:12px;color:#b0aeac;background:#131315;border:1px solid #26262a;border-radius:10px">Nothing saved yet.</div>`;
-
-    const search = s.libSearch.trim().toLowerCase();
-    const filmSection = () => {
-        const entries = Object.entries(allFilms).filter(([, f]) => !search || f.name.toLowerCase().includes(search));
-        const filmCards = entries.map(([key, f]) => {
-            const bundles = normalizeFilmBundles(f);
-            const cheapest = bundles.slice().sort((a, b) => a.filmCost / a.rolls - b.filmCost / b.rolls)[0];
-            const meta = `${f.boxSpeed} · ${procLabel(f.process)} · ${bundles.length} price${bundles.length === 1 ? '' : 's'}`;
-            return mLibCard('film', key, f.name, meta, `${CUR()}${money(cheapest.filmCost / cheapest.rolls)}`, f.hidden);
-        }).join('');
-        const empty = search ? `<div style="padding:14px;font-size:12px;color:#b0aeac;background:#131315;border:1px solid #26262a;border-radius:10px">No film stock matches "${escapeHtml(s.libSearch.trim())}".</div>` : emptyCard;
-        return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-<div style="width:6px;height:6px;background:var(--acc);border-radius:50%"></div>
-<div style="${NARROW};font-size:16px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#eae7e1">Films</div>
-<div style="flex:1;height:1px;background:#26262a"></div>
-<button type="button" onclick="App.newFilm()" style="height:36px;background:#141416;border:1px solid #2c2c30;border-radius:8px;padding:0 12px;color:#928e88;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">New</button>
-</div>
-<div class="lib-grid">${filmCards || empty}</div>`;
-    };
-    const labSection = () => {
-        let entries = Object.entries(allLabs).filter(([name]) => !search || name.toLowerCase().includes(search));
-        const distanceOf = (l) => (userCoords && l.lat != null && l.lon != null) ? haversineKm(userCoords.lat, userCoords.lon, l.lat, l.lon) : Infinity;
-        if (userCoords) entries = entries.slice().sort(([, a], [, b]) => distanceOf(a) - distanceOf(b));
-        const labCards = entries.map(([name, l]) => {
-            const tiers = normalizeLabServices(l);
-            const cheapest = tiers.slice().sort((a, b) => a.devCost - b.devCost)[0];
-            const dist = distanceOf(l);
-            const meta = `${tiers.length} tier${tiers.length === 1 ? '' : 's'}${Number.isFinite(dist) ? ` · ${Math.round(dist)} km away` : ''}`;
-            return mLibCard('lab', name, name, meta, `${CUR()}${money(cheapest.devCost)}`, l.hidden);
-        }).join('');
-        const empty = search ? `<div style="padding:14px;font-size:12px;color:#b0aeac;background:#131315;border:1px solid #26262a;border-radius:10px">No lab matches "${escapeHtml(s.libSearch.trim())}".</div>` : emptyCard;
-        return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-<div style="width:6px;height:6px;background:var(--acc);border-radius:50%"></div>
-<div style="${NARROW};font-size:16px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#eae7e1">Labs</div>
-<div style="flex:1;height:1px;background:#26262a"></div>
-${!userCoords ? `<button type="button" onclick="App.findNearestLabs()" style="height:36px;background:#141416;border:1px solid #2c2c30;border-radius:8px;padding:0 12px;color:#928e88;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;white-space:nowrap">Nearest to you</button>` : ''}
-<button type="button" onclick="App.newLab()" style="height:36px;background:#141416;border:1px solid #2c2c30;border-radius:8px;padding:0 12px;color:#928e88;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">New</button>
-</div>
-<div class="lib-grid">${labCards || empty}</div>`;
-    };
-
-    return `<div style="padding:16px 12px 0">
-<div style="display:flex;gap:8px;margin-bottom:14px">
-<button type="button" onclick="App.setField('libTab','films')" style="flex:1;height:44px;background:${filmsTone.bg};border:1px solid ${filmsTone.border};border-radius:8px;color:${filmsTone.color};font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Films (${filmCount})</button>
-<button type="button" onclick="App.setField('libTab','labs')" style="flex:1;height:44px;background:${labsTone.bg};border:1px solid ${labsTone.border};border-radius:8px;color:${labsTone.color};font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Labs (${labCount})</button>
-</div>
-${filmCount || labCount ? `<button type="button" onclick="App.submitLibrary()" title="Copies your saved films/labs to the clipboard and opens a GitHub issue to paste them into, for a maintainer to review and add as shared presets" style="width:100%;box-sizing:border-box;height:40px;background:transparent;border:1px dashed #33333a;border-radius:8px;color:#928e88;font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;margin-bottom:14px">Submit my library for the shared presets ↗</button>` : ''}
-<input value="${escapeHtml(s.libSearch)}" oninput="App.setField('libSearch',this.value)" data-fkey="m-libSearch" placeholder="Search by name…" style="width:100%;box-sizing:border-box;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 12px;color:#eae7e1;font-size:15px;margin-bottom:20px">
-${tab === 'films' ? filmSection() : labSection()}
-</div>`;
-}
-
-function renderMobileExpired(s) {
-    const c = computeExpired(s);
-    const storageOptions = [
-        ['cold', 'Cold stored', 'Fridge or freezer since new; ages slowest.'],
-        ['controlled', 'Climate controlled', 'Indoors at steady room temperature, out of sunlight; the normal rate.'],
-        ['uncontrolled', 'Uncontrolled', 'Shed, garage, roof space or a hot car; ages fastest.']
-    ].map(([key, label, help]) => {
-        const on = s.storage === key;
-        return `<button type="button" onclick="App.setField('storage','${key}')" style="display:block;width:100%;text-align:left;border-radius:8px;padding:12px;cursor:pointer;${on ? 'background:#17140f;border:1px solid #5a3a1c' : 'background:#1a1a1d;border:1px solid #33333a'}">
-<span style="display:block;font-size:15px;color:${on ? 'var(--acc)' : '#c9c5bd'}">${label}</span>
-<span style="display:block;font-size:12px;line-height:1.45;color:#9c9994;margin-top:4px">${help}</span>
-</button>`;
-    }).join('');
-    return `<div style="padding:16px 12px 0">
-<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-<div style="width:6px;height:6px;background:var(--acc);border-radius:50%"></div>
-<div style="${NARROW};font-size:16px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#eae7e1">Expired film</div>
-<div style="flex:1;height:1px;background:#26262a"></div>
-</div>
-<p style="margin:0 0 12px;font-size:14px;line-height:1.5;color:#928e88">Old film loses speed as it ages. Enter the roll's box speed and expiry, and this gives you what to rate it at.</p>
-<div class="field-grid" style="${M_CARD}">
-${mRow('Expiry', `<select onchange="App.setField('expiryMonth',this.value)" style="width:88px;height:44px;${M_INPUT};font-size:15px">${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => `<option value="${i + 1}" ${String(s.expiryMonth) === String(i + 1) ? 'selected' : ''}>${m}</option>`).join('')}</select><input value="${escapeHtml(s.expiryYear)}" oninput="App.setField('expiryYear',this.value)" data-fkey="m-expiryYear" inputmode="numeric" placeholder="2006" style="width:96px;height:44px;text-align:right;${M_INPUT}">`, true, true)}
-${mRow('Box speed', `<input value="${escapeHtml(s.expBox)}" oninput="App.setField('expBox',this.value)" data-fkey="m-expBox" inputmode="numeric" style="width:120px;height:44px;text-align:right;${M_INPUT}">`)}
-${mRow('Development', `<select onchange="App.setField('filmType',this.value)" style="width:180px;height:44px;${M_INPUT};font-size:15px"><option value="c41" ${s.filmType === 'c41' ? 'selected' : ''}>C-41 colour</option><option value="bw" ${s.filmType === 'bw' ? 'selected' : ''}>B&amp;W</option><option value="e6" ${s.filmType === 'e6' ? 'selected' : ''}>E-6 slide</option></select>`)}
-<div style="padding:11px 14px;border-top:1px solid #212125">
-<label style="${M_LABEL};display:block;margin-bottom:8px">Storage</label>
-<div style="display:flex;flex-direction:column;gap:6px">${storageOptions}</div>
-</div>
-<div style="display:flex;align-items:baseline;gap:12px;padding:14px;border-top:1px solid #212125;background:#0f0f11;flex-wrap:wrap">
-<div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9c9994">Rate it at</div>
-<div style="${MONO};font-size:30px;color:var(--acc)">${c.rated}</div>
-<div style="font-size:13px;color:#a9a59e">${c.note}</div>
-</div>
-</div>
-<div style="${MONO};margin-top:10px;font-size:12px;color:#9c9994">${c.ageNote}</div>
-</div>`;
-}
-
-// <label> (not <div>) for the same accessible-name-for-free reason as
-// mRow above — display:block keeps the original div's block layout since
-// <label> defaults to inline.
-function mField(label, inputHtml) {
-    return `<label style="display:block"><div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#928e88;margin-bottom:6px">${label}</div>${inputHtml}</label>`;
-}
-const M_FIELD_INPUT = "width:100%;box-sizing:border-box;height:48px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 12px;color:#eae7e1;font-size:16px";
-
-// Small pencil glyph used on every list row that opens a full-screen sub-editor.
-const EDIT_ICON = `<svg style="width:14px;height:14px;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 4.5l3 3M4 20l4-1 10-10-3-3L5 16l-1 4z"></path></svg>`;
-
-function bundleLocalityLabel(b) {
-    if (b.availability === 'city') return b.city ? `${b.city}-only` : 'City-only';
-    if (b.availability === 'state') return b.state ? `${b.state}-only` : 'State-only';
-    return 'National';
-}
-
-// Compact tap-to-edit row shared by the film "Where to buy" list and the lab
-// "Service tiers" list — full field editing lives in the full-screen
-// sub-editor (renderBundleEditModal / renderTierEditModal), not here.
-function editRow(title, meta, onclick) {
-    return `<button type="button" onclick="${onclick}" style="width:100%;text-align:left;display:flex;align-items:center;gap:10px;padding:12px;background:#131315;border:1px solid #26262a;border-radius:10px;color:inherit;cursor:pointer">
-<div style="flex:1;min-width:0">
-<div style="font-size:14px;color:#c9c5bd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${title}</div>
-<div style="${MONO};font-size:12px;color:#9c9994;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${meta}</div>
-</div>
-${EDIT_ICON}
-</button>`;
-}
-
-function renderMobileEditFilm(s) {
-    const d = s.draft;
-    const bundles = d.bundles.map((b, i) => editRow(
-        escapeHtml(b.storeName || t('v2FallbackUnnamedStore')),
-        `${b.rolls}×${b.exposures} · ${CUR()}${(parseFloat(b.filmCost) || 0).toFixed(2)} · ${escapeHtml(bundleLocalityLabel(b))}`,
-        `App.editBundle(${i})`
-    )).join('');
-    return `<div style="position:fixed;inset:0;z-index:50;background:#0b0b0c;display:flex;flex-direction:column">
-<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border-bottom:1px solid #26262a;background:#0e0e10">
-<span style="${NARROW};font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">${escapeHtml(t('v2ButtonEditFilm'))}</span>
-<button type="button" onclick="App.cancelDraft()" style="width:44px;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#928e88;font-size:18px;cursor:pointer;padding:0">×</button>
-</div>
-<div style="flex:1;overflow:auto;padding:14px 12px;display:flex;flex-direction:column;gap:10px">
-${mField(t('v2LabelName'), `<input value="${escapeHtml(d.name)}" oninput="App.setDraftField('name',this.value)" data-fkey="m-draft-name" style="${M_FIELD_INPUT}">`)}
-<div style="display:flex;gap:10px">
-<div style="flex:1">${mField(t('v2LabelBoxSpeed'), `<input value="${d.boxSpeed}" oninput="App.setDraftField('boxSpeed',this.value)" data-fkey="m-draft-boxSpeed" inputmode="numeric" style="${M_FIELD_INPUT};${MONO}">`)}</div>
-<div style="flex:1">${mField(t('maxPushPullLabel'), `<input value="${d.maxPushPull}" oninput="App.setDraftField('maxPushPull',this.value)" data-fkey="m-draft-maxPushPull" inputmode="numeric" style="${M_FIELD_INPUT};${MONO}">`)}</div>
-</div>
-<div style="display:flex;gap:10px">
-<div style="flex:1">${mField(t('formatLabel'), `<select onchange="App.setDraftField('format',this.value)" style="${M_FIELD_INPUT}">${FORMAT_OPTIONS.map(o => `<option value="${o.value}" ${d.format === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>`)}</div>
-<div style="flex:1">${mField(t('processLabel'), `<select onchange="App.setDraftField('process',this.value)" style="${M_FIELD_INPUT}">${PROCESS_OPTIONS.map(o => `<option value="${o.value}" ${d.process === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>`)}</div>
-</div>
-${mField(t('v2LabelType'), `<select onchange="App.setDraftField('colorType',this.value)" style="${M_FIELD_INPUT}">${filmTypeOptions().map(o => `<option value="${o.value}" ${(d.colorType || filmColorType(d)) === o.value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select>`)}
-<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px">
-<div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#928e88">${escapeHtml(t('v2LabelWhereToBuy'))}</div>
-<button type="button" onclick="App.addBundle()" style="align-self:flex-start;height:36px;background:#141416;border:1px solid #2c2c30;border-radius:8px;padding:0 14px;color:#928e88;font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;white-space:nowrap">${escapeHtml(t('v2ButtonAddPrice'))}</button>
-</div>
-${bundles || `<div style="${MONO};font-size:12px;color:#b0aeac;padding:4px 2px">${escapeHtml(t('v2EmptyNoPurchaseLinks'))}</div>`}
-<a href="javascript:void(0)" onclick="App.suggestToPresets()" style="align-self:flex-start;margin-top:4px;font-size:11px;color:#928e88;cursor:pointer">${escapeHtml(t('v2LinkSuggestPreset'))}</a>
-</div>
-<div style="display:flex;gap:10px;padding:12px;border-top:1px solid #26262a;background:#0e0e10">
-<button type="button" onclick="App.saveDraft()" style="flex:1;height:50px;background:#1c1512;border:1px solid #5a3a1c;border-radius:8px;color:var(--acc);font-size:13px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${escapeHtml(t('v2ButtonSaveFilm'))}</button>
-<button type="button" onclick="App.cancelDraft()" style="width:110px;height:50px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#928e88;font-size:13px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${escapeHtml(t('cancelButton'))}</button>
-</div>
-</div>`;
-}
-
-// Full-screen sub-editor for one purchase link, opened from the "Where to
-// buy" list row in renderMobileEditFilm (App.editBundle) rather than editing
-// inline — keeps the film form itself scannable when there are several
-// prices, and gives the national/state/city locality fields room to breathe.
-function renderBundleEditModal(s) {
-    const i = s.subEditIndex;
-    const b = s.draft.bundles[i];
-    // <label> wrapper (not a bare <div>) so the field gets an accessible
-    // name from its visible text, same reasoning as mRow/mField above.
-    const bundleLabel = (text, controlHtml) => `<label style="display:block"><div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#b0aeac;margin-bottom:4px">${text}</div>${controlHtml}</label>`;
-    return `<div style="position:fixed;inset:0;z-index:55;background:#0b0b0c;display:flex;flex-direction:column">
-<div style="display:flex;align-items:center;gap:10px;padding:12px;border-bottom:1px solid #26262a;background:#0e0e10">
-<button type="button" onclick="App.closeBundleEditor()" title="${escapeHtml(t('v2ButtonBack'))}" style="flex-shrink:0;width:44px;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#928e88;font-size:18px;cursor:pointer;padding:0">‹</button>
-<span style="${NARROW};flex:1;font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">${escapeHtml(t('v2TitlePurchaseLink'))}</span>
-<button type="button" onclick="App.removeBundle(${i})" title="${escapeHtml(t('deleteButton'))}" style="flex-shrink:0;width:44px;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#d2857d;font-size:16px;cursor:pointer;padding:0">×</button>
-</div>
-<div style="flex:1;overflow:auto;padding:14px 12px;display:flex;flex-direction:column;gap:10px">
-${bundleLabel(t('bundleStoreNameLabel'), `<input value="${escapeHtml(b.storeName)}" oninput="App.setBundleField(${i},'storeName',this.value)" data-fkey="m-bundle-${i}-storeName" placeholder="${escapeHtml(t('bundleStoreNameLabel'))}" style="${M_FIELD_INPUT}">`)}
-<div style="display:flex;gap:10px">
-<div style="flex:1;min-width:0">${bundleLabel(t('rollsLabel'), `<input value="${b.rolls}" oninput="App.setBundleField(${i},'rolls',this.value)" data-fkey="m-bundle-${i}-rolls" inputmode="numeric" placeholder="${escapeHtml(t('rollsLabel'))}" style="width:100%;${M_FIELD_INPUT};${MONO}">`)}</div>
-<div style="flex:1;min-width:0">${bundleLabel(t('exposuresPerRollLabel'), `<input value="${b.exposures}" oninput="App.setBundleField(${i},'exposures',this.value)" data-fkey="m-bundle-${i}-exposures" inputmode="numeric" placeholder="${escapeHtml(t('v2LabelExp'))}" style="width:100%;${M_FIELD_INPUT};${MONO}">`)}</div>
-<div style="flex:1;min-width:0">${bundleLabel(t('sortByPriceLabel'), `<input value="${b.filmCost}" oninput="App.setBundleField(${i},'filmCost',this.value)" data-fkey="m-bundle-${i}-filmCost" inputmode="decimal" placeholder="${escapeHtml(t('sortByPriceLabel'))}" style="width:100%;${M_FIELD_INPUT};${MONO}">`)}</div>
-</div>
-${bundleLabel(t('bundleBuyLinkLabel'), `<input value="${escapeHtml(b.buyLink)}" oninput="App.setBundleField(${i},'buyLink',this.value)" data-fkey="m-bundle-${i}-buyLink" inputmode="url" placeholder="https://… ${escapeHtml(t('bundleBuyLinkLabel'))}" style="${M_FIELD_INPUT}">`)}
-${bundleLabel(t('v2LabelAvailability'), `<select onchange="App.setBundleField(${i},'availability',this.value)" title="${escapeHtml(t('bundlePriceValidWhereHelp'))}" style="${M_FIELD_INPUT}">
-<option value="national" ${(b.availability || 'national') === 'national' ? 'selected' : ''}>${escapeHtml(t('bundleCountryWideOption'))}</option>
-<option value="state" ${b.availability === 'state' ? 'selected' : ''}>${escapeHtml(t('bundleStateWideOption'))}</option>
-<option value="city" ${b.availability === 'city' ? 'selected' : ''}>${escapeHtml(t('bundleCityOnlyOption'))}</option>
-</select>`)}
-${(b.availability === 'state' || b.availability === 'city') ? (() => {
-    const { states, cities } = knownStatesAndCities();
-    const dataOptions = (values) => values.map(v => `<option value="${escapeHtml(v)}">`).join('');
-    return `<div style="display:flex;gap:10px">
-<div style="flex:1;min-width:0">${bundleLabel(t('v2LabelState'), `<input value="${escapeHtml(b.state || '')}" oninput="App.setBundleField(${i},'state',this.value)" data-fkey="m-bundle-${i}-state" placeholder="Victoria" list="bundle-state-options" style="width:100%;${M_FIELD_INPUT}">`)}</div>
-${b.availability === 'city' ? `<div style="flex:1;min-width:0">${bundleLabel(t('v2LabelCity'), `<input value="${escapeHtml(b.city || '')}" oninput="App.setBundleField(${i},'city',this.value)" data-fkey="m-bundle-${i}-city" placeholder="Melbourne" list="bundle-city-options" style="width:100%;${M_FIELD_INPUT}">`)}</div>` : ''}
-</div>
-<datalist id="bundle-state-options">${dataOptions(states)}</datalist>
-<datalist id="bundle-city-options">${dataOptions(cities)}</datalist>`;
-})() : ''}
-</div>
-<div style="display:flex;gap:10px;padding:12px;border-top:1px solid #26262a;background:#0e0e10">
-<button type="button" onclick="App.closeBundleEditor()" style="flex:1;height:50px;background:#1c1512;border:1px solid #5a3a1c;border-radius:8px;color:var(--acc);font-size:13px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${escapeHtml(t('v2ButtonDone'))}</button>
-</div>
-</div>`;
-}
-
-// Lab tier summary row — like editRow() but with a third line of static
-// process pills (C41/BW/E6/ECN2) so which processes a tier covers is
-// visible without opening it. Not editRow() itself since bundle rows
-// (film side) have no equivalent third line and shouldn't grow one.
-// Pills here are plain <span>s, not the interactive pill() buttons the
-// tier editor itself uses — this whole row is already one <button>
-// (App.editTier), and a <button> can't nest another <button>.
-function tierRow(t, i) {
-    const activePills = PROCESS_OPTIONS.filter(o => (t.processes || []).includes(o.value)).map(o =>
-        `<span style="background:#1a1a1d;border:1px solid #33333a;border-radius:20px;padding:3px 9px;color:#9c9994;font-size:9px;letter-spacing:.1em;text-transform:uppercase">${escapeHtml(o.label)}</span>`
-    ).join('');
-    return `<button type="button" onclick="App.editTier(${i})" style="width:100%;text-align:left;display:flex;align-items:center;gap:10px;padding:12px;background:#131315;border:1px solid #26262a;border-radius:10px;color:inherit;cursor:pointer">
-<div style="flex:1;min-width:0">
-<div style="font-size:14px;color:#c9c5bd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(tierDescription(t))}</div>
-<div style="${MONO};font-size:12px;color:#9c9994;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${CUR()}${(parseFloat(t.devCost) || 0).toFixed(2)}/roll${t.pushPullCost ? ` · ${CUR()}${(parseFloat(t.pushPullCost) || 0).toFixed(2)} push/pull` : ''}</div>
-${activePills ? `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:7px">${activePills}</div>` : ''}
-</div>
-${EDIT_ICON}
-</button>`;
-}
-
-function renderMobileEditLab(s) {
-    const d = s.draft;
-    const tiers = d.services.map((t, i) => tierRow(t, i)).join('');
-    return `<div style="position:fixed;inset:0;z-index:50;background:#0b0b0c;display:flex;flex-direction:column">
-<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border-bottom:1px solid #26262a;background:#0e0e10">
-<span style="${NARROW};font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">${escapeHtml(t('v2ButtonEditLab'))}</span>
-<button type="button" onclick="App.cancelDraft()" style="width:44px;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#928e88;font-size:18px;cursor:pointer;padding:0">×</button>
-</div>
-<div style="flex:1;overflow:auto;padding:14px 12px;display:flex;flex-direction:column;gap:10px">
-${mField(t('v2LabelName'), `<input value="${escapeHtml(d.name)}" oninput="App.setDraftField('name',this.value)" data-fkey="m-draft-name" style="${M_FIELD_INPUT}">`)}
-${mField(t('addressPlaceholder'), `<input value="${escapeHtml(d.address || '')}" oninput="App.setDraftField('address',this.value)" data-fkey="m-draft-address" placeholder="${escapeHtml(t('v2LabelAddressFormat'))}" style="${M_FIELD_INPUT}">`)}
-${mField(t('websitePlaceholder'), `<input value="${escapeHtml(d.website || '')}" oninput="App.setDraftField('website',this.value)" data-fkey="m-draft-website" placeholder="https://…" style="${M_FIELD_INPUT}">`)}
-${mField(t('phoneNumberPlaceholder'), `<input value="${escapeHtml(d.phone || '')}" oninput="App.setDraftField('phone',this.value)" data-fkey="m-draft-phone" style="${M_FIELD_INPUT}">`)}
-${mField(t('emailPlaceholder'), `<input value="${escapeHtml(d.email || '')}" oninput="App.setDraftField('email',this.value)" data-fkey="m-draft-email" style="${M_FIELD_INPUT}">`)}
-${mField(t('v2LabelPriceSource'), `<input value="${escapeHtml(d.source || '')}" oninput="App.setDraftField('source',this.value)" data-fkey="m-draft-source" inputmode="url" placeholder="https://…" style="${M_FIELD_INPUT}">`)}
-<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px">
-<div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#928e88">${escapeHtml(t('serviceTiersLabel'))}</div>
-<button type="button" onclick="App.addTier()" style="align-self:flex-start;height:36px;background:#141416;border:1px solid #2c2c30;border-radius:8px;padding:0 14px;color:#928e88;font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;white-space:nowrap">${escapeHtml(t('addServiceTierButton'))}</button>
-</div>
-${tiers || `<div style="${MONO};font-size:12px;color:#b0aeac;padding:4px 2px">${escapeHtml(t('v2EmptyNoServiceTiers'))}</div>`}
-<a href="javascript:void(0)" onclick="App.suggestToPresets()" style="align-self:flex-start;margin-top:4px;font-size:11px;color:#928e88;cursor:pointer">${escapeHtml(t('v2LinkSuggestPreset'))}</a>
-</div>
-<div style="display:flex;gap:10px;padding:12px;border-top:1px solid #26262a;background:#0e0e10">
-<button type="button" onclick="App.saveDraft()" style="flex:1;height:50px;background:#1c1512;border:1px solid #5a3a1c;border-radius:8px;color:var(--acc);font-size:13px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${escapeHtml(t('v2ButtonSaveLab'))}</button>
-<button type="button" onclick="App.cancelDraft()" style="width:110px;height:50px;background:#141416;border:1px solid #2c2c30;border-radius:8px;color:#928e88;font-size:13px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${escapeHtml(t('cancelButton'))}</button>
-</div>
-</div>`;
-}
-
-// Full-screen sub-editor for one service tier, opened from the "Service
-// tiers" list row in renderMobileEditLab (App.editTier) — same rationale as
-// renderBundleEditModal above: keeps the lab form scannable when a lab has
-// several price tiers.
-function renderTierEditModal(s) {
-    const i = s.subEditIndex;
-    const tier = s.draft.services[i];
-    return `<div style="position:fixed;inset:0;z-index:55;background:#0b0b0c;display:flex;flex-direction:column">
-<div style="display:flex;align-items:center;gap:10px;padding:12px;border-bottom:1px solid #26262a;background:#0e0e10">
-<button type="button" onclick="App.closeTierEditor()" title="${escapeHtml(t('v2ButtonBack'))}" style="flex-shrink:0;width:44px;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#928e88;font-size:18px;cursor:pointer;padding:0">‹</button>
-<span style="${NARROW};flex:1;font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:#c9c5bd">${escapeHtml(t('v2TitleServiceTier'))}</span>
-<button type="button" onclick="App.removeTier(${i})" title="${escapeHtml(t('deleteButton'))}" style="flex-shrink:0;width:44px;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;color:#d2857d;font-size:16px;cursor:pointer;padding:0">×</button>
-</div>
-<div style="flex:1;overflow:auto;padding:14px 12px">
-<label style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0">
-<span style="font-size:14px;color:#a9a59e">${escapeHtml(t('v2LabelCostPerRoll'))}</span>
-<div style="display:flex;align-items:center;width:120px;height:44px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px"><span style="${MONO};font-size:15px;color:#a6a4a0">${CUR()}</span><input value="${tier.devCost}" oninput="App.setTierField(${i},'devCost',this.value)" data-fkey="m-tier-${i}-devCost" inputmode="decimal" style="width:100%;min-width:0;text-align:right;background:transparent;border:0;color:#eae7e1;font-size:16px;${MONO}"></div>
-</label>
-<label style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid #212125">
-<span style="font-size:14px;color:#a9a59e">${escapeHtml(t('v2LabelMailBack'))}</span>
-<div style="display:flex;align-items:center;width:120px;height:44px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px"><span style="${MONO};font-size:15px;color:#a6a4a0">${CUR()}</span><input value="${tier.mailBackCost ?? ''}" oninput="App.setTierField(${i},'mailBackCost',this.value)" data-fkey="m-tier-${i}-mailBackCost" inputmode="decimal" placeholder="n/a" style="width:100%;min-width:0;text-align:right;background:transparent;border:0;color:#eae7e1;font-size:16px;${MONO}"></div>
-</label>
-<label style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid #212125">
-<span style="font-size:14px;color:#a9a59e">${escapeHtml(t('v2LabelPushPullFeeShort'))}</span>
-<div style="display:flex;align-items:center;width:120px;height:44px;box-sizing:border-box;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px"><span style="${MONO};font-size:15px;color:#a6a4a0">${CUR()}</span><input value="${tier.pushPullCost}" oninput="App.setTierField(${i},'pushPullCost',this.value)" data-fkey="m-tier-${i}-pushPullCost" inputmode="decimal" style="width:100%;min-width:0;text-align:right;background:transparent;border:0;color:#eae7e1;font-size:16px;${MONO}"></div>
-</label>
-<label style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid #212125">
-<span style="font-size:14px;color:#a9a59e">${escapeHtml(t('tierPushPullFeeTypeLabel'))}</span>
-<select onchange="App.setTierField(${i},'pushPullType',this.value)" style="width:150px;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px;color:#eae7e1;font-size:15px"><option value="per_stop" ${tier.pushPullType === 'per_stop' ? 'selected' : ''}>${escapeHtml(t('tierPerStopOption'))}</option><option value="flat" ${tier.pushPullType === 'flat' ? 'selected' : ''}>${escapeHtml(t('tierFlatFeeOption'))}</option></select>
-</label>
-<label style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid #212125">
-<span style="font-size:14px;color:#a9a59e">${escapeHtml(t('turnaroundRowLabel'))}</span>
-<select onchange="App.setTierField(${i},'turnaroundTime',this.value)" style="width:150px;height:44px;background:#1a1a1d;border:1px solid #33333a;border-radius:8px;padding:0 10px;color:#eae7e1;font-size:15px">${turnaroundOptions().map(o => `<option value="${o.value}" ${tier.turnaroundTime === o.value ? 'selected' : ''}>${o.label}</option>`).join('')}</select>
-</label>
-<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-top:12px;border-top:1px solid #212125">
-${pill(t('dcHiResScanLabel'), tier.highResScan, `App.toggleTierFlag(${i},'highResScan')`)}
-${pill(t('tiffScanLabel'), tier.tiffScan, `App.toggleTierFlag(${i},'tiffScan')`)}
-${pill(t('v2PillNoPushPull'), tier.noPushPull, `App.toggleTierFlag(${i},'noPushPull')`)}
-</div>
-<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-top:10px">
-${PROCESS_OPTIONS.map(o => pill(o.label, tier.processes.includes(o.value), `App.toggleTierProcess(${i},'${o.value}')`)).join('')}
-</div>
-</div>
-<div style="display:flex;gap:10px;padding:12px;border-top:1px solid #26262a;background:#0e0e10">
-<button type="button" onclick="App.closeTierEditor()" style="flex:1;height:50px;background:#1c1512;border:1px solid #5a3a1c;border-radius:8px;color:var(--acc);font-size:13px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer">${escapeHtml(t('v2ButtonDone'))}</button>
-</div>
-</div>`;
-}
-
-// Top-level mobile composer — mirrors desktop render()'s dispatch (draft
-// modal > view), but as a self-contained page (own header/menu/toast/
-// footer) rather than desktop's card-in-a-frame.
-function renderMobile(s) {
-    let body;
-    if (s.draft !== null) {
-        if (s.subEditIndex !== null) {
-            return (s.draftKind === 'film' ? renderBundleEditModal(s) : renderTierEditModal(s)) + renderMobileToast(s);
+        const params = new URLSearchParams(location.search);
+        if (params.has('roll')) {
+            const data = b64DecodeShare(params.get('roll'));
+            if (data) Object.assign(state, data);
+        } else if (params.has('lib')) {
+            const data = b64DecodeShare(params.get('lib'));
+            if (data && (data.films || data.labs)) {
+                const allFilms = getAllFilms(), allLabs = getAllLabs();
+                mergeFilmsInto(allFilms, data.films || []);
+                mergeLabsInto(allLabs, data.labs || []);
+                setAllFilms(allFilms); setAllLabs(allLabs);
+                if (data.settings && data.settings.homeLab) setHomeLab(data.settings.homeLab);
+                state.homeLab = getHomeLab();
+                say(t('v3SharedLibraryImported'));
+            }
         }
-        return (s.draftKind === 'film' ? renderMobileEditFilm(s) : renderMobileEditLab(s)) + renderMobileToast(s);
-    }
-    if (s.view === 'library') body = renderMobileLibrary(s);
-    else if (s.view === 'expired') body = renderMobileExpired(s);
-    else if (s.view === 'settings') body = renderSettingsView(s);
-    else body = renderMobileLookup(s);
-    return `<div style="min-height:100vh;background:radial-gradient(120% 80% at 50% -10%,#17171a 0%,#0b0b0c 60%);padding-bottom:48px">
-${renderMobileHeader(s)}
-${body}
-${renderMobileFooter(s)}
-</div>
-${renderMobileMenu(s)}
-${s.setupOpen ? renderSetupModal(s) : ''}
-${s.changelogOpen ? renderChangelogModal(s) : ''}
-${shouldShowNewUiPromo(s) ? renderNewUiPromoModal() : ''}
-${renderMobileToast(s)}
-${renderConsentBanner()}`;
+        if (params.has('roll') || params.has('lib')) {
+            history.replaceState(null, '', location.pathname);
+        }
+    } catch { /* malformed link — ignore, keep defaults */ }
 }
 
-async function initApp() {
-    migrateFilmProfileKeys();
-    migrateLegacyDefaultLabPref();
-    state.homeLab = getHomeLab();
-    state.defaultTier = getDefaultTierLabel();
-    restoreFromShareLink();
-    await loadOptions();
-    // First-ever visit: no saved films/labs and Setup has never been
-    // dismissed. Runs after loadOptions() (format/process dropdowns need
-    // real data) but before the first render, so Setup is what greets a
-    // brand new user instead of an empty calculator.
-    if (localStorage.getItem('setupSeen') === null && !Object.keys(getAllFilms()).length && !Object.keys(getAllLabs()).length) {
-        state.setupOpen = true;
-    }
+// ---------- Init ----------
+function init() {
+    restoreFromQuery();
+    const mq = window.matchMedia('(min-width: 900px)');
+    state.desktop = mq.matches;
+    const onMq = () => { state.desktop = mq.matches; render(); };
+    if (mq.addEventListener) mq.addEventListener('change', onMq); else mq.addListener(onMq);
+
+    const themeMq = window.matchMedia('(prefers-color-scheme: dark)');
+    const onThemeMq = () => { if (state.theme === 'system') render(); };
+    if (themeMq.addEventListener) themeMq.addEventListener('change', onThemeMq); else themeMq.addListener(onThemeMq);
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        state.deferredPrompt = e;
+        state.installable = true;
+        render();
+    });
+
+    // Escape closes whichever overlay is topmost. Innermost first (a sub-item
+    // editor is only ever open while its parent film/lab editor also is, so
+    // check subIndex before draft) — every branch here already has a real,
+    // focusable close/✕/Done button in the UI, this just adds the keyboard
+    // shortcut. Setup wizard is deliberately excluded: it's forced onboarding,
+    // not dismissable.
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        if (state.subIndex !== null) App.closeSub();
+        else if (state.draft !== null) App.cancelDraft();
+        else if (state.confirm) App.cancelConfirm();
+        else if (state.libFilterModal) App.setField('libFilterModal', false);
+        else if (state.shareModal) App.setField('shareModal', false);
+        else if (state.postModal) App.closePost();
+        else if (state.modal) App.closeModal();
+        else if (state.libOpen) App.closeLibDetail();
+        else if (state.changelogOpen) App.closeChangelog();
+        else if (state.menu) App.closeMenu();
+    });
+
+    if (state.setupOpen) loadPresetRegions().then(render);
+
     render();
-    loadChangelog(); // fire-and-forget — re-renders itself if there's something new to show
 }
 
-document.addEventListener('DOMContentLoaded', initApp);
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
 
-// Registered after load (not blocking initApp) so a slow/failed
-// registration never delays the calculator itself becoming usable — see
-// sw.js's own header comment for what it does and doesn't cache.
+// Registered after load (not blocking init) so a slow/failed registration
+// never delays the calculator itself becoming usable — see sw.js's own
+// header comment for what it does and doesn't cache. Same registration
+// root's js/app.js does; '/sw.js' is already root-absolute so this works
+// unchanged whether this page is served from /new/ or (post-swap) from /.
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js').catch(() => {});
     });
 }
+
+})();
+
+
+
