@@ -4,6 +4,11 @@
     <!-- AdSense site verification — see js/adsense-loader.js for what this
          does and why it's an external file rather than inline. -->
     <script src="js/adsense-loader.js"></script>
+    <!-- Google Analytics (GA4) — opt-in only, gated behind the cookie-
+         consent banner (js/app.js's App.acceptAnalytics()/renderConsent
+         Banner). See js/ga-loader.js's own header comment and
+         privacy.html for what this does and doesn't send before consent. -->
+    <script src="js/ga-loader.js"></script>
     <!-- Content-Security-Policy: script-src/frame-src/connect-src carry the
          AdSense/Google ad-tech domains (script-src also needs them because
          adsbygoogle.js itself, running in this document, issues the ad
@@ -16,7 +21,7 @@
          else is locked to 'self' plus the two CDNs this page actually
          loads from (cdnjs for js-yaml, Google Fonts). script-src also
          needs 'unsafe-inline': js/app.js renders the whole UI as
-         onclick/onchange attribute strings (no framework, no
+         onclick/oninput/onchange attribute strings (no framework, no
          addEventListener wiring — see app.js's own header comment), so
          blocking inline handlers would break every control in the app.
          That means script-src can't fully stop injected script from
@@ -38,10 +43,18 @@
     <link rel="icon" type="image/svg+xml" href="/icon.svg">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#08090a">
+    <meta name="theme-color" content="#0b0b0c">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>FilmCalc — Film Cost Calculator</title>
+    <!-- Description text duplicates manifest.json's - no shared template
+         at build time to source both from, so kept in sync by hand. Same
+         for canonical: this is a single-page app, filmcalc.app/ is the
+         only URL that ever exists to be canonical *to*.
+         og:image/twitter:image use icon-512.png (square) rather than a
+         dedicated 1200x630 banner, since no such banner exists yet - a
+         real banner image would preview better on social platforms but
+         this is a functional minimum, not a placeholder. -->
     <meta name="description" content="Work out the true cost per photo of shooting film, and which lab is actually cheapest for a given roll.">
     <link rel="canonical" href="https://filmcalc.app/">
     <meta property="og:type" content="website">
@@ -54,52 +67,61 @@
     <meta name="twitter:description" content="Work out the true cost per photo of shooting film, and which lab is actually cheapest for a given roll.">
     <meta name="twitter:image" content="https://filmcalc.app/icon-512.png">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Narrow:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         :root { --acc: #ff7a2f; }
-        body { margin: 0; background: #08090a; font-family: 'Public Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
-        a { color: #5fa8d3; text-decoration: none; }
-        a:hover { color: #8cc4e4; }
+        body { margin: 0; background: #0b0b0c; font-family: Archivo, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+        a { color: var(--acc); text-decoration: none; }
+        a:hover { color: #ffa268; text-decoration: underline; }
         input, select, button { font-family: inherit; }
-        input::placeholder { color: #4a4f57; }
-        input[type=range] { accent-color: #ff7a2f; }
-        button:hover { filter: brightness(1.12); }
-        ::-webkit-scrollbar { width: 10px; height: 10px; }
-        ::-webkit-scrollbar-thumb { background: #26292e; border-radius: 6px; }
+        input::placeholder { color: #55534e; }
+        input:focus, select:focus { outline: 1px solid var(--acc); outline-offset: 0; }
+        button:hover { filter: brightness(1.15); }
+        .lib-grid { display: flex; flex-direction: column; gap: 8px; }
+        /* Above this width there's room for a real toolbar and multi-field
+           rows, so the single markup tree (js/app.js's renderMobile()) grows
+           a desktop-style nav and lets its field rows sit side by side
+           instead of one-per-line — same markup, CSS-only rearrangement, so
+           there's no second layout to fall out of sync with this one. */
+        @media (min-width: 720px) {
+            .desktop-nav { display: flex !important; margin-left: auto; }
+            .hamburger-btn, .mobile-view-label { display: none !important; }
+            .field-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); background: #212125; gap: 1px; }
+            .field-grid > .m-row { background: #131315; border-top: 0 !important; }
+            .field-grid > button, .field-grid > div:not(.m-row), .field-grid > .m-row-wide { grid-column: 1 / -1; }
+            .lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; }
+        }
     </style>
-    <!-- js-yaml: parses the films/labs region preset files, and options.yaml. -->
+    <!-- js-yaml: parses options.yaml and the films/labs region preset files. -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js" integrity="sha512-CSBhVREyzHAjAFfBlIBakjoRUKp5h7VSweP0InR/pAJyptH7peuhCsqAI/snV+TwZmXZqoUklpXp6R6wMnYf5Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <!-- qrcode-generator: renders the share-link QR in the Share sheet. -->
+    <!-- qrcode-generator: renders the "Copy library link" URL as a scannable
+         SVG QR code (Settings > Data). Pure JS, no canvas/DOM dependency of
+         its own. -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" integrity="sha512-ZDSPMa/JM1D+7kdg2x3BsruQ6T/JpJo3jWDWkCZsP+5yVyp1KfESqLI+7RqB5k24F7p2cV7i2YHh/890y6P6Sw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
-<div id="app"></div>
+    <div id="app"></div>
 
-<!-- Google Analytics (GA4) — opt-in only, gated behind the cookie-consent
-     banner. See js/ga-loader.js's own header comment and privacy.html for
-     what this does and doesn't send before consent. -->
-<script src="js/ga-loader.js"></script>
-<!-- Dev Cost / Per ISO calculation engine — pure global functions, no DOM,
-     no localStorage. Must load before js/app.js, which calls these
-     directly rather than duplicating the maths. See
-     tests/dev-cost-calc.test.js. -->
-<script src="js/dev-cost-calc.js"></script>
-<!-- Import validation: checks custom-uploaded film/lab YAML against
-     schema/film-lab-schema.json before it's merged into localStorage. Must
-     load before js/app.js, which calls its functions directly. -->
-<script src="js/data-validate.js"></script>
-<!-- IANA timezone -> country name table, used as the geo-detect fallback
-     for the Setup wizard's starter-presets pre-tick when Geolocation is
-     denied/unavailable. Must load before js/app.js, which reads
-     TZ_COUNTRY directly. -->
-<script src="js/tz-country.js"></script>
-<!-- STRINGS dictionary + t()/setLocale()/currentLocale. Must load before
-     js/app.js, which calls t() directly inside its render functions. -->
-<script src="js/i18n.js"></script>
-<!-- App shell: state, rendering, and every event handler — the "FilmCalc
-     3.0" redesign, developed at /new/ and promoted to replace the
-     previous UI here. See the file's own header comment for what carried
-     over and what changed in the move. -->
-<script src="js/app.js"></script>
+    <!-- i18n: STRINGS dictionary + t()/setLocale() helpers. Must load
+         before js/app.js, which calls t() directly inside its render
+         functions rather than the old data-i18n attribute hydration. -->
+    <script src="js/i18n.js"></script>
+    <!-- Dev Cost / Per ISO calculation engine — pure global functions, no
+         DOM, no localStorage. Must load before js/app.js, which calls
+         these directly rather than duplicating the maths. See
+         tests/dev-cost-calc.test.js. -->
+    <script src="js/dev-cost-calc.js"></script>
+    <!-- Import validation: checks custom-uploaded film/lab YAML against
+         schema/film-lab-schema.json before it's merged into localStorage.
+         Must load before js/app.js, which calls its functions directly. -->
+    <script src="js/data-validate.js"></script>
+    <!-- IANA timezone -> country name table, used only as the geo-detect
+         fallback in js/app.js when Geolocation is denied/unavailable. Must
+         load before js/app.js, which reads TZ_COUNTRY directly. -->
+    <script src="js/tz-country.js"></script>
+    <!-- App shell: state, rendering, and every event handler, built for
+         the "FilmCalc Redesign" mockup. See the file's own header comment
+         for what carried over from the previous UI and what didn't. -->
+    <script src="js/app.js"></script>
 </body>
 </html>
