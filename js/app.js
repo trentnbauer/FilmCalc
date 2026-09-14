@@ -2612,9 +2612,30 @@ const App = {
 };
 window.App = App;
 
+// GitHub Pages serves no real routes — /depth and /expired only reach the
+// app via 404.html's redirect to /?view=depth (or =expired), which we
+// unpack here and clean back up to the pretty path so the address bar
+// still reads /depth rather than the redirect's query string. A direct
+// pathname match is also handled (harmless if nothing ever serves it, but
+// costs nothing and helps local dev servers that do rewrite to index.html).
+const LINKABLE_VIEWS = ['depth', 'expired'];
+function restoreViewFromLocation() {
+    const params = new URLSearchParams(location.search);
+    let view = params.get('view');
+    if (!view) {
+        const path = location.pathname.replace(/\/$/, '').replace(/^\//, '');
+        if (LINKABLE_VIEWS.includes(path)) view = path;
+    }
+    if (LINKABLE_VIEWS.includes(view)) {
+        state.view = view;
+        try { history.replaceState(null, '', '/' + view); } catch {}
+    }
+}
+
 // ---------- Restore a shared roll/library link ----------
 function restoreFromQuery() {
     try {
+        restoreViewFromLocation();
         const params = new URLSearchParams(location.search);
         if (params.has('roll')) {
             const data = b64DecodeShare(params.get('roll'));
