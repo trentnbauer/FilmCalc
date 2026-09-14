@@ -2122,6 +2122,9 @@ const App = {
         // "Loading regions…" forever. loadPresetIndexes() short-circuits
         // (and renders itself) once already loaded.
         if (view === 'settings' && !(presetFilmIndex && presetLabIndex)) loadPresetIndexes();
+        if (LINKABLE_VIEWS.includes(view)) {
+            try { history.pushState({ view }, '', pathForView(view)); } catch {}
+        }
         render();
     },
     setFormat(label) { state.format = label; try { localStorage.setItem('globalFormat', label); } catch {} render(); },
@@ -2618,7 +2621,9 @@ window.App = App;
 // still reads /depth rather than the redirect's query string. A direct
 // pathname match is also handled (harmless if nothing ever serves it, but
 // costs nothing and helps local dev servers that do rewrite to index.html).
-const LINKABLE_VIEWS = ['depth', 'expired'];
+const LINKABLE_VIEWS = ['lookup', 'expired', 'depth', 'library', 'settings'];
+// 'lookup' is the default view, so it lives at '/' rather than '/lookup'.
+function pathForView(view) { return view === 'lookup' ? '/' : '/' + view; }
 function restoreViewFromLocation() {
     const params = new URLSearchParams(location.search);
     let view = params.get('view');
@@ -2628,7 +2633,7 @@ function restoreViewFromLocation() {
     }
     if (LINKABLE_VIEWS.includes(view)) {
         state.view = view;
-        try { history.replaceState(null, '', '/' + view); } catch {}
+        try { history.replaceState(null, '', pathForView(view)); } catch {}
     }
 }
 
@@ -2661,6 +2666,11 @@ function restoreFromQuery() {
 // ---------- Init ----------
 function init() {
     restoreFromQuery();
+    window.addEventListener('popstate', () => {
+        const path = location.pathname.replace(/\/$/, '').replace(/^\//, '') || 'lookup';
+        state.view = LINKABLE_VIEWS.includes(path) ? path : 'lookup';
+        render();
+    });
     const mq = window.matchMedia('(min-width: 900px)');
     state.desktop = mq.matches;
     const onMq = () => { state.desktop = mq.matches; render(); };
