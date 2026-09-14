@@ -848,6 +848,8 @@ const STRINGS = {
         v3MenuLookupMeta: 'Price a roll in your hand',
         v3MenuLibraryMeta: 'Your saved stocks and labs',
         v3MenuExpiredMeta: 'What to rate an old roll at',
+        v4NavDepth: 'Depth',
+        v4MenuDepthMeta: 'Depth of field and the aperture that holds it',
         v3MenuSettingsMeta: 'Home lab, language, data',
         v3MenuHeading: 'Menu',
         v3InstallFilmCalc: 'Install FilmCalc',
