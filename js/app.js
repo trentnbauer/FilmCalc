@@ -136,6 +136,26 @@ const STORAGE_OPTIONS = [
 const STORAGE_LABEL_KEY = { cold: 'v3StorageColdLabel', controlled: 'v3StorageControlledLabel', uncontrolled: 'v3StorageUncontrolledLabel' };
 const STORAGE_HELP_KEY = { cold: 'v3StorageColdHelp', controlled: 'v3StorageControlledHelp', uncontrolled: 'v3StorageUncontrolledHelp' };
 
+// ---------- Depth of field ----------
+// Ported from the "FilmCalc Depth of Field" Claude Design mockup — its own
+// small self-contained calculator (own subject/target/format/units state,
+// not the cost-calc's state.format etc.), reusing this app's colours (C)
+// and shell/nav so it reads as a native tab rather than a bolted-on tool.
+// Circle of confusion per format — bigger negatives tolerate more blur
+// for the same on-print sharpness, so need a smaller circle to match.
+const DEPTH_COC = { '35mm': 0.030, '120': 0.053, 'sheet': 0.100 };
+const DEPTH_FORMAT_LABELS = { '35mm': '35mm', '120': '120 / 220', 'sheet': '4×5 sheet' };
+// depth/tall are metres, used only to size and lay out the side-on
+// diagram — not shown to the user directly except via depthLabel (fmt).
+const DEPTH_SUBJECTS = {
+    flower: { label: 'Flower', short: 'Flower', depth: 0.15, tall: 0.22, rows: 1, glyph: '🌼', glyphFont: 'min(102cqh,118cqw)', help: 'A single bloom — petals to stamen, about 15 cm front to back.' },
+    portrait: { label: 'Portrait', short: 'Portrait', depth: 0.40, tall: 0.60, rows: 1, glyph: '🧑', glyphFont: 'min(108cqh,150cqw)', help: 'Head and shoulders — nose to back of the head, about 40 cm.' },
+    group: { label: 'Group of people', short: 'Group', depth: 1.00, tall: 1.70, rows: 2, glyph: '🧑‍🤝‍🧑', glyphFont: 'min(104cqh,86cqw)', help: 'Two rows of three, a metre from the front row to the back.' },
+    car: { label: 'Car', short: 'Car', depth: 4.60, tall: 1.95, rows: 3, glyph: '🚗', glyphFont: 'min(104cqh,92cqw)', help: 'A saloon nose to tail, 4.6 m.' }
+};
+const DEPTH_TARGETS = { front: 'Front', middle: 'Center', back: 'Back' };
+const DEPTH_APS = [1.4, 2, 2.8, 4, 5.6, 8, 11, 16, 22, 32];
+
 // ---------- App state ----------
 const state = {
     view: 'lookup', desktop: false, menu: false, modal: false,
@@ -161,7 +181,9 @@ const state = {
     homeLab: getHomeLab(), tier: getDefaultTierLabel(),
     upgradePct: localStorage.getItem('upgradeThresholdPercent') || '4',
     theme: localStorage.getItem('newUiTheme') || 'system',
-    expBox: '400', expMonth: MONTHS[new Date().getMonth()], expYear: '', expProcess: 'c41', storage: 'controlled'
+    expBox: '400', expMonth: MONTHS[new Date().getMonth()], expYear: '', expProcess: 'c41', storage: 'controlled',
+    depthSubject: 'car', depthTarget: 'front', depthDist: '3.5', depthFocal: '80',
+    depthFormat: '120', depthAp: 5.6, depthUnits: 'm', depthSheet: false
 };
 let toastTimer = null;
 function say(text) {
@@ -748,7 +770,7 @@ ${state.toast ? `<div style="position:fixed;left:50%;transform:translateX(-50%);
 }
 
 function viewMobileHeader() {
-    const title = state.view === 'expired' ? t('v3TitleExpiredFilm') : state.view === 'settings' ? t('navSettings') : state.view === 'library' ? t('navLibrary') : t('appTitle');
+    const title = state.view === 'expired' ? t('v3TitleExpiredFilm') : state.view === 'settings' ? t('navSettings') : state.view === 'library' ? t('navLibrary') : state.view === 'depth' ? t('v4NavDepth') : t('appTitle');
     return `<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px">
 <span style="font-size:17px;font-weight:700;letter-spacing:-.01em;color:${C.text}">${escapeHtml(title)}</span>
 <button type="button" onclick="App.openMenu()" aria-label="${escapeHtml(t('v3MenuHeading'))}" style="width:44px;height:44px;margin-right:-12px;display:flex;align-items:center;justify-content:center;background:transparent;border:0;color:${C.sub};cursor:pointer"><svg style="width:20px;height:20px" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"></path></svg></button>
@@ -765,7 +787,7 @@ function viewDesktopHeader() {
     // like backend configuration for it (saved data, preferences) — kept
     // visually separate on the right rather than lumped in with the
     // calculator tabs on the left.
-    const frontTabs = [['lookup', t('v3NavLookup')], ['expired', t('v3NavExpired')]].map(([k, l]) => tab(k, l)).join('');
+    const frontTabs = [['lookup', t('v3NavLookup')], ['expired', t('v3NavExpired')], ['depth', t('v4NavDepth')]].map(([k, l]) => tab(k, l)).join('');
     const backTabs = [['library', t('navLibrary')], ['settings', t('navSettings')]].map(([k, l]) => tab(k, l)).join('');
     return `<div style="display:flex;align-items:center;gap:26px;padding:16px 28px;border-bottom:1px solid ${C.border}">
 <span style="font-size:18px;font-weight:700;letter-spacing:-.01em;color:${C.text}">${escapeHtml(t('appTitle'))}</span>
@@ -965,7 +987,335 @@ function viewBody() {
     if (state.view === 'expired') return viewExpired();
     if (state.view === 'settings') return viewSettings();
     if (state.view === 'library') return viewLibrary();
+    if (state.view === 'depth') return viewDepth();
     return viewLookup();
+}
+
+// metres <-> whichever unit the two distance fields are currently shown in
+function depthToM(v) { const n = parseFloat(v); if (!isFinite(n) || n <= 0) return 0; return state.depthUnits === 'ft' ? n * 0.3048 : n; }
+function depthFmt(m) {
+    if (!isFinite(m)) return '∞';
+    if (state.depthUnits === 'ft') {
+        const ft = m / 0.3048;
+        return ft < 1 ? Math.round(ft * 12) + ' in' : (ft < 20 ? ft.toFixed(1) : Math.round(ft)) + ' ft';
+    }
+    return m < 1 ? Math.round(m * 100) + ' cm' : (m < 20 ? m.toFixed(2) : m.toFixed(1)) + ' m';
+}
+// Classic thin-lens DOF: hyperfocal distance H, then near/far limits at
+// subject distance s (mm throughout — distances arrive/leave in metres).
+function depthDof(distM, N) {
+    const f = parseFloat(state.depthFocal) || 50;
+    const c = DEPTH_COC[state.depthFormat] || 0.03;
+    const s = distM * 1000;
+    const H = (f * f) / (N * c) + f;
+    const near = isFinite(s) ? (s * (H - f)) / (H + s - 2 * f) : H;
+    let far = (H - s) <= 0 ? Infinity : (s * (H - f)) / (H - s);
+    if (far > s * 40) far = Infinity;
+    return { near: near / 1000, far: far / 1000 };
+}
+
+// All the derived display data for both the desktop and mobile layouts —
+// computed once per render so the two markup variants (viewDepth()) stay
+// in sync without duplicating the maths, unlike the original mockup which
+// duplicated the whole panel per breakpoint.
+function depthValues() {
+    const subj = DEPTH_SUBJECTS[state.depthSubject];
+    const distM = depthToM(state.depthDist) || 0.5;
+    const depth = subj.depth;
+    const cur = depthDof(distM, state.depthAp);
+    const front = Math.max(0.05, state.depthTarget === 'front' ? distM : state.depthTarget === 'middle' ? distM - depth / 2 : distM - depth);
+    const back = front + depth;
+    const holds = (d) => { const r = depthDof(distM, d); return r.near <= front + 0.002 && r.far >= back - 0.002; };
+    const recAp = DEPTH_APS.find(holds);
+    const covers = holds(state.depthAp);
+
+    const pad = depth * 1.1 + 0.6;
+    const dMin = Math.max(0, Math.min(front, cur.near) - pad);
+    const ceiling = back + depth * 2.2 + 1.5;
+    const farSeen = Math.min(isFinite(cur.far) ? cur.far : ceiling, ceiling);
+    const farClipped = !isFinite(cur.far) || cur.far > ceiling;
+    const dMax = Math.max(back, farSeen) + pad;
+    const span = Math.max(0.001, dMax - dMin);
+    const pct = (d) => ((Math.min(Math.max(d, dMin), dMax) - dMin) / span) * 100;
+    const px = (n) => n.toFixed(2) + '%';
+
+    const nearP = pct(cur.near), farP = pct(isFinite(cur.far) ? cur.far : dMax);
+    const frontP = pct(front), backP = pct(back), focusP = pct(distM);
+
+    const rows = [];
+    for (let i = 0; i < subj.rows; i++) {
+        const rt = subj.rows === 1 ? 0.5 : i / (subj.rows - 1) * 0.86 + 0.07;
+        const d = back - depth * rt;
+        const inside = d >= cur.near && d <= cur.far;
+        rows.push({ left: (rt * 100).toFixed(1) + '%', color: inside ? C.acc : C.red });
+    }
+    const ticks = [dMin + span * 0.08, dMin + span * 0.34, dMin + span * 0.60, dMin + span * 0.86].map(d => ({ label: depthFmt(d), left: px(pct(d)) }));
+
+    const recIdx = recAp ? DEPTH_APS.indexOf(recAp) : -1;
+    const ladder = DEPTH_APS.map((n, idx) => {
+        const r = depthDof(distM, n);
+        const ok = r.near <= front + 0.002 && r.far >= back - 0.002;
+        const on = n === state.depthAp;
+        const isRec = n === recAp;
+        // green = the widest few stops that hold it; orange = holds it but
+        // burns light on depth you don't need; red = doesn't hold it.
+        const excess = ok && recIdx >= 0 && idx > recIdx + 2;
+        const tone = !ok ? C.red : (excess ? C.acc : C.green);
+        return {
+            label: 'f/' + n, short: n + '',
+            total: isFinite(r.far) ? depthFmt(r.far - r.near) : '∞',
+            fg: isRec ? '#ffeab8' : tone,
+            bg: isRec
+                ? 'linear-gradient(100deg,#2a1f0a 0%,#4a3712 28%,#8a6c22 46%,#c9a144 50%,#8a6c22 54%,#4a3712 72%,#2a1f0a 100%) 0 0 / 260% 100% no-repeat'
+                : (on ? '#1f2228' : 'transparent'),
+            border: isRec ? '#c9a144' : (on ? C.border3 : C.border),
+            shadow: isRec ? '0 0 0 1px rgba(201,161,68,0.25), 0 2px 14px rgba(201,161,68,0.28), inset 0 1px 0 rgba(255,234,184,0.22)' : 'none',
+            anim: isRec ? 'recSheen 3.2s linear infinite' : 'none',
+            bar: isRec ? '#f0d489' : tone
+        };
+    });
+
+    const segOn = (on) => ({ bg: on ? '#1f2228' : 'transparent', border: on ? '1px solid ' + C.border3 : '0', fg: on ? C.text : C.sub, weight: on ? 600 : 400 });
+    const missFront = Math.max(0, cur.near - front), missBack = Math.max(0, back - (isFinite(cur.far) ? cur.far : back));
+    const verdictHead = covers ? 'All of it lands' : (missFront > 0 && missBack > 0 ? 'Front and back fall off' : missFront > 0 ? 'Front falls off' : 'Back falls off');
+    const verdictNote = covers
+        ? 'f/' + state.depthAp + ' already holds the whole ' + subj.label.toLowerCase() + ' at this distance. f/' + recAp + ' is the widest stop that still does it — anything wider starts cutting in.'
+        : (recAp
+            ? 'At f/' + state.depthAp + ' you lose ' + depthFmt(Math.max(missFront, missBack)) + ' of the ' + subj.label.toLowerCase() + '. Stop down to f/' + recAp + ' and all of it sits inside the focus band.'
+            : 'Even at f/32 the ' + subj.label.toLowerCase() + ' is deeper than the lens can hold from ' + depthFmt(distM) + '. Back off, go wider, or accept the falloff.');
+
+    return {
+        subjects: Object.keys(DEPTH_SUBJECTS).map(k => {
+            const s = DEPTH_SUBJECTS[k], on = k === state.depthSubject, sg = segOn(on);
+            return { label: s.label, short: s.short, help: s.help, depth: depthFmt(s.depth), glyph: s.glyph, ...sg, pick: `App.depthSetSubject('${k}')` };
+        }),
+        targets: Object.keys(DEPTH_TARGETS).map(k => ({ label: DEPTH_TARGETS[k], ...segOn(k === state.depthTarget), pick: `App.depthSetTarget('${k}')` })),
+        unitOpts: [['m', 'Metres'], ['ft', 'Feet']].map(([k, l]) => ({ label: l, ...segOn(k === state.depthUnits), pick: `App.depthSetUnits('${k}')` })),
+        formats: Object.keys(DEPTH_COC).map(k => ({ value: k, label: DEPTH_FORMAT_LABELS[k] })),
+        format: state.depthFormat, focalField: state.depthFocal, distField: state.depthDist,
+        unitShort: state.depthUnits === 'ft' ? 'ft' : 'm',
+        subjectLabel: subj.label, subjectHelp: subj.help, subjectGlyph: subj.glyph, glyphFont: subj.glyphFont,
+        subjAspect: (depth / subj.tall).toFixed(3),
+        depthLabel: depthFmt(depth), distLabel: depthFmt(distM),
+        nearLabel: depthFmt(cur.near), farLabel: depthFmt(cur.far),
+        totalLabel: isFinite(cur.far) ? depthFmt(cur.far - cur.near) : '∞',
+        apLabel: state.depthAp + '', recNumber: recAp ? recAp + '' : '—',
+        recHead: 'Stop down to', recTail: recAp ? 'holds it all' : 'no stop holds it from here',
+        recColor: recAp ? (covers ? C.text : C.acc) : C.red,
+        coverColor: covers ? C.green : C.red,
+        verdictBg: covers ? C.panel : C.redBg, verdictBorder: covers ? C.border : C.redBorder,
+        verdictHead, verdictNote,
+        shootingNote: subj.label + ' · focus ' + DEPTH_TARGETS[state.depthTarget].toLowerCase() + ' · ' + depthFmt(distM),
+        shotSummary: 'focus ' + DEPTH_TARGETS[state.depthTarget].toLowerCase(),
+        cocNote: 'Circle of confusion ' + (DEPTH_COC[state.depthFormat] || 0.03).toFixed(3) + ' mm on ' + DEPTH_FORMAT_LABELS[state.depthFormat] + ' — bigger negatives need smaller apertures for the same depth.',
+        scaleNote: depthFmt(dMin) + ' to ' + depthFmt(dMax) + ' across',
+        ladderNote: recAp ? 'f/' + recAp + ' is the widest stop that holds it' : 'no stop holds it from here',
+        ladder, ticks, rows,
+        bandLeft: px(nearP), bandW: px(Math.max(0.4, farP - nearP)),
+        focusLeft: px(focusP), nearLabelLeft: px(Math.min(nearP + 1, 72)),
+        farLabelLeft: px(Math.min(Math.max(farP - 12, nearP + 14), 86)),
+        subjLeft: px(frontP), subjW: px(Math.max(0.6, backP - frontP)),
+        subjBorder: covers ? C.text2 : C.red,
+        farClipped: farClipped ? 'flex' : 'none'
+    };
+}
+
+function depthSeg(list) {
+    return list.map(o => `<button type="button" onclick="${o.pick}" style="flex:1;height:40px;border-radius:6px;font:inherit;font-size:13px;cursor:pointer;background:${o.bg};border:${o.border};color:${o.fg};font-weight:${o.weight}">${escapeHtml(o.label)}</button>`).join('');
+}
+function depthLadder(vals, size) {
+    const tall = size === 'lg';
+    return `<div style="display:flex;gap:${tall ? '6px' : '5px'}">${vals.ladder.map((row, i) => `<button type="button" onclick="App.depthSetAp(${DEPTH_APS[i]})" style="flex:1;min-width:0;padding:${tall ? '10px 0 9px' : '8px 0'};border-radius:${tall ? '8px' : '7px'};cursor:pointer;font:inherit;background:${row.bg};border:1px solid ${row.border};box-shadow:${row.shadow};animation:${row.anim};display:flex;flex-direction:column;align-items:center;gap:${tall ? '5px' : '4px'}">
+<span style="font-size:${tall ? '14px' : '11px'};font-weight:700;color:${row.fg}">${tall ? escapeHtml(row.label) : escapeHtml(row.short)}</span>
+${tall ? `<span style="font-size:10px;color:#6a7078">${escapeHtml(row.total)}</span>` : ''}
+<span style="width:62%;height:3px;border-radius:2px;background:${row.bar}"></span>
+</button>`).join('')}</div>`;
+}
+function depthDiagram(vals, size) {
+    const h = size === 'lg' ? 380 : 160;
+    const floorBottom = size === 'lg' ? 42 : 32;
+    return `<div style="position:relative;height:${h}px;background:${C.field};border:1px solid ${C.border};border-radius:9px;overflow:hidden">
+<div style="position:absolute;top:0;bottom:0;left:${vals.bandLeft};width:${vals.bandW};background:rgba(255,122,47,.12);border-left:2px solid ${C.acc};border-right:2px solid ${C.acc};box-sizing:border-box"></div>
+<div style="position:absolute;top:0;bottom:0;left:${vals.focusLeft};width:0;border-left:1px dashed #ff9a5c"></div>
+<div style="position:absolute;left:0;right:0;bottom:${floorBottom}px;height:0;border-top:1px solid ${C.border}"></div>
+<div style="position:absolute;left:${vals.subjLeft};width:${vals.subjW};bottom:${floorBottom}px;aspect-ratio:${vals.subjAspect};max-height:42%;container-type:size;border:2px solid ${vals.subjBorder};border-radius:6px;box-sizing:border-box">
+${vals.rows.map(r => `<div style="position:absolute;top:8%;bottom:8%;left:${r.left};width:0;border-left:2px solid ${r.color}"></div>`).join('')}
+<span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:${vals.glyphFont};line-height:1;opacity:.92;pointer-events:none">${vals.subjectGlyph}</span>
+<span style="position:absolute;left:0;top:0;transform:translateY(-215%);white-space:nowrap;font-size:11px;color:${vals.subjBorder}">${escapeHtml(vals.subjectLabel)} · ${escapeHtml(vals.depthLabel)} deep</span>
+</div>
+${vals.ticks.map(tk => `<div style="position:absolute;bottom:${size === 'lg' ? 14 : 10}px;left:${tk.left};font-size:10px;color:${C.faint}">${escapeHtml(tk.label)}</div>`).join('')}
+${size === 'lg' ? `<div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:${C.faint}">
+<span style="font-size:34px;line-height:1">📷</span>
+<span>camera</span>
+</div>` : ''}
+<div style="position:absolute;right:6px;top:50%;transform:translateY(-50%);display:${vals.farClipped};align-items:center;font-size:17px;color:${C.acc}">→∞</div>
+<div style="position:absolute;left:${vals.nearLabelLeft};top:${size === 'lg' ? 12 : 10}px;font-size:10px;color:${C.acc}">near ${escapeHtml(vals.nearLabel)}</div>
+${size === 'lg' ? `<div style="position:absolute;left:${vals.farLabelLeft};top:12px;white-space:nowrap;font-size:10px;color:${C.acc}">far ${escapeHtml(vals.farLabel)}</div>
+<div style="position:absolute;left:${vals.focusLeft};top:32px;font-size:10px;color:#ff9a5c">focused ${escapeHtml(vals.distLabel)}</div>` : ''}
+</div>`;
+}
+function depthRecCard(vals, size) {
+    const tall = size === 'lg';
+    return `<div style="${tall ? 'margin:18px 0 0' : 'margin:14px 20px 0'};background:${C.panel};border:1px solid ${C.border};border-radius:10px;overflow:hidden">
+<div style="padding:18px 20px">
+${tall ? `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+<span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.acc}">${escapeHtml(vals.recHead)}</span>
+<span style="font-size:12px;color:${C.blue}">${escapeHtml(vals.shootingNote)}</span>
+</div>` : `<div style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.acc}">${escapeHtml(vals.recHead)}</div>`}
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-top:8px;flex-wrap:${tall ? 'nowrap' : 'wrap'}">
+<div style="display:flex;align-items:baseline;gap:5px"><span style="font-size:${tall ? 24 : 22}px;font-weight:500;color:${C.sub}">f/</span><span style="font-size:${tall ? '66px' : '56px'};font-weight:700;line-height:.9;letter-spacing:-.035em;color:${vals.recColor}">${escapeHtml(vals.recNumber)}</span>${tall ? `<span style="font-size:12px;color:${C.sub}">${escapeHtml(vals.recTail)}</span>` : ''}</div>
+${tall ? `<div style="text-align:right;padding-bottom:6px"><div style="font-size:11px;color:${C.sub}">In focus at f/${escapeHtml(vals.apLabel)}</div><div style="font-size:24px;font-weight:600;color:${vals.coverColor}">${escapeHtml(vals.totalLabel)}</div></div>` : `<div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;padding-bottom:3px">
+<span style="font-size:13px;color:${C.text2};white-space:nowrap">${escapeHtml(vals.nearLabel)} → ${escapeHtml(vals.farLabel)}</span>
+<span style="font-size:12px;color:${C.faint};white-space:nowrap">at f/${escapeHtml(vals.apLabel)}</span>
+</div>`}
+</div>
+${tall ? `<div style="display:flex;height:4px;margin-top:16px;border-radius:2px;overflow:hidden;background:${C.field}"><div style="flex:1;background:${C.border}"></div></div>
+<div style="display:flex;gap:12px;margin-top:10px">
+<div style="flex:1"><div style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:2px;background:${C.acc}"></span><span style="font-size:11px;color:${C.sub}">Near limit</span></div><div style="font-size:15px;font-weight:600;color:${C.text};margin-top:3px">${escapeHtml(vals.nearLabel)}</div></div>
+<div style="flex:1"><div style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:2px;background:#ff9a5c"></span><span style="font-size:11px;color:${C.sub}">Far limit</span></div><div style="font-size:15px;font-weight:600;color:${C.text};margin-top:3px">${escapeHtml(vals.farLabel)}</div></div>
+<div style="flex:1.2;min-width:0"><div style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;flex:none;border-radius:2px;background:${vals.coverColor}"></span><span style="font-size:11px;color:${C.sub}">Subject depth</span></div><div style="font-size:15px;font-weight:600;color:${C.text};margin-top:3px">${escapeHtml(vals.depthLabel)}</div></div>
+</div>` : ''}
+</div>
+<div style="padding:13px 20px 15px;background:${vals.verdictBg};border-top:1px solid ${vals.verdictBorder}">
+<div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${vals.coverColor}">${escapeHtml(vals.verdictHead)}</div>
+<div style="font-size:14px;line-height:1.5;color:${C.text2};margin-top:5px">${escapeHtml(vals.verdictNote)}</div>
+</div>
+</div>`;
+}
+// Shared by both the Setup step-style Shot settings panel (desktop left
+// column) and the mobile bottom sheet: target/format/units controls.
+function depthSettingsPanel(vals) {
+    return `<div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Focus target</div>
+<div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${depthSeg(vals.targets)}</div>
+<div style="font-size:11px;line-height:1.5;color:${C.faint};margin-top:6px">Have you focused on the closest, center or furthest away part of the subject?</div>
+</div>
+<label style="display:block">
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Camera format</div>
+<select onchange="App.depthSetFormat(this.value)" aria-label="Camera format" style="width:100%;box-sizing:border-box;height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer">
+${vals.formats.map(f => `<option value="${escapeHtml(f.value)}" ${f.value === vals.format ? 'selected' : ''}>${escapeHtml(f.label)}</option>`).join('')}
+</select>
+</label>
+<div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Units</div>
+<div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${depthSeg(vals.unitOpts)}</div>
+</div>
+<div style="font-size:12px;line-height:1.5;color:${C.faint}">${escapeHtml(vals.cocNote)}</div>`;
+}
+
+function viewDepth() {
+    const desktop = state.desktop;
+    const vals = depthValues();
+    const subjectButtons = (size) => `<div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${vals.subjects.map(s => `<button type="button" onclick="${s.pick}" style="flex:1;min-width:0;height:${size === 'lg' ? 50 : 46}px;border-radius:6px;font:inherit;cursor:pointer;background:${s.bg};border:${s.border};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">
+<span style="display:flex;align-items:center;gap:${size === 'lg' ? 5 : 4}px;font-size:${size === 'lg' ? 13 : 12}px;color:${s.fg};font-weight:${s.weight}"><span style="font-size:${size === 'lg' ? 15 : 13}px">${s.glyph}</span>${escapeHtml(s.short)}</span>
+<span style="font-size:10px;color:${C.faint}">${escapeHtml(s.depth)}${size === 'lg' ? ' deep' : ''}</span>
+</button>`).join('')}</div>`;
+    const distFocalRow = `<div style="display:flex;gap:10px">
+<label style="flex:1;display:block">
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Focus distance</div>
+<div style="height:56px;background:${C.field};border:1px solid ${C.acc};border-radius:8px;display:flex;align-items:center;gap:4px;padding:0 12px">
+<input type="text" inputmode="decimal" value="${escapeHtml(vals.distField)}" onchange="App.setField('depthDist',this.value)" aria-label="Focus distance" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:28px;font-weight:600;color:${C.text}">
+<span style="font-size:13px;color:${C.faint}">${escapeHtml(vals.unitShort)}</span>
+</div>
+</label>
+<label style="flex:1;display:block">
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Focal length</div>
+<div style="height:56px;background:${C.field};border:1px solid ${C.border};border-radius:8px;display:flex;align-items:center;gap:4px;padding:0 12px">
+<input type="text" inputmode="numeric" value="${escapeHtml(vals.focalField)}" onchange="App.setField('depthFocal',this.value)" aria-label="Focal length" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:28px;font-weight:600;color:${C.text}">
+<span style="font-size:13px;color:${C.faint}">mm</span>
+</div>
+</label>
+</div>`;
+
+    if (desktop) {
+        const left = `<div style="display:flex;flex-direction:column;gap:14px;padding-top:10px">
+<p style="margin:0;font-size:14px;line-height:1.55;color:${C.sub}">Pick what you're shooting and where you focused. This works out what actually lands in focus, and the aperture that holds all of it.</p>
+<div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Subject</div>
+${subjectButtons('lg')}
+<div style="font-size:11px;line-height:1.5;color:${C.faint};margin-top:6px">${escapeHtml(vals.subjectHelp)}</div>
+</div>
+${distFocalRow}
+<div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Focus target</div>
+<div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${depthSeg(vals.targets)}</div>
+<div style="font-size:11px;line-height:1.5;color:${C.faint};margin-top:6px">Have you focused on the closest, center or furthest away part of the subject?</div>
+</div>
+<div style="display:flex;gap:10px">
+<label style="flex:1.3;display:block">
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Camera format</div>
+<select onchange="App.depthSetFormat(this.value)" aria-label="Camera format" style="width:100%;box-sizing:border-box;height:44px;background:${C.shell};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer">
+${vals.formats.map(f => `<option value="${escapeHtml(f.value)}" ${f.value === vals.format ? 'selected' : ''}>${escapeHtml(f.label)}</option>`).join('')}
+</select>
+</label>
+<div style="flex:1;min-width:0">
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Units</div>
+<div style="display:flex;gap:4px;padding:4px;background:${C.shell};border:1px solid ${C.border};border-radius:9px">${depthSeg(vals.unitOpts)}</div>
+</div>
+</div>
+<div style="font-size:12px;line-height:1.5;color:${C.faint}">${escapeHtml(vals.cocNote)}</div>
+</div>`;
+
+        const right = `<div>
+${depthRecCard(vals, 'lg')}
+<div style="margin-top:14px;background:${C.panel};border:1px solid ${C.border};border-radius:10px;padding:14px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px">
+<span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.sub}">Side on · camera at the left</span>
+<span style="font-size:11px;color:${C.faint}">${escapeHtml(vals.scaleNote)}</span>
+</div>
+${depthDiagram(vals, 'lg')}
+</div>
+<div style="margin-top:14px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
+<span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.sub}">Aperture ladder</span>
+<span style="font-size:11px;color:${C.faint}">Tap a stop to redraw · ${escapeHtml(vals.ladderNote)}</span>
+</div>
+${depthLadder(vals, 'lg')}
+</div>
+</div>`;
+
+        return `<div style="display:grid;grid-template-columns:380px minmax(0,1fr);gap:20px;align-items:start;padding-top:4px">${left}<div>${right}</div></div>`;
+    }
+
+    // Mobile: compact subject/distance/focal controls up top, a "Change ›"
+    // button opening a bottom sheet for the less-often-changed settings
+    // (target/format/units) — same pattern as Lookup's own roll-details
+    // sheet (state.modal/viewRollDetails), just its own flag (depthSheet)
+    // so the two sheets never fight over the same state.
+    return `<div style="padding:4px 20px 0;display:flex;flex-direction:column;gap:12px">
+${subjectButtons('sm')}
+${distFocalRow}
+<button type="button" onclick="App.depthOpenSheet()" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px;padding:9px 14px;background:${C.panel};border:1px solid ${C.border};border-radius:10px;font:inherit;text-align:left;cursor:pointer">
+<span style="display:flex;flex-direction:column;gap:3px;min-width:0">
+<span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+<span style="font-size:13px;color:${C.text}">${escapeHtml(DEPTH_FORMAT_LABELS[vals.format])}</span><span style="color:${C.border3}">·</span><span style="font-size:13px;color:${C.acc}">${escapeHtml(vals.shotSummary)}</span>
+</span>
+<span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+<span style="font-size:12px;color:${C.sub}">${escapeHtml(vals.subjectLabel)}</span><span style="color:${C.border3}">·</span><span style="font-size:12px;color:${C.sub}">${escapeHtml(vals.depthLabel)} deep</span>
+</span>
+</span>
+<span style="font-size:12px;color:${C.sub};white-space:nowrap">Change ›</span>
+</button>
+</div>
+${depthRecCard(vals, 'sm')}
+<div style="margin:14px 20px 0;background:${C.panel};border:1px solid ${C.border};border-radius:10px;padding:12px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:2px 2px 9px">
+<span style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:${C.sub}">Side on · camera at the left</span>
+<span style="font-size:10px;color:${C.faint};white-space:nowrap">${escapeHtml(vals.scaleNote)}</span>
+</div>
+${depthDiagram(vals, 'sm')}
+<div style="margin-top:10px">${depthLadder(vals, 'sm')}</div>
+</div>
+${state.depthSheet ? `<div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(8,9,10,.72);z-index:40">
+<div onclick="App.depthCloseSheet()" style="position:absolute;inset:0"></div>
+<div style="position:relative;background:${C.shell};border-top:1px solid ${C.border};border-radius:14px 14px 12px 12px;padding:18px 20px 22px;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+<span style="font-size:17px;font-weight:700;letter-spacing:-.01em;color:${C.text}">Shot settings</span>
+<button type="button" onclick="App.depthCloseSheet()" style="height:34px;padding:0 12px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:12px;font-weight:600;cursor:pointer">Done</button>
+</div>
+${depthSettingsPanel(vals)}
+</div>
+</div>` : ''}`;
 }
 
 // The "Roll details" bottom sheet on mobile; the same markup renders
@@ -1505,8 +1855,9 @@ function b64DecodeShare(str) {
 function viewMenu() {
     const items = [
         ['lookup', t('v3NavLookup'), t('v3MenuLookupMeta')],
-        ['library', t('navLibrary'), t('v3MenuLibraryMeta')],
         ['expired', t('v3TitleExpiredFilm'), t('v3MenuExpiredMeta')],
+        ['depth', t('v4NavDepth'), t('v4MenuDepthMeta')],
+        ['library', t('navLibrary'), t('v3MenuLibraryMeta')],
         ['settings', t('navSettings'), t('v3MenuSettingsMeta')]
     ];
     return `<div style="position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:${shellW()};z-index:50;display:flex;flex-direction:column;justify-content:flex-start">
@@ -1760,6 +2111,20 @@ const App = {
         render();
     },
     setFormat(label) { state.format = label; try { localStorage.setItem('globalFormat', label); } catch {} render(); },
+    depthSetSubject(k) { state.depthSubject = k; render(); },
+    depthSetTarget(k) { state.depthTarget = k; render(); },
+    depthSetFormat(v) { state.depthFormat = v; render(); },
+    depthSetAp(n) { state.depthAp = n; render(); },
+    // Converts the current distance value between units so the number
+    // stays the same real-world distance rather than the same digits.
+    depthSetUnits(k) {
+        const m = depthToM(state.depthDist);
+        state.depthUnits = k;
+        state.depthDist = (k === 'ft' ? m / 0.3048 : m).toFixed(k === 'ft' ? 1 : 2);
+        render();
+    },
+    depthOpenSheet() { state.depthSheet = true; render(); },
+    depthCloseSheet() { state.depthSheet = false; render(); },
     incField(key, delta, min, max) {
         const cur = parseInt(state[key], 10) || 0;
         state[key] = String(Math.min(max, Math.max(min, cur + delta)));
