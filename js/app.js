@@ -182,8 +182,17 @@ const state = {
     upgradePct: localStorage.getItem('upgradeThresholdPercent') || '4',
     theme: localStorage.getItem('newUiTheme') || 'system',
     expBox: '400', expMonth: MONTHS[new Date().getMonth()], expYear: '', expProcess: 'c41', storage: 'controlled',
-    depthSubject: 'portrait', depthTarget: 'front', depthDist: '5', depthFocal: '50',
-    depthFormat: '35mm', depthAp: 5.6, depthUnits: 'm', depthSheet: false
+    // Depth tab remembers the last shot the user set up, same as the
+    // cost-calc's globalFormat/globalProcess — each field its own key so a
+    // returning user picks up exactly where they left off.
+    depthSubject: localStorage.getItem('depthSubject') || 'portrait',
+    depthTarget: localStorage.getItem('depthTarget') || 'front',
+    depthDist: localStorage.getItem('depthDist') || '5',
+    depthFocal: localStorage.getItem('depthFocal') || '50',
+    depthFormat: localStorage.getItem('depthFormat') || '35mm',
+    depthAp: parseFloat(localStorage.getItem('depthAp')) || 5.6,
+    depthUnits: localStorage.getItem('depthUnits') || 'm',
+    depthSheet: false
 };
 let toastTimer = null;
 function say(text) {
@@ -2096,6 +2105,8 @@ const App = {
             try { localStorage.setItem('mailBackRollCount', state.postRolls); } catch {}
         }
         if (key === 'libFilterModal' && val === true) { /* keep current tab's filters */ }
+        if (key === 'depthDist') try { localStorage.setItem('depthDist', val); } catch {}
+        if (key === 'depthFocal') try { localStorage.setItem('depthFocal', val); } catch {}
         render();
     },
     setView(view) {
@@ -2111,16 +2122,17 @@ const App = {
         render();
     },
     setFormat(label) { state.format = label; try { localStorage.setItem('globalFormat', label); } catch {} render(); },
-    depthSetSubject(k) { state.depthSubject = k; render(); },
-    depthSetTarget(k) { state.depthTarget = k; render(); },
-    depthSetFormat(v) { state.depthFormat = v; render(); },
-    depthSetAp(n) { state.depthAp = n; render(); },
+    depthSetSubject(k) { state.depthSubject = k; try { localStorage.setItem('depthSubject', k); } catch {} render(); },
+    depthSetTarget(k) { state.depthTarget = k; try { localStorage.setItem('depthTarget', k); } catch {} render(); },
+    depthSetFormat(v) { state.depthFormat = v; try { localStorage.setItem('depthFormat', v); } catch {} render(); },
+    depthSetAp(n) { state.depthAp = n; try { localStorage.setItem('depthAp', n); } catch {} render(); },
     // Converts the current distance value between units so the number
     // stays the same real-world distance rather than the same digits.
     depthSetUnits(k) {
         const m = depthToM(state.depthDist);
         state.depthUnits = k;
         state.depthDist = (k === 'ft' ? m / 0.3048 : m).toFixed(k === 'ft' ? 1 : 2);
+        try { localStorage.setItem('depthUnits', k); localStorage.setItem('depthDist', state.depthDist); } catch {}
         render();
     },
     depthOpenSheet() { state.depthSheet = true; render(); },
