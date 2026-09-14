@@ -156,7 +156,7 @@ const state = {
     desktopMq: null, installable: false,
     changelogOpen: false, changelog: null,
     menuInstalled: false,
-    setupOpen: !localStorage.getItem('setupSeen'), setupStep: 0, presetChecked: new Set(), geoChecked: false, geoPromptAnswer: null, setupBusy: false,
+    setupOpen: !localStorage.getItem('setupSeen'), setupStep: 0, presetChecked: new Set(), geoChecked: false, presetCountry: null, setupBusy: false,
     consent: localStorage.getItem('analyticsConsent'),
     homeLab: getHomeLab(), tier: getDefaultTierLabel(),
     upgradePct: localStorage.getItem('upgradeThresholdPercent') || '4',
@@ -401,13 +401,21 @@ function guessLocationFromTimezone() {
 function detectUserLocation() {
     if (geoGuess !== undefined) return Promise.resolve(geoGuess);
     if (geoDetectPromise) return geoDetectPromise;
-    // Doesn't pre-tick anything itself — just records the guess. The
-    // picker asks the user to confirm it first (App.acceptGeoGuess()
-    // does the actual ticking); silently auto-selecting on their behalf
-    // was the exact behaviour this confirmation step replaced.
+    // Doesn't tick anything itself — city-level precision needs lat/lon on
+    // index.json entries, which the shipped files don't carry yet (see
+    // nearestPresetCity's own comment), so every real-world guess today is
+    // country-only. Ticking by country alone would grab every city in that
+    // country at once (e.g. Sydney AND Melbourne for a single "Australia"
+    // guess) — exactly the over-broad-match bug this replaced. Instead it
+    // only jumps the picker straight to that country's page (skipping the
+    // country-list page), landing the user directly in front of just their
+    // own country's cities/regions to tick themselves. If a future data
+    // update does add real city precision, nothing here needs to change —
+    // an actual city match still narrows down to a single country first.
     const finish = (g) => {
         geoGuess = g;
         state.geoChecked = true;
+        if (g && g.country && state.presetCountry === null) state.presetCountry = g.country;
         render();
         return g;
     };
@@ -448,41 +456,41 @@ function presetCheckList(kind, entries) {
         return `<button type="button" onclick="App.togglePresetCheck('${kind}','${jsAttr(f.file)}')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:50px;padding:0 14px;border-radius:8px;font:inherit;font-size:14px;cursor:pointer;text-align:left;background:${on ? C.accBg : C.field};border:1px solid ${on ? C.accBorder : C.border};color:${on ? C.acc : C.text2}">${escapeHtml(f.label)} <span>${on ? '✓' : ''}</span></button>`;
     }).join('');
 }
-function presetGateActive() { return !!(geoGuess && state.geoPromptAnswer === null); }
-function geoMatchingEntries(kind) {
-    if (!geoGuess) return [];
-    const index = kind === 'films' ? presetFilmIndex : presetLabIndex;
-    return (index || []).filter(e => geoGuess.city ? e.city === geoGuess.city : e.country === geoGuess.country);
+function presetCountries() {
+    return [...new Set([...(presetFilmIndex || []), ...(presetLabIndex || [])].map(e => e.country).filter(Boolean))].sort();
+}
+// Country selection is single-choice navigation (tap to drill into that
+// country's cities/regions), not a checkbox — mirrors presetCheckList's
+// selected-first sort so the geo-guessed country (if any) doesn't get
+// lost in a long alphabetical list.
+function renderCountryPicker() {
+    const countries = presetCountries();
+    if (!countries.length) return `<div style="font-size:12px;color:${C.faint};padding:6px 2px">${escapeHtml(t('v3NoPresetsAvailable'))}</div>`;
+    const sorted = [...countries].sort((a, b) => (a === geoGuess?.country) === (b === geoGuess?.country) ? 0 : a === geoGuess?.country ? -1 : 1);
+    return `${geoGuess ? `<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-bottom:10px">${escapeHtml(t('v3GeoSuggestCountryNote', { country: geoGuess.country }))}</div>` : `<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-bottom:10px">${escapeHtml(t('v3PickCountryNote'))}</div>`}
+<div style="display:flex;flex-direction:column;gap:6px;max-height:260px;overflow:auto">${sorted.map(c => `<button type="button" onclick="App.setPresetCountry('${jsAttr(c)}')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:50px;padding:0 14px;border-radius:8px;font:inherit;font-size:14px;cursor:pointer;text-align:left;background:${C.field};border:1px solid ${c === geoGuess?.country ? C.accBorder : C.border};color:${C.text2}">${escapeHtml(c)}${c === geoGuess?.country ? `<span style="font-size:11px;color:${C.acc}">${escapeHtml(t('v3GeoGuessedTag'))}</span>` : '<span>›</span>'}</button>`).join('')}</div>`;
 }
 // Shared by the Setup wizard's presets step and Settings' Starter presets
 // card (each wraps this in its own container/footer/button). Gated on
 // state.geoChecked, not just the indexes being loaded — see
 // detectUserLocation()'s own comment for why waiting for that matters.
-// A geo guess doesn't auto-tick anything: it asks Yes/No first
-// (App.acceptGeoGuess()/declineGeoGuess()) and only shows the full
-// film/lab checklist once answered (or immediately, if there was no
-// guess to confirm in the first place).
+// Two pages: pick a country, then tick film/lab presets scoped to just
+// that country's cities/regions — see detectUserLocation()'s comment for
+// why this replaced a flat, all-countries-at-once checklist.
 function renderPresetPicker() {
     if (!presetFilmIndex || !presetLabIndex) return `<div style="font-size:12px;color:${C.faint}">${escapeHtml(t('v3LoadingRegions'))}</div>`;
     if (!state.geoChecked) return `<div style="font-size:12px;color:${C.faint}">${escapeHtml(t('v3DetectingRegion'))}</div>`;
-    if (geoGuess && state.geoPromptAnswer === null) {
-        const place = geoGuess.city || geoGuess.country;
-        const matchCount = geoMatchingEntries('films').length + geoMatchingEntries('labs').length;
-        return `<div style="text-align:center;padding:6px 0 4px">
-<p style="font-size:13px;line-height:1.55;color:${C.text2};margin:0 0 18px">${escapeHtml(t('v3GeoConfirmQuestion', { place }))}</p>
-<div style="display:flex;gap:10px">
-<button type="button" onclick="App.declineGeoGuess()" style="flex:1;height:46px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v3No'))}</button>
-<button type="button" onclick="App.acceptGeoGuess()" style="flex:1;height:46px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:700;cursor:pointer" ${matchCount ? '' : 'disabled'}>${escapeHtml(t('v3Yes'))}</button>
-</div>
-${!matchCount ? `<p style="font-size:11px;color:${C.faint};margin:12px 0 0">${escapeHtml(t('v3NoPresetsAvailable'))}</p>` : ''}
-</div>`;
-    }
-    const note = state.geoPromptAnswer === 'yes' ? t('v3GeoPreTickedNote', { place: geoGuess.city || geoGuess.country }) : t('v3PickRegionsNote');
-    return `<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-bottom:10px">${escapeHtml(note)}</div>
+    if (state.presetCountry === null || !presetCountries().includes(state.presetCountry)) return renderCountryPicker();
+    const country = state.presetCountry;
+    const films = (presetFilmIndex || []).filter(e => e.country === country);
+    const labs = (presetLabIndex || []).filter(e => e.country === country);
+    return `<button type="button" onclick="App.backToPresetCountries()" style="display:flex;align-items:center;gap:4px;background:transparent;border:0;padding:0;margin-bottom:10px;font:inherit;font-size:12px;color:${C.sub};cursor:pointer">‹ ${escapeHtml(t('v3AllCountries'))}</button>
+<div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${C.acc};margin-bottom:10px">${escapeHtml(country)}</div>
+${country === geoGuess?.country ? `<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-bottom:10px">${escapeHtml(t('v3GeoSuggestCountryNote', { country }))}</div>` : ''}
 <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v2SectionFilms'))}</div>
-<div style="display:flex;flex-direction:column;gap:6px;max-height:180px;overflow:auto;margin-bottom:14px">${presetCheckList('films', presetFilmIndex)}</div>
+<div style="display:flex;flex-direction:column;gap:6px;max-height:180px;overflow:auto;margin-bottom:14px">${presetCheckList('films', films)}</div>
 <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v2SectionLabs'))}</div>
-<div style="display:flex;flex-direction:column;gap:6px;max-height:180px;overflow:auto">${presetCheckList('labs', presetLabIndex)}</div>`;
+<div style="display:flex;flex-direction:column;gap:6px;max-height:180px;overflow:auto">${presetCheckList('labs', labs)}</div>`;
 }
 
 // State/city suggestions for the purchase-link editor's Availability
@@ -849,8 +857,9 @@ ${rows || `<div style="margin-top:10px;padding:22px 18px;border:1px dashed ${C.b
 <div style="padding:4px 20px 0;display:flex;gap:10px">
 <label style="flex:1;display:block">
 <div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v2LabelBoxSpeed'))}</div>
-<div style="height:56px;background:${C.panel};border:1px solid ${C.border};border-radius:8px;display:flex;align-items:center;justify-content:flex-end;padding:0 12px">
+<div style="height:56px;background:${C.panel};border:1px solid ${C.border};border-radius:8px;display:flex;align-items:center;gap:4px;padding:0 12px">
 <input type="text" inputmode="numeric" value="${escapeHtml(state.boxSpeed)}" onchange="App.setField('boxSpeed',this.value)" aria-label="${escapeHtml(t('v2LabelBoxSpeed'))}" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:28px;font-weight:600;color:${C.text}">
+${state.boxSpeed ? `<button type="button" onclick="App.setField('boxSpeed','')" aria-label="${escapeHtml(t('v2ButtonClear'))}" style="flex:none;width:20px;height:20px;display:flex;align-items:center;justify-content:center;background:transparent;border:0;padding:0;color:${C.faint};font-size:14px;line-height:1;cursor:pointer">✕</button>` : ''}
 </div>
 </label>
 <label style="flex:1.25;display:block">
@@ -858,6 +867,7 @@ ${rows || `<div style="margin-top:10px;padding:22px 18px;border:1px dashed ${C.b
 <div style="height:56px;background:${C.panel};border:1px solid ${C.acc};border-radius:8px;display:flex;align-items:center;gap:3px;padding:0 12px">
 <span style="font-size:17px;color:${C.sub}">${CUR()}</span>
 <input type="text" inputmode="decimal" value="${escapeHtml(state.packCost)}" onchange="App.setField('packCost',this.value)" aria-label="${escapeHtml(t('v3PackPrice'))}" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:28px;font-weight:600;color:${C.text}">
+${state.packCost ? `<button type="button" onclick="App.setField('packCost','')" aria-label="${escapeHtml(t('v2ButtonClear'))}" style="flex:none;width:20px;height:20px;display:flex;align-items:center;justify-content:center;background:transparent;border:0;padding:0;color:${C.faint};font-size:14px;line-height:1;cursor:pointer">✕</button>` : ''}
 </div>
 </label>
 </div>
@@ -1083,10 +1093,10 @@ ${hiddenLabs.map(l => `<div style="display:flex;align-items:center;justify-conte
 </div>`}`),
 
         settingsCard(escapeHtml(t('v2SettingsStarterPresets')), `${renderPresetPicker()}
-${presetGateActive() ? '' : `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px">
 <span style="font-size:12px;color:${C.faint}">${escapeHtml(t(state.presetChecked.size === 1 ? 'v3RegionsSelectedOne' : 'v3RegionsSelected', { n: state.presetChecked.size }))}</span>
 <button type="button" onclick="App.importPresets()" style="height:40px;padding:0 14px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:600;cursor:pointer">${escapeHtml(t('v3ButtonImport'))}</button>
-</div>`}`),
+</div>`),
 
         settingsCard(escapeHtml(t('v3YourDataHeading')), `<div style="display:flex;flex-wrap:wrap;gap:8px">
 <button type="button" onclick="App.shareLibrary()" style="height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v3ShareLibraryLink'))}</button>
@@ -1492,7 +1502,7 @@ function viewSetup() {
 ${step === 0 ? `<select onchange="App.setLanguage(this.value)" aria-label="${escapeHtml(t('v2SettingsLanguage'))}" style="width:100%;height:46px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer">${LANGUAGE_OPTIONS.map(([code, label]) => `<option value="${code}" ${currentLocale === code ? 'selected' : ''}>${label}</option>`).join('')}</select>
 <div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:10px">${escapeHtml(t('v3LanguageRegionNote'))}</div>` : ''}
 ${step === 1 ? `${renderPresetPicker()}
-${presetGateActive() ? '' : `<div style="font-size:12px;color:${C.faint};margin-top:10px">${escapeHtml(t(state.presetChecked.size === 1 ? 'v3RegionsSelectedImportsOne' : 'v3RegionsSelectedImports', { n: state.presetChecked.size }))}</div>`}` : ''}
+<div style="font-size:12px;color:${C.faint};margin-top:10px">${escapeHtml(t(state.presetChecked.size === 1 ? 'v3RegionsSelectedImportsOne' : 'v3RegionsSelectedImports', { n: state.presetChecked.size }))}</div>` : ''}
 ${step === 2 ? `<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v2SettingsHomeLab'))}</div>
 <select onchange="App.setField('homeLab',this.value)" aria-label="${escapeHtml(t('v2SettingsHomeLab'))}" style="width:100%;height:46px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer"><option value="">${escapeHtml(t('v3PickALab'))}</option>${labNames.map(n => `<option value="${escapeHtml(n)}" ${state.homeLab === n ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('')}</select>
 <div style="font-size:11px;color:${C.sub};margin:14px 0 6px">${escapeHtml(t('v2SetupPreferredTier'))}</div>
@@ -1986,13 +1996,8 @@ const App = {
         if (state.presetChecked.has(key)) state.presetChecked.delete(key); else state.presetChecked.add(key);
         render();
     },
-    acceptGeoGuess() {
-        state.geoPromptAnswer = 'yes';
-        geoMatchingEntries('films').forEach(e => state.presetChecked.add(`films:${e.file}`));
-        geoMatchingEntries('labs').forEach(e => state.presetChecked.add(`labs:${e.file}`));
-        render();
-    },
-    declineGeoGuess() { state.geoPromptAnswer = 'no'; render(); },
+    setPresetCountry(country) { state.presetCountry = country; render(); },
+    backToPresetCountries() { state.presetCountry = null; render(); },
     async importPresets() {
         const filmFiles = [], labFiles = [];
         state.presetChecked.forEach(key => {
