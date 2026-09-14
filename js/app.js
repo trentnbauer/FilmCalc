@@ -252,7 +252,7 @@ function computeFilmRows(home) {
     const allFilms = getAllFilms();
     const iso = shootIso() || num(state.boxSpeed);
     const override = camOverride();
-    const rows = Object.values(allFilms).filter(f => !f.hidden && (f.format || '35mm') === FORMAT_VALUE[state.format] && filmColorType(f) === state.filmColor).map(f => {
+    const rows = Object.values(allFilms).filter(f => !f.hidden && (f.format || '35mm') === FORMAT_VALUE[state.format]).map(f => {
         const boxSpeed = parseFloat(f.boxSpeed) || 0;
         if (!boxSpeed) return null;
         const stopsSigned = iso ? Math.round(Math.log2(iso / boxSpeed)) : 0;
@@ -290,7 +290,7 @@ function computeCheaperFilm(home) {
     }
     const override = camOverride();
     let bestNative = null, bestPushPull = null;
-    Object.values(getAllFilms()).filter(f => !f.hidden && (f.format || '35mm') === FORMAT_VALUE[state.format] && filmColorType(f) === state.filmColor).forEach(f => {
+    Object.values(getAllFilms()).filter(f => !f.hidden && (f.format || '35mm') === FORMAT_VALUE[state.format]).forEach(f => {
         const boxSpeed = parseFloat(f.boxSpeed) || 0;
         if (!boxSpeed) return;
         const stopsSigned = Math.round(Math.log2(target / boxSpeed));
@@ -647,6 +647,19 @@ function fmtDate(iso) {
         return d.getDate() + ' ' + MONTHS[d.getMonth()] + ' ' + d.getFullYear();
     } catch { return ''; }
 }
+// changelog.json is sorted newest-first (generate-changelog.py sorts by
+// mergedAt descending), so its first entry's PR number doubles as a crude
+// version tag — a real one exists (git commit SHA), but that's meaningless
+// to anyone who isn't reading source; the PR number is at least a stable,
+// ever-increasing "this is newer than that" signal for a bug report.
+function currentVersionLabel() {
+    const items = state.changelog;
+    return (items && items.length) ? `v${items[0].number}` : '';
+}
+function whatsNewLabel() {
+    const v = currentVersionLabel();
+    return v ? `${v} · ${t('v3WhatsNew')}` : t('v3WhatsNew');
+}
 
 // Each item is either a plain value (used as both the button's value and
 // its display label — untranslated technical terms like format/process
@@ -713,7 +726,7 @@ function viewDesktopHeader() {
 <div style="display:flex;gap:20px">${backTabs}</div>
 <span style="width:1px;height:16px;background:${C.border}"></span>
 <span style="font-size:12px;color:${C.faint}">${escapeHtml(t('v3HeaderLabsStocksSummary', { home: state.homeLab || t('v3NoHomeLab'), labs: labCount, stocks: filmCount }))}</span>
-<button type="button" onclick="App.openChangelog()" style="background:transparent;border:0;padding:0;font:inherit;font-size:12px;color:${C.sub};cursor:pointer">${escapeHtml(t('v3WhatsNew'))}</button>
+<button type="button" onclick="App.openChangelog()" style="background:transparent;border:0;padding:0;font:inherit;font-size:12px;color:${C.sub};cursor:pointer">${escapeHtml(whatsNewLabel())}</button>
 <button type="button" onclick="App.install()" style="height:34px;padding:0 12px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:12px;font-weight:600;cursor:pointer">${escapeHtml(t('v2ButtonInstallApp'))}</button>
 </span>
 </div>`;
@@ -825,7 +838,7 @@ ${chips.join('')}
 <div style="margin-top:6px">
 ${rows || `<div style="margin-top:10px;padding:22px 18px;border:1px dashed ${C.border2};border-radius:10px;text-align:center">
 <div style="font-size:14px;font-weight:600;color:${C.text2}">${state.tab === 'labs' ? escapeHtml(t('v3NoLabsMatchFilters')) : escapeHtml(t('v3NoStockMatchesCombination'))}</div>
-<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:6px">${state.tab === 'labs' ? escapeHtml(t('v3ClearFilterOrAddLab')) : escapeHtml(t('v3FormatColorEmptyLibrary', { format: state.format, color: FILM_COLOR_LABEL[state.filmColor] }))}</div>
+<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:6px">${state.tab === 'labs' ? escapeHtml(t('v3ClearFilterOrAddLab')) : escapeHtml(t('v3FormatEmptyLibrary', { format: state.format }))}</div>
 <button type="button" onclick="App.setView('library')" style="height:42px;padding:0 16px;margin-top:14px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text};font:inherit;font-size:13px;cursor:pointer">${state.tab === 'labs' ? escapeHtml(t('v2ButtonNewLab')) : escapeHtml(t('v3ButtonAddFilmStock'))}</button>
 </div>`}
 </div>
@@ -875,7 +888,7 @@ ${!desktop ? `<div style="padding:10px 20px 0">
 <button type="button" onclick="App.openModal()" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px;padding:9px 14px;background:${C.panel};border:1px solid ${C.border};border-radius:10px;font:inherit;text-align:left;cursor:pointer">
 <span style="display:flex;flex-direction:column;gap:3px;min-width:0">
 <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-<span style="font-size:13px;color:${C.text}">${escapeHtml(state.format)}</span><span style="color:${C.border3}">·</span><span style="font-size:13px;color:${C.text}">${escapeHtml(FILM_COLOR_LABEL[state.filmColor])}</span><span style="color:${C.border3}">·</span><span style="font-size:13px;color:${C.acc}">${escapeHtml(PROCESS_LABEL[state.process])}</span>
+<span style="font-size:13px;color:${C.text}">${escapeHtml(state.format)}</span><span style="color:${C.border3}">·</span><span style="font-size:13px;color:${C.acc}">${escapeHtml(PROCESS_LABEL[state.process])}</span>
 </span>
 <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
 <span style="font-size:12px;color:${C.sub}">${escapeHtml(t(state.rolls === '1' ? 'v3RollsCountOne' : 'v3RollsCount', { n: state.rolls }))}</span><span style="color:${C.border3}">·</span><span style="font-size:12px;color:${C.sub}">${escapeHtml(t('v3ExpCount', { n: exposuresPerRoll() }))}</span>
@@ -925,12 +938,9 @@ function viewRollDetails() {
 <div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${seg(FORMATS, state.format, l => `App.setFormat('${l}')`)}</div>
 </div>
 <div>
-<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v3FilmTypeLabel'))}</div>
-<div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${seg([['Colour', t('v3FilmColorColour')], ['B&W', t('v3FilmColorBW')], ['Speciality', t('v3FilmColorSpeciality')]], FILM_COLOR_LABEL[state.filmColor], l => `App.setFilmColor('${l}')`)}</div>
-</div>
-<div>
 <div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v3DevelopmentLabel'))}</div>
 <div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${seg(PROCESSES, PROCESS_LABEL[state.process], l => `App.setField('process','${PROCESS_VALUE[l]}')`)}</div>
+<div style="font-size:11px;line-height:1.5;color:${C.faint};margin-top:6px">${escapeHtml(t('v3DevelopmentTypeHelp'))}</div>
 </div>
 <div style="display:flex;gap:10px">
 <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:5px;margin-bottom:6px">
@@ -1465,7 +1475,7 @@ ${items.map(([key, label, meta]) => `<button type="button" onclick="App.setView(
 <span style="flex:1;min-width:0"><span style="display:block;font-size:15px;color:${C.acc}">${state.installable ? escapeHtml(t('v3InstallFilmCalc')) : escapeHtml(t('v3AddToHomeScreen'))}</span><span style="display:block;font-size:12px;color:#a87a52;margin-top:3px">${state.installable ? escapeHtml(t('v3WorksOfflineNote')) : escapeHtml(t('v3ShareAddHomeScreenNote'))}</span></span>
 </button>
 <button type="button" onclick="App.openChangelog()" style="width:100%;text-align:left;padding:12px 14px;border-radius:10px;border:1px solid ${C.border};background:transparent;font:inherit;cursor:pointer">
-<span style="display:block;font-size:15px;color:${C.text}">${escapeHtml(t('v3WhatsNew'))}</span>
+<span style="display:block;font-size:15px;color:${C.text}">${escapeHtml(whatsNewLabel())}</span>
 <span style="display:block;font-size:12px;color:${C.faint};margin-top:3px">${escapeHtml(t('v3RecentChangesNote'))}</span>
 </button>
 <button type="button" onclick="App.openSetup()" style="width:100%;text-align:left;padding:12px 14px;border-radius:10px;border:1px dashed ${C.border3};background:transparent;font:inherit;cursor:pointer">
@@ -1537,7 +1547,7 @@ function viewChangelog() {
 <div role="dialog" aria-modal="true" style="position:relative;background:#131518;border-top:1px solid #2f333a;border-radius:18px 18px 0 0;padding:8px 20px 22px;box-shadow:0 -18px 40px rgba(0,0,0,.45)">
 <div style="width:38px;height:4px;border-radius:2px;background:${C.border3};margin:0 auto 14px"></div>
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-<span style="font-size:16px;font-weight:700;color:${C.text}">${escapeHtml(t('v3WhatsNew'))}</span>
+<span style="font-size:16px;font-weight:700;color:${C.text}">${escapeHtml(whatsNewLabel())}</span>
 <button type="button" onclick="App.closeChangelog()" aria-label="${escapeHtml(t('closeLabel'))}" style="width:32px;height:32px;border-radius:8px;background:#1f2228;border:0;color:${C.sub};font:inherit;font-size:15px;line-height:1;cursor:pointer">✕</button>
 </div>
 <p style="margin:0 0 8px;font-size:12px;color:${C.faint}">${escapeHtml(t('v3ChangelogIntro'))}</p>
@@ -1702,7 +1712,6 @@ const App = {
         render();
     },
     setFormat(label) { state.format = label; try { localStorage.setItem('globalFormat', label); } catch {} render(); },
-    setFilmColor(label) { state.filmColor = FILM_COLOR_VALUE[label]; try { localStorage.setItem('globalFilmColor', state.filmColor); } catch {} render(); },
     incField(key, delta, min, max) {
         const cur = parseInt(state[key], 10) || 0;
         state[key] = String(Math.min(max, Math.max(min, cur + delta)));
@@ -2219,6 +2228,12 @@ function init() {
     });
 
     if (state.setupOpen) loadPresetIndexes();
+
+    // Fetched eagerly (not just when the changelog sheet is opened, which
+    // App.openChangelog() still handles as a fallback via the same
+    // `!state.changelog` guard) so the "v{number}" version tag next to
+    // "What's new" has something to show without waiting for a click.
+    fetch('changelog.json').then(r => r.ok ? r.json() : []).then(list => { state.changelog = list; render(); }).catch(() => {});
 
     render();
 }
