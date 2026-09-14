@@ -182,8 +182,8 @@ const state = {
     upgradePct: localStorage.getItem('upgradeThresholdPercent') || '4',
     theme: localStorage.getItem('newUiTheme') || 'system',
     expBox: '400', expMonth: MONTHS[new Date().getMonth()], expYear: '', expProcess: 'c41', storage: 'controlled',
-    depthSubject: 'car', depthTarget: 'front', depthDist: '3.5', depthFocal: '80',
-    depthFormat: '120', depthAp: 5.6, depthUnits: 'm', depthSheet: false
+    depthSubject: 'portrait', depthTarget: 'front', depthDist: '5', depthFocal: '50',
+    depthFormat: '35mm', depthAp: 5.6, depthUnits: 'm', depthSheet: false
 };
 let toastTimer = null;
 function say(text) {
