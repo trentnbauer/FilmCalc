@@ -457,32 +457,40 @@ function detectUserLocation() {
 }
 
 // Checkboxes rather than a single-choice picker — someone setting up for,
-// say, Melbourne wants both the Melbourne AND the country-wide retailer
-// files in one go. Checked state lives in state.presetChecked (kind:file
-// keys, e.g. "films:melbourne-retailers.yaml") so a geo-matched pre-check
-// or the user's own tick/untick survives a re-render triggered by
-// anything else on the same screen.
-function presetCheckList(kind, entries) {
+// say, Melbourne wants both the Melbourne film AND lab/retailer files in
+// one go. Films and labs sharing the same place (city/state/country) are
+// merged into a single row/tick here, since picking "Melbourne" once
+// should grab both — rather than making the user find and tick the same
+// place twice in separate Films/Labs lists. Checked state still lives in
+// state.presetChecked as separate "films:file"/"labs:file" keys; a merged
+// row just toggles whichever of the two exist for that place together.
+function presetCheckList(films, labs) {
+    const groups = new Map();
+    const placeKey = f => f.city || f.state || f.country || f.label;
+    films.forEach(f => {
+        const k = placeKey(f);
+        if (!groups.has(k)) groups.set(k, { display: k });
+        groups.get(k).filmFile = f.file;
+    });
+    labs.forEach(f => {
+        const k = placeKey(f);
+        if (!groups.has(k)) groups.set(k, { display: k });
+        groups.get(k).labFile = f.file;
+    });
+    const entries = [...groups.values()];
     if (!entries.length) return `<div style="font-size:12px;color:${C.faint};padding:6px 2px">${escapeHtml(t('v3NoPresetsAvailable'))}</div>`;
+    const isOn = (g) => (g.filmFile && state.presetChecked.has(`films:${g.filmFile}`)) || (g.labFile && state.presetChecked.has(`labs:${g.labFile}`));
     // Selected entries float to the top (stable within each group — still
     // alphabetical among themselves) so it's obvious at a glance what's
     // already ticked without scanning the whole list.
     const sorted = [...entries].sort((a, b) => {
-        const aOn = state.presetChecked.has(`${kind}:${a.file}`), bOn = state.presetChecked.has(`${kind}:${b.file}`);
+        const aOn = isOn(a), bOn = isOn(b);
         if (aOn !== bOn) return aOn ? -1 : 1;
         return 0;
     });
-    return sorted.map(f => {
-        const key = `${kind}:${f.file}`;
-        const on = state.presetChecked.has(key);
-        // City/state/country rather than the raw label ("Melbourne
-        // Retailers"/"Melbourne Labs") — the Films/Labs section header
-        // this sits under already says which kind it is, so repeating
-        // that in every row's own label is redundant. Falls back to the
-        // full label only for country-wide files with no city of their
-        // own (e.g. "Australian Retailers").
-        const display = f.city || f.state || f.country || f.label;
-        return `<button type="button" onclick="App.togglePresetCheck('${kind}','${jsAttr(f.file)}')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:50px;padding:0 14px;border-radius:8px;font:inherit;font-size:14px;cursor:pointer;text-align:left;background:${on ? C.accBg : C.field};border:1px solid ${on ? C.accBorder : C.border};color:${on ? C.acc : C.text2}">${escapeHtml(display)} <span>${on ? '✓' : ''}</span></button>`;
+    return sorted.map(g => {
+        const on = isOn(g);
+        return `<button type="button" onclick="App.togglePresetGroup('${jsAttr(g.filmFile || '')}','${jsAttr(g.labFile || '')}')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:50px;padding:0 14px;border-radius:8px;font:inherit;font-size:14px;cursor:pointer;text-align:left;background:${on ? C.accBg : C.field};border:1px solid ${on ? C.accBorder : C.border};color:${on ? C.acc : C.text2}">${escapeHtml(g.display)} <span>${on ? '✓' : ''}</span></button>`;
     }).join('');
 }
 function presetCountries() {
@@ -530,10 +538,7 @@ function renderPresetPicker() {
     const labs = (presetLabIndex || []).filter(e => e.country === country);
     return `<button type="button" onclick="App.backToPresetCountries()" style="display:flex;align-items:center;gap:4px;background:transparent;border:0;padding:0;margin-bottom:10px;font:inherit;font-size:12px;color:${C.sub};cursor:pointer">‹ ${escapeHtml(t('v3AllCountries'))}</button>
 <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${C.acc};margin-bottom:10px">${escapeHtml(country)}</div>
-<div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v2SectionFilms'))}</div>
-<div style="display:flex;flex-direction:column;gap:6px;max-height:180px;overflow:auto;margin-bottom:14px">${presetCheckList('films', films)}</div>
-<div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v2SectionLabs'))}</div>
-<div style="display:flex;flex-direction:column;gap:6px;max-height:180px;overflow:auto">${presetCheckList('labs', labs)}</div>`;
+<div style="display:flex;flex-direction:column;gap:6px;max-height:320px;overflow:auto">${presetCheckList(films, labs)}</div>`;
 }
 
 // State/city suggestions for the purchase-link editor's Availability
@@ -2043,9 +2048,15 @@ const App = {
         state.setupStep = Math.min(SETUP_STEPS.length - 1, state.setupStep + 1);
         render();
     },
-    togglePresetCheck(kind, file) {
-        const key = `${kind}:${file}`;
-        if (state.presetChecked.has(key)) state.presetChecked.delete(key); else state.presetChecked.add(key);
+    togglePresetGroup(filmFile, labFile) {
+        const on = (filmFile && state.presetChecked.has(`films:${filmFile}`)) || (labFile && state.presetChecked.has(`labs:${labFile}`));
+        if (on) {
+            if (filmFile) state.presetChecked.delete(`films:${filmFile}`);
+            if (labFile) state.presetChecked.delete(`labs:${labFile}`);
+        } else {
+            if (filmFile) state.presetChecked.add(`films:${filmFile}`);
+            if (labFile) state.presetChecked.add(`labs:${labFile}`);
+        }
         render();
     },
     setPresetCountry(country) { state.presetCountry = country; render(); },
