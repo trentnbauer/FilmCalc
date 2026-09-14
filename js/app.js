@@ -153,7 +153,7 @@ const DEPTH_SUBJECTS = {
     group: { label: 'Group of people', short: 'Group', depth: 1.00, tall: 1.70, rows: 2, glyph: '🧑‍🤝‍🧑', glyphFont: 'min(104cqh,86cqw)', help: 'Two rows of three, a metre from the front row to the back.' },
     car: { label: 'Car', short: 'Car', depth: 4.60, tall: 1.95, rows: 3, glyph: '🚗', glyphFont: 'min(104cqh,92cqw)', help: 'A saloon nose to tail, 4.6 m.' }
 };
-const DEPTH_TARGETS = { front: 'Front', middle: 'Center', back: 'Back' };
+const DEPTH_TARGETS = { front: 'Closest', middle: 'Center', back: 'Furthest' };
 const DEPTH_APS = [1.4, 2, 2.8, 4, 5.6, 8, 11, 16, 22, 32];
 
 // ---------- App state ----------
