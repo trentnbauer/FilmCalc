@@ -156,7 +156,7 @@ const state = {
     desktopMq: null, installable: false,
     changelogOpen: false, changelog: null,
     menuInstalled: false,
-    setupOpen: !localStorage.getItem('setupSeen'), setupStep: 0, presetChecked: new Set(), geoChecked: false, setupBusy: false,
+    setupOpen: !localStorage.getItem('setupSeen'), setupStep: 0, presetChecked: new Set(), geoChecked: false, geoPromptAnswer: null, setupBusy: false,
     consent: localStorage.getItem('analyticsConsent'),
     homeLab: getHomeLab(), tier: getDefaultTierLabel(),
     upgradePct: localStorage.getItem('upgradeThresholdPercent') || '4',
@@ -401,13 +401,12 @@ function guessLocationFromTimezone() {
 function detectUserLocation() {
     if (geoGuess !== undefined) return Promise.resolve(geoGuess);
     if (geoDetectPromise) return geoDetectPromise;
+    // Doesn't pre-tick anything itself — just records the guess. The
+    // picker asks the user to confirm it first (App.acceptGeoGuess()
+    // does the actual ticking); silently auto-selecting on their behalf
+    // was the exact behaviour this confirmation step replaced.
     const finish = (g) => {
         geoGuess = g;
-        if (g) {
-            const matches = (e) => g.city ? e.city === g.city : e.country === g.country;
-            (presetFilmIndex || []).filter(matches).forEach(e => state.presetChecked.add(`films:${e.file}`));
-            (presetLabIndex || []).filter(matches).forEach(e => state.presetChecked.add(`labs:${e.file}`));
-        }
         state.geoChecked = true;
         render();
         return g;
@@ -435,20 +434,50 @@ function detectUserLocation() {
 // anything else on the same screen.
 function presetCheckList(kind, entries) {
     if (!entries.length) return `<div style="font-size:12px;color:${C.faint};padding:6px 2px">${escapeHtml(t('v3NoPresetsAvailable'))}</div>`;
-    return entries.map(f => {
+    // Selected entries float to the top (stable within each group — still
+    // alphabetical among themselves) so it's obvious at a glance what's
+    // already ticked without scanning the whole list.
+    const sorted = [...entries].sort((a, b) => {
+        const aOn = state.presetChecked.has(`${kind}:${a.file}`), bOn = state.presetChecked.has(`${kind}:${b.file}`);
+        if (aOn !== bOn) return aOn ? -1 : 1;
+        return 0;
+    });
+    return sorted.map(f => {
         const key = `${kind}:${f.file}`;
         const on = state.presetChecked.has(key);
-        return `<button type="button" onclick="App.togglePresetCheck('${kind}','${jsAttr(f.file)}')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:42px;padding:0 12px;border-radius:8px;font:inherit;font-size:13px;cursor:pointer;text-align:left;background:${on ? C.accBg : C.field};border:1px solid ${on ? C.accBorder : C.border};color:${on ? C.acc : C.text2}">${escapeHtml(f.label)} <span>${on ? '✓' : ''}</span></button>`;
+        return `<button type="button" onclick="App.togglePresetCheck('${kind}','${jsAttr(f.file)}')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:50px;padding:0 14px;border-radius:8px;font:inherit;font-size:14px;cursor:pointer;text-align:left;background:${on ? C.accBg : C.field};border:1px solid ${on ? C.accBorder : C.border};color:${on ? C.acc : C.text2}">${escapeHtml(f.label)} <span>${on ? '✓' : ''}</span></button>`;
     }).join('');
+}
+function presetGateActive() { return !!(geoGuess && state.geoPromptAnswer === null); }
+function geoMatchingEntries(kind) {
+    if (!geoGuess) return [];
+    const index = kind === 'films' ? presetFilmIndex : presetLabIndex;
+    return (index || []).filter(e => geoGuess.city ? e.city === geoGuess.city : e.country === geoGuess.country);
 }
 // Shared by the Setup wizard's presets step and Settings' Starter presets
 // card (each wraps this in its own container/footer/button). Gated on
 // state.geoChecked, not just the indexes being loaded — see
 // detectUserLocation()'s own comment for why waiting for that matters.
+// A geo guess doesn't auto-tick anything: it asks Yes/No first
+// (App.acceptGeoGuess()/declineGeoGuess()) and only shows the full
+// film/lab checklist once answered (or immediately, if there was no
+// guess to confirm in the first place).
 function renderPresetPicker() {
     if (!presetFilmIndex || !presetLabIndex) return `<div style="font-size:12px;color:${C.faint}">${escapeHtml(t('v3LoadingRegions'))}</div>`;
     if (!state.geoChecked) return `<div style="font-size:12px;color:${C.faint}">${escapeHtml(t('v3DetectingRegion'))}</div>`;
-    const note = geoGuess ? t('v3GeoPreTickedNote', { place: geoGuess.city || geoGuess.country }) : t('v3PickRegionsNote');
+    if (geoGuess && state.geoPromptAnswer === null) {
+        const place = geoGuess.city || geoGuess.country;
+        const matchCount = geoMatchingEntries('films').length + geoMatchingEntries('labs').length;
+        return `<div style="text-align:center;padding:6px 0 4px">
+<p style="font-size:13px;line-height:1.55;color:${C.text2};margin:0 0 18px">${escapeHtml(t('v3GeoConfirmQuestion', { place }))}</p>
+<div style="display:flex;gap:10px">
+<button type="button" onclick="App.declineGeoGuess()" style="flex:1;height:46px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v3No'))}</button>
+<button type="button" onclick="App.acceptGeoGuess()" style="flex:1;height:46px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:700;cursor:pointer" ${matchCount ? '' : 'disabled'}>${escapeHtml(t('v3Yes'))}</button>
+</div>
+${!matchCount ? `<p style="font-size:11px;color:${C.faint};margin:12px 0 0">${escapeHtml(t('v3NoPresetsAvailable'))}</p>` : ''}
+</div>`;
+    }
+    const note = state.geoPromptAnswer === 'yes' ? t('v3GeoPreTickedNote', { place: geoGuess.city || geoGuess.country }) : t('v3PickRegionsNote');
     return `<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-bottom:10px">${escapeHtml(note)}</div>
 <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v2SectionFilms'))}</div>
 <div style="display:flex;flex-direction:column;gap:6px;max-height:180px;overflow:auto;margin-bottom:14px">${presetCheckList('films', presetFilmIndex)}</div>
@@ -487,8 +516,15 @@ function mergeFilmsInto(all, incoming) {
         }
     });
 }
+// Overwrites a same-named existing lab with the preset's version, rather
+// than silently skipping it — matches root's actual end state for a
+// re-imported region (root warns via window.confirm first when something
+// would change; this preview doesn't have an equivalent confirm step, but
+// silently no-op'ing was worse: a lab record that already existed locally
+// (blank, hand-added, or from an older preset) could never pick up real
+// service-tier data on re-import, which is exactly the bug this fixes).
 function mergeLabsInto(all, incoming) {
-    incoming.forEach(l => { if (!all[l.name]) all[l.name] = l; });
+    incoming.forEach(l => { if (l.name) all[l.name] = l; });
 }
 
 // ---------- Custom file import (mirrors root's js/app.js, same behaviour) ----------
@@ -1047,10 +1083,10 @@ ${hiddenLabs.map(l => `<div style="display:flex;align-items:center;justify-conte
 </div>`}`),
 
         settingsCard(escapeHtml(t('v2SettingsStarterPresets')), `${renderPresetPicker()}
-<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px">
+${presetGateActive() ? '' : `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px">
 <span style="font-size:12px;color:${C.faint}">${escapeHtml(t(state.presetChecked.size === 1 ? 'v3RegionsSelectedOne' : 'v3RegionsSelected', { n: state.presetChecked.size }))}</span>
 <button type="button" onclick="App.importPresets()" style="height:40px;padding:0 14px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:600;cursor:pointer">${escapeHtml(t('v3ButtonImport'))}</button>
-</div>`),
+</div>`}`),
 
         settingsCard(escapeHtml(t('v3YourDataHeading')), `<div style="display:flex;flex-wrap:wrap;gap:8px">
 <button type="button" onclick="App.shareLibrary()" style="height:40px;padding:0 13px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v3ShareLibraryLink'))}</button>
@@ -1456,7 +1492,7 @@ function viewSetup() {
 ${step === 0 ? `<select onchange="App.setLanguage(this.value)" aria-label="${escapeHtml(t('v2SettingsLanguage'))}" style="width:100%;height:46px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer">${LANGUAGE_OPTIONS.map(([code, label]) => `<option value="${code}" ${currentLocale === code ? 'selected' : ''}>${label}</option>`).join('')}</select>
 <div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:10px">${escapeHtml(t('v3LanguageRegionNote'))}</div>` : ''}
 ${step === 1 ? `${renderPresetPicker()}
-<div style="font-size:12px;color:${C.faint};margin-top:10px">${escapeHtml(t(state.presetChecked.size === 1 ? 'v3RegionsSelectedImportsOne' : 'v3RegionsSelectedImports', { n: state.presetChecked.size }))}</div>` : ''}
+${presetGateActive() ? '' : `<div style="font-size:12px;color:${C.faint};margin-top:10px">${escapeHtml(t(state.presetChecked.size === 1 ? 'v3RegionsSelectedImportsOne' : 'v3RegionsSelectedImports', { n: state.presetChecked.size }))}</div>`}` : ''}
 ${step === 2 ? `<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v2SettingsHomeLab'))}</div>
 <select onchange="App.setField('homeLab',this.value)" aria-label="${escapeHtml(t('v2SettingsHomeLab'))}" style="width:100%;height:46px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer"><option value="">${escapeHtml(t('v3PickALab'))}</option>${labNames.map(n => `<option value="${escapeHtml(n)}" ${state.homeLab === n ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('')}</select>
 <div style="font-size:11px;color:${C.sub};margin:14px 0 6px">${escapeHtml(t('v2SetupPreferredTier'))}</div>
@@ -1950,6 +1986,13 @@ const App = {
         if (state.presetChecked.has(key)) state.presetChecked.delete(key); else state.presetChecked.add(key);
         render();
     },
+    acceptGeoGuess() {
+        state.geoPromptAnswer = 'yes';
+        geoMatchingEntries('films').forEach(e => state.presetChecked.add(`films:${e.file}`));
+        geoMatchingEntries('labs').forEach(e => state.presetChecked.add(`labs:${e.file}`));
+        render();
+    },
+    declineGeoGuess() { state.geoPromptAnswer = 'no'; render(); },
     async importPresets() {
         const filmFiles = [], labFiles = [];
         state.presetChecked.forEach(key => {
