@@ -1178,7 +1178,10 @@ ${tall ? `<div style="text-align:right;padding-bottom:6px"><div style="font-size
 <span style="font-size:12px;color:${C.faint};white-space:nowrap">at f/${escapeHtml(vals.apLabel)}</span>
 </div>`}
 </div>
-${tall ? `<div style="display:flex;height:4px;margin-top:16px;border-radius:2px;overflow:hidden;background:${C.field}"><div style="flex:1;background:${C.border}"></div></div>
+${tall ? `<div style="position:relative;height:4px;margin-top:16px;border-radius:2px;overflow:hidden;background:${C.field}">
+<div style="position:absolute;top:0;bottom:0;left:${vals.bandLeft};width:${vals.bandW};background:#ff9a5c"></div>
+<div style="position:absolute;top:0;bottom:0;left:${vals.subjLeft};width:${vals.subjW};background:${C.green}"></div>
+</div>
 <div style="display:flex;gap:12px;margin-top:10px">
 <div style="flex:1"><div style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:2px;background:${C.acc}"></span><span style="font-size:11px;color:${C.sub}">Near limit</span></div><div style="font-size:15px;font-weight:600;color:${C.text};margin-top:3px">${escapeHtml(vals.nearLabel)}</div></div>
 <div style="flex:1"><div style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:2px;background:#ff9a5c"></span><span style="font-size:11px;color:${C.sub}">Far limit</span></div><div style="font-size:15px;font-weight:600;color:${C.text};margin-top:3px">${escapeHtml(vals.farLabel)}</div></div>
