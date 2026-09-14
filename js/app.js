@@ -716,7 +716,11 @@ function isDarkNow() {
 function render() {
     const el = document.getElementById('app');
     if (!el) return;
-    el.style.filter = isDarkNow() ? '' : 'invert(1) hue-rotate(180deg)';
+    // Filter goes on <body>, not #app: on desktop the shell is a centered
+    // column narrower than the viewport, and body's own background paints
+    // the side gutters — putting the filter on #app left that background
+    // un-inverted, so light mode showed black bars down both sides.
+    document.body.style.filter = isDarkNow() ? '' : 'invert(1) hue-rotate(180deg)';
     el.innerHTML = viewShell();
 }
 
