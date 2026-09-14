@@ -156,7 +156,7 @@ const state = {
     desktopMq: null, installable: false,
     changelogOpen: false, changelog: null,
     menuInstalled: false,
-    setupOpen: !localStorage.getItem('setupSeen'), setupStep: 0, presetChecked: new Set(), geoChecked: false, presetCountry: null, setupBusy: false,
+    setupOpen: !localStorage.getItem('setupSeen'), setupStep: 0, presetChecked: new Set(), geoChecked: false, geoConfirm: null, presetCountry: null, setupBusy: false,
     consent: localStorage.getItem('analyticsConsent'),
     homeLab: getHomeLab(), tier: getDefaultTierLabel(),
     upgradePct: localStorage.getItem('upgradeThresholdPercent') || '4',
@@ -361,36 +361,67 @@ async function loadPresetIndexes() {
     if (presetFilmIndex && presetLabIndex) return;
     try { presetFilmIndex = await (await fetch('films/index.json')).json(); } catch { presetFilmIndex = []; }
     try { presetLabIndex = await (await fetch('labs/index.json')).json(); } catch { presetLabIndex = []; }
-    if (geoGuess === undefined) detectUserLocation();
     render();
 }
 
 // ---------- Geo-based preset defaults (mirrors root's js/app.js) ----------
 // Detection never leaves the device: no reverse-geocoding, no IP lookup, no
-// network request of any kind. Only ever *pre-ticks* checkboxes below — the
-// user still chooses what actually gets imported. City-level matching needs
-// lat/lon on index.json entries, which the shipped files don't carry yet
-// (root doesn't get real city-level matches today either) — kept for
-// forward-compat so this starts working the moment that data ships, with
-// zero further app.js changes. Falls back to matching by country via the
-// visitor's IANA timezone (js/tz-country.js) otherwise.
+// network request of any kind — just the on-device Geolocation API (or the
+// IANA timezone as a fallback) compared against this small built-in table
+// of the handful of cities the shipped presets actually cover. Only ever
+// *suggests* a city for the user to confirm (see the Correct/Incorrect
+// panel in renderPresetPicker) — nothing gets ticked without that.
 //
+// Only triggered from the Setup wizard (App.openSetup(), and init() when
+// landing directly on it) — not from Settings' Starter presets card, which
+// only loads the plain country list. Geolocation is a real OS permission
+// prompt; asking for it just because someone opened a settings screen
+// (rather than the onboarding flow it's meant to speed up) is the kind of
+// thing that trains people to reflexively deny it everywhere.
+//
+// Approximate city-center coordinates, only for cities the shipped
+// films/labs presets cover — adding a new city here needs both a films/
+// labs YAML with that city and an entry below, so this only ever grows
+// alongside real data, never drifts ahead of it.
+const CITY_COORDS = {
+    Adelaide: { lat: -34.9285, lon: 138.6007, country: 'Australia' },
+    Brisbane: { lat: -27.4698, lon: 153.0251, country: 'Australia' },
+    Canberra: { lat: -35.2809, lon: 149.1300, country: 'Australia' },
+    Melbourne: { lat: -37.8136, lon: 144.9631, country: 'Australia' },
+    Perth: { lat: -31.9505, lon: 115.8605, country: 'Australia' },
+    Sydney: { lat: -33.8688, lon: 151.2093, country: 'Australia' },
+    Toronto: { lat: 43.6532, lon: -79.3832, country: 'Canada' },
+    Tokyo: { lat: 35.6762, lon: 139.6503, country: 'Japan' },
+    London: { lat: 51.5072, lon: -0.1276, country: 'United Kingdom' },
+    Chicago: { lat: 41.8781, lon: -87.6298, country: 'United States' },
+    'Los Angeles': { lat: 34.0522, lon: -118.2437, country: 'United States' },
+    'New York': { lat: 40.7128, lon: -74.0060, country: 'United States' },
+    Portland: { lat: 45.5152, lon: -122.6784, country: 'United States' },
+    'San Francisco': { lat: 37.7749, lon: -122.4194, country: 'United States' },
+};
 // state.geoChecked gates the picker UI (see renderPresetPicker): the list
-// stays in a "detecting…" placeholder — nothing pre-fillable yet — until
-// this resolves one way or the other (granted+matched, granted+no-match,
-// denied, timed out, or no Geolocation API at all), so a slow permission
-// prompt can't leave checkboxes interactive for a moment before suddenly
-// jumping to pre-ticked underneath the user.
+// stays in a "waiting for location…" placeholder — nothing pre-fillable
+// yet — until this resolves one way or the other (granted+matched,
+// granted+no-match, denied, timed out, or no Geolocation API at all), so a
+// slow permission prompt can't leave checkboxes interactive for a moment
+// before suddenly jumping to pre-ticked underneath the user.
 let geoGuess = undefined;
 let geoDetectPromise = null;
-function nearestPresetCity(lat, lon) {
-    const candidates = [...(presetFilmIndex || []), ...(presetLabIndex || [])].filter(e => e.city && typeof e.lat === 'number' && typeof e.lon === 'number');
+function haversineKm(lat1, lon1, lat2, lon2) {
+    const R = 6371, toRad = (d) => d * Math.PI / 180;
+    const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+function nearestKnownCity(lat, lon) {
     let nearest = null, nearestDist = Infinity;
-    candidates.forEach(e => {
-        const dist = (lat - e.lat) ** 2 + (lon - e.lon) ** 2;
-        if (dist < nearestDist) { nearestDist = dist; nearest = e; }
+    Object.entries(CITY_COORDS).forEach(([city, c]) => {
+        const dist = haversineKm(lat, lon, c.lat, c.lon);
+        if (dist < nearestDist) { nearestDist = dist; nearest = { city, country: c.country }; }
     });
-    return nearestDist <= 6.25 ? nearest : null;
+    // Comfortably wider than the gap between any two shipped cities'
+    // metro areas, so this only fires for a genuinely nearby match.
+    return nearestDist <= 100 ? nearest : null;
 }
 function guessLocationFromTimezone() {
     try {
@@ -401,21 +432,12 @@ function guessLocationFromTimezone() {
 function detectUserLocation() {
     if (geoGuess !== undefined) return Promise.resolve(geoGuess);
     if (geoDetectPromise) return geoDetectPromise;
-    // Doesn't tick anything itself — city-level precision needs lat/lon on
-    // index.json entries, which the shipped files don't carry yet (see
-    // nearestPresetCity's own comment), so every real-world guess today is
-    // country-only. Ticking by country alone would grab every city in that
-    // country at once (e.g. Sydney AND Melbourne for a single "Australia"
-    // guess) — exactly the over-broad-match bug this replaced. Instead it
-    // only jumps the picker straight to that country's page (skipping the
-    // country-list page), landing the user directly in front of just their
-    // own country's cities/regions to tick themselves. If a future data
-    // update does add real city precision, nothing here needs to change —
-    // an actual city match still narrows down to a single country first.
+    // Doesn't tick or navigate anywhere itself — just records the guess for
+    // the Correct/Incorrect confirmation panel to act on (App.confirmGeo
+    // Guess()/rejectGeoGuess()). A guess is only ever a suggestion.
     const finish = (g) => {
         geoGuess = g;
         state.geoChecked = true;
-        if (g && g.country && state.presetCountry === null) state.presetCountry = g.country;
         render();
         return g;
     };
@@ -424,7 +446,7 @@ function detectUserLocation() {
         : new Promise(resolve => {
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
-                    const nearest = nearestPresetCity(pos.coords.latitude, pos.coords.longitude);
+                    const nearest = nearestKnownCity(pos.coords.latitude, pos.coords.longitude);
                     resolve(finish(nearest ? { country: nearest.country, city: nearest.city } : guessLocationFromTimezone()));
                 },
                 () => resolve(finish(guessLocationFromTimezone())),
@@ -453,40 +475,61 @@ function presetCheckList(kind, entries) {
     return sorted.map(f => {
         const key = `${kind}:${f.file}`;
         const on = state.presetChecked.has(key);
-        return `<button type="button" onclick="App.togglePresetCheck('${kind}','${jsAttr(f.file)}')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:50px;padding:0 14px;border-radius:8px;font:inherit;font-size:14px;cursor:pointer;text-align:left;background:${on ? C.accBg : C.field};border:1px solid ${on ? C.accBorder : C.border};color:${on ? C.acc : C.text2}">${escapeHtml(f.label)} <span>${on ? '✓' : ''}</span></button>`;
+        // City/state/country rather than the raw label ("Melbourne
+        // Retailers"/"Melbourne Labs") — the Films/Labs section header
+        // this sits under already says which kind it is, so repeating
+        // that in every row's own label is redundant. Falls back to the
+        // full label only for country-wide files with no city of their
+        // own (e.g. "Australian Retailers").
+        const display = f.city || f.state || f.country || f.label;
+        return `<button type="button" onclick="App.togglePresetCheck('${kind}','${jsAttr(f.file)}')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:50px;padding:0 14px;border-radius:8px;font:inherit;font-size:14px;cursor:pointer;text-align:left;background:${on ? C.accBg : C.field};border:1px solid ${on ? C.accBorder : C.border};color:${on ? C.acc : C.text2}">${escapeHtml(display)} <span>${on ? '✓' : ''}</span></button>`;
     }).join('');
 }
 function presetCountries() {
     return [...new Set([...(presetFilmIndex || []), ...(presetLabIndex || [])].map(e => e.country).filter(Boolean))].sort();
 }
 // Country selection is single-choice navigation (tap to drill into that
-// country's cities/regions), not a checkbox — mirrors presetCheckList's
-// selected-first sort so the geo-guessed country (if any) doesn't get
-// lost in a long alphabetical list.
+// country's cities/regions), not a checkbox.
 function renderCountryPicker() {
     const countries = presetCountries();
     if (!countries.length) return `<div style="font-size:12px;color:${C.faint};padding:6px 2px">${escapeHtml(t('v3NoPresetsAvailable'))}</div>`;
-    const sorted = [...countries].sort((a, b) => (a === geoGuess?.country) === (b === geoGuess?.country) ? 0 : a === geoGuess?.country ? -1 : 1);
-    return `${geoGuess ? `<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-bottom:10px">${escapeHtml(t('v3GeoSuggestCountryNote', { country: geoGuess.country }))}</div>` : `<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-bottom:10px">${escapeHtml(t('v3PickCountryNote'))}</div>`}
-<div style="display:flex;flex-direction:column;gap:6px;max-height:260px;overflow:auto">${sorted.map(c => `<button type="button" onclick="App.setPresetCountry('${jsAttr(c)}')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:50px;padding:0 14px;border-radius:8px;font:inherit;font-size:14px;cursor:pointer;text-align:left;background:${C.field};border:1px solid ${c === geoGuess?.country ? C.accBorder : C.border};color:${C.text2}">${escapeHtml(c)}${c === geoGuess?.country ? `<span style="font-size:11px;color:${C.acc}">${escapeHtml(t('v3GeoGuessedTag'))}</span>` : '<span>›</span>'}</button>`).join('')}</div>`;
+    return `<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-bottom:10px">${escapeHtml(t('v3PickCountryNote'))}</div>
+<div style="display:flex;flex-direction:column;gap:6px;max-height:260px;overflow:auto">${countries.map(c => `<button type="button" onclick="App.setPresetCountry('${jsAttr(c)}')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:50px;padding:0 14px;border-radius:8px;font:inherit;font-size:14px;cursor:pointer;text-align:left;background:${C.field};border:1px solid ${C.border};color:${C.text2}">${escapeHtml(c)}<span>›</span></button>`).join('')}</div>`;
 }
+// A geolocation request was actually made this session (only true when
+// the Setup wizard triggered it — see App.openSetup()/init()) — distinct
+// from state.geoChecked, which only means "resolved one way or another".
+// Settings' Starter presets card never calls detectUserLocation() at all,
+// so this stays false there and it goes straight to the plain country
+// list below, with no waiting/guess panel ever shown.
+function geoDetectionActive() { return geoDetectPromise !== null; }
 // Shared by the Setup wizard's presets step and Settings' Starter presets
-// card (each wraps this in its own container/footer/button). Gated on
-// state.geoChecked, not just the indexes being loaded — see
-// detectUserLocation()'s own comment for why waiting for that matters.
-// Two pages: pick a country, then tick film/lab presets scoped to just
-// that country's cities/regions — see detectUserLocation()'s comment for
-// why this replaced a flat, all-countries-at-once checklist.
+// card (each wraps this in its own container/footer/button).
+// Three states in order: waiting for the OS location prompt to resolve;
+// once resolved with an actual guess, an explicit "is this you?"
+// Correct/Incorrect panel (App.confirmGeoGuess()/rejectGeoGuess()) — nothing
+// is ticked or navigated to until answered; then the normal two-page
+// picker (pick a country, then tick film/lab presets scoped to just that
+// country's cities/regions).
 function renderPresetPicker() {
     if (!presetFilmIndex || !presetLabIndex) return `<div style="font-size:12px;color:${C.faint}">${escapeHtml(t('v3LoadingRegions'))}</div>`;
-    if (!state.geoChecked) return `<div style="font-size:12px;color:${C.faint}">${escapeHtml(t('v3DetectingRegion'))}</div>`;
+    if (geoDetectionActive() && !state.geoChecked) return `<div style="font-size:12px;color:${C.faint}">${escapeHtml(t('v3WaitingForLocation'))}</div>`;
+    if (geoDetectionActive() && geoGuess && state.geoConfirm === null) {
+        const place = geoGuess.city ? `${geoGuess.city}, ${geoGuess.country}` : geoGuess.country;
+        return `<div style="text-align:center;padding:6px 0 4px">
+<p style="font-size:13px;line-height:1.55;color:${C.text2};margin:0 0 18px">${escapeHtml(t('v3GuessedLocation', { place }))}</p>
+<div style="display:flex;gap:10px">
+<button type="button" onclick="App.rejectGeoGuess()" style="flex:1;height:46px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v3Incorrect'))}</button>
+<button type="button" onclick="App.confirmGeoGuess()" style="flex:1;height:46px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${escapeHtml(t('v3Correct'))}</button>
+</div>
+</div>`;
+    }
     if (state.presetCountry === null || !presetCountries().includes(state.presetCountry)) return renderCountryPicker();
     const country = state.presetCountry;
     const films = (presetFilmIndex || []).filter(e => e.country === country);
     const labs = (presetLabIndex || []).filter(e => e.country === country);
     return `<button type="button" onclick="App.backToPresetCountries()" style="display:flex;align-items:center;gap:4px;background:transparent;border:0;padding:0;margin-bottom:10px;font:inherit;font-size:12px;color:${C.sub};cursor:pointer">‹ ${escapeHtml(t('v3AllCountries'))}</button>
 <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${C.acc};margin-bottom:10px">${escapeHtml(country)}</div>
-${country === geoGuess?.country ? `<div style="font-size:12px;line-height:1.5;color:${C.faint};margin-bottom:10px">${escapeHtml(t('v3GeoSuggestCountryNote', { country }))}</div>` : ''}
 <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v2SectionFilms'))}</div>
 <div style="display:flex;flex-direction:column;gap:6px;max-height:180px;overflow:auto;margin-bottom:14px">${presetCheckList('films', films)}</div>
 <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v2SectionLabs'))}</div>
@@ -1988,7 +2031,7 @@ const App = {
         render();
     },
     closeChangelog() { state.changelogOpen = false; render(); },
-    openSetup() { state.setupOpen = true; state.setupStep = 0; state.menu = false; loadPresetIndexes(); render(); },
+    openSetup() { state.setupOpen = true; state.setupStep = 0; state.menu = false; loadPresetIndexes(); detectUserLocation(); render(); },
     closeSetup() { state.setupOpen = false; try { localStorage.setItem('setupSeen', '1'); } catch {} render(); },
     setupBack() { state.setupStep = Math.max(0, state.setupStep - 1); render(); },
     async setupNext() {
@@ -2007,6 +2050,21 @@ const App = {
     },
     setPresetCountry(country) { state.presetCountry = country; render(); },
     backToPresetCountries() { state.presetCountry = null; render(); },
+    // "Correct" pre-ticks the guessed city's own film/lab presets (real
+    // per-city precision now, via the CITY_COORDS match, not a country-
+    // wide guess) and lands on that country's page; country-wide-only
+    // files are left unticked either way — deliberate, still the user's
+    // call, same reasoning as the country-list note.
+    confirmGeoGuess() {
+        state.geoConfirm = 'correct';
+        state.presetCountry = geoGuess.country;
+        if (geoGuess.city) {
+            (presetFilmIndex || []).filter(e => e.city === geoGuess.city).forEach(e => state.presetChecked.add(`films:${e.file}`));
+            (presetLabIndex || []).filter(e => e.city === geoGuess.city).forEach(e => state.presetChecked.add(`labs:${e.file}`));
+        }
+        render();
+    },
+    rejectGeoGuess() { state.geoConfirm = 'incorrect'; render(); },
     async importPresets() {
         const filmFiles = [], labFiles = [];
         state.presetChecked.forEach(key => {
@@ -2227,7 +2285,7 @@ function init() {
         else if (state.menu) App.closeMenu();
     });
 
-    if (state.setupOpen) loadPresetIndexes();
+    if (state.setupOpen) { loadPresetIndexes(); detectUserLocation(); }
 
     // Fetched eagerly (not just when the changelog sheet is opened, which
     // App.openChangelog() still handles as a fallback via the same
