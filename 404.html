@@ -8,6 +8,17 @@
     <link rel="icon" type="image/svg+xml" href="/icon.svg">
     <meta name="theme-color" content="#0b0b0c">
     <meta name="robots" content="noindex">
+    <script>
+    // GitHub Pages has no real server-side routes, so /depth and /expired
+    // land here — hand them straight to the app (js/app.js's
+    // restoreViewFromLocation() unpacks ?view= and puts the pretty path
+    // back). Anything else is a genuine 404, so it falls through to the
+    // page below rather than redirecting.
+    (function () {
+        var path = location.pathname.replace(/\/$/, '').replace(/^\//, '');
+        if (path === 'depth' || path === 'expired') location.replace('/?view=' + path);
+    })();
+    </script>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Narrow:wght@600;700&display=swap" rel="stylesheet">
     <style>
