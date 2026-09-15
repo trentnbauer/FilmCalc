@@ -390,17 +390,190 @@ function computeExpired() {
     const boxSpeed = num(state.expBox) || 400;
     const month = MONTHS.indexOf(state.expMonth) + 1;
     const year = parseInt(state.expYear, 10);
-    if (!year) return { rated: t('v3IsoDash'), note: t('v3EnterExpiryYear'), age: t('v3EnterAYear') };
+    if (!year) return { ok: false, rated: t('v3IsoDash'), note: t('v3EnterExpiryYear'), age: t('v3EnterAYear') };
     const now = new Date();
     const years = Math.max(0, (now.getFullYear() - year) + (now.getMonth() + 1 - month) / 12);
     const per = (YEARS_PER_STOP[state.expProcess] || YEARS_PER_STOP.c41)[state.storage] || YEARS_PER_STOP.c41.controlled;
     const high = boxSpeed > 400 ? Math.floor(Math.log2(boxSpeed / 400)) * 0.5 : 0;
     const stops = Math.round((years / per + high) * 2) / 2;
+    const ei = Math.max(1, Math.round(boxSpeed / Math.pow(2, stops)));
     return {
-        rated: t('v3IsoValue', { iso: Math.max(1, Math.round(boxSpeed / Math.pow(2, stops))) }),
+        ok: true, boxSpeed, ei,
+        rated: t('v3IsoValue', { iso: ei }),
         note: t('v3StopsOfCompensation', { n: stops.toFixed(1) }),
         age: t('v3YrsPastExpiry', { n: years.toFixed(1) })
     };
+}
+
+// ---------- Expired film: DX code re-taping plan ----------
+// ISO 1007 CAS film-speed table, contacts S1-S5. true = conductive (bare
+// metal), false = insulated (painted black). 35mm only — 120 and sheet
+// film have no DX contacts, so the whole card is gated on state.format.
+const DX_TABLE = [
+    [25, [0, 0, 0, 1, 0]], [32, [0, 0, 0, 0, 1]], [40, [0, 0, 0, 1, 1]],
+    [50, [1, 0, 0, 1, 0]], [64, [1, 0, 0, 0, 1]], [80, [1, 0, 0, 1, 1]],
+    [100, [0, 1, 0, 1, 0]], [125, [0, 1, 0, 0, 1]], [160, [0, 1, 0, 1, 1]],
+    [200, [1, 1, 0, 1, 0]], [250, [1, 1, 0, 0, 1]], [320, [1, 1, 0, 1, 1]],
+    [400, [0, 0, 1, 1, 0]], [500, [0, 0, 1, 0, 1]], [640, [0, 0, 1, 1, 1]],
+    [800, [1, 0, 1, 1, 0]], [1000, [1, 0, 1, 0, 1]], [1250, [1, 0, 1, 1, 1]],
+    [1600, [0, 1, 1, 1, 0]], [2000, [0, 1, 1, 0, 1]], [2500, [0, 1, 1, 1, 1]],
+    [3200, [1, 1, 1, 1, 0]], [4000, [1, 1, 1, 0, 1]], [5000, [1, 1, 1, 1, 1]]
+].map(([iso, bits]) => ({ iso, bits: bits.map(Boolean) }));
+// Second row is film length + exposure latitude — shown for orientation
+// only (36 exp, ±1/2 stop) and never touched by the tape plan.
+const DX_ROW2 = [true, false, false, true, false, false];
+const DX_SILVER = { bg: '#c3c8cf', border: '#6a7078', ink: '#6a7078' };
+const DX_BLACK = { bg: '#111315', border: '#2f333a', ink: '#2f333a' };
+const DX_TAPE = { bg: 'repeating-linear-gradient(135deg,#ff7a2f 0 3px,#c25617 3px 6px)', border: '#ff9557', ink: '#1b0e05' };
+const DX_FOIL = { bg: 'repeating-linear-gradient(135deg,#5fa8d3 0 3px,#3d7ea6 3px 6px)', border: '#8ccaea', ink: '#06131c' };
+const DX_S_LABELS = ['G', 'S1', 'S2', 'S3', 'S4', 'S5'];
+
+function dxExact(iso) { return DX_TABLE.find(d => d.iso === iso) || null; }
+// Always the box speed's nearest DX speed at or below it — the
+// conservative rounding direction, since rounding up would understate how
+// much protection an old roll needs.
+function dxSnapDown(v) {
+    let best = DX_TABLE[0];
+    DX_TABLE.forEach(d => { if (d.iso <= v) best = d; });
+    return best;
+}
+function dxTapeReachable(src, d) { return d.bits.every((b, i) => !b || src.bits[i]); }
+function dxListNames(idx) {
+    const names = idx.map(i => DX_S_LABELS[i + 1]);
+    if (names.length <= 1) return names.join('');
+    return names.slice(0, -1).join(', ') + ' ' + t('v4DxAnd') + ' ' + names[names.length - 1];
+}
+function dxCells(src, target) {
+    const out = [{ ...DX_SILVER, tag: '' }];
+    for (let i = 0; i < 5; i++) {
+        const s = src.bits[i], tt = target.bits[i];
+        if (s && !tt) out.push({ ...DX_TAPE, tag: 'TAPE' });
+        else if (!s && tt) out.push({ ...DX_FOIL, tag: 'FOIL' });
+        else out.push({ ...(s ? DX_SILVER : DX_BLACK), tag: '' });
+    }
+    DX_ROW2.forEach(on => out.push({ ...(on ? DX_SILVER : DX_BLACK), tag: '' }));
+    return out;
+}
+function dxPlan(src, target, kind, ei) {
+    const tape = [], foil = [];
+    target.bits.forEach((tt, i) => {
+        if (src.bits[i] && !tt) tape.push(i);
+        else if (!src.bits[i] && tt) foil.push(i);
+    });
+    const steps = [];
+    if (tape.length) steps.push({ swatchBg: DX_TAPE.bg, swatchBorder: DX_TAPE.border, text: t('v4DxStepTape', { squares: dxListNames(tape) }) });
+    if (foil.length) steps.push({ swatchBg: DX_FOIL.bg, swatchBorder: DX_FOIL.border, text: t('v4DxStepFoil', { squares: dxListNames(foil) }) });
+    if (!tape.length && !foil.length) steps.push({ swatchBg: DX_SILVER.bg, swatchBorder: DX_SILVER.border, text: t('v4DxStepNoChange') });
+    const offBy = Math.log2(target.iso / ei);
+    const mag = Math.abs(offBy).toFixed(1);
+    const stopWord = t(mag === '1.0' ? 'v4DxStopSingular' : 'v4DxStopPlural');
+    const exact = Math.abs(offBy) < 0.08;
+    const meta = exact ? t('v4DxExact') : t(offBy > 0 ? 'v4DxOverEi' : 'v4DxUnderEi', { mag, stopWord, ei });
+    const foilKind = kind === 'foil';
+    const over = Math.abs(offBy) > 1.01;
+    const warn = !over ? null
+        : t(offBy > 0 ? 'v4DxWarnOver' : 'v4DxWarnUnder', { mag, stopWord, ei }) + (foilKind ? '' : ' ' + t('v4DxWarnFoilHint'));
+    return {
+        warn,
+        badge: t(foilKind ? 'v4DxBadgeTapeFoil' : 'v4DxBadgeTapeOnly'),
+        badgeMeta: meta,
+        badgeColor: foilKind ? C.blue : C.acc,
+        cardBorder: foilKind ? C.border : C.accBorder,
+        isoLabel: t('v4DxCameraReads', { iso: target.iso }),
+        cells: dxCells(src, target),
+        rowNote: t('v4DxRowNote'),
+        steps
+    };
+}
+// Null when there's nothing to show yet (no expiry year entered) or the
+// format isn't 35mm — DX contacts only exist on 35mm cassettes.
+function computeDxPlans(ex) {
+    if (!ex.ok || state.format !== '35mm') return null;
+    const src = dxExact(ex.boxSpeed) || dxSnapDown(ex.boxSpeed);
+    const target = dxSnapDown(ex.ei);
+    const needsFoil = target.bits.some((tt, i) => tt && !src.bits[i]);
+    const plans = [];
+    if (!needsFoil) {
+        plans.push(dxPlan(src, target, 'tape', ex.ei));
+    } else {
+        // Tape alone can only remove contacts, never add one back, so when
+        // the exact target needs a contact restored, the tape-only plan
+        // instead targets the nearest speed tape actually can reach —
+        // shown first — with the exact match (needing foil) shown second.
+        const reach = DX_TABLE.filter(d => dxTapeReachable(src, d));
+        const best = reach.reduce((a, b) => Math.abs(Math.log2(b.iso / ex.ei)) < Math.abs(Math.log2(a.iso / ex.ei)) ? b : a, reach[0]);
+        plans.push(dxPlan(src, best, 'tape', ex.ei));
+        plans.push(dxPlan(src, target, 'foil', ex.ei));
+    }
+    const srcNote = src.iso === ex.boxSpeed
+        ? t('v4DxSrcCodesAs', { iso: src.iso })
+        : t('v4DxSrcAssumed', { box: ex.boxSpeed, iso: src.iso });
+    return {
+        headline: needsFoil ? t('v4DxHeadlineNeedsMore', { iso: target.iso }) : t('v4DxHeadlineTapeIt', { iso: target.iso }),
+        sub: srcNote + ' ' + (needsFoil
+            ? t('v4DxSubNeedsFoil', { iso: target.iso })
+            : t('v4DxSubTapeGetsThere', { iso: target.iso, ei: ex.ei })),
+        plans
+    };
+}
+function viewExpiredDxCard(ex) {
+    const dx = computeDxPlans(ex);
+    if (!dx) return '';
+    return `<div style="margin-top:12px;padding:18px 20px;background:${C.panel};border:1px solid ${C.border};border-radius:10px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+<div style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.sub}">${escapeHtml(t('v4DxCodeHeading'))}</div>
+<div style="font-size:11px;color:${C.faint}">${escapeHtml(t('v4Dx35mmOnly'))}</div>
+</div>
+<div style="font-size:19px;font-weight:600;letter-spacing:-.01em;color:${C.text};margin-top:10px;text-wrap:pretty">${escapeHtml(dx.headline)}</div>
+<p style="margin:6px 0 0;font-size:12.5px;line-height:1.55;color:${C.sub};text-wrap:pretty">${escapeHtml(dx.sub)}</p>
+<div style="display:flex;flex-direction:column;gap:12px;margin-top:16px">
+${dx.plans.map(plan => `<div style="background:${C.panel2};border:1px solid ${plan.cardBorder};border-radius:10px;padding:14px">
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+<span style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:${plan.badgeColor}">${escapeHtml(plan.badge)}</span>
+<span style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:${C.faint}">${escapeHtml(plan.badgeMeta)}</span>
+</div>
+<div style="font-size:24px;font-weight:700;letter-spacing:-.02em;color:${C.text};margin-top:6px">${escapeHtml(plan.isoLabel)}</div>
+<div style="margin-top:12px;background:${C.field};border:1px solid ${C.border2};border-radius:9px;padding:10px 12px">
+<div style="display:flex;align-items:center;gap:9px">
+<div style="flex:1;min-width:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:3px">
+${plan.cells.map(cell => `<div style="height:21px;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;letter-spacing:.04em;background:${cell.bg};border:1px solid ${cell.border};color:${cell.ink}">${escapeHtml(cell.tag)}</div>`).join('')}
+${DX_S_LABELS.map(lab => `<div style="text-align:center;font-size:8.5px;letter-spacing:.06em;color:${C.faint}">${lab}</div>`).join('')}
+</div>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-top:8px">
+<span style="font-size:10px;line-height:1.4;letter-spacing:.03em;color:${C.faint}">${escapeHtml(plan.rowNote)}</span>
+<span style="font-size:10px;line-height:1.4;letter-spacing:.03em;color:${C.sub};text-align:right">${escapeHtml(t('v4DxFilmComesOut'))}</span>
+</div>
+</div>
+${plan.warn ? `<div style="margin-top:11px;padding:10px 12px;background:${C.redBg};border:1px solid ${C.redBorder};border-radius:8px;display:flex;gap:8px;align-items:flex-start">
+<svg style="width:14px;height:14px;flex:0 0 auto;margin-top:1px;color:${C.red}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 3.5v.5M10.3 3.9 2.6 17.2A1.5 1.5 0 0 0 3.9 19.5h16.2a1.5 1.5 0 0 0 1.3-2.3L13.7 3.9a1.5 1.5 0 0 0-2.6 0z"></path></svg>
+<span style="font-size:12.5px;line-height:1.45;color:${C.red};text-wrap:pretty">${escapeHtml(plan.warn)}</span>
+</div>` : ''}
+<div style="display:flex;flex-direction:column;gap:6px;margin-top:11px">
+${plan.steps.map(step => `<div style="display:flex;gap:8px;align-items:flex-start">
+<span style="flex:0 0 auto;margin-top:3px;width:11px;height:11px;border-radius:2px;background:${step.swatchBg};border:1px solid ${step.swatchBorder}"></span>
+<span style="font-size:12.5px;line-height:1.45;color:${C.text2};text-wrap:pretty">${escapeHtml(step.text)}</span>
+</div>`).join('')}
+</div>
+</div>`).join('')}
+</div>
+<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:14px">
+<div style="display:flex;align-items:center;gap:6px">
+<span style="width:11px;height:11px;border-radius:2px;background:${DX_SILVER.bg};border:1px solid ${DX_SILVER.border}"></span>
+<span style="font-size:11px;color:${C.faint}">${escapeHtml(t('v4DxLegendSilver'))}</span>
+</div>
+<div style="display:flex;align-items:center;gap:6px">
+<span style="width:11px;height:11px;border-radius:2px;background:${DX_BLACK.bg};border:1px solid ${DX_BLACK.border}"></span>
+<span style="font-size:11px;color:${C.faint}">${escapeHtml(t('v4DxLegendBlack'))}</span>
+</div>
+</div>
+<div style="margin-top:14px;padding-top:14px;border-top:1px solid ${C.border};display:flex;flex-direction:column;gap:9px">
+<p style="margin:0;font-size:12px;line-height:1.55;color:${C.faint};text-wrap:pretty">${escapeHtml(t('v4DxWhyOrientation'))}</p>
+<p style="margin:0;font-size:12px;line-height:1.55;color:${C.faint};text-wrap:pretty">${escapeHtml(t('v4DxWhyMetering'))}</p>
+<p style="margin:0;font-size:12px;line-height:1.55;color:${C.faint};text-wrap:pretty">${escapeHtml(t('v4DxWhyCheapCompacts'))}</p>
+<p style="margin:0;font-size:12px;line-height:1.55;color:${C.faint};text-wrap:pretty">${escapeHtml(t('v4DxWhyDevelopNormally'))}</p>
+</div>
+</div>`;
 }
 
 // ---------- Preset indexes (real films/index.json + labs/index.json) ----------
@@ -2157,6 +2330,7 @@ ${STORAGE_OPTIONS.map(([label, value, help]) => {
 <span style="font-size:12px;color:${C.faint}">${escapeHtml(ex.age)}</span>
 </div>
 </div>
+${viewExpiredDxCard(ex)}
 <p style="margin:12px 0 0;font-size:12px;line-height:1.55;color:${C.faint}">${escapeHtml(t('v3ExpiredGuideNote'))}</p>
 </div>`;
     return `<div style="padding:6px 20px 0;display:grid;grid-template-columns:${desktop ? '1fr 1fr' : '1fr'};gap:20px;align-items:start">${form}${result}</div>`;
