@@ -1552,6 +1552,10 @@ ${renderImportPreview()}
 }
 
 // ---------- Library ----------
+function formatDevTime(sec) {
+    const s = parseInt(sec, 10) || 0;
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
 function App_filmDetail(key) {
     const f = getAllFilms()[key];
     if (!f) return null;
@@ -1563,7 +1567,9 @@ function App_filmDetail(key) {
             { k: t('v3FactSpeed'), v: t('v3IsoValue', { iso: f.boxSpeed }) },
             { k: t('v3FactProcess'), v: PROCESS_LABEL[f.process] || f.process },
             { k: t('v3FactCategory'), v: FILM_COLOR_LABEL[filmColorType(f)] },
-            { k: t('formatLabel'), v: FORMAT_LABEL[f.format || '35mm'] || f.format }
+            { k: t('formatLabel'), v: FORMAT_LABEL[f.format || '35mm'] || f.format },
+            ...(f.devTimeSec ? [{ k: t('v3FactDevTime'), v: formatDevTime(f.devTimeSec) }] : []),
+            ...(f.devTempC ? [{ k: t('v3FactDevTemp'), v: `${f.devTempC}°C` }] : [])
         ],
         rows: bundles.slice().sort((a, b) => (a.filmCost / (a.rolls || 1)) - (b.filmCost / (b.rolls || 1))).map((b, i) => ({
             name: b.storeName || t('v3UnnamedStore'), meta: t(i === 0 ? 'v3CheapestSavedPrice' : 'v3SavedPrice'),
@@ -1633,7 +1639,8 @@ function viewLibrary() {
                 items: items.map(({ key, f }) => {
                     const bundles = f.bundles || [];
                     const cheapest = bundles.length ? Math.min(...bundles.map(b => b.filmCost / (parseInt(b.rolls) || 1))) : 0;
-                    return { key, kind: 'film', name: f.name, meta: (PROCESS_LABEL[f.process] || f.process) + ' · ' + t(bundles.length === 1 ? 'v3PriceCountBareOne' : 'v3PriceCountBare', { n: bundles.length || 0 }), price: CUR() + money(cheapest), unit: t('v3PerRollUnit'), accent: String(f.boxSpeed) === state.boxSpeed ? C.acc : C.faint };
+                    const devMeta = f.devTimeSec ? ` · ${formatDevTime(f.devTimeSec)}${f.devTempC ? `@${f.devTempC}°C` : ''}` : '';
+                    return { key, kind: 'film', name: f.name, meta: (PROCESS_LABEL[f.process] || f.process) + ' · ' + t(bundles.length === 1 ? 'v3PriceCountBareOne' : 'v3PriceCountBare', { n: bundles.length || 0 }) + devMeta, price: CUR() + money(cheapest), unit: t('v3PerRollUnit'), accent: String(f.boxSpeed) === state.boxSpeed ? C.acc : C.faint };
                 })
             };
         });
@@ -1941,6 +1948,17 @@ ${items.map(([key, label, meta]) => `<button type="button" onclick="App.setView(
 
 function viewSetup() {
     const step = state.setupStep;
+    // Step 1 shows a Correct/Incorrect confirm panel (renderPresetPicker,
+    // same condition mirrored here) before the actual region checklist —
+    // while that's up, the footer's Next button sits directly below
+    // "Correct" with identical accent styling, so a user going for the
+    // lower/habitual bottom-CTA can skip confirming (or rejecting) the
+    // guess entirely. presetChecked stays empty, setupNext()'s size guard
+    // then silently skips the import while the wizard still advances —
+    // "it detected my city but imported nothing." Hiding Next here forces
+    // Correct/Incorrect first; both of those already lead to a screen with
+    // its own Next available (the ticked checklist, or the country picker).
+    const showingGeoConfirm = step === 1 && geoDetectionActive() && geoGuess && state.geoConfirm === null;
     const labNames = Object.keys(getAllLabs()).filter(n => !getAllLabs()[n].hidden);
     // Same "stable internal marker" pattern as Settings' Home lab card
     // (viewSettings) — untranslated so the <option value>/state.tier
@@ -1972,7 +1990,7 @@ ${step === 2 ? `<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${e
 <div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:10px">${escapeHtml(t('v3HomeLabExplainerNote'))}</div>` : ''}
 <div style="display:flex;gap:10px;margin-top:20px">
 ${step > 0 ? `<button type="button" onclick="App.setupBack()" style="flex:1;height:46px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v2ButtonBack'))}</button>` : ''}
-${step === SETUP_STEPS.length - 1
+${showingGeoConfirm ? '' : step === SETUP_STEPS.length - 1
         ? `<button type="button" onclick="App.closeSetup()" style="flex:2;height:46px;border-radius:8px;background:${C.text};border:0;color:${C.shell};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${escapeHtml(t('v2ButtonDone'))}</button>`
         : `<button type="button" onclick="App.setupNext()" style="flex:2;height:46px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${escapeHtml(t('v2ButtonNext'))}</button>`}
 </div>
@@ -2067,7 +2085,11 @@ ${isFilm ? `<div style="display:flex;gap:10px">
 <div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('formatLabel')), selectInput('format', d.format, FORMATS))}</div>
 <div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('processLabel')), selectInput('process', d.process, PROCESSES))}</div>
 </div>
-${fieldLabel(escapeHtml(t('v2LabelType')), selectInput('colorType', d.colorType, FILM_COLORS))}` : isChemical ? `
+${fieldLabel(escapeHtml(t('v2LabelType')), selectInput('colorType', d.colorType, FILM_COLORS))}
+<div style="display:flex;gap:10px">
+<div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('v3DevTimeLabel')), textInput('devTimeSec', d.devTimeSec))}</div>
+<div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('v3DevTempLabel')), textInput('devTempC', d.devTempC))}</div>
+</div>` : isChemical ? `
 ${fieldLabel(escapeHtml(t('processLabel')), selectInput('process', d.process, PROCESSES))}
 ${fieldLabel(escapeHtml(t('v3DilutionLabel')), textInput('dilution', d.dilution, t('v3DilutionPlaceholder')))}
 <div style="display:flex;gap:10px">
@@ -2277,6 +2299,7 @@ const App = {
                 format: Object.keys(FORMAT_VALUE).find(k => FORMAT_VALUE[k] === (f.format || '35mm')) || '35mm',
                 process: Object.keys(PROCESS_VALUE).find(k => PROCESS_VALUE[k] === f.process) || 'C41',
                 colorType: FILM_COLOR_LABEL[filmColorType(f)],
+                devTimeSec: f.devTimeSec ? String(f.devTimeSec) : '', devTempC: f.devTempC ? String(f.devTempC) : '',
                 bundles: (f.bundles || []).map(b => ({ ...b, rolls: String(b.rolls), exposures: String(b.exposures), filmCost: (parseFloat(b.filmCost) || 0).toFixed(2) }))
             };
         } else if (it.kind === 'chemical') {
@@ -2443,6 +2466,7 @@ const App = {
             const filmObj = {
                 name: d.name, boxSpeed: parseInt(d.boxSpeed, 10) || 400, maxPushPull: parseFloat(d.maxPushPull) || 1,
                 process: PROCESS_VALUE[d.process] || 'C41', colorType: FILM_COLOR_VALUE[d.colorType] || 'color', format, hidden: false,
+                devTimeSec: parseInt(d.devTimeSec, 10) || undefined, devTempC: parseFloat(d.devTempC) || undefined,
                 bundles: d.bundles.map(b => ({ rolls: parseInt(b.rolls) || 1, exposures: parseInt(b.exposures) || 36, filmCost: parseFloat(b.filmCost) || 0, storeName: b.storeName || '', buyLink: b.buyLink || '', availability: b.availability || 'national', state: b.state || '', city: b.city || '' }))
             };
             const all = getAllFilms();
