@@ -1550,6 +1550,10 @@ ${renderImportPreview()}
 }
 
 // ---------- Library ----------
+function formatDevTime(sec) {
+    const s = parseInt(sec, 10) || 0;
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
 function App_filmDetail(key) {
     const f = getAllFilms()[key];
     if (!f) return null;
@@ -1561,7 +1565,9 @@ function App_filmDetail(key) {
             { k: t('v3FactSpeed'), v: t('v3IsoValue', { iso: f.boxSpeed }) },
             { k: t('v3FactProcess'), v: PROCESS_LABEL[f.process] || f.process },
             { k: t('v3FactCategory'), v: FILM_COLOR_LABEL[filmColorType(f)] },
-            { k: t('formatLabel'), v: FORMAT_LABEL[f.format || '35mm'] || f.format }
+            { k: t('formatLabel'), v: FORMAT_LABEL[f.format || '35mm'] || f.format },
+            ...(f.devTimeSec ? [{ k: t('v3FactDevTime'), v: formatDevTime(f.devTimeSec) }] : []),
+            ...(f.devTempC ? [{ k: t('v3FactDevTemp'), v: `${f.devTempC}°C` }] : [])
         ],
         rows: bundles.slice().sort((a, b) => (a.filmCost / (a.rolls || 1)) - (b.filmCost / (b.rolls || 1))).map((b, i) => ({
             name: b.storeName || t('v3UnnamedStore'), meta: t(i === 0 ? 'v3CheapestSavedPrice' : 'v3SavedPrice'),
@@ -1616,7 +1622,8 @@ function viewLibrary() {
                 items: items.map(({ key, f }) => {
                     const bundles = f.bundles || [];
                     const cheapest = bundles.length ? Math.min(...bundles.map(b => b.filmCost / (parseInt(b.rolls) || 1))) : 0;
-                    return { key, kind: 'film', name: f.name, meta: (PROCESS_LABEL[f.process] || f.process) + ' · ' + t(bundles.length === 1 ? 'v3PriceCountBareOne' : 'v3PriceCountBare', { n: bundles.length || 0 }), price: CUR() + money(cheapest), unit: t('v3PerRollUnit'), accent: String(f.boxSpeed) === state.boxSpeed ? C.acc : C.faint };
+                    const devMeta = f.devTimeSec ? ` · ${formatDevTime(f.devTimeSec)}${f.devTempC ? `@${f.devTempC}°C` : ''}` : '';
+                    return { key, kind: 'film', name: f.name, meta: (PROCESS_LABEL[f.process] || f.process) + ' · ' + t(bundles.length === 1 ? 'v3PriceCountBareOne' : 'v3PriceCountBare', { n: bundles.length || 0 }) + devMeta, price: CUR() + money(cheapest), unit: t('v3PerRollUnit'), accent: String(f.boxSpeed) === state.boxSpeed ? C.acc : C.faint };
                 })
             };
         });
@@ -2026,7 +2033,11 @@ ${isFilm ? `<div style="display:flex;gap:10px">
 <div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('formatLabel')), selectInput('format', d.format, FORMATS))}</div>
 <div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('processLabel')), selectInput('process', d.process, PROCESSES))}</div>
 </div>
-${fieldLabel(escapeHtml(t('v2LabelType')), selectInput('colorType', d.colorType, FILM_COLORS))}` : `
+${fieldLabel(escapeHtml(t('v2LabelType')), selectInput('colorType', d.colorType, FILM_COLORS))}
+<div style="display:flex;gap:10px">
+<div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('v3DevTimeLabel')), textInput('devTimeSec', d.devTimeSec))}</div>
+<div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('v3DevTempLabel')), textInput('devTempC', d.devTempC))}</div>
+</div>` : `
 ${fieldLabel(escapeHtml(t('v3AddressLabel')), textInput('address', d.address, t('v3AddressPlaceholder')))}
 ${fieldLabel(escapeHtml(t('v3WebsiteLabel')), textInput('website', d.website, 'https://…'))}
 <div style="display:flex;gap:10px">
@@ -2230,6 +2241,7 @@ const App = {
                 format: Object.keys(FORMAT_VALUE).find(k => FORMAT_VALUE[k] === (f.format || '35mm')) || '35mm',
                 process: Object.keys(PROCESS_VALUE).find(k => PROCESS_VALUE[k] === f.process) || 'C41',
                 colorType: FILM_COLOR_LABEL[filmColorType(f)],
+                devTimeSec: f.devTimeSec ? String(f.devTimeSec) : '', devTempC: f.devTempC ? String(f.devTempC) : '',
                 bundles: (f.bundles || []).map(b => ({ ...b, rolls: String(b.rolls), exposures: String(b.exposures), filmCost: (parseFloat(b.filmCost) || 0).toFixed(2) }))
             };
         } else {
@@ -2378,6 +2390,7 @@ const App = {
             const filmObj = {
                 name: d.name, boxSpeed: parseInt(d.boxSpeed, 10) || 400, maxPushPull: parseFloat(d.maxPushPull) || 1,
                 process: PROCESS_VALUE[d.process] || 'C41', colorType: FILM_COLOR_VALUE[d.colorType] || 'color', format, hidden: false,
+                devTimeSec: parseInt(d.devTimeSec, 10) || undefined, devTempC: parseFloat(d.devTempC) || undefined,
                 bundles: d.bundles.map(b => ({ rolls: parseInt(b.rolls) || 1, exposures: parseInt(b.exposures) || 36, filmCost: parseFloat(b.filmCost) || 0, storeName: b.storeName || '', buyLink: b.buyLink || '', availability: b.availability || 'national', state: b.state || '', city: b.city || '' }))
             };
             const all = getAllFilms();

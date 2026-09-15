@@ -8,6 +8,8 @@ films:
   - name: Fujifilm 200
     boxSpeed: 200
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     format: 35mm
     hidden: false
     bundles:
@@ -22,6 +24,8 @@ films:
   - name: Fujifilm 400
     boxSpeed: 400
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     format: 35mm
     hidden: false
     bundles:
@@ -36,6 +40,8 @@ films:
   - name: Kodak Gold
     boxSpeed: 200
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     format: 35mm
     hidden: false
     bundles:
@@ -58,6 +64,8 @@ films:
   - name: Kodak Gold
     boxSpeed: 200
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     format: '120'
     hidden: false
     bundles:
@@ -72,6 +80,8 @@ films:
   - name: Kodak Kodacolor
     boxSpeed: 200
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     format: 35mm
     hidden: false
     bundles:
@@ -86,6 +96,8 @@ films:
   - name: Kodak ColorPlus
     boxSpeed: 200
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     format: 35mm
     hidden: false
     bundles:
@@ -100,6 +112,8 @@ films:
   - name: Kodak UltraMax
     boxSpeed: 400
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     format: 35mm
     hidden: false
     bundles:
@@ -114,6 +128,8 @@ films:
   - name: Kodak Portra 160
     boxSpeed: 160
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     format: 35mm
     hidden: false
     bundles:
@@ -129,6 +145,8 @@ films:
     boxSpeed: 400
     maxPushPull: 2
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     format: 35mm
     hidden: false
     bundles:
@@ -143,6 +161,8 @@ films:
   - name: Kodak Portra 800
     boxSpeed: 800
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     format: 35mm
     hidden: false
     bundles:
@@ -157,6 +177,8 @@ films:
   - name: Kodak Portra 160
     boxSpeed: 160
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     format: '120'
     hidden: false
     bundles:
@@ -172,6 +194,8 @@ films:
     boxSpeed: 400
     maxPushPull: 2
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     format: '120'
     hidden: false
     bundles:
@@ -186,6 +210,8 @@ films:
   - name: Harman Phoenix
     boxSpeed: 200
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     colorType: speciality
     format: 35mm
     hidden: false
@@ -201,6 +227,8 @@ films:
   - name: Harman Phoenix
     boxSpeed: 200
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     colorType: speciality
     format: '120'
     hidden: false
@@ -216,6 +244,8 @@ films:
   - name: Kentmere 100
     boxSpeed: 100
     process: BW
+    devTimeSec: 690
+    devTempC: 20
     format: 35mm
     hidden: false
     bundles:
@@ -230,6 +260,8 @@ films:
   - name: Kentmere 400
     boxSpeed: 400
     process: BW
+    devTimeSec: 990
+    devTempC: 20
     format: 35mm
     hidden: false
     bundles:
@@ -244,6 +276,8 @@ films:
   - name: Kentmere 400
     boxSpeed: 400
     process: BW
+    devTimeSec: 990
+    devTempC: 20
     format: '120'
     hidden: false
     bundles:
@@ -259,6 +293,8 @@ films:
     boxSpeed: 400
     maxPushPull: 2
     process: BW
+    devTimeSec: 780
+    devTempC: 20
     format: 35mm
     hidden: false
     bundles:
@@ -274,6 +310,8 @@ films:
     boxSpeed: 400
     maxPushPull: 2
     process: BW
+    devTimeSec: 780
+    devTempC: 20
     format: '120'
     hidden: false
     bundles:
@@ -288,6 +326,8 @@ films:
   - name: Ilford XP2 Super
     boxSpeed: 400
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     colorType: bw
     format: 35mm
     hidden: false
@@ -304,6 +344,8 @@ films:
     boxSpeed: 400
     maxPushPull: 2
     process: BW
+    devTimeSec: 585
+    devTempC: 20
     format: 35mm
     hidden: false
     bundles:
@@ -318,6 +360,8 @@ films:
   - name: Kodak T-Max P3200
     boxSpeed: 3200
     process: BW
+    devTimeSec: 840
+    devTempC: 20
     format: 35mm
     hidden: false
     bundles:

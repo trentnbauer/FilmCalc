@@ -121,6 +121,12 @@ jobs:
                       err(path, f"{where}: boxSpeed must be a plain number (no quotes)")
                   if "maxPushPull" in film and not isinstance(film["maxPushPull"], (int, float)):
                       err(path, f"{where}: maxPushPull must be a plain number (no quotes)")
+                  if "devTimeSec" in film and not isinstance(film["devTimeSec"], (int, float)):
+                      err(path, f"{where}: devTimeSec must be a plain number of seconds (no quotes)")
+                  elif isinstance(film.get("devTimeSec"), (int, float)) and film["devTimeSec"] <= 0:
+                      err(path, f"{where}: devTimeSec must be greater than 0")
+                  if "devTempC" in film and not isinstance(film["devTempC"], (int, float)):
+                      err(path, f"{where}: devTempC must be a plain number in Celsius (no quotes)")
                   bundle_keys = defaultdict(int)
                   for j, b in enumerate(film.get("bundles") or []):
                       bw = f"{where}, bundle #{j+1}"
