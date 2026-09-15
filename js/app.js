@@ -168,7 +168,7 @@ const state = {
     frame120: localStorage.getItem('globalCamera120Type') || '6x7',
     frame35: localStorage.getItem('globalCamera35Type') || 'full',
     pushPull: '0',
-    tab: 'labs', fHiRes: (readJSON('reqFilters', {}) || {}).hiRes || false, fRush: (readJSON('reqFilters', {}) || {}).rush || false,
+    tab: 'stock', fHiRes: (readJSON('reqFilters', {}) || {}).hiRes || false, fRush: (readJSON('reqFilters', {}) || {}).rush || false,
     includePush: true,
     postModal: false, postTo: '', postRolls: localStorage.getItem('mailBackRollCount') || '1', mailBack: false,
     shareModal: false, copied: false, shareKind: 'roll',
@@ -3558,7 +3558,7 @@ const App = {
     cancelDraft() { state.draft = null; state.draftKind = null; state.draftKey = null; state.subIndex = null; render(); },
     clearAll() {
         state.boxSpeed = ''; state.packCost = ''; state.postage = ''; state.rolls = '1'; state.exposures = '36';
-        state.pushPull = '0'; state.postTo = ''; state.mailBack = false; state.tab = 'labs';
+        state.pushPull = '0'; state.postTo = ''; state.mailBack = false; state.tab = 'stock';
         state.fHiRes = false; state.fRush = false;
         render();
     },
