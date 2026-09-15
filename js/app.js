@@ -2818,6 +2818,28 @@ function init() {
     // "What's new" has something to show without waiting for a click.
     fetch('changelog.json').then(r => r.ok ? r.json() : []).then(list => { state.changelog = list; render(); }).catch(() => {});
 
+    // Chemicals aren't region-split like films/labs (see chemicals/presets.yaml's
+    // own header comment), so there's no wizard step to opt into — the whole
+    // file is merged into the library once, automatically. Gated on
+    // 'chemicalsPresetSeeded' rather than "chemicalProfiles is empty" so a
+    // user who deletes every preset chemical doesn't get them all back on
+    // their next visit.
+    if (!localStorage.getItem('chemicalsPresetSeeded')) {
+        fetch('chemicals/presets.yaml').then(r => r.ok ? r.text() : null).then(text => {
+            if (text) {
+                const doc = jsyaml.load(text) || {};
+                const entries = Array.isArray(doc.chemicals) ? doc.chemicals : [];
+                if (entries.length) {
+                    const all = getAllChemicals();
+                    entries.forEach(c => { if (c.name && !(c.name in all)) all[c.name] = { ...c, hidden: false }; });
+                    setAllChemicals(all);
+                    render();
+                }
+            }
+            try { localStorage.setItem('chemicalsPresetSeeded', '1'); } catch {}
+        }).catch(() => {});
+    }
+
     render();
 }
 

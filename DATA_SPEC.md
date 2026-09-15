@@ -169,6 +169,39 @@ C41 or ECN-2"), list both under that one entry's `processes`.
 
 ---
 
+## Chemical entries
+
+Goes in `chemicals/presets.yaml` — a single flat file, **not region-split** like `films/` and `labs/`,
+since a developer's chemistry doesn't vary by country the way a shop's price does. There's no `country`/
+`state`/`city`, and no `index.json` — the app fetches this one file directly. It's also not part of the
+AI-assisted contribution flow above: add or edit entries here by hand.
+
+Unlike films and labs, this file is **auto-imported into every user's library on first run**, with no
+setup-wizard step to opt into (see `init()` in `js/app.js`) — it's seeded once (tracked by the
+`chemicalsPresetSeeded` localStorage flag) and never re-imported after that, so a user who deletes a
+preset chemical doesn't get it back on their next visit. Keep that in mind before adding an entry: it
+will show up, unasked, in every new user's library.
+
+```yaml
+label: Common developing chemicals
+chemicals:
+- name: Kodak D-76
+  process: BW
+  dilution: "1+1"
+  capacityRolls: 8
+  cost: 14
+```
+
+| Field | Rules |
+|---|---|
+| `name` | The chemical's product name, e.g. `Kodak D-76`, `Ilford Ilfosol 3`. Keyed by exact name — a duplicate name silently overwrites the earlier entry, so don't reuse one. |
+| `process` | Exactly one of: `C41`, `BW`, `E6`, `ECN2` — same enum as film/lab `process`. Use whichever process the chemical is actually for; if it's genuinely universal (e.g. a stop bath), pick the process it's most commonly paired with. |
+| `dilution` | Free text, e.g. `1+1`, `1+50`, or `Stock` for a kit used undiluted/as-mixed. |
+| `capacityRolls` | How many 35mm 36-exposure-equivalent rolls one batch develops before exhausted. A plain number, no quotes. |
+| `cost` | Approximate price of one full batch/kit. Plain number — this is a rough starting point for the user to edit after import, **not** authoritative regional pricing like `filmCost`/`devCost` in films/labs. |
+
+---
+
 ## What to tell the user at the end
 
 After the YAML, add a short note with exactly these three things:
