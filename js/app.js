@@ -370,9 +370,11 @@ function computeCheaperFilm(home) {
     if (pick) {
         const pct = Math.round((1 - pick.cpp / curCpp) * 100);
         const how = pick.stopsSigned === 0 ? t('v3AtBoxSpeed') : t(pick.stopsSigned > 0 ? 'v3PushHow' : 'v3PullHow', { n: pick.stopsAbs });
+        const rollsLabel = t(pick.bundle.rolls === 1 ? 'v3RollsCountOne' : 'v3RollsCount', { n: pick.bundle.rolls });
         return {
             has: true, tone: 'warn', headline: t('v3CheaperAtIsoHeadline', { iso: target }),
             note: t('v3CheaperAtIsoNote', { name: pick.f.name, how, amount: CUR() + money(pick.cpp), lab: home.name, pct }),
+            packSubtext: t('v3CheaperPackSubtext', { rolls: rollsLabel, amount: CUR() + money(pick.bundle.filmCost) }),
             buyLabel: pick.bundle.storeName ? t('v3BuyAtStore', { store: pick.bundle.storeName }) : t('v3FindThisStock'),
             buyLink: pick.bundle.buyLink,
             loadLabel: t('v3LoadFilm', { name: pick.f.name }),
@@ -1084,6 +1086,7 @@ ${overPush || cheaper.tone === 'warn' ? `<svg style="width:15px;height:15px;flex
 <span style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${overPush || cheaper.tone === 'warn' ? C.red : C.sub}">${overPush ? escapeHtml(t(pushLimit === 1 ? 'v3PushedPastLimitOne' : 'v3PushedPastLimit', { n: pushLimit })) : escapeHtml(cheaper.headline)}</span>
 </div>
 <div style="font-size:14px;line-height:1.5;color:${C.text2};margin-top:5px">${overPush ? escapeHtml(t('v3PushExpectGrain')) : escapeHtml(cheaper.note)}</div>
+${(cheaper.has && !overPush) ? `<div style="font-size:12px;color:${C.faint};margin-top:3px">${escapeHtml(cheaper.packSubtext)}</div>` : ''}
 ${(cheaper.has && !overPush) ? `<div style="display:flex;gap:8px;margin-top:12px">
 <button type="button" onclick="App.loadCheaper()" style="flex:1;min-width:0;height:42px;border-radius:8px;background:transparent;border:1px solid ${C.redBorder};color:${C.red};font:inherit;font-size:13px;font-weight:600;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 12px">${escapeHtml(cheaper.loadLabel)}</button>
 ${cheaper.buyLink ? `<a href="${sanitizeUrl(cheaper.buyLink)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(cheaper.buyLabel)}" title="${escapeHtml(cheaper.buyLabel)}" style="flex:none;width:46px;height:42px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid ${C.border2};color:${C.text2};text-decoration:none">
@@ -1102,23 +1105,22 @@ ${cheaper.buyLink ? `<a href="${sanitizeUrl(cheaper.buyLink)}" target="_blank" r
 
     const totalLabs = Object.keys(getAllLabs()).filter(n => !getAllLabs()[n].hidden).length;
     const rows = state.tab === 'labs'
-        ? r.ranked.map((x, i) => { const rec = i === 0; return `<button type="button" onclick="App.openLibDetail(App.labDetail('${jsAttr(x.name)}'))" style="display:flex;align-items:center;gap:12px;width:100%;padding:14px 0;background:${rec ? GOLD.bg : 'transparent'};border:0;border-top:${rec ? '2px solid ' + GOLD.border : '1px solid ' + C.border};box-shadow:${rec ? GOLD.shadow : 'none'};animation:${rec ? GOLD.anim : 'none'};font:inherit;text-align:left;cursor:pointer">
-<span style="flex:1;min-width:0"><span style="display:block;font-size:16px;color:${rec ? GOLD.fg : C.text}">${escapeHtml(x.name)}${x.name === state.homeLab ? ' ' + escapeHtml(t('v3HomeSuffix')) : ''}</span><span style="display:block;font-size:12px;color:${rec ? '#c9b98a' : C.faint};margin-top:3px">${CUR()}${money(x.pick.devCost)} · ${escapeHtml(x.pick.label.toLowerCase())} · ${(turnaroundLabels[x.pick.turnaroundTime] || '').toLowerCase()}</span></span>
-<span style="text-align:right;flex:none"><span style="display:block;font-size:24px;font-weight:600;color:${rec ? GOLD.fg : (i === 0 ? C.blue : C.text2)}">${money(x.cpp)}</span><span style="display:block;font-size:11px;color:${rec ? GOLD.fg : C.faint};margin-top:2px">${rec ? escapeHtml(t('v3TagCheapestLower')) : '+' + ((x.cpp - best.cpp) * 100).toFixed(1) + 'c'}</span></span>
-<span style="color:${rec ? GOLD.fg : C.border3};font-size:18px;flex:none">›</span>
-</button>`; }).join('')
+        ? r.ranked.map((x, i) => `<button type="button" onclick="App.openLibDetail(App.labDetail('${jsAttr(x.name)}'))" style="display:flex;align-items:center;gap:12px;width:100%;padding:14px 0;background:transparent;border:0;border-top:${i === 0 ? '2px solid ' + C.blue : '1px solid ' + C.border};font:inherit;text-align:left;cursor:pointer">
+<span style="flex:1;min-width:0"><span style="display:block;font-size:16px;color:${C.text}">${escapeHtml(x.name)}${x.name === state.homeLab ? ' ' + escapeHtml(t('v3HomeSuffix')) : ''}</span><span style="display:block;font-size:12px;color:${C.faint};margin-top:3px">${CUR()}${money(x.pick.devCost)} · ${escapeHtml(x.pick.label.toLowerCase())} · ${(turnaroundLabels[x.pick.turnaroundTime] || '').toLowerCase()}</span></span>
+<span style="text-align:right;flex:none"><span style="display:block;font-size:24px;font-weight:600;color:${i === 0 ? C.blue : C.text2}">${money(x.cpp)}</span><span style="display:block;font-size:11px;color:${i === 0 ? C.blue : C.faint};margin-top:2px">${i === 0 ? escapeHtml(t('v3TagCheapestLower')) : '+' + ((x.cpp - best.cpp) * 100).toFixed(1) + 'c'}</span></span>
+<span style="color:${C.border3};font-size:18px;flex:none">›</span>
+</button>`).join('')
         : filmRows.map((row, i) => {
             const st = row.f;
-            const rec = i === 0 && !row.overLimit;
             const meta = row.overLimit
                 ? t('v3MetaOverLimit', { iso: st.boxSpeed, process: PROCESS_LABEL[st.process], limit: parseFloat(st.maxPushPull ?? 1) })
                 : row.feeBlocked
                     ? t('v3MetaFeeBlocked', { iso: st.boxSpeed, process: PROCESS_LABEL[st.process], lab: home ? home.name.split(' ')[0] : t('v3GenericLab') })
                     : t('v3MetaNormal', { iso: st.boxSpeed, process: PROCESS_LABEL[st.process], pushPart: row.stopsAbs ? t('v3MetaPushPart', { sign: row.dir === 'push' ? '+' : '-', n: row.stopsAbs }) : t('v3MetaNativePart'), amount: CUR() + money(row.perFrame) });
-            return `<button type="button" onclick="App.openLibDetail(App.filmDetail('${jsAttr(filmKeyOf(st))}'))" style="display:flex;align-items:center;gap:12px;width:100%;padding:14px 0;background:${rec ? GOLD.bg : 'transparent'};border:0;border-top:${rec ? '2px solid ' + GOLD.border : '1px solid ' + C.border};box-shadow:${rec ? GOLD.shadow : 'none'};animation:${rec ? GOLD.anim : 'none'};font:inherit;text-align:left;cursor:pointer">
-<span style="flex:1;min-width:0"><span style="display:block;font-size:16px;color:${row.overLimit ? C.sub : (rec ? GOLD.fg : C.text)}">${escapeHtml(st.name)}</span><span style="display:block;font-size:12px;color:${rec ? '#c9b98a' : C.faint};margin-top:3px">${escapeHtml(meta)}</span></span>
-<span style="text-align:right;flex:none"><span style="display:block;font-size:24px;font-weight:600;color:${row.overLimit ? '#8a5c50' : (rec ? GOLD.fg : (i === 0 ? C.green : C.text2))}">${money(row.perRoll)}</span><span style="display:block;font-size:11px;color:${rec ? GOLD.fg : C.faint};margin-top:2px">${escapeHtml(t('v3PerRollAmount', { amount: CUR() }))}</span></span>
-<span style="color:${rec ? GOLD.fg : C.border3};font-size:18px;flex:none">›</span>
+            return `<button type="button" onclick="App.openLibDetail(App.filmDetail('${jsAttr(filmKeyOf(st))}'))" style="display:flex;align-items:center;gap:12px;width:100%;padding:14px 0;background:transparent;border:0;border-top:${i === 0 ? '2px solid ' + C.green : '1px solid ' + C.border};font:inherit;text-align:left;cursor:pointer">
+<span style="flex:1;min-width:0"><span style="display:block;font-size:16px;color:${row.overLimit ? C.sub : C.text}">${escapeHtml(st.name)}</span><span style="display:block;font-size:12px;color:${C.faint};margin-top:3px">${escapeHtml(meta)}</span></span>
+<span style="text-align:right;flex:none"><span style="display:block;font-size:24px;font-weight:600;color:${row.overLimit ? '#8a5c50' : (i === 0 ? C.green : C.text2)}">${money(row.perRoll)}</span><span style="display:block;font-size:11px;color:${C.faint};margin-top:2px">${escapeHtml(t('v3PerRollAmount', { amount: CUR() }))}</span></span>
+<span style="color:${C.border3};font-size:18px;flex:none">›</span>
 </button>`;
         }).join('');
 
