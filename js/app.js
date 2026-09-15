@@ -60,8 +60,10 @@ function money(n) { return (n || 0).toFixed(2); }
 function CUR() { return escapeHtml(localStorage.getItem('currencySymbol') || '$'); }
 function getAllFilms() { return readJSON('filmProfiles', {}); }
 function getAllLabs() { return readJSON('labProfiles', {}); }
+function getAllChemicals() { return readJSON('chemicalProfiles', {}); }
 function setAllFilms(v) { writeJSON('filmProfiles', v); }
 function setAllLabs(v) { writeJSON('labProfiles', v); }
+function setAllChemicals(v) { writeJSON('chemicalProfiles', v); }
 function getHomeLab() { return localStorage.getItem('homeLab') || ''; }
 function setHomeLab(name) { try { localStorage.setItem('homeLab', name || ''); } catch {} }
 function getDefaultTierLabel() { return localStorage.getItem('defaultTierLabel') || ''; }
@@ -1590,12 +1592,27 @@ function App_labDetail(name) {
         }))
     };
 }
+function App_chemicalDetail(key) {
+    const c = getAllChemicals()[key];
+    if (!c) return null;
+    return {
+        kind: 'chemical', key, name: c.name,
+        meta: (PROCESS_LABEL[c.process] || c.process) + (c.dilution ? ' · ' + c.dilution : ''),
+        facts: [
+            { k: t('processLabel'), v: PROCESS_LABEL[c.process] || c.process },
+            { k: t('v3DilutionLabel'), v: c.dilution || t('v3NotSaved') },
+            { k: t('v3CapacityLabel'), v: c.capacityRolls ? t('v3RollsValue', { n: c.capacityRolls }) : t('v3NotSaved') }
+        ],
+        rows: []
+    };
+}
 
 function viewLibrary() {
     const desktop = state.desktop;
-    const allFilms = getAllFilms(), allLabs = getAllLabs();
+    const allFilms = getAllFilms(), allLabs = getAllLabs(), allChemicals = getAllChemicals();
     const films = Object.entries(allFilms).filter(([, f]) => !f.hidden);
     const labs = Object.entries(allLabs).filter(([, l]) => !l.hidden);
+    const chemicals = Object.entries(allChemicals).filter(([, c]) => !c.hidden);
     const q = state.libSearch.trim().toLowerCase();
 
     let groups = [];
@@ -1620,6 +1637,21 @@ function viewLibrary() {
                 })
             };
         });
+    } else if (state.libTab === 'chemicals') {
+        const list = chemicals
+            .filter(([, c]) => !q || c.name.toLowerCase().indexOf(q) > -1)
+            .filter(([, c]) => state.libFilter === 'All' || (PROCESS_LABEL[c.process] || c.process) === state.libFilter);
+        if (list.length) {
+            groups = [{
+                title: t('v3SavedChemicalsTitle'), count: t(list.length === 1 ? 'v3ChemicalCountOne' : 'v3ChemicalCount', { n: list.length }),
+                items: list.map(([key, c]) => ({
+                    key, kind: 'chemical', name: c.name,
+                    meta: (PROCESS_LABEL[c.process] || c.process) + (c.dilution ? ' · ' + c.dilution : ''),
+                    price: c.cost ? CUR() + money(c.cost) : '—', unit: c.capacityRolls ? t('v3RollsValue', { n: c.capacityRolls }) : '',
+                    accent: C.faint
+                }))
+            }];
+        }
     } else {
         const list = labs
             .filter(([name]) => !q || name.toLowerCase().indexOf(q) > -1)
@@ -1644,12 +1676,14 @@ function viewLibrary() {
 
     const searchBar = `<div style="display:flex;align-items:center;gap:10px;height:44px;padding:0 12px;background:${C.panel};border:1px solid ${C.border};border-radius:10px;flex:1;min-width:0">
 <svg style="width:16px;height:16px;flex:none;color:${C.faint}" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"></circle><path stroke-linecap="round" d="M20 20l-4.2-4.2"></path></svg>
-<input type="text" value="${escapeHtml(state.libSearch)}" onchange="App.setField('libSearch',this.value)" placeholder="${escapeHtml(t(state.libTab === 'films' ? 'v3SearchStocksPlaceholder' : 'v3SearchLabsPlaceholder', { n: state.libTab === 'films' ? films.length : labs.length }))}" aria-label="${escapeHtml(t('v3SearchLibraryLabel'))}" style="width:100%;background:transparent;border:0;outline:none;font:inherit;font-size:14px;color:${C.text}">
+<input type="text" value="${escapeHtml(state.libSearch)}" onchange="App.setField('libSearch',this.value)" placeholder="${escapeHtml(t(state.libTab === 'films' ? 'v3SearchStocksPlaceholder' : state.libTab === 'chemicals' ? 'v3SearchChemicalsPlaceholder' : 'v3SearchLabsPlaceholder', { n: state.libTab === 'films' ? films.length : state.libTab === 'chemicals' ? chemicals.length : labs.length }))}" aria-label="${escapeHtml(t('v3SearchLibraryLabel'))}" style="width:100%;background:transparent;border:0;outline:none;font:inherit;font-size:14px;color:${C.text}">
 </div>`;
 
     const filterSummary = state.libTab === 'films'
         ? [state.libFilter, state.libFormat, state.libIso === 'All' ? 'All' : t('v3IsoValue', { iso: state.libIso }), state.libProcess].filter(x => x !== 'All').join(' · ') || t('v3AllFilms')
-        : (state.libFilter === 'All' ? t('v3AllLabs') : state.libFilter);
+        : state.libTab === 'chemicals'
+            ? (state.libFilter === 'All' ? t('v3AllChemicals') : state.libFilter)
+            : (state.libFilter === 'All' ? t('v3AllLabs') : state.libFilter);
 
     const filterBtn = `<button type="button" onclick="App.setField('libFilterModal',true)" style="width:${desktop ? '210px' : '100%'};flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;height:44px;padding:0 14px;background:${C.panel};border:1px solid ${C.border};border-radius:10px;font:inherit;cursor:pointer">
 <span style="display:flex;align-items:center;gap:8px;min-width:0">
@@ -1684,17 +1718,21 @@ ${g.items.map(it => `<button type="button" onclick="App.openLibDetailByKey('${it
 <div style="display:flex;gap:4px;padding:4px;background:${C.panel};border:1px solid ${C.border};border-radius:10px;flex:${desktop ? '0 0 260px' : '1'}">
 <button type="button" onclick="App.setLibTab('films')" style="flex:1;height:40px;border-radius:7px;border:0;display:flex;align-items:center;justify-content:center;gap:7px;font:inherit;font-size:13px;cursor:pointer;background:${state.libTab === 'films' ? '#1f2228' : 'transparent'};color:${state.libTab === 'films' ? C.text : C.sub};font-weight:${state.libTab === 'films' ? 600 : 400}">${escapeHtml(t('v2SectionFilms'))} <span style="font-size:11px;font-weight:400;color:${C.faint}">${films.length}</span></button>
 <button type="button" onclick="App.setLibTab('labs')" style="flex:1;height:40px;border-radius:7px;border:0;display:flex;align-items:center;justify-content:center;gap:7px;font:inherit;font-size:13px;cursor:pointer;background:${state.libTab === 'labs' ? '#1f2228' : 'transparent'};color:${state.libTab === 'labs' ? C.text : C.sub};font-weight:${state.libTab === 'labs' ? 600 : 400}">${escapeHtml(t('v2SectionLabs'))} <span style="font-size:11px;font-weight:400;color:${C.faint}">${labs.length}</span></button>
+<button type="button" onclick="App.setLibTab('chemicals')" style="flex:1;height:40px;border-radius:7px;border:0;display:flex;align-items:center;justify-content:center;gap:7px;font:inherit;font-size:13px;cursor:pointer;background:${state.libTab === 'chemicals' ? '#1f2228' : 'transparent'};color:${state.libTab === 'chemicals' ? C.text : C.sub};font-weight:${state.libTab === 'chemicals' ? 600 : 400}">${escapeHtml(t('v3SectionChemicals'))} <span style="font-size:11px;font-weight:400;color:${C.faint}">${chemicals.length}</span></button>
 </div>
 ${searchBar}
 ${filterBtn}
 </div>
 ${list}
-<button type="button" onclick="App.addLibItem()" style="width:100%;height:48px;margin-top:20px;border-radius:10px;background:transparent;border:1px dashed ${C.border3};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${state.libTab === 'films' ? escapeHtml(t('v3ButtonAddFilmStock')) : escapeHtml(t('v2ButtonNewLab'))}</button>
+<button type="button" onclick="App.addLibItem()" style="width:100%;height:48px;margin-top:20px;border-radius:10px;background:transparent;border:1px dashed ${C.border3};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${state.libTab === 'films' ? escapeHtml(t('v3ButtonAddFilmStock')) : state.libTab === 'chemicals' ? escapeHtml(t('v3ButtonAddChemical')) : escapeHtml(t('v2ButtonNewLab'))}</button>
 </div>`;
 }
 
 function viewLibFilterModal() {
-    const filters = state.libTab === 'films' ? ['All', 'Colour', 'B&W', 'Speciality'] : ['All', 'Hi-res', 'Next day', 'Mail-back'];
+    const processes = ['All', 'C41', 'B&W', 'E6', 'ECN-2'];
+    const filters = state.libTab === 'films' ? ['All', 'Colour', 'B&W', 'Speciality']
+        : state.libTab === 'chemicals' ? processes
+            : ['All', 'Hi-res', 'Next day', 'Mail-back'];
     const chipRow = (label, current, onClickField) => filters.map(l => {
         const on = current === l;
         return `<button type="button" onclick="App.setField('${onClickField}','${l}')" style="height:38px;padding:0 14px;border-radius:9px;font:inherit;font-size:13px;cursor:pointer;background:${on ? C.text : 'transparent'};border:1px solid ${on ? C.text : C.border2};color:${on ? C.shell : C.sub}">${l}</button>`;
@@ -1702,18 +1740,17 @@ function viewLibFilterModal() {
     const allFilms = Object.values(getAllFilms());
     const formats = ['All', '35mm', '120', '110', '127', '220', 'Sheet'];
     const isos = ['All'].concat([...new Set(allFilms.map(f => String(f.boxSpeed)))].sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0)));
-    const processes = ['All', 'C41', 'B&W', 'E6', 'ECN-2'];
     return `<div style="position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:${shellW()};z-index:46;display:flex;flex-direction:column;justify-content:flex-end">
 <div onclick="App.setField('libFilterModal',false)" style="position:absolute;inset:0;background:rgba(4,5,6,.72);cursor:pointer"></div>
 <div role="dialog" aria-modal="true" style="position:relative;background:#131518;border-top:1px solid #2f333a;border-radius:18px 18px 0 0;padding:8px 20px 22px;box-shadow:0 -18px 40px rgba(0,0,0,.45)">
 <div style="width:38px;height:4px;border-radius:2px;background:${C.border3};margin:0 auto 14px"></div>
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-<span style="font-size:16px;font-weight:700;color:${C.text}">${state.libTab === 'films' ? escapeHtml(t('v3FilterFilmsHeading')) : escapeHtml(t('v3FilterLabsHeading'))}</span>
+<span style="font-size:16px;font-weight:700;color:${C.text}">${state.libTab === 'films' ? escapeHtml(t('v3FilterFilmsHeading')) : state.libTab === 'chemicals' ? escapeHtml(t('v3FilterChemicalsHeading')) : escapeHtml(t('v3FilterLabsHeading'))}</span>
 <button type="button" onclick="App.setField('libFilterModal',false)" aria-label="${escapeHtml(t('closeLabel'))}" style="width:32px;height:32px;border-radius:8px;background:#1f2228;border:0;color:${C.sub};font:inherit;font-size:15px;line-height:1;cursor:pointer">✕</button>
 </div>
 <div style="display:flex;flex-direction:column;gap:14px">
 <div>
-<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${state.libTab === 'films' ? escapeHtml(t('v3FilmTypeLabel')) : escapeHtml(t('v3OffersLabel'))}</div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${state.libTab === 'films' ? escapeHtml(t('v3FilmTypeLabel')) : state.libTab === 'chemicals' ? escapeHtml(t('processLabel')) : escapeHtml(t('v3OffersLabel'))}</div>
 <div style="display:flex;gap:6px;flex-wrap:wrap">${chipRow(null, state.libFilter, 'libFilter')}</div>
 </div>
 ${state.libTab === 'films' ? `<div>
@@ -1750,20 +1787,20 @@ function viewLibDetail() {
 <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
 <span style="min-width:0">
 <span style="display:block;font-size:18px;font-weight:700;color:${C.text}">${escapeHtml(it.name)}</span>
-${mapsHref ? `<a href="${mapsHref}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:5px;margin-top:4px;font-size:12px;color:${C.blue};text-decoration:none"><svg style="width:12px;height:12px;flex:none" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s7-6.3 7-11a7 7 0 10-14 0c0 4.7 7 11 7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg><span>${escapeHtml(it.meta)}</span></a>` : (it.kind === 'film' ? `<span style="display:block;font-size:12px;color:${C.faint};margin-top:3px">${escapeHtml(it.meta)}</span>` : '')}
+${mapsHref ? `<a href="${mapsHref}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:5px;margin-top:4px;font-size:12px;color:${C.blue};text-decoration:none"><svg style="width:12px;height:12px;flex:none" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s7-6.3 7-11a7 7 0 10-14 0c0 4.7 7 11 7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg><span>${escapeHtml(it.meta)}</span></a>` : (it.kind === 'film' || it.kind === 'chemical' ? `<span style="display:block;font-size:12px;color:${C.faint};margin-top:3px">${escapeHtml(it.meta)}</span>` : '')}
 </span>
 <button type="button" onclick="App.closeLibDetail()" aria-label="${escapeHtml(t('closeLabel'))}" style="width:32px;height:32px;flex:none;border-radius:8px;background:#1f2228;border:0;color:${C.sub};font:inherit;font-size:15px;line-height:1;cursor:pointer">✕</button>
 </div>
 <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:14px">${it.facts.map(f => `<span style="display:flex;align-items:baseline;gap:6px;padding:7px 11px;border-radius:8px;background:${C.field};border:1px solid ${C.border}"><span style="font-size:11px;color:${C.faint}">${escapeHtml(f.k)}</span><span style="font-size:13px;font-weight:600;color:${C.text}">${escapeHtml(f.v)}</span></span>`).join('')}</div>
-<div style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.sub};margin:18px 0 4px">${it.kind === 'film' ? escapeHtml(t('v2LabelWhereToBuy')) : escapeHtml(t('v3ServiceTiersHeading'))}</div>
+${it.kind === 'chemical' ? '' : `<div style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.sub};margin:18px 0 4px">${it.kind === 'film' ? escapeHtml(t('v2LabelWhereToBuy')) : escapeHtml(t('v3ServiceTiersHeading'))}</div>
 <div>
 ${it.rows.length === 0 ? `<div style="padding:12px 0;border-top:1px solid ${C.border};font-size:12px;color:${C.faint}">${it.kind === 'film' ? escapeHtml(t('v2EmptyNoPurchaseLinks')) : escapeHtml(t('v2EmptyNoServiceTiers'))}</div>` : it.rows.map(r => it.kind === 'film' && r.isLink
         ? `<a href="${r.href}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid ${C.border};text-decoration:none"><span style="flex:1;min-width:0"><span style="display:block;font-size:14px;color:${C.text}">${escapeHtml(r.name)}</span><span style="display:block;font-size:11px;color:${C.faint};margin-top:2px">${escapeHtml(r.meta)}</span></span><span style="font-size:17px;font-weight:600;color:${r.color}">${r.price}</span><span style="font-size:14px;color:${C.faint};flex:none">${r.cta}</span></a>`
         : `<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid ${C.border}"><span style="flex:1;min-width:0"><span style="display:block;font-size:14px;color:${C.text}">${escapeHtml(r.name)}</span><span style="display:block;font-size:11px;color:${C.faint};margin-top:2px">${escapeHtml(r.meta)}</span></span><span style="font-size:17px;font-weight:600;color:${r.color}">${r.price}</span></div>`
     ).join('')}
-</div>
+</div>`}
 <div style="display:flex;gap:8px;margin-top:18px">
-<button type="button" onclick="App.loadIntoLookup()" style="flex:2;height:46px;border-radius:10px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${escapeHtml(t('v3ButtonLoadIntoLookup'))}</button>
+${it.kind === 'chemical' ? '' : `<button type="button" onclick="App.loadIntoLookup()" style="flex:2;height:46px;border-radius:10px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${escapeHtml(t('v3ButtonLoadIntoLookup'))}</button>`}
 <button type="button" onclick="App.openEditorFor()" style="flex:1;height:46px;border-radius:10px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v2ButtonEdit'))}</button>
 </div>
 <div style="display:flex;gap:8px;margin-top:8px">
@@ -2004,16 +2041,20 @@ function selectInput(field, value, options) {
 
 function viewEditor() {
     const d = state.draft;
-    const isFilm = state.draftKind === 'film';
-    const subList = isFilm ? d.bundles : d.services;
+    const kind = state.draftKind;
+    const isFilm = kind === 'film';
+    const isChemical = kind === 'chemical';
+    const subList = isChemical ? [] : isFilm ? d.bundles : d.services;
     const subRows = subList.map((b, i) => ({
         title: isFilm ? (b.storeName || t('v3UnnamedStore')) : (b.label || t('v3UnnamedTier')),
         meta: isFilm ? `${b.rolls}×${b.exposures} · ${CUR()}${(parseFloat(b.filmCost) || 0).toFixed(2)} · ${b.availability}` : t('v3DevMailBackMeta', { dev: CUR() + (parseFloat(b.devCost) || 0).toFixed(2), mailBack: b.mailBackCost === '' ? t('v3NotApplicable') : CUR() + (parseFloat(b.mailBackCost) || 0).toFixed(2) }),
         i
     }));
+    const heading = isFilm ? t('v3EditFilmHeading') : isChemical ? t('v3EditChemicalHeading') : t('v3EditLabHeading');
+    const saveLabel = isFilm ? t('v2ButtonSaveFilm') : isChemical ? t('v3ButtonSaveChemical') : t('v2ButtonSaveLab');
     return `<div role="dialog" aria-modal="true" style="position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:${shellW()};z-index:58;background:${C.shell};display:flex;flex-direction:column">
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid ${C.border};background:#131518">
-<span style="font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.text}">${isFilm ? escapeHtml(t('v3EditFilmHeading')) : escapeHtml(t('v3EditLabHeading'))}</span>
+<span style="font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.text}">${escapeHtml(heading)}</span>
 <button type="button" onclick="App.cancelDraft()" aria-label="${escapeHtml(t('closeLabel'))}" style="width:36px;height:36px;border-radius:8px;background:#1f2228;border:1px solid ${C.border2};color:${C.sub};font:inherit;font-size:16px;line-height:1;cursor:pointer">✕</button>
 </div>
 <div style="flex:1;overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px">
@@ -2026,7 +2067,13 @@ ${isFilm ? `<div style="display:flex;gap:10px">
 <div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('formatLabel')), selectInput('format', d.format, FORMATS))}</div>
 <div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('processLabel')), selectInput('process', d.process, PROCESSES))}</div>
 </div>
-${fieldLabel(escapeHtml(t('v2LabelType')), selectInput('colorType', d.colorType, FILM_COLORS))}` : `
+${fieldLabel(escapeHtml(t('v2LabelType')), selectInput('colorType', d.colorType, FILM_COLORS))}` : isChemical ? `
+${fieldLabel(escapeHtml(t('processLabel')), selectInput('process', d.process, PROCESSES))}
+${fieldLabel(escapeHtml(t('v3DilutionLabel')), textInput('dilution', d.dilution, t('v3DilutionPlaceholder')))}
+<div style="display:flex;gap:10px">
+<div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('v3CapacityLabel')), textInput('capacityRolls', d.capacityRolls, t('v3CapacityPlaceholder')))}</div>
+<div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('v3CostLabel')), textInput('cost', d.cost))}</div>
+</div>` : `
 ${fieldLabel(escapeHtml(t('v3AddressLabel')), textInput('address', d.address, t('v3AddressPlaceholder')))}
 ${fieldLabel(escapeHtml(t('v3WebsiteLabel')), textInput('website', d.website, 'https://…'))}
 <div style="display:flex;gap:10px">
@@ -2034,7 +2081,7 @@ ${fieldLabel(escapeHtml(t('v3WebsiteLabel')), textInput('website', d.website, 'h
 <div style="flex:1;min-width:0">${fieldLabel(escapeHtml(t('v3EmailLabel')), textInput('email', d.email))}</div>
 </div>
 ${fieldLabel(escapeHtml(t('v2LabelPriceSource')), textInput('source', d.source, 'https://…'))}`}
-<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px">
+${isChemical ? '' : `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px">
 <span style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:${C.sub}">${isFilm ? escapeHtml(t('v2LabelWhereToBuy')) : escapeHtml(t('v3ServiceTiersHeading'))}</span>
 <button type="button" onclick="App.addSub()" style="height:36px;padding:0 14px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:12px;cursor:pointer">${isFilm ? escapeHtml(t('v2ButtonAddPrice')) : escapeHtml(t('v3ButtonAddTier'))}</button>
 </div>
@@ -2042,10 +2089,10 @@ ${subRows.length === 0 ? `<div style="font-size:12px;color:${C.faint};padding:2p
 ${subRows.map(r => `<button type="button" onclick="App.openSub(${r.i})" style="display:flex;align-items:center;gap:10px;width:100%;padding:12px;background:${C.panel};border:1px solid ${C.border};border-radius:10px;font:inherit;text-align:left;cursor:pointer">
 <span style="flex:1;min-width:0"><span style="display:block;font-size:14px;color:${C.text}">${escapeHtml(r.title)}</span><span style="display:block;font-size:12px;color:${C.faint};margin-top:3px">${escapeHtml(r.meta)}</span></span>
 <svg style="width:14px;height:14px;flex:none;color:${C.faint}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 4.5l3 3M4 20l4-1 10-10-3-3L5 16l-1 4z"></path></svg>
-</button>`).join('')}
+</button>`).join('')}`}
 </div>
 <div style="display:flex;gap:10px;padding:12px 16px;border-top:1px solid ${C.border};background:#131518">
-<button type="button" onclick="App.saveDraft()" style="flex:1;height:50px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${isFilm ? escapeHtml(t('v2ButtonSaveFilm')) : escapeHtml(t('v2ButtonSaveLab'))}</button>
+<button type="button" onclick="App.saveDraft()" style="flex:1;height:50px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${escapeHtml(saveLabel)}</button>
 <button type="button" onclick="App.cancelDraft()" style="width:110px;height:50px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('cancelButton'))}</button>
 </div>
 </div>`;
@@ -2191,7 +2238,7 @@ const App = {
     labDetail: App_labDetail,
     filmDetail: App_filmDetail,
     openLibDetail(item) { if (item) { state.libOpen = item; render(); } },
-    openLibDetailByKey(kind, key) { App.openLibDetail(kind === 'film' ? App_filmDetail(key) : App_labDetail(key)); },
+    openLibDetailByKey(kind, key) { App.openLibDetail(kind === 'film' ? App_filmDetail(key) : kind === 'chemical' ? App_chemicalDetail(key) : App_labDetail(key)); },
     closeLibDetail() { state.libOpen = null; render(); },
     setLibTab(tab) { state.libTab = tab; state.libFilter = 'All'; state.libFormat = 'All'; state.libProcess = 'All'; state.libIso = 'All'; render(); },
     resetLibFilters() { state.libFilter = 'All'; state.libFormat = 'All'; state.libProcess = 'All'; state.libIso = 'All'; render(); },
@@ -2231,6 +2278,15 @@ const App = {
                 process: Object.keys(PROCESS_VALUE).find(k => PROCESS_VALUE[k] === f.process) || 'C41',
                 colorType: FILM_COLOR_LABEL[filmColorType(f)],
                 bundles: (f.bundles || []).map(b => ({ ...b, rolls: String(b.rolls), exposures: String(b.exposures), filmCost: (parseFloat(b.filmCost) || 0).toFixed(2) }))
+            };
+        } else if (it.kind === 'chemical') {
+            const c = getAllChemicals()[it.key];
+            if (!c) return;
+            state.draftKind = 'chemical'; state.draftKey = it.key;
+            state.draft = {
+                name: c.name, process: Object.keys(PROCESS_VALUE).find(k => PROCESS_VALUE[k] === c.process) || 'C41',
+                dilution: c.dilution || '', capacityRolls: c.capacityRolls ? String(c.capacityRolls) : '',
+                cost: c.cost ? c.cost.toFixed(2) : ''
             };
         } else {
             const l = getAllLabs()[it.key];
@@ -2272,6 +2328,9 @@ const App = {
         if (it.kind === 'film') {
             const all = getAllFilms();
             if (all[it.key]) { all[it.key] = { ...all[it.key], hidden: true }; setAllFilms(all); }
+        } else if (it.kind === 'chemical') {
+            const all = getAllChemicals();
+            if (all[it.key]) { all[it.key] = { ...all[it.key], hidden: true }; setAllChemicals(all); }
         } else {
             const all = getAllLabs();
             if (all[it.key]) { all[it.key] = { ...all[it.key], hidden: true }; setAllLabs(all); }
@@ -2283,6 +2342,9 @@ const App = {
         if (kind === 'film') {
             const all = getAllFilms();
             if (all[key]) { all[key] = { ...all[key], hidden: false }; setAllFilms(all); }
+        } else if (kind === 'chemical') {
+            const all = getAllChemicals();
+            if (all[key]) { all[key] = { ...all[key], hidden: false }; setAllChemicals(all); }
         } else {
             const all = getAllLabs();
             if (all[key]) { all[key] = { ...all[key], hidden: false }; setAllLabs(all); }
@@ -2295,10 +2357,11 @@ const App = {
         const name = it.name.replace(' ' + t('v3HomeSuffix'), '');
         state.confirm = {
             title: t('v3DeleteNameConfirmTitle', { name }),
-            body: it.kind === 'film' ? t('v3DeleteFilmConfirmBody') : t('v3DeleteLabConfirmBody'),
+            body: it.kind === 'film' ? t('v3DeleteFilmConfirmBody') : it.kind === 'chemical' ? t('v3DeleteChemicalConfirmBody') : t('v3DeleteLabConfirmBody'),
             cta: t('deleteButton'),
             run: () => {
                 if (it.kind === 'film') { const all = getAllFilms(); delete all[it.key]; setAllFilms(all); }
+                else if (it.kind === 'chemical') { const all = getAllChemicals(); delete all[it.key]; setAllChemicals(all); }
                 else { const all = getAllLabs(); delete all[it.key]; setAllLabs(all); }
                 state.confirm = null; state.libOpen = null;
                 say(t('v3NameDeletedToast', { name }));
@@ -2312,7 +2375,7 @@ const App = {
             body: t('v3DeleteEverythingConfirmBody'),
             cta: t('v3DeleteEverythingCta'),
             run: () => {
-                setAllFilms({}); setAllLabs({});
+                setAllFilms({}); setAllLabs({}); setAllChemicals({});
                 setHomeLab(''); setDefaultTierLabel('');
                 state.homeLab = ''; state.tier = '';
                 state.confirm = null;
@@ -2324,11 +2387,13 @@ const App = {
     runConfirm() { if (state.confirm) state.confirm.run(); render(); },
     cancelConfirm() { state.confirm = null; render(); },
     addLibItem() {
-        state.draftKind = state.libTab === 'films' ? 'film' : 'lab';
+        state.draftKind = state.libTab === 'films' ? 'film' : state.libTab === 'chemicals' ? 'chemical' : 'lab';
         state.draftKey = null;
         state.draft = state.libTab === 'films'
             ? { name: '', boxSpeed: '400', maxPushPull: '1', format: '35mm', process: 'C41', colorType: 'Colour', bundles: [] }
-            : { name: '', address: '', website: '', phone: '', email: '', source: '', services: [] };
+            : state.libTab === 'chemicals'
+                ? { name: '', process: 'C41', dilution: '', capacityRolls: '', cost: '' }
+                : { name: '', address: '', website: '', phone: '', email: '', source: '', services: [] };
         render();
     },
     setDraft(key, val) { state.draft[key] = val; render(); },
@@ -2385,6 +2450,15 @@ const App = {
             if (state.draftKey && state.draftKey !== newKey) delete all[state.draftKey];
             all[newKey] = filmObj;
             setAllFilms(all);
+        } else if (state.draftKind === 'chemical') {
+            const chemObj = {
+                name: d.name, process: PROCESS_VALUE[d.process] || 'C41', dilution: d.dilution || '',
+                capacityRolls: parseInt(d.capacityRolls) || 0, cost: parseFloat(d.cost) || 0, hidden: false
+            };
+            const all = getAllChemicals();
+            if (state.draftKey && state.draftKey !== d.name) delete all[state.draftKey];
+            all[d.name] = chemObj;
+            setAllChemicals(all);
         } else {
             const labObj = {
                 name: d.name, address: d.address || '', website: d.website || '', phone: d.phone || '', email: d.email || '', source: d.source || '', hidden: false,
@@ -2493,7 +2567,7 @@ const App = {
     },
     exportJson() {
         try {
-            const blob = new Blob([JSON.stringify({ films: getAllFilms(), labs: getAllLabs() }, null, 2)], { type: 'application/json' });
+            const blob = new Blob([JSON.stringify({ films: getAllFilms(), labs: getAllLabs(), chemicals: getAllChemicals() }, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url; a.download = 'filmcalc-library.json';
@@ -2547,6 +2621,7 @@ const App = {
                 const parsed = JSON.parse(reader.result);
                 if (parsed.films && typeof parsed.films === 'object') setAllFilms(mergeFilmProfiles(getAllFilms(), parsed.films));
                 if (parsed.labs && typeof parsed.labs === 'object') setAllLabs({ ...getAllLabs(), ...parsed.labs });
+                if (parsed.chemicals && typeof parsed.chemicals === 'object') setAllChemicals({ ...getAllChemicals(), ...parsed.chemicals });
                 if (parsed.homeLab) setHomeLab(parsed.homeLab);
                 if (parsed.defaultTierLabel) setDefaultTierLabel(parsed.defaultTierLabel);
                 state.homeLab = getHomeLab(); state.tier = getDefaultTierLabel();
