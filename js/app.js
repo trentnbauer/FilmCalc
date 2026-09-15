@@ -194,7 +194,25 @@ const state = {
     depthFormat: localStorage.getItem('depthFormat') || '35mm',
     depthAp: parseFloat(localStorage.getItem('depthAp')) || 5.6,
     depthUnits: localStorage.getItem('depthUnits') || 'm',
-    depthSheet: false
+    depthSheet: false,
+    // Process tab: dev-time/push/temperature calculator. baseTempC/tempC are
+    // always stored in Celsius regardless of display units (procUnits) —
+    // same reasoning as depthDist/depthFocal being unit-tagged separately —
+    // so unit toggling never re-derives a stored value through a lossy
+    // round trip. procFilmKey 'custom' means the fields were typed by hand
+    // rather than loaded from a saved film stock's devTimeSec/devTempC.
+    procBaseTime: localStorage.getItem('procBaseTime') || '7:30',
+    procStops: parseInt(localStorage.getItem('procStops'), 10) || 0,
+    procUnits: localStorage.getItem('procUnits') || 'c',
+    procBaseTempC: parseFloat(localStorage.getItem('procBaseTempC')) || 20,
+    procTempC: parseFloat(localStorage.getItem('procTempC')) || 20,
+    procDeveloper: localStorage.getItem('procDeveloper') || 'd76',
+    procDevType: localStorage.getItem('procDevType') || 'bw',
+    procFilmKey: localStorage.getItem('procFilmKey') || 'custom',
+    procPct: parseInt(localStorage.getItem('procPct'), 10) || 30,
+    procSheet: false,
+    procTimerOpen: false, procStageIdx: 0, procRemaining: 0, procRunning: false, procStarted: false,
+    procBeep: localStorage.getItem('procBeep') !== '0', procLastBeepAt: -1
 };
 let toastTimer = null;
 function say(text) {
@@ -785,7 +803,7 @@ ${state.toast ? `<div style="position:fixed;left:50%;transform:translateX(-50%);
 }
 
 function viewMobileHeader() {
-    const title = state.view === 'expired' ? t('v3TitleExpiredFilm') : state.view === 'settings' ? t('navSettings') : state.view === 'library' ? t('navLibrary') : state.view === 'depth' ? t('v4NavDepth') : t('appTitle');
+    const title = state.view === 'expired' ? t('v3TitleExpiredFilm') : state.view === 'settings' ? t('navSettings') : state.view === 'library' ? t('navLibrary') : state.view === 'depth' ? t('v4NavDepth') : state.view === 'process' ? 'Process' : t('appTitle');
     return `<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px">
 <span style="font-size:17px;font-weight:700;letter-spacing:-.01em;color:${C.text}">${escapeHtml(title)}</span>
 <button type="button" onclick="App.openMenu()" aria-label="${escapeHtml(t('v3MenuHeading'))}" style="width:44px;height:44px;margin-right:-12px;display:flex;align-items:center;justify-content:center;background:transparent;border:0;color:${C.sub};cursor:pointer"><svg style="width:20px;height:20px" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"></path></svg></button>
@@ -802,7 +820,7 @@ function viewDesktopHeader() {
     // like backend configuration for it (saved data, preferences) — kept
     // visually separate on the right rather than lumped in with the
     // calculator tabs on the left.
-    const frontTabs = [['lookup', t('v3NavLookup')], ['expired', t('v3NavExpired')], ['depth', t('v4NavDepth')]].map(([k, l]) => tab(k, l)).join('');
+    const frontTabs = [['lookup', t('v3NavLookup')], ['expired', t('v3NavExpired')], ['depth', t('v4NavDepth')], ['process', 'Process']].map(([k, l]) => tab(k, l)).join('');
     const backTabs = [['library', t('navLibrary')], ['settings', t('navSettings')]].map(([k, l]) => tab(k, l)).join('');
     return `<div style="display:flex;align-items:center;gap:26px;padding:16px 28px;border-bottom:1px solid ${C.border}">
 <span style="font-size:18px;font-weight:700;letter-spacing:-.01em;color:${C.text}">${escapeHtml(t('appTitle'))}</span>
@@ -1003,6 +1021,7 @@ function viewBody() {
     if (state.view === 'settings') return viewSettings();
     if (state.view === 'library') return viewLibrary();
     if (state.view === 'depth') return viewDepth();
+    if (state.view === 'process') return viewProcess();
     return viewLookup();
 }
 
@@ -1334,6 +1353,614 @@ ${state.depthSheet ? `<div style="position:absolute;inset:0;display:flex;flex-di
 ${depthSettingsPanel(vals)}
 </div>
 </div>` : ''}`;
+}
+
+// ---------- Process (dev time / push-pull / temperature calculator) ----------
+// Chemistry presets — percent-per-stop, the published time-temperature
+// slope, the valid chart range, and an agitation schedule, each citing the
+// datasheet it's built from. Fetched from developers.yaml the first time
+// the Process tab is opened (loadDevelopers()); this array is only the
+// fallback for before that load finishes, or if it fails.
+let DEVELOPERS = [
+    { value: 'standard', label: 'Standard / unknown', type: 'bw', percentPerStop: 25, baseTempC: 20, factorPerDegC: 0.90, tempRange: [15, 25], agitation: { initial: 30, intervalSec: 60, forSec: 10 }, source: 'Generic time–temperature slope (~×0.9 per +1 °C)' },
+    { value: 'd76', label: 'Kodak D-76', type: 'bw', percentPerStop: 30, baseTempC: 20, factorPerDegC: 0.90, tempRange: [18, 24], agitation: { initial: 30, intervalSec: 30, forSec: 5 }, source: 'Kodak D-76 datasheet (J-78)' },
+    { value: 'hc110', label: 'Kodak HC-110', type: 'bw', percentPerStop: 25, baseTempC: 20, factorPerDegC: 0.89, tempRange: [18, 24], agitation: { initial: 30, intervalSec: 60, forSec: 10 }, source: 'Kodak HC-110 datasheet (J-24)' },
+    { value: 'rodinal', label: 'Adox/Agfa Rodinal', type: 'bw', percentPerStop: 20, baseTempC: 20, factorPerDegC: 0.91, tempRange: [18, 24], agitation: { initial: 30, intervalSec: 60, forSec: 5 }, source: 'Rodinal datasheet, 1+50' },
+    { value: 'ddx', label: 'Ilford Ilfotec DD-X', type: 'bw', percentPerStop: 30, baseTempC: 20, factorPerDegC: 0.90, tempRange: [15, 24], agitation: { initial: 10, intervalSec: 60, forSec: 10 }, source: 'Ilford time–temperature compensation chart' },
+    { value: 'xtol24', label: 'Kodak Xtol (24 °C chart)', type: 'bw', percentPerStop: 30, baseTempC: 24, factorPerDegC: 0.90, tempRange: [20, 27], agitation: { initial: 30, intervalSec: 30, forSec: 5 }, source: 'Kodak Xtol datasheet, 24 °C column' },
+    { value: 'c41', label: 'C-41 colour negative', type: 'c41', percentPerStop: 30, baseTempC: 37.8, factorPerDegC: 0.93, tempRange: [37.5, 38.1], agitation: { initial: 10, intervalSec: 30, forSec: 2 }, source: 'Kodak Flexicolor C-41 spec (3:15 at 37.8 °C)' },
+    { value: 'e6', label: 'E-6 transparency (first dev)', type: 'e6', percentPerStop: 30, baseTempC: 37.8, factorPerDegC: 0.93, tempRange: [37.5, 38.1], agitation: { initial: 15, intervalSec: 30, forSec: 2 }, source: 'Kodak E-6 spec (6:00 first developer at 37.8 °C)' }
+];
+const PROC_PCT_CHOICES = [20, 25, 30, 40];
+const PROC_DEV_TYPES = [['bw', 'B&W'], ['c41', 'C-41'], ['e6', 'E-6']];
+let procDataLoaded = false;
+let PROC_DATA_SOURCE = 'built-in defaults';
+function loadDevelopers() {
+    if (procDataLoaded) return;
+    procDataLoaded = true;
+    fetch('developers.yaml').then(r => r.ok ? r.text() : null).then(text => {
+        if (!text) return;
+        const doc = jsyaml.load(text) || {};
+        const list = (doc.developers || []).filter(d => d && d.value && d.label && d.agitation);
+        if (!list.length) return;
+        DEVELOPERS = list.map(d => ({
+            value: String(d.value), label: String(d.label), type: d.type || 'bw',
+            percentPerStop: num(d.percentPerStop) || 25,
+            baseTempC: num(d.baseTempC) || 20,
+            factorPerDegC: num(d.factorPerDegC) || 0.9,
+            tempRange: Array.isArray(d.tempRange) && d.tempRange.length === 2 ? d.tempRange.map(v => num(v) || 20) : [15, 25],
+            agitation: {
+                initial: num(d.agitation.initial) || 30,
+                intervalSec: Math.max(5, num(d.agitation.intervalSec) || 60),
+                forSec: num(d.agitation.forSec) || 10
+            },
+            source: d.source || 'developers.yaml'
+        }));
+        PROC_DATA_SOURCE = 'developers.yaml';
+        // A reload can drop or rename what was selected — re-resolve rather
+        // than leaving the menus pointing at a developer that no longer
+        // exists.
+        const d = DEVELOPERS.find(x => x.value === state.procDeveloper) || DEVELOPERS.find(x => x.type === state.procDevType) || DEVELOPERS[0];
+        if (d && d.value !== state.procDeveloper) {
+            state.procDeveloper = d.value; state.procDevType = d.type; state.procPct = d.percentPerStop;
+            state.procBaseTempC = d.baseTempC; state.procTempC = procSnapTemp(d.baseTempC, null, d.baseTempC);
+        }
+        render();
+    }).catch(() => {});
+}
+
+// The one grid rule for temperatures, shared by the state initializer and
+// the ladder so they can't drift: whole degrees in °F, half degrees in °C —
+// plus the developer's own chart temperature, which is always a legal stop
+// even off that grid (C-41 is 37.8 °C, a 24 °C chart is 75.2 °F).
+function procSnapToGrid(c, units, anchor) {
+    const grid = units === 'f' ? (Math.round(c * 9 / 5 + 32) - 32) * 5 / 9 : Math.round(c * 2) / 2;
+    if (typeof anchor !== 'number' || !isFinite(anchor)) return grid;
+    return Math.abs(c - anchor) < Math.abs(c - grid) ? anchor : grid;
+}
+function procMmss(sec) { return formatDevTime(Math.max(0, Math.round(sec || 0))); }
+function procParseMmss(str) {
+    const txt = String(str || '').trim().replace(/[.,]/g, ':');
+    if (!txt) return 0;
+    const parts = txt.split(':');
+    if (parts.length === 1) {
+        const digits = parts[0].replace(/\D/g, '');
+        if (!digits) return 0;
+        if (digits.length > 2) return (parseInt(digits.slice(0, -2), 10) || 0) * 60 + (parseInt(digits.slice(-2), 10) || 0);
+        return (parseInt(digits, 10) || 0) * 60;
+    }
+    const m = parseInt(parts[0], 10) || 0;
+    const s = parseInt(String(parts[1]).slice(0, 2), 10) || 0;
+    return m * 60 + s;
+}
+function procDev() { return DEVELOPERS.find(d => d.value === state.procDeveloper) || DEVELOPERS[0]; }
+function procToC(v) { return state.procUnits === 'f' ? (v - 32) * 5 / 9 : v; }
+function procFromC(c) { return state.procUnits === 'f' ? c * 9 / 5 + 32 : c; }
+function procTempLabel(c) {
+    const v = procFromC(c);
+    return (Math.abs(v - Math.round(v)) < 0.05 ? Math.round(v) : v.toFixed(1)) + '°';
+}
+// In °F mode every temperature sits on a whole Fahrenheit degree, so the
+// ladder can step in whole °F and the highlighted tile still matches the
+// headline (37.8 °C reads as its published 100 °F).
+function procSnapTemp(c, units, anchorTemp) {
+    return procSnapToGrid(c, units || state.procUnits, anchorTemp === undefined ? state.procBaseTempC : anchorTemp);
+}
+function procPushFactor() { return Math.pow(1 + state.procPct / 100, state.procStops); }
+function procTempFactor(c) {
+    const d = c - state.procBaseTempC;
+    // Within a third of a degree of the chart temperature there is no
+    // adjustment — the displayed grid is whole °F / half °C, so a 37.8 °C
+    // process reads at 100 °F or 38 °C, and neither should invent a
+    // correction.
+    if (Math.abs(d) < 0.1) return 1;
+    return Math.pow(procDev().factorPerDegC, d);
+}
+function procLadderStepC() { return state.procBaseTempC >= 30 ? 0.5 : 1; }
+function procTimes() {
+    const base = procParseMmss(state.procBaseTime);
+    const afterPush = base * procPushFactor();
+    const final = afterPush * procTempFactor(state.procTempC);
+    return { base, afterPush, final };
+}
+function procStageList() {
+    const t = procTimes();
+    return [
+        { name: 'Develop', seconds: t.final || 0, agitate: true },
+        { name: 'Stop bath', seconds: 60, agitate: false },
+        { name: 'Fixer', seconds: 300, agitate: true },
+        { name: 'Wash', seconds: 300, agitate: false }
+    ];
+}
+function procAgitationPoints(stage) {
+    if (!stage.agitate) return [];
+    const a = procDev().agitation;
+    const pts = [{ at: 0, note: 'Continuous — ' + a.initial + 's' }];
+    for (let s = a.intervalSec; s < stage.seconds - 2; s += a.intervalSec) {
+        pts.push({ at: s, note: 'Agitate ' + a.forSec + 's' });
+    }
+    return pts;
+}
+let procAudioCtx = null;
+function procBeepNow() {
+    if (!state.procBeep) return;
+    try {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        procAudioCtx = procAudioCtx || new Ctx();
+        const o = procAudioCtx.createOscillator(), g = procAudioCtx.createGain();
+        o.frequency.value = 880; g.gain.value = 0.06;
+        o.connect(g); g.connect(procAudioCtx.destination);
+        o.start(); o.stop(procAudioCtx.currentTime + 0.12);
+    } catch {}
+}
+let procTick = null;
+function procStartInterval() {
+    clearInterval(procTick);
+    procTick = setInterval(() => {
+        if (!state.procRunning) return;
+        const stages = procStageList();
+        const stage = stages[state.procStageIdx];
+        const next = state.procRemaining - 1;
+        if (next <= 0) {
+            procBeepNow();
+            if (state.procStageIdx + 1 < stages.length) {
+                state.procStageIdx += 1;
+                state.procRemaining = stages[state.procStageIdx].seconds;
+                state.procLastBeepAt = -1;
+            } else {
+                state.procRunning = false;
+                state.procRemaining = 0;
+            }
+            render();
+            return;
+        }
+        const elapsed = stage.seconds - next;
+        const hit = procAgitationPoints(stage).find(p => p.at > 0 && Math.abs(p.at - elapsed) < 0.5);
+        if (hit && hit.at !== state.procLastBeepAt) { procBeepNow(); state.procLastBeepAt = hit.at; }
+        state.procRemaining = next;
+        render();
+    }, 1000);
+}
+function procSegOn(on) { return { bg: on ? '#1f2228' : 'transparent', border: on ? '1px solid ' + C.border3 : '0', fg: on ? C.text : C.sub, weight: on ? 600 : 400 }; }
+
+// All the derived display data for both layouts, computed once per render
+// so desktop/mobile/sheet/timer stay in sync without duplicating the maths —
+// same pattern as depthValues() above.
+function procValues() {
+    const dev = procDev();
+    const t = procTimes();
+    const empty = t.base <= 0;
+    const range = dev.tempRange;
+    const outOfRange = state.procTempC < range[0] || state.procTempC > range[1];
+    const bigPush = Math.abs(state.procStops) >= 3;
+    const shortTime = !empty && t.final < 240;
+    const warn = !empty && (bigPush || outOfRange || shortTime);
+
+    const pushDelta = t.afterPush - t.base;
+    const tempDelta = t.final - t.afterPush;
+    const scale = Math.max(t.base, t.final, 1);
+    const pctOf = (v) => (Math.max(0, v) / scale * 100).toFixed(2) + '%';
+
+    const breakdown = [
+        { label: 'Base', value: empty ? '—:—' : procMmss(t.base), color: C.green, sep: '→' },
+        { label: state.procStops === 0 ? 'Box speed' : (state.procStops > 0 ? '+' + state.procStops + ' stop, +' + state.procPct + '%' : state.procStops + ' stop, −' + state.procPct + '%'), value: empty ? '—:—' : procMmss(t.afterPush), color: state.procStops === 0 ? C.sub : C.acc, sep: '→' },
+        { label: procTempLabel(state.procTempC) + (state.procUnits === 'f' ? 'F' : 'C') + ', ×' + procTempFactor(state.procTempC).toFixed(2), value: empty ? '—:—' : procMmss(t.final), color: Math.abs(tempDelta) < 1 ? C.sub : C.blue, sep: '=' },
+        { label: 'Final', value: empty ? '—:—' : procMmss(t.final), color: C.text, sep: '' }
+    ];
+
+    const ladder = [];
+    const stepF = state.procUnits === 'f';
+    const stepC = procLadderStepC();
+    const centre = stepF ? Math.round(procFromC(state.procTempC)) : state.procTempC;
+    const step = stepF ? 1 : stepC;
+    const dp = (n) => (Math.abs(n - Math.round(n)) < 0.05 ? String(Math.round(n)) : n.toFixed(1));
+    for (let d = -3; d <= 4; d++) {
+        const raw = centre + d * step;
+        const c = d === 0 ? state.procTempC : procSnapTemp(stepF ? (raw - 32) * 5 / 9 : raw);
+        const shown = stepF ? procFromC(c) : c;
+        const sel = d === 0;
+        const inRange = c >= range[0] && c <= range[1];
+        const tone = inRange ? (Math.abs(c - state.procBaseTempC) <= 2 * stepC ? C.green : C.acc) : C.red;
+        ladder.push({
+            label: dp(shown) + '°' + (stepF ? 'F' : 'C'),
+            short: dp(shown) + '°',
+            time: empty ? '—:—' : procMmss(t.afterPush * procTempFactor(c)),
+            fg: sel ? '#ffeab8' : tone,
+            bg: sel
+                ? 'linear-gradient(100deg,#2a1f0a 0%,#4a3712 28%,#8a6c22 46%,#c9a144 50%,#8a6c22 54%,#4a3712 72%,#2a1f0a 100%) 0 0 / 260% 100% no-repeat'
+                : 'transparent',
+            border: sel ? '#c9a144' : C.border,
+            shadow: sel ? '0 0 0 1px rgba(201,161,68,0.25), 0 2px 14px rgba(201,161,68,0.28), inset 0 1px 0 rgba(255,234,184,0.22)' : 'none',
+            anim: sel ? 'recSheen 3.2s linear infinite' : 'none',
+            bar: sel ? '#f0d489' : tone,
+            pick: `App.procTempPick(${c})`
+        });
+    }
+
+    const stages = procStageList();
+    const stage = stages[state.procStageIdx] || stages[0];
+    const pts = procAgitationPoints(stage);
+    const elapsed = Math.max(0, stage.seconds - state.procRemaining);
+    const nextPt = pts.find(p => p.at > elapsed);
+    const inInitial = stage.agitate && elapsed < dev.agitation.initial;
+    const agitateMsg = !stage.agitate
+        ? stage.name + ' — no agitation needed, keep it moving gently if you like'
+        : inInitial
+            ? 'Agitate now — continuous for the first ' + dev.agitation.initial + 's'
+            : nextPt
+                ? 'Next agitation in ' + procMmss(nextPt.at - elapsed) + ' · ' + dev.agitation.forSec + 's at ' + procMmss(nextPt.at)
+                : 'No more agitation — leave it still until the stage ends';
+    const schedule = pts.map(p => {
+        const done = p.at < elapsed - 1;
+        const isNext = nextPt && p.at === nextPt.at;
+        return {
+            at: procMmss(p.at), note: p.note,
+            bg: isNext ? '#1f2228' : 'transparent',
+            fg: isNext ? C.acc : (done ? C.faint : C.text),
+            noteFg: isNext ? C.text2 : C.faint
+        };
+    });
+
+    const allFilms = getAllFilms();
+    const filmEntries = Object.entries(allFilms).filter(([, f]) => !f.hidden).sort((a, b) => a[1].name.localeCompare(b[1].name));
+    const filmOpts = [{ value: 'custom', label: 'Custom — type it in' }].concat(
+        filmEntries.map(([key, f]) => ({ value: key, label: f.name + ' (' + f.boxSpeed + ' ISO, ' + (FORMAT_LABEL[f.format || '35mm'] || f.format) + ')' }))
+    );
+    const pickedFilm = state.procFilmKey !== 'custom' ? allFilms[state.procFilmKey] : null;
+    const filmNote = !pickedFilm
+        ? ''
+        : pickedFilm.devTimeSec
+            ? formatDevTime(pickedFilm.devTimeSec) + ' at ' + pickedFilm.devTempC + '°C · from your library'
+            : 'No dev time saved for this stock — enter it below';
+
+    return {
+        desktop: state.desktop,
+        baseField: state.procBaseTime,
+        tempNowLabel: procTempLabel(state.procTempC) + (state.procUnits === 'f' ? 'F' : 'C'),
+        chartAnchorShort: 'your chart',
+        chartTempShort: 'chart at ' + procTempLabel(state.procBaseTempC) + (state.procUnits === 'f' ? 'F' : 'C'),
+        tempField: procTempLabel(state.procBaseTempC).replace('°', ''),
+        unitShort: state.procUnits === 'f' ? 'F' : 'C',
+        stopsLabel: state.procStops > 0 ? '+' + state.procStops : String(state.procStops),
+        stopsColor: bigPush ? C.red : C.text,
+        stopsBorder: bigPush ? C.redBorder : C.border,
+        stopsLabelColor: bigPush ? C.red : C.sub,
+        developer: state.procDeveloper, developerLabel: dev.label,
+        developers: DEVELOPERS.filter(d => d.type === state.procDevType).map(d => ({ value: d.value, label: d.label })),
+        typeOpts: PROC_DEV_TYPES.map(([k, l]) => ({ label: l, ...procSegOn(k === state.procDevType), pick: `App.procPickType('${k}')` })),
+        pctLabel: '+' + state.procPct + '%',
+        pctOpts: [...new Set([...PROC_PCT_CHOICES, dev.percentPerStop])].sort((a, b) => a - b).map(p => {
+            const on = p === state.procPct, isRec = p === dev.percentPerStop;
+            return {
+                label: '+' + p + '%',
+                bg: isRec
+                    ? 'linear-gradient(100deg,#2a1f0a 0%,#4a3712 28%,#8a6c22 46%,#c9a144 50%,#8a6c22 54%,#4a3712 72%,#2a1f0a 100%) 0 0 / 260% 100% no-repeat'
+                    : (on ? '#1f2228' : 'transparent'),
+                border: isRec ? '1px solid #c9a144' : (on ? '1px solid ' + C.border3 : '0'),
+                shadow: isRec ? '0 0 0 1px rgba(201,161,68,0.25), 0 2px 14px rgba(201,161,68,0.28), inset 0 1px 0 rgba(255,234,184,0.22)' : 'none',
+                anim: isRec ? 'recSheen 3.2s linear infinite' : 'none',
+                fg: isRec ? '#ffeab8' : (on ? C.text : C.sub),
+                weight: on || isRec ? 600 : 400,
+                pick: `App.procSetPct(${p})`
+            };
+        }),
+        pctSourceNote: dev.label + ' recommends +' + dev.percentPerStop + '%',
+        unitOpts: [['c', 'Celsius'], ['f', 'Fahrenheit']].map(([k, l]) => ({ label: l, ...procSegOn(k === state.procUnits), pick: `App.procSetUnits('${k}')` })),
+        coeffNote: 'Base times for ' + dev.label + ' are published at ' + dev.baseTempC + ' °C (' + (dev.baseTempC * 9 / 5 + 32).toFixed(0) + ' °F). Temperature factor ×' + dev.factorPerDegC.toFixed(2) + ' per °C away from that — ' + dev.source + '. Chart covers ' + range[0] + '–' + range[1] + ' °C.',
+        coeffShort: '×' + dev.factorPerDegC.toFixed(2) + ' per °C',
+
+        finalLabel: empty ? '—:—' : procMmss(t.final),
+        finalColor: empty ? C.faint : (warn ? C.acc : C.text),
+        finalTail: empty ? 'enter your chart time' : 'at ' + procTempLabel(state.procTempC) + (state.procUnits === 'f' ? 'F' : 'C'),
+        baseLabel: empty ? '—:—' : procMmss(t.base),
+        deltaLabel: empty ? '—' : (t.final >= t.base ? '+' : '−') + procMmss(Math.abs(t.final - t.base)),
+        deltaColor: empty ? C.faint : (t.final >= t.base ? C.acc : C.blue),
+        shotNote: dev.label + ' · ' + (state.procStops === 0 ? 'box speed' : (state.procStops > 0 ? '+' + state.procStops + ' stop push' : state.procStops + ' stop pull')) + ' · ' + procTempLabel(state.procTempC) + (state.procUnits === 'f' ? 'F' : 'C'),
+        pushStepLabel: empty ? '—:—' : (pushDelta >= 0 ? '+' : '−') + procMmss(Math.abs(pushDelta)),
+        tempStepLabel: empty ? '—:—' : (tempDelta >= 0 ? '+' : '−') + procMmss(Math.abs(tempDelta)),
+        barBase: pctOf(Math.min(t.base, t.final)),
+        barPushLeft: pctOf(t.base), barPush: pctOf(pushDelta),
+        barTempLeft: pctOf(tempDelta >= 0 ? t.afterPush : t.final),
+        barTemp: pctOf(Math.abs(tempDelta)),
+        barTempColor: tempDelta >= 0 ? C.blue : '#2f333a',
+        breakdown, ladder,
+        ladderNote: empty ? 'enter a base time' : 'chart covers ' + range[0] + '–' + range[1] + ' °C',
+
+        verdictBg: warn ? C.redBg : C.panel,
+        verdictBorder: warn ? C.redBorder : C.border,
+        verdictHeadColor: warn ? C.red : (empty ? C.sub : C.green),
+        verdictHead: empty ? 'Nothing to adjust yet' : warn ? (bigPush ? 'Large push' : outOfRange ? 'Off the published chart' : 'Very short development') : 'Straight off the chart',
+        verdictNote: empty
+            ? 'Put in the time your own dev chart gives for this film in ' + dev.label + ' at box speed, ' + dev.baseTempC + ' °C. Push, pull and temperature get applied to that.'
+            : bigPush
+                ? 'Large pushes increase contrast and grain, and the time-per-stop rule drifts at ±3 — confirm with a test roll before you commit a real one.'
+                : outOfRange
+                    ? 'The ' + dev.label + ' chart only covers ' + range[0] + '–' + range[1] + ' °C. Outside it the factor is an extrapolation, not published data — bring the soup back toward ' + dev.baseTempC + ' °C if you can.'
+                    : shortTime
+                        ? 'Under 4 minutes the pour and drain time itself starts to matter, and unevenness shows. Cool the developer or dilute it to buy yourself a longer time.'
+                        : 'Base ' + procMmss(t.base) + ' with ' + (state.procStops === 0 ? 'no push or pull' : Math.abs(state.procStops) + ' stop ' + (state.procStops > 0 ? 'push' : 'pull')) + ' at ' + procTempLabel(state.procTempC) + (state.procUnits === 'f' ? 'F' : 'C') + ' — every step is shown above, nothing hidden.',
+        warn,
+
+        startLabel: empty ? 'Enter a base time to start the timer' : 'Start timer · ' + procMmss(t.final) + ' develop',
+        startBg: empty ? 'transparent' : C.accBg,
+        startBorder: empty ? C.border2 : C.accBorder,
+        startFg: empty ? C.faint : C.acc,
+        startCursor: empty ? 'not-allowed' : 'pointer',
+        startOpacity: empty ? '.6' : '1',
+        timerDisabled: empty,
+
+        timerStageHead: stage.name + ' · step ' + (state.procStageIdx + 1) + ' of ' + stages.length,
+        timerClock: procMmss(state.procRemaining),
+        timerProgress: Math.min(100, Math.max(0, stage.seconds ? (1 - state.procRemaining / stage.seconds) * 100 : 0)).toFixed(1) + '%',
+        stages: stages.map((s, i) => ({
+            name: s.name, time: procMmss(s.seconds),
+            tone: i < state.procStageIdx ? C.green : i === state.procStageIdx ? C.acc : C.border,
+            fg: i === state.procStageIdx ? C.text : C.faint
+        })),
+        agitateMsg,
+        agitateBg: inInitial ? C.accBg : C.panel,
+        agitateBorder: inInitial ? C.accBorder : C.border,
+        agitateFg: inInitial ? C.acc : C.text2,
+        agitateDot: inInitial ? C.acc : C.blue,
+        agitationRule: stage.agitate ? dev.agitation.initial + 's initial, ' + dev.agitation.forSec + 's every ' + dev.agitation.intervalSec + 's' : 'no schedule for this stage',
+        schedule,
+        runLabel: state.procRunning ? 'Running · ' + procMmss(state.procRemaining) + ' left' : (state.procStarted ? (state.procRemaining > 0 ? 'Resume ' + stage.name.toLowerCase() : 'All done') : 'Start ' + stage.name.toLowerCase()),
+        beepJustify: state.procBeep ? 'flex-end' : 'flex-start',
+        beepTrack: state.procBeep ? C.accBorder : C.border,
+        beepKnob: state.procBeep ? C.acc : C.faint,
+
+        films: filmOpts, filmNote,
+        developerLabelShort: dev.label
+    };
+}
+
+function procLadder(vals, size) {
+    const sm = size === 'sm';
+    return `<div style="display:flex;gap:${sm ? 5 : 6}px">${vals.ladder.map(row => `<button type="button" onclick="${row.pick}" style="flex:1;min-width:0;padding:${sm ? '8px 0' : '10px 0 9px'};border-radius:${sm ? 7 : 8}px;cursor:pointer;font:inherit;background:${row.bg};border:1px solid ${row.border};box-shadow:${row.shadow};animation:${row.anim};display:flex;flex-direction:column;align-items:center;gap:${sm ? 4 : 5}px">
+<span style="font-size:${sm ? 11 : 14}px;font-weight:700;color:${row.fg}">${escapeHtml(sm ? row.short : row.label)}</span>
+<span style="font-size:${sm ? 9 : 10}px;color:${C.faint}">${escapeHtml(row.time)}</span>
+<span style="width:62%;height:3px;border-radius:2px;background:${row.bar}"></span>
+</button>`).join('')}</div>`;
+}
+
+function procSettingsFields(vals) {
+    return `<div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Development type</div>
+<div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${vals.typeOpts.map(o => `<button type="button" onclick="${o.pick}" style="flex:1;height:40px;border-radius:6px;font:inherit;font-size:13px;cursor:pointer;background:${o.bg};border:${o.border};color:${o.fg};font-weight:${o.weight}">${escapeHtml(o.label)}</button>`).join('')}</div>
+</div>
+<label style="display:block">
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Developer</div>
+<select onchange="App.procPickDeveloper(this.value)" aria-label="Developer" style="width:100%;box-sizing:border-box;height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer">
+${vals.developers.map(d => `<option value="${escapeHtml(d.value)}" ${d.value === vals.developer ? 'selected' : ''}>${escapeHtml(d.label)}</option>`).join('')}
+</select>
+</label>
+<div>
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px">
+<span style="font-size:11px;color:${C.sub}">Time added per stop</span>
+</div>
+<div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${vals.pctOpts.map(o => `<button type="button" onclick="${o.pick}" style="flex:1;height:40px;border-radius:6px;font:inherit;font-size:13px;cursor:pointer;background:${o.bg};border:${o.border};box-shadow:${o.shadow};animation:${o.anim};color:${o.fg};font-weight:${o.weight}">${escapeHtml(o.label)}</button>`).join('')}</div>
+<div style="font-size:11px;line-height:1.5;color:${C.faint};margin-top:6px">${escapeHtml(vals.pctSourceNote)}</div>
+</div>
+<div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Units</div>
+<div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${vals.unitOpts.map(o => `<button type="button" onclick="${o.pick}" style="flex:1;height:40px;border-radius:6px;font:inherit;font-size:13px;cursor:pointer;background:${o.bg};border:${o.border};color:${o.fg};font-weight:${o.weight}">${escapeHtml(o.label)}</button>`).join('')}</div>
+</div>
+<div style="font-size:12px;line-height:1.5;color:${C.faint}">${escapeHtml(vals.coeffNote)}</div>`;
+}
+
+function procDevelopCard(vals) {
+    return `<div style="margin-top:14px;background:${C.panel};border:1px solid ${C.border};border-radius:10px;overflow:hidden">
+<div style="padding:18px 20px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+<span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.acc}">Develop for</span>
+<span style="font-size:12px;color:${C.blue}">${escapeHtml(vals.shotNote)}</span>
+</div>
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-top:8px;flex-wrap:wrap">
+<div style="display:flex;align-items:baseline;gap:5px"><span style="font-size:${vals.desktop ? 66 : 56}px;font-weight:700;line-height:.9;letter-spacing:-.035em;color:${vals.finalColor}">${escapeHtml(vals.finalLabel)}</span><span style="font-size:${vals.desktop ? 24 : 22}px;font-weight:500;color:${C.sub}">min</span>${vals.desktop ? `<span style="font-size:12px;color:${C.sub}">${escapeHtml(vals.finalTail)}</span>` : ''}</div>
+<div style="text-align:right;padding-bottom:6px"><div style="font-size:11px;color:${C.sub}">Against base ${escapeHtml(vals.baseLabel)}</div><div style="font-size:24px;font-weight:600;color:${vals.deltaColor}">${escapeHtml(vals.deltaLabel)}</div></div>
+</div>
+<div style="position:relative;height:4px;margin-top:16px;border-radius:2px;overflow:hidden;background:${C.field}">
+<div style="position:absolute;top:0;bottom:0;left:0;width:${vals.barBase};background:${C.green}"></div>
+<div style="position:absolute;top:0;bottom:0;left:${vals.barPushLeft};width:${vals.barPush};background:${C.acc}"></div>
+<div style="position:absolute;top:0;bottom:0;left:${vals.barTempLeft};width:${vals.barTemp};background:${vals.barTempColor}"></div>
+</div>
+<div style="display:flex;gap:12px;margin-top:10px">
+<div style="flex:1"><div style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:2px;background:${C.green}"></span><span style="font-size:11px;color:${C.sub}">Base</span></div><div style="font-size:15px;font-weight:600;color:${C.text};margin-top:3px">${escapeHtml(vals.baseLabel)}</div></div>
+<div style="flex:1"><div style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:2px;background:${C.acc}"></span><span style="font-size:11px;color:${C.sub}">Push / pull</span></div><div style="font-size:15px;font-weight:600;color:${C.text};margin-top:3px">${escapeHtml(vals.pushStepLabel)}</div></div>
+<div style="flex:1.2;min-width:0"><div style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;flex:none;border-radius:2px;background:${vals.barTempColor}"></span><span style="font-size:11px;color:${C.sub}">Temperature</span></div><div style="font-size:15px;font-weight:600;color:${C.text};margin-top:3px">${escapeHtml(vals.tempStepLabel)}</div></div>
+</div>
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px;padding:10px 12px;border-radius:8px;background:${C.field};border:1px solid ${C.border}">${vals.breakdown.map(b => `<span style="display:flex;align-items:center;gap:8px">
+<span style="display:flex;flex-direction:column;gap:2px">
+<span style="font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:${C.faint}">${escapeHtml(b.label)}</span>
+<span style="font-size:14px;font-weight:600;color:${b.color}">${escapeHtml(b.value)}</span>
+</span>
+<span style="font-size:13px;color:${C.border3}">${escapeHtml(b.sep)}</span>
+</span>`).join('')}</div>
+<button type="button" onclick="App.procOpenTimer()" ${vals.timerDisabled ? 'disabled' : ''} style="width:100%;height:48px;margin-top:12px;border-radius:8px;background:${vals.startBg};border:1px solid ${vals.startBorder};color:${vals.startFg};font:inherit;font-size:13px;font-weight:700;cursor:${vals.startCursor};opacity:${vals.startOpacity}">${escapeHtml(vals.startLabel)}</button>
+</div>
+<div style="padding:13px 20px 15px;background:${vals.verdictBg};border-top:1px solid ${vals.verdictBorder}">
+<div style="display:flex;align-items:center;gap:7px">
+${vals.warn ? `<svg style="width:15px;height:15px;flex:none;color:${C.red}" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5L2.8 20h18.4L12 4.5z"></path><path stroke-linecap="round" d="M12 10v4.2"></path><circle cx="12" cy="17.2" r="1" fill="currentColor" stroke="none"></circle></svg>` : ''}
+<span style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${vals.verdictHeadColor}">${escapeHtml(vals.verdictHead)}</span>
+</div>
+<div style="font-size:14px;line-height:1.5;color:${C.text2};margin-top:5px">${escapeHtml(vals.verdictNote)}</div>
+</div>
+</div>`;
+}
+
+function procTimerView(vals) {
+    return `<div style="position:absolute;inset:0;z-index:60;background:${C.shell};display:flex;flex-direction:column">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px">
+<span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.acc}">${escapeHtml(vals.timerStageHead)}</span>
+<button type="button" onclick="App.procCloseTimer()" aria-label="Close timer" style="width:32px;height:32px;border-radius:8px;background:#1f2228;border:0;color:${C.sub};font:inherit;font-size:15px;line-height:1;cursor:pointer">✕</button>
+</div>
+<div style="padding:0 20px;display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;gap:6px">${vals.stages.map(s => `<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:5px">
+<span style="height:3px;border-radius:2px;background:${s.tone}"></span>
+<span style="font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:${s.fg};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(s.name)}</span>
+<span style="font-size:11px;color:${C.faint}">${escapeHtml(s.time)}</span>
+</div>`).join('')}</div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px 20px">
+<div style="font-size:${state.desktop ? '120px' : '84px'};font-weight:700;line-height:.86;letter-spacing:-.04em;color:${C.text};font-variant-numeric:tabular-nums">${escapeHtml(vals.timerClock)}</div>
+<div style="width:100%;max-width:520px;height:6px;border-radius:3px;background:${C.panel};overflow:hidden">
+<div style="height:6px;border-radius:3px;background:${C.acc};width:${vals.timerProgress}"></div>
+</div>
+<div style="display:flex;align-items:center;gap:8px;padding:11px 14px;border-radius:9px;background:${vals.agitateBg};border:1px solid ${vals.agitateBorder};max-width:520px;box-sizing:border-box">
+<span style="width:7px;height:7px;flex:none;border-radius:2px;background:${vals.agitateDot}"></span>
+<span style="font-size:14px;color:${vals.agitateFg}">${escapeHtml(vals.agitateMsg)}</span>
+</div>
+<button type="button" onclick="App.procToggleRun()" style="width:100%;max-width:520px;height:52px;border-radius:10px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:14px;font-weight:700;cursor:pointer">${escapeHtml(vals.runLabel)}</button>
+</div>
+<div style="padding:0 20px 22px;display:flex;flex-direction:column;gap:12px">
+<div style="background:${C.panel};border:1px solid ${C.border};border-radius:10px;padding:12px 14px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px">
+<span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.sub}">Agitation schedule</span>
+<span style="font-size:11px;color:${C.faint}">${escapeHtml(vals.agitationRule)}</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:2px;max-height:168px;overflow:auto">${vals.schedule.map(row => `<div style="display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:7px;background:${row.bg}">
+<span style="width:52px;flex:none;font-size:13px;font-weight:600;color:${row.fg};font-variant-numeric:tabular-nums">${escapeHtml(row.at)}</span>
+<span style="flex:1;min-width:0;font-size:12px;color:${row.noteFg}">${escapeHtml(row.note)}</span>
+</div>`).join('')}</div>
+</div>
+<div style="display:flex;align-items:center;gap:12px;background:${C.panel};border:1px solid ${C.border};border-radius:10px;padding:12px 14px">
+<span style="flex:1;min-width:0">
+<span style="display:block;font-size:14px;color:${C.text}">Beep on agitation</span>
+<span style="display:block;font-size:12px;color:${C.faint};margin-top:3px">A short tone at each agitation point, and at the end of every stage.</span>
+</span>
+<button type="button" onclick="App.procToggleBeep()" aria-pressed="${state.procBeep}" style="width:52px;height:30px;flex:none;border-radius:15px;border:0;padding:3px;cursor:pointer;display:flex;align-items:center;justify-content:${vals.beepJustify};background:${vals.beepTrack}"><span style="width:24px;height:24px;border-radius:50%;background:${vals.beepKnob}"></span></button>
+</div>
+<div style="font-size:12px;line-height:1.5;color:${C.faint}">Keep the screen awake while this runs — the countdown pauses with the tab on some phones. Plug in, turn auto-lock off, or keep the app in the foreground.</div>
+</div>
+</div>`;
+}
+
+function viewProcess() {
+    const vals = procValues();
+    if (state.procTimerOpen) return procTimerView(vals);
+    const filmField = `<label style="display:block">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px">
+<span style="font-size:11px;color:${C.sub}">Film stock</span>
+<span style="font-size:11px;color:${C.faint};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(vals.filmNote)}</span>
+</div>
+<select onchange="App.procPickFilm(this.value)" aria-label="Film stock" style="width:100%;box-sizing:border-box;height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer">
+${vals.films.map(x => `<option value="${escapeHtml(x.value)}" ${x.value === state.procFilmKey ? 'selected' : ''}>${escapeHtml(x.label)}</option>`).join('')}
+</select>
+</label>`;
+    const baseTempRow = `<div style="display:flex;gap:10px">
+<label style="flex:1.2;display:block">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px">
+<span style="font-size:11px;color:${C.sub}">Base time · mm:ss</span>
+<span style="font-size:11px;color:${C.faint}">${escapeHtml(vals.chartAnchorShort)}</span>
+</div>
+<div style="height:56px;background:${C.field};border:1px solid ${C.acc};border-radius:8px;display:flex;align-items:center;gap:4px;padding:0 12px">
+<input type="text" inputmode="numeric" value="${escapeHtml(vals.baseField)}" onchange="App.procOnBase(this.value)" placeholder="7:30" aria-label="Base development time" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:28px;font-weight:600;color:${C.text}">
+<span style="font-size:13px;color:${C.faint}">min</span>
+</div>
+</label>
+<label style="flex:1;display:block">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px">
+<span style="font-size:11px;color:${C.sub}">Dev temp</span>
+<span style="font-size:11px;color:${C.faint}">on that chart</span>
+</div>
+<div style="height:56px;background:${C.field};border:1px solid ${C.border};border-radius:8px;display:flex;align-items:center;gap:4px;padding:0 12px">
+<input type="text" inputmode="decimal" value="${escapeHtml(vals.tempField)}" onchange="App.procOnTemp(this.value)" aria-label="Development temperature" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:28px;font-weight:600;color:${C.text}">
+<span style="font-size:13px;color:${C.faint}">°${escapeHtml(vals.unitShort)}</span>
+</div>
+</label>
+</div>`;
+    const stopsBlock = (wide) => `<div${wide ? '' : ' style="flex:1;min-width:0"'}>
+<div style="font-size:11px;color:${vals.stopsLabelColor};margin-bottom:6px">Push / pull</div>
+<div style="display:flex;align-items:center;gap:2px;height:44px;background:${C.field};border:1px solid ${vals.stopsBorder};border-radius:8px;padding:3px;box-sizing:border-box">
+<button type="button" onclick="App.procDecStops()" aria-label="One stop less" style="width:${wide ? 44 : 38}px;height:36px;flex:none;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:19px;font-weight:600;line-height:1;cursor:pointer">−</button>
+<span style="flex:1;text-align:center;font-size:18px;font-weight:700;color:${vals.stopsColor}">${escapeHtml(vals.stopsLabel)}</span>
+<button type="button" onclick="App.procIncStops()" aria-label="One stop more" style="width:${wide ? 44 : 38}px;height:36px;flex:none;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:19px;font-weight:600;line-height:1;cursor:pointer">+</button>
+</div>
+</div>`;
+
+    if (state.desktop) {
+        const left = `<div style="display:flex;flex-direction:column;gap:14px;padding-top:10px">
+<p style="margin:0;font-size:14px;line-height:1.55;color:${C.sub}">Start from the time on your dev chart — box speed at the temperature that chart is published for. Tell it what you pushed and how warm the soup actually is, and it works out how long to leave it in.</p>
+${filmField}
+${baseTempRow}
+<div style="font-size:11px;line-height:1.5;color:${C.faint};margin-top:-4px">Both fields are the chart figure. Tap the ladder to say what the developer is actually sitting at — that's what moves the develop time.</div>
+<div style="display:flex;gap:10px">
+${stopsBlock(false)}
+<div style="flex:1;min-width:0">
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Units</div>
+<div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${vals.unitOpts.map(o => `<button type="button" onclick="${o.pick}" style="flex:1;height:36px;border-radius:6px;font:inherit;font-size:13px;cursor:pointer;background:${o.bg};border:${o.border};color:${o.fg};font-weight:${o.weight}">${escapeHtml(o.label)}</button>`).join('')}</div>
+</div>
+</div>
+<div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Development type</div>
+<div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${vals.typeOpts.map(o => `<button type="button" onclick="${o.pick}" style="flex:1;height:36px;border-radius:6px;font:inherit;font-size:13px;cursor:pointer;background:${o.bg};border:${o.border};color:${o.fg};font-weight:${o.weight}">${escapeHtml(o.label)}</button>`).join('')}</div>
+</div>
+<label style="display:block">
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Developer</div>
+<select onchange="App.procPickDeveloper(this.value)" aria-label="Developer" style="width:100%;box-sizing:border-box;height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer">
+${vals.developers.map(d => `<option value="${escapeHtml(d.value)}" ${d.value === vals.developer ? 'selected' : ''}>${escapeHtml(d.label)}</option>`).join('')}
+</select>
+</label>
+<div>
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px">
+<span style="font-size:11px;color:${C.sub}">Time added per stop</span>
+</div>
+<div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${vals.pctOpts.map(o => `<button type="button" onclick="${o.pick}" style="flex:1;height:36px;border-radius:6px;font:inherit;font-size:13px;cursor:pointer;background:${o.bg};border:${o.border};box-shadow:${o.shadow};animation:${o.anim};color:${o.fg};font-weight:${o.weight}">${escapeHtml(o.label)}</button>`).join('')}</div>
+<div style="font-size:11px;line-height:1.5;color:${C.faint};margin-top:6px">${escapeHtml(vals.pctSourceNote)}</div>
+</div>
+<div style="font-size:12px;line-height:1.5;color:${C.faint}">${escapeHtml(vals.coeffNote)}</div>
+</div>`;
+
+        const right = `<div>
+<div style="margin-top:14px;padding-top:4px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
+<span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.sub}">Actually developing at · ${escapeHtml(vals.tempNowLabel)}</span>
+<span style="font-size:11px;color:${C.faint}">Tap the real temperature · ${escapeHtml(vals.ladderNote)}</span>
+</div>
+${procLadder(vals, 'lg')}
+</div>
+${procDevelopCard(vals)}
+</div>`;
+
+        return `<div style="display:grid;grid-template-columns:380px minmax(0,1fr);gap:20px;align-items:start;padding-top:4px">${left}<div>${right}</div></div>`;
+    }
+
+    return `<div style="position:relative">
+<div style="padding:4px 20px 0;display:flex;flex-direction:column;gap:12px">
+${filmField}
+${baseTempRow}
+${stopsBlock(true)}
+<button type="button" onclick="App.procOpenSheet()" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px;padding:9px 14px;background:${C.panel};border:1px solid ${C.border};border-radius:10px;font:inherit;text-align:left;cursor:pointer">
+<span style="display:flex;flex-direction:column;gap:3px;min-width:0">
+<span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+<span style="font-size:13px;color:${C.text}">${escapeHtml(vals.developerLabel)}</span><span style="color:${C.border3}">·</span><span style="font-size:13px;color:${C.acc}">${escapeHtml(vals.pctLabel)} / stop</span>
+</span>
+<span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+<span style="font-size:12px;color:${C.sub}">${escapeHtml(vals.coeffShort)}</span><span style="color:${C.border3}">·</span><span style="font-size:12px;color:${C.sub}">${escapeHtml(vals.chartTempShort)}</span>
+</span>
+</span>
+<span style="font-size:12px;color:${C.sub};white-space:nowrap">Change ›</span>
+</button>
+</div>
+<div style="margin:14px 20px 0;background:${C.panel};border:1px solid ${C.border};border-radius:10px;padding:12px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:2px 2px 9px">
+<span style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:${C.sub}">Developing at · ${escapeHtml(vals.tempNowLabel)}</span>
+<span style="font-size:10px;color:${C.faint};white-space:nowrap">tap the real temp</span>
+</div>
+${procLadder(vals, 'sm')}
+</div>
+<div style="margin:14px 20px 0">${procDevelopCard(vals)}</div>
+${state.procSheet ? `<div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(8,9,10,.72);z-index:40">
+<div onclick="App.procCloseSheet()" style="position:absolute;inset:0"></div>
+<div style="position:relative;background:${C.shell};border-top:1px solid ${C.border};border-radius:14px 14px 12px 12px;padding:18px 20px 22px;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+<span style="font-size:17px;font-weight:700;letter-spacing:-.01em;color:${C.text}">Development settings</span>
+<button type="button" onclick="App.procCloseSheet()" style="height:34px;padding:0 12px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:12px;font-weight:600;cursor:pointer">Done</button>
+</div>
+${procSettingsFields(vals)}
+</div>
+</div>` : ''}
+</div>`;
 }
 
 // The "Roll details" bottom sheet on mobile; the same markup renders
@@ -1917,6 +2544,7 @@ function viewMenu() {
         ['lookup', t('v3NavLookup'), t('v3MenuLookupMeta')],
         ['expired', t('v3TitleExpiredFilm'), t('v3MenuExpiredMeta')],
         ['depth', t('v4NavDepth'), t('v4MenuDepthMeta')],
+        ['process', 'Process', 'Push/pull, temperature and a develop-stage timer'],
         ['library', t('navLibrary'), t('v3MenuLibraryMeta')],
         ['settings', t('navSettings'), t('v3MenuSettingsMeta')]
     ];
@@ -2216,6 +2844,113 @@ const App = {
     },
     depthOpenSheet() { state.depthSheet = true; render(); },
     depthCloseSheet() { state.depthSheet = false; render(); },
+    // Picking a type moves the developer to the first one of that type, the
+    // way setFormat() re-picks a film elsewhere, rather than leaving a
+    // mismatched type/developer pair on screen.
+    procPickType(k) {
+        const d = DEVELOPERS.find(x => x.type === k) || DEVELOPERS[0];
+        const temp = procSnapTemp(d.baseTempC, null, d.baseTempC);
+        state.procDevType = k; state.procDeveloper = d.value; state.procPct = d.percentPerStop;
+        state.procBaseTempC = d.baseTempC; state.procTempC = temp; state.procFilmKey = 'custom';
+        try {
+            localStorage.setItem('procFilmKey', 'custom'); localStorage.setItem('procDevType', k);
+            localStorage.setItem('procDeveloper', d.value); localStorage.setItem('procPct', String(d.percentPerStop));
+            localStorage.setItem('procBaseTempC', String(d.baseTempC)); localStorage.setItem('procTempC', String(temp));
+        } catch {}
+        render();
+    },
+    procPickDeveloper(v) {
+        const d = DEVELOPERS.find(x => x.value === v);
+        const nextBase = d ? d.baseTempC : state.procBaseTempC;
+        // Keep a temperature the user deliberately set, but only if the new
+        // developer's chart actually covers it — C-41 at 24 °C is nonsense,
+        // so a process change that far out lands on its own chart temp.
+        // 0.3 °C tolerance covers the °F snap (75 °F is 23.89, not 24).
+        const inNewRange = d ? (state.procTempC >= d.tempRange[0] - 0.3 && state.procTempC <= d.tempRange[1] + 0.3) : true;
+        const wasAtChart = Math.abs(state.procTempC - state.procBaseTempC) < 0.3 || !inNewRange;
+        const nextTemp = wasAtChart ? procSnapTemp(nextBase, null, nextBase) : state.procTempC;
+        state.procDeveloper = v; state.procPct = d ? d.percentPerStop : state.procPct;
+        state.procBaseTempC = nextBase; state.procTempC = nextTemp; state.procFilmKey = 'custom';
+        try {
+            localStorage.setItem('procFilmKey', 'custom'); localStorage.setItem('procDeveloper', v);
+            localStorage.setItem('procBaseTempC', String(nextBase)); localStorage.setItem('procPct', String(state.procPct));
+            if (wasAtChart) localStorage.setItem('procTempC', String(nextTemp));
+        } catch {}
+        render();
+    },
+    procSetPct(p) { state.procPct = p; try { localStorage.setItem('procPct', String(p)); } catch {} render(); },
+    procSetUnits(k) {
+        const c = procSnapTemp(state.procTempC, k);
+        state.procUnits = k; state.procTempC = c;
+        try { localStorage.setItem('procUnits', k); localStorage.setItem('procTempC', String(c)); } catch {}
+        render();
+    },
+    // Picking a stock loads its saved figure — time AND the temperature that
+    // time was measured at — the way loadIntoLookup() fills the cost calc.
+    // A stock with no saved devTimeSec/devTempC is still selected (its note
+    // says so) rather than silently falling back to Custom, so the user can
+    // see which stock they meant and type the figure in themselves.
+    procPickFilm(key) {
+        if (key === 'custom') { state.procFilmKey = 'custom'; try { localStorage.setItem('procFilmKey', 'custom'); } catch {} render(); return; }
+        const f = getAllFilms()[key];
+        if (!f) { state.procFilmKey = 'custom'; try { localStorage.setItem('procFilmKey', 'custom'); } catch {} render(); return; }
+        state.procFilmKey = key;
+        try { localStorage.setItem('procFilmKey', key); } catch {}
+        if (f.devTimeSec && f.devTempC) {
+            const time = formatDevTime(f.devTimeSec);
+            const temp = procSnapToGrid(f.devTempC, state.procUnits, f.devTempC);
+            state.procBaseTime = time; state.procBaseTempC = temp; state.procTempC = temp;
+            try {
+                localStorage.setItem('procBaseTime', time); localStorage.setItem('procBaseTempC', String(temp));
+                localStorage.setItem('procTempC', String(temp));
+            } catch {}
+        }
+        render();
+    },
+    // The field is part of the chart figure — "7:30 at 20 °C" — so typing
+    // in either one moves the anchor away from whatever film was picked.
+    procOnBase(v) {
+        const secs = procParseMmss(v);
+        const norm = secs > 0 ? procMmss(secs) : '';
+        state.procBaseTime = norm; state.procFilmKey = 'custom';
+        try { localStorage.setItem('procBaseTime', norm); localStorage.setItem('procFilmKey', 'custom'); } catch {}
+        render();
+    },
+    procOnTemp(v) {
+        const n = parseFloat(v);
+        if (!isFinite(n)) return;
+        const raw = state.procUnits === 'f' ? (n - 32) * 5 / 9 : n;
+        const c = procSnapToGrid(raw, state.procUnits, raw);
+        state.procBaseTempC = c; state.procTempC = c; state.procFilmKey = 'custom';
+        try {
+            localStorage.setItem('procBaseTempC', String(c)); localStorage.setItem('procTempC', String(c));
+            localStorage.setItem('procFilmKey', 'custom');
+        } catch {}
+        render();
+    },
+    procTempPick(c) { state.procTempC = c; try { localStorage.setItem('procTempC', String(c)); } catch {} render(); },
+    procIncStops() { const n = Math.min(3, state.procStops + 1); state.procStops = n; try { localStorage.setItem('procStops', String(n)); } catch {} render(); },
+    procDecStops() { const n = Math.max(-3, state.procStops - 1); state.procStops = n; try { localStorage.setItem('procStops', String(n)); } catch {} render(); },
+    procOpenSheet() { state.procSheet = true; render(); },
+    procCloseSheet() { state.procSheet = false; render(); },
+    procOpenTimer() {
+        const t = procTimes();
+        if (t.base <= 0) return;
+        state.procTimerOpen = true; state.procStageIdx = 0; state.procRemaining = Math.round(t.final);
+        state.procRunning = false; state.procStarted = false; state.procLastBeepAt = -1;
+        render();
+    },
+    procCloseTimer() { clearInterval(procTick); state.procTimerOpen = false; state.procRunning = false; render(); },
+    procToggleRun() {
+        const next = !state.procRunning;
+        const stages = procStageList();
+        const stage = stages[state.procStageIdx] || stages[0];
+        state.procRunning = next; state.procStarted = true;
+        state.procRemaining = state.procRemaining > 0 ? state.procRemaining : Math.round(stage.seconds);
+        if (next) procStartInterval(); else clearInterval(procTick);
+        render();
+    },
+    procToggleBeep() { const v = !state.procBeep; state.procBeep = v; try { localStorage.setItem('procBeep', v ? '1' : '0'); } catch {} render(); },
     incField(key, delta, min, max) {
         const cur = parseInt(state[key], 10) || 0;
         state[key] = String(Math.min(max, Math.max(min, cur + delta)));
@@ -2724,7 +3459,7 @@ window.App = App;
 // still reads /depth rather than the redirect's query string. A direct
 // pathname match is also handled (harmless if nothing ever serves it, but
 // costs nothing and helps local dev servers that do rewrite to index.html).
-const LINKABLE_VIEWS = ['lookup', 'expired', 'depth', 'library', 'settings'];
+const LINKABLE_VIEWS = ['lookup', 'expired', 'depth', 'process', 'library', 'settings'];
 // 'lookup' is the default view, so it lives at '/' rather than '/lookup'.
 function pathForView(view) { return view === 'lookup' ? '/' : '/' + view; }
 function restoreViewFromLocation() {
@@ -2839,6 +3574,12 @@ function init() {
             try { localStorage.setItem('chemicalsPresetSeeded', '1'); } catch {}
         }).catch(() => {});
     }
+
+    // Eager, not just on first opening the Process tab: a deep link straight
+    // to /process sets state.view directly (restoreViewFromLocation(), not
+    // App.setView()), so a lazy per-view-open trigger would miss that path
+    // entirely. Same reasoning as the changelog fetch above.
+    loadDevelopers();
 
     render();
 }

@@ -1,0 +1,97 @@
+# Chemistry presets for the Process tab's dev-time/push-pull/temperature
+# calculator (js/app.js, DEVELOPERS/loadDevelopers()) — fetched once, eagerly,
+# on every app load. A single flat file, same reasoning as
+# chemicals/presets.yaml: developer chemistry doesn't vary by country, so
+# there's nothing regional to split this by.
+#
+# Fields per entry:
+#   value            stable key, stored in localStorage/state — never rename
+#                     an existing one, add a new entry instead
+#   label             shown in the Developer <select>
+#   type              'bw' | 'c41' | 'e6' — which Development-type segment
+#                      this developer appears under
+#   percentPerStop    this developer's own recommended push/pull time
+#                      increase per stop, offered as the "recommended" chip
+#   baseTempC         the temperature this developer's own published times
+#                      are quoted at
+#   factorPerDegC     time-temperature compensation slope — multiply the
+#                      time by this per °C away from baseTempC
+#   tempRange         [min, max] °C the published chart actually covers;
+#                      outside it the app still computes a number but flags
+#                      it as an extrapolation
+#   agitation         initial (seconds continuous at the start), intervalSec
+#                      (how often), forSec (how long each time)
+#   source            the datasheet/chart this row is built from
+developers:
+  - value: standard
+    label: Standard / unknown
+    type: bw
+    percentPerStop: 25
+    baseTempC: 20
+    factorPerDegC: 0.90
+    tempRange: [15, 25]
+    agitation: { initial: 30, intervalSec: 60, forSec: 10 }
+    source: Generic time–temperature slope (~×0.9 per +1 °C)
+  - value: d76
+    label: Kodak D-76
+    type: bw
+    percentPerStop: 30
+    baseTempC: 20
+    factorPerDegC: 0.90
+    tempRange: [18, 24]
+    agitation: { initial: 30, intervalSec: 30, forSec: 5 }
+    source: Kodak D-76 datasheet (J-78)
+  - value: hc110
+    label: Kodak HC-110
+    type: bw
+    percentPerStop: 25
+    baseTempC: 20
+    factorPerDegC: 0.89
+    tempRange: [18, 24]
+    agitation: { initial: 30, intervalSec: 60, forSec: 10 }
+    source: Kodak HC-110 datasheet (J-24)
+  - value: rodinal
+    label: Adox/Agfa Rodinal
+    type: bw
+    percentPerStop: 20
+    baseTempC: 20
+    factorPerDegC: 0.91
+    tempRange: [18, 24]
+    agitation: { initial: 30, intervalSec: 60, forSec: 5 }
+    source: Rodinal datasheet, 1+50
+  - value: ddx
+    label: Ilford Ilfotec DD-X
+    type: bw
+    percentPerStop: 30
+    baseTempC: 20
+    factorPerDegC: 0.90
+    tempRange: [15, 24]
+    agitation: { initial: 10, intervalSec: 60, forSec: 10 }
+    source: Ilford time–temperature compensation chart
+  - value: xtol24
+    label: Kodak Xtol (24 °C chart)
+    type: bw
+    percentPerStop: 30
+    baseTempC: 24
+    factorPerDegC: 0.90
+    tempRange: [20, 27]
+    agitation: { initial: 30, intervalSec: 30, forSec: 5 }
+    source: Kodak Xtol datasheet, 24 °C column
+  - value: c41
+    label: C-41 colour negative
+    type: c41
+    percentPerStop: 30
+    baseTempC: 37.8
+    factorPerDegC: 0.93
+    tempRange: [37.5, 38.1]
+    agitation: { initial: 10, intervalSec: 30, forSec: 2 }
+    source: Kodak Flexicolor C-41 spec (3:15 at 37.8 °C)
+  - value: e6
+    label: E-6 transparency (first dev)
+    type: e6
+    percentPerStop: 30
+    baseTempC: 37.8
+    factorPerDegC: 0.93
+    tempRange: [37.5, 38.1]
+    agitation: { initial: 15, intervalSec: 30, forSec: 2 }
+    source: Kodak E-6 spec (6:00 first developer at 37.8 °C)

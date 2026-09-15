@@ -9,6 +9,7 @@ on:
       - "films/**"
       - "labs/**"
       - "chemicals/**"
+      - "developers.yaml"
       - "options.yaml"
   push:
     branches: [main]
@@ -16,6 +17,7 @@ on:
       - "films/**"
       - "labs/**"
       - "chemicals/**"
+      - "developers.yaml"
       - "options.yaml"
 
 permissions:
@@ -280,6 +282,49 @@ jobs:
                       if c["name"] in chemical_names:
                           err(path, f"{where}: '{c['name']}' appears more than once across chemicals/*.yaml — the app keys chemicals by exact name with no merge logic, so a duplicate here silently overwrites the earlier one")
                       chemical_names.add(c["name"])
+
+          # ---- developers ----
+          # A single flat file (like chemicals/presets.yaml) read by the
+          # Process tab's dev-time calculator — see developers.yaml's own
+          # header comment and loadDevelopers() in js/app.js.
+          try:
+              dev_doc = yaml.safe_load(open("developers.yaml"))
+          except FileNotFoundError:
+              dev_doc = None
+          except yaml.YAMLError as e:
+              err("developers.yaml", f"not valid YAML — check your indentation (spaces, never tabs).\n    {e}")
+              dev_doc = None
+          if dev_doc is not None:
+              if not isinstance(dev_doc, dict) or "developers" not in dev_doc:
+                  err("developers.yaml", "expected a top-level 'developers:' list")
+              else:
+                  dev_values = set()
+                  for i, d in enumerate(dev_doc["developers"] or []):
+                      where = f"developer #{i+1} ({d.get('label', 'unlabeled')})"
+                      for key in ("value", "label", "type", "percentPerStop", "baseTempC", "factorPerDegC", "tempRange", "agitation", "source"):
+                          if key not in d:
+                              err("developers.yaml", f"{where}: missing required field '{key}'")
+                      if d.get("type") and d["type"] not in ("bw", "c41", "e6", "ecn2"):
+                          err("developers.yaml", f"{where}: type '{d['type']}' must be one of bw, c41, e6, ecn2")
+                      for key in ("percentPerStop", "baseTempC", "factorPerDegC"):
+                          if key in d and not isinstance(d[key], (int, float)):
+                              err("developers.yaml", f"{where}: {key} must be a plain number (no quotes)")
+                      if "tempRange" in d and not (isinstance(d["tempRange"], list) and len(d["tempRange"]) == 2 and all(isinstance(v, (int, float)) for v in d["tempRange"])):
+                          err("developers.yaml", f"{where}: tempRange must be a two-number list, e.g. [18, 24]")
+                      agitation = d.get("agitation")
+                      if agitation is not None:
+                          if not isinstance(agitation, dict):
+                              err("developers.yaml", f"{where}: agitation must be a mapping with initial/intervalSec/forSec")
+                          else:
+                              for key in ("initial", "intervalSec", "forSec"):
+                                  if key not in agitation:
+                                      err("developers.yaml", f"{where}: agitation missing '{key}'")
+                                  elif not isinstance(agitation[key], (int, float)):
+                                      err("developers.yaml", f"{where}: agitation.{key} must be a plain number (no quotes)")
+                      if d.get("value"):
+                          if d["value"] in dev_values:
+                              err("developers.yaml", f"{where}: value '{d['value']}' appears more than once — the app keys developers by exact value, so a duplicate silently overwrites the earlier one")
+                          dev_values.add(d["value"])
 
           # ---- options ----
           try:
