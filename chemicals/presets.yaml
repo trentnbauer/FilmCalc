@@ -1,0 +1,70 @@
+label: Common developing chemicals
+# Unlike films/*.yaml and labs/*.yaml, this isn't split by region — dev
+# chemistry itself doesn't vary by country the way a shop's price does, so
+# there's nothing regional to pick between. The app auto-imports this whole
+# file once on first run (no setup-wizard step, no opt-in checkbox — see
+# init() in js/app.js), and never re-imports it after that, so deleting a
+# preset here sticks. Cost is a rough USD street price for one full batch —
+# always approximate and meant to be edited after import, not authoritative
+# regional pricing like the films/labs presets are.
+chemicals:
+  - name: Kodak D-76
+    process: BW
+    dilution: "1+1"
+    capacityRolls: 8
+    cost: 14
+  - name: Kodak T-Max Developer
+    process: BW
+    dilution: "1+4"
+    capacityRolls: 16
+    cost: 17
+  - name: Ilford ID-11
+    process: BW
+    dilution: "1+1"
+    capacityRolls: 8
+    cost: 15
+  - name: Ilford Ilfosol 3
+    process: BW
+    dilution: "1+9"
+    capacityRolls: 12
+    cost: 16
+  - name: Ilford DD-X
+    process: BW
+    dilution: "1+4"
+    capacityRolls: 10
+    cost: 22
+  - name: Adox Rodinal
+    process: BW
+    dilution: "1+50"
+    capacityRolls: 20
+    cost: 20
+  - name: Ilford Rapid Fixer
+    process: BW
+    dilution: "1+4"
+    capacityRolls: 24
+    cost: 15
+  - name: Kodak Indicator Stop Bath
+    process: BW
+    dilution: "1+63"
+    capacityRolls: 24
+    cost: 12
+  - name: Kodak Flexicolor C41 Kit
+    process: C41
+    dilution: Stock
+    capacityRolls: 20
+    cost: 40
+  - name: CineStill Cs41 Kit
+    process: C41
+    dilution: Stock
+    capacityRolls: 16
+    cost: 37
+  - name: Unicolor C41 Kit
+    process: C41
+    dilution: Stock
+    capacityRolls: 16
+    cost: 30
+  - name: Tetenal E6 3-Bath Kit
+    process: E6
+    dilution: Stock
+    capacityRolls: 12
+    cost: 65

@@ -8,12 +8,14 @@ on:
     paths:
       - "films/**"
       - "labs/**"
+      - "chemicals/**"
       - "options.yaml"
   push:
     branches: [main]
     paths:
       - "films/**"
       - "labs/**"
+      - "chemicals/**"
       - "options.yaml"
 
 permissions:
@@ -239,6 +241,45 @@ jobs:
               if len(spellings) > 1:
                   files = ", ".join(sorted(set(lab_name_locations[norm_name])))
                   err(files, f"'{norm_name}' is spelled {sorted(spellings)} across these files — if these are the same lab, use the exact same spelling everywhere; if they're genuinely different labs that happen to share a name, ignore this")
+
+          # ---- chemicals ----
+          # A single flat preset file, not region-split like films/labs (dev
+          # chemistry doesn't vary by country), auto-imported once on first
+          # run rather than picked in the setup wizard — see chemicals/
+          # presets.yaml's own header comment and init() in js/app.js.
+          chemical_names = set()
+          for path in sorted(glob.glob("chemicals/*.yaml") + glob.glob("chemicals/*.yml")):
+              try:
+                  doc = yaml.safe_load(open(path))
+              except yaml.YAMLError as e:
+                  err(path, f"not valid YAML — check your indentation (spaces, never tabs).\n    {e}")
+                  continue
+              if not isinstance(doc, dict) or "chemicals" not in doc:
+                  err(path, "expected a top-level 'chemicals:' list")
+                  continue
+              unknown_hits = []
+              find_unknown(doc, "chemicals", unknown_hits)
+              for hit in unknown_hits:
+                  err(path, f"{hit}: still has 'UNKNOWN' as a value")
+              for i, c in enumerate(doc["chemicals"] or []):
+                  where = f"chemical #{i+1} ({c.get('name', 'unnamed')})"
+                  for key in ("name", "process", "dilution", "capacityRolls", "cost"):
+                      if key not in c:
+                          err(path, f"{where}: missing required field '{key}'")
+                  if c.get("process") and c["process"] not in VALID_PROCESSES:
+                      err(path, f"{where}: process '{c['process']}' must be one of {sorted(VALID_PROCESSES)}")
+                  if "capacityRolls" in c and not isinstance(c["capacityRolls"], (int, float)):
+                      err(path, f"{where}: capacityRolls must be a plain number (no quotes)")
+                  elif isinstance(c.get("capacityRolls"), (int, float)) and c["capacityRolls"] <= 0:
+                      err(path, f"{where}: capacityRolls must be greater than 0")
+                  if isinstance(c.get("cost"), str):
+                      err(path, f"{where}: cost must be a number, not text (write 14, not '$14')")
+                  elif isinstance(c.get("cost"), (int, float)) and c["cost"] < 0:
+                      err(path, f"{where}: cost can't be negative")
+                  if c.get("name"):
+                      if c["name"] in chemical_names:
+                          err(path, f"{where}: '{c['name']}' appears more than once across chemicals/*.yaml — the app keys chemicals by exact name with no merge logic, so a duplicate here silently overwrites the earlier one")
+                      chemical_names.add(c["name"])
 
           # ---- options ----
           try:
