@@ -211,8 +211,9 @@ const state = {
     procFilmKey: localStorage.getItem('procFilmKey') || 'custom',
     procPct: parseInt(localStorage.getItem('procPct'), 10) || 30,
     procSheet: false,
+    procFilmOpen: false, procFilmQuery: '',
     procTimerOpen: false, procStageIdx: 0, procRemaining: 0, procRunning: false, procStarted: false,
-    procBeep: localStorage.getItem('procBeep') !== '0', procLastBeepAt: -1
+    procBeep: localStorage.getItem('procBeep') !== '0'
 };
 let toastTimer = null;
 function say(text) {
@@ -1373,6 +1374,7 @@ let DEVELOPERS = [
 ];
 const PROC_PCT_CHOICES = [20, 25, 30, 40];
 const PROC_DEV_TYPES = [['bw', 'B&W'], ['c41', 'C-41'], ['e6', 'E-6']];
+const PROC_PROCESS_TO_TYPE = { BW: 'bw', C41: 'c41', E6: 'e6', ECN2: 'ecn2' };
 let procDataLoaded = false;
 let PROC_DATA_SOURCE = 'built-in defaults';
 function loadDevelopers() {
@@ -1481,16 +1483,55 @@ function procAgitationPoints(stage) {
     }
     return pts;
 }
+// Whether `elapsed` seconds into `stage` falls inside an agitation window —
+// the initial continuous run, or one of the periodic forSec windows — used
+// by the timer tick to beep on every second of actual agitation rather
+// than once at the moment it starts.
+function procIsAgitatingAt(stage, elapsed) {
+    if (!stage.agitate) return false;
+    const a = procDev().agitation;
+    if (elapsed < a.initial) return true;
+    for (let s = a.intervalSec; s < stage.seconds - 2; s += a.intervalSec) {
+        if (elapsed >= s && elapsed < s + a.forSec) return true;
+    }
+    return false;
+}
 let procAudioCtx = null;
+// Browsers only let an AudioContext start (or resume from suspended) inside
+// a real click/tap handler — not from a setInterval tick, which is where
+// every beep actually needs to fire. Without this, the context sits
+// permanently suspended: Chrome still shows the tab's speaker icon (it
+// only cares that a context exists) while nothing audible ever plays.
+// Called synchronously from the Start/Resume button and from turning the
+// toggle on, so the context is primed by a gesture before the first tick.
+function procEnsureAudio() {
+    try {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return;
+        if (!procAudioCtx) procAudioCtx = new Ctx();
+        if (procAudioCtx.state === 'suspended') procAudioCtx.resume();
+    } catch {}
+}
 function procBeepNow() {
     if (!state.procBeep) return;
     try {
-        const Ctx = window.AudioContext || window.webkitAudioContext;
-        procAudioCtx = procAudioCtx || new Ctx();
+        procEnsureAudio();
+        if (!procAudioCtx) return;
+        // Mobile Safari can re-suspend a context when the tab loses focus
+        // even after it was primed once — resume defensively on every beep
+        // too, not just on the button press that started the timer.
+        if (procAudioCtx.state === 'suspended') procAudioCtx.resume();
         const o = procAudioCtx.createOscillator(), g = procAudioCtx.createGain();
-        o.frequency.value = 880; g.gain.value = 0.06;
+        const now = procAudioCtx.currentTime;
+        o.frequency.value = 880;
+        // A hard on/off at a fixed gain is easy to lose entirely on a phone
+        // speaker; ramping up then down both raises perceived loudness and
+        // avoids the click a sudden stop produces.
+        g.gain.setValueAtTime(0.0001, now);
+        g.gain.exponentialRampToValueAtTime(0.22, now + 0.015);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
         o.connect(g); g.connect(procAudioCtx.destination);
-        o.start(); o.stop(procAudioCtx.currentTime + 0.12);
+        o.start(now); o.stop(now + 0.23);
     } catch {}
 }
 let procTick = null;
@@ -1506,7 +1547,6 @@ function procStartInterval() {
             if (state.procStageIdx + 1 < stages.length) {
                 state.procStageIdx += 1;
                 state.procRemaining = stages[state.procStageIdx].seconds;
-                state.procLastBeepAt = -1;
             } else {
                 state.procRunning = false;
                 state.procRemaining = 0;
@@ -1515,8 +1555,11 @@ function procStartInterval() {
             return;
         }
         const elapsed = stage.seconds - next;
-        const hit = procAgitationPoints(stage).find(p => p.at > 0 && Math.abs(p.at - elapsed) < 0.5);
-        if (hit && hit.at !== state.procLastBeepAt) { procBeepNow(); state.procLastBeepAt = hit.at; }
+        // Beeps on every second inside an agitation window, not just once
+        // at the start — a single 220ms blip is easy to miss over running
+        // water; a beep every second for the length of the window reads as
+        // continuous and can't be mistaken for "did that already happen?".
+        if (procIsAgitatingAt(stage, elapsed)) procBeepNow();
         state.procRemaining = next;
         render();
     }, 1000);
@@ -1603,7 +1646,8 @@ function procValues() {
 
     const allFilms = getAllFilms();
     const filmEntries = Object.entries(allFilms).filter(([, f]) => !f.hidden).sort((a, b) => a[1].name.localeCompare(b[1].name));
-    const filmOpts = [{ value: 'custom', label: 'Custom — type it in' }].concat(
+    const CUSTOM_FILM_OPT = { value: 'custom', label: 'Custom — type it in' };
+    const filmOpts = [CUSTOM_FILM_OPT].concat(
         filmEntries.map(([key, f]) => ({ value: key, label: f.name + ' (' + f.boxSpeed + ' ISO, ' + (FORMAT_LABEL[f.format || '35mm'] || f.format) + ')' }))
     );
     const pickedFilm = state.procFilmKey !== 'custom' ? allFilms[state.procFilmKey] : null;
@@ -1612,6 +1656,16 @@ function procValues() {
         : pickedFilm.devTimeSec
             ? formatDevTime(pickedFilm.devTimeSec) + ' at ' + pickedFilm.devTempC + '°C · from your library'
             : 'No dev time saved for this stock — enter it below';
+    const filmLabel = state.procFilmKey === 'custom'
+        ? CUSTOM_FILM_OPT.label
+        : ((filmOpts.find(o => o.value === state.procFilmKey) || CUSTOM_FILM_OPT).label);
+    // Custom always shows, search or not — it's the escape hatch, not a
+    // film name to filter by. Everything else must actually match the
+    // query: a search that still shows non-matches isn't a search.
+    const filmQuery = state.procFilmQuery.trim().toLowerCase();
+    const filmResults = filmQuery
+        ? [CUSTOM_FILM_OPT].concat(filmOpts.filter(o => o.value !== 'custom' && o.label.toLowerCase().includes(filmQuery)))
+        : filmOpts;
 
     return {
         desktop: state.desktop,
@@ -1709,7 +1763,7 @@ function procValues() {
         beepTrack: state.procBeep ? C.accBorder : C.border,
         beepKnob: state.procBeep ? C.acc : C.faint,
 
-        films: filmOpts, filmNote,
+        films: filmOpts, filmResults, filmLabel, filmNote,
         developerLabelShort: dev.label
     };
 }
@@ -1838,15 +1892,23 @@ function procTimerView(vals) {
 function viewProcess() {
     const vals = procValues();
     if (state.procTimerOpen) return procTimerView(vals);
-    const filmField = `<label style="display:block">
+    // A searchable combobox, not a plain <select> — with a saved library
+    // running into the hundreds of entries across imported regions, a
+    // native dropdown's built-in "jump to typed letters" behaviour still
+    // shows every other stock; typing "Kodak" here actually removes
+    // everything that isn't a match, same as the Library tab's own search.
+    const filmField = `<div style="position:relative">
 <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px">
 <span style="font-size:11px;color:${C.sub}">Film stock</span>
 <span style="font-size:11px;color:${C.faint};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(vals.filmNote)}</span>
 </div>
-<select onchange="App.procPickFilm(this.value)" aria-label="Film stock" style="width:100%;box-sizing:border-box;height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer">
-${vals.films.map(x => `<option value="${escapeHtml(x.value)}" ${x.value === state.procFilmKey ? 'selected' : ''}>${escapeHtml(x.label)}</option>`).join('')}
-</select>
-</label>`;
+<input type="text" value="${escapeHtml(state.procFilmOpen ? state.procFilmQuery : vals.filmLabel)}" oninput="App.procSetFilmQuery(this.value)" onfocus="App.procOpenFilmSearch()" placeholder="Search your saved films…" aria-label="Film stock" autocomplete="off" style="width:100%;box-sizing:border-box;height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text}">
+${state.procFilmOpen ? `<div onclick="App.procCloseFilmSearch()" style="position:fixed;inset:0;z-index:39"></div>
+<div style="position:absolute;top:100%;left:0;right:0;margin-top:4px;max-height:260px;overflow:auto;background:${C.panel};border:1px solid ${C.border};border-radius:8px;z-index:40;box-shadow:0 12px 30px rgba(0,0,0,.45)">
+${vals.filmResults.map(o => `<button type="button" onclick="App.procPickFilm('${jsAttr(o.value)}')" style="display:block;width:100%;text-align:left;padding:9px 12px;background:${o.value === state.procFilmKey ? C.field : 'transparent'};border:0;border-bottom:1px solid ${C.border};font:inherit;font-size:13px;color:${C.text};cursor:pointer">${escapeHtml(o.label)}</button>`).join('')}
+${state.procFilmQuery.trim() && vals.filmResults.length <= 1 ? `<div style="padding:12px;font-size:12px;color:${C.faint}">No saved films match "${escapeHtml(state.procFilmQuery)}"</div>` : ''}
+</div>` : ''}
+</div>`;
     const baseTempRow = `<div style="display:flex;gap:10px">
 <label style="flex:1.2;display:block">
 <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px">
@@ -2891,11 +2953,26 @@ const App = {
     // says so) rather than silently falling back to Custom, so the user can
     // see which stock they meant and type the figure in themselves.
     procPickFilm(key) {
+        state.procFilmOpen = false; state.procFilmQuery = '';
         if (key === 'custom') { state.procFilmKey = 'custom'; try { localStorage.setItem('procFilmKey', 'custom'); } catch {} render(); return; }
         const f = getAllFilms()[key];
         if (!f) { state.procFilmKey = 'custom'; try { localStorage.setItem('procFilmKey', 'custom'); } catch {} render(); return; }
         state.procFilmKey = key;
         try { localStorage.setItem('procFilmKey', key); } catch {}
+        // Match the development type/developer to the film's own process —
+        // picking a C41 stock while still set to B&W left the two
+        // contradicting each other. Only moves it on an actual mismatch, so
+        // picking a second C41 film doesn't bounce away from a developer
+        // already deliberately chosen within the same type.
+        const type = PROC_PROCESS_TO_TYPE[f.process];
+        if (type && type !== state.procDevType) {
+            const d = DEVELOPERS.find(x => x.type === type) || DEVELOPERS[0];
+            state.procDevType = type; state.procDeveloper = d.value; state.procPct = d.percentPerStop;
+            try {
+                localStorage.setItem('procDevType', type); localStorage.setItem('procDeveloper', d.value);
+                localStorage.setItem('procPct', String(d.percentPerStop));
+            } catch {}
+        }
         if (f.devTimeSec && f.devTempC) {
             const time = formatDevTime(f.devTimeSec);
             const temp = procSnapToGrid(f.devTempC, state.procUnits, f.devTempC);
@@ -2933,16 +3010,23 @@ const App = {
     procDecStops() { const n = Math.max(-3, state.procStops - 1); state.procStops = n; try { localStorage.setItem('procStops', String(n)); } catch {} render(); },
     procOpenSheet() { state.procSheet = true; render(); },
     procCloseSheet() { state.procSheet = false; render(); },
+    procOpenFilmSearch() { state.procFilmOpen = true; state.procFilmQuery = ''; render(); },
+    procCloseFilmSearch() { state.procFilmOpen = false; render(); },
+    procSetFilmQuery(v) { state.procFilmQuery = v; state.procFilmOpen = true; render(); },
     procOpenTimer() {
         const t = procTimes();
         if (t.base <= 0) return;
         state.procTimerOpen = true; state.procStageIdx = 0; state.procRemaining = Math.round(t.final);
-        state.procRunning = false; state.procStarted = false; state.procLastBeepAt = -1;
+        state.procRunning = false; state.procStarted = false;
         render();
     },
     procCloseTimer() { clearInterval(procTick); state.procTimerOpen = false; state.procRunning = false; render(); },
     procToggleRun() {
         const next = !state.procRunning;
+        // Must happen synchronously inside this click handler, not later
+        // inside the setInterval tick that actually calls procBeepNow() —
+        // see procEnsureAudio()'s own comment for why.
+        if (next && state.procBeep) procEnsureAudio();
         const stages = procStageList();
         const stage = stages[state.procStageIdx] || stages[0];
         state.procRunning = next; state.procStarted = true;
@@ -2950,7 +3034,13 @@ const App = {
         if (next) procStartInterval(); else clearInterval(procTick);
         render();
     },
-    procToggleBeep() { const v = !state.procBeep; state.procBeep = v; try { localStorage.setItem('procBeep', v ? '1' : '0'); } catch {} render(); },
+    procToggleBeep() {
+        const v = !state.procBeep;
+        state.procBeep = v;
+        if (v) procEnsureAudio();
+        try { localStorage.setItem('procBeep', v ? '1' : '0'); } catch {}
+        render();
+    },
     incField(key, delta, min, max) {
         const cur = parseInt(state[key], 10) || 0;
         state[key] = String(Math.min(max, Math.max(min, cur + delta)));
@@ -3536,6 +3626,7 @@ function init() {
         if (state.subIndex !== null) App.closeSub();
         else if (state.draft !== null) App.cancelDraft();
         else if (state.confirm) App.cancelConfirm();
+        else if (state.procFilmOpen) App.procCloseFilmSearch();
         else if (state.libFilterModal) App.setField('libFilterModal', false);
         else if (state.shareModal) App.setField('shareModal', false);
         else if (state.postModal) App.closePost();
