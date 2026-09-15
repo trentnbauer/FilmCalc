@@ -655,6 +655,7 @@ const STRINGS = {
         v3PullHow: '-{n} pull',
         v3CheaperAtIsoHeadline: 'Cheaper at ISO {iso}',
         v3CheaperAtIsoNote: '{name} {how} is {amount} a frame at {lab} — {pct}% less than this roll.',
+        v3CheaperPackSubtext: '{rolls} · {amount} total',
         v3BuyAtStore: 'Buy at {store} ↗',
         v3FindThisStock: 'Find this stock ↗',
         v3LoadFilm: 'Load {name}',
