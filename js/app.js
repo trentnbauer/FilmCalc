@@ -376,7 +376,7 @@ function computeCheaperFilm(home) {
             buyLabel: pick.bundle.storeName ? t('v3BuyAtStore', { store: pick.bundle.storeName }) : t('v3FindThisStock'),
             buyLink: pick.bundle.buyLink,
             loadLabel: t('v3LoadFilm', { name: pick.f.name }),
-            pick: pick.f, pickStops: pick.stopsSigned,
+            pick: pick.f, pickStops: pick.stopsSigned, bundle: pick.bundle,
             overpay: t('v3PayingMoreOverpay', { amount: CUR() + money(curCpp - pick.cpp), pct: Math.round((curCpp / pick.cpp - 1) * 100) })
         };
     }
@@ -894,6 +894,19 @@ const C = {
     acc: '#ff7a2f', accBg: '#241a13', accBorder: '#5a3a1c',
     blue: '#5fa8d3', green: '#8fbf6a', red: '#ef6a54', redBg: '#1c1210', redBorder: '#5a2420'
 };
+// Shared "this is the recommended one" treatment — the shimmering gold
+// chip Depth's aperture ladder and Process's %-per-stop/temperature
+// pickers use for the manufacturer/developer default. Reused on Lookup for
+// the cheapest-ranked lab/stock and for the price-per-photo headline when
+// the roll currently entered beats every saved stock. Relies on the
+// @keyframes recSheen already defined in index.html's global <style>.
+const GOLD = {
+    bg: 'linear-gradient(100deg,#2a1f0a 0%,#4a3712 28%,#8a6c22 46%,#c9a144 50%,#8a6c22 54%,#4a3712 72%,#2a1f0a 100%) 0 0 / 260% 100% no-repeat',
+    border: '#c9a144',
+    shadow: '0 0 0 1px rgba(201,161,68,0.25), 0 2px 14px rgba(201,161,68,0.28), inset 0 1px 0 rgba(255,234,184,0.22)',
+    anim: 'recSheen 3.2s linear infinite',
+    fg: '#ffeab8'
+};
 // Light mode isn't a second palette (every colour in C/this file is a
 // literal hex) — invert+hue-rotate the whole app instead, same trick
 // root's js/app.js uses. Own localStorage key ('newUiTheme', tri-state
@@ -1024,12 +1037,18 @@ function viewLookup() {
     const homeCpp = home ? home.cpp : 0;
     const saveC = best ? (homeCpp - best.cpp) * 100 : 0;
     const cheaper = computeCheaperFilm(home);
+    // Gold on the price-per-photo headline when what's currently entered
+    // already beats every saved stock — mutually exclusive with
+    // cheaper.tone === 'warn' (that fires when a SAVED stock beats the
+    // current entry, the opposite direction), so the two never compete.
+    const cheapestSavedPerFrame = filmRows.length ? Math.min(...filmRows.map(row => row.perFrame)) : null;
+    const beatsAllSaved = !!home && homeCpp > 0 && cheapestSavedPerFrame !== null && homeCpp < cheapestSavedPerFrame;
     const pushStopsAbs = Math.abs(pushStops());
     const loadedFilm = Object.values(getAllFilms()).find(f => !f.hidden && parseInt(f.boxSpeed, 10) === (parseInt(state.boxSpeed, 10) || -1) && (f.format || '35mm') === FORMAT_VALUE[state.format]);
     const pushLimit = loadedFilm ? parseFloat(loadedFilm.maxPushPull ?? 1) : 1;
     const overPush = pushStopsAbs > pushLimit;
 
-    const summaryCard = `<div style="margin:18px 20px 0;background:${C.panel};border:1px solid ${C.border};border-radius:10px;overflow:hidden">
+    const summaryCard = `<div style="margin:18px 20px 0;background:${beatsAllSaved ? GOLD.bg : C.panel};border:1px solid ${beatsAllSaved ? GOLD.border : C.border};border-radius:10px;overflow:hidden;box-shadow:${beatsAllSaved ? GOLD.shadow : 'none'};animation:${beatsAllSaved ? GOLD.anim : 'none'}">
 <div style="padding:18px 20px">
 <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
 ${home && home.lab.address ? `<button type="button" onclick="App.openMaps()" aria-label="${escapeHtml(t('v3DirectionsToLab', { name: home.name }))}" style="display:flex;align-items:center;gap:6px;background:transparent;border:0;padding:0;font:inherit;font-size:12px;color:${C.sub};cursor:pointer">
@@ -1039,7 +1058,7 @@ ${home && home.lab.address ? `<button type="button" onclick="App.openMaps()" ari
 <span style="font-size:12px;color:${C.blue}">${best && saveC > 0.05 ? escapeHtml(t('v3SaveVsBestName', { name: best.name.split(' ')[0], amount: saveC.toFixed(1) })) : (home ? escapeHtml(t('v3CheapestAlready')) : '')}</span>
 </div>
 <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-top:8px">
-<div style="display:flex;align-items:baseline;gap:5px"><span style="font-size:24px;font-weight:500;color:${C.sub}">${CUR()}</span><span style="font-size:66px;font-weight:700;line-height:.84;color:${cheaper.tone === 'warn' ? C.red : C.text};letter-spacing:-.035em">${home ? money(homeCpp) : '—'}</span><span style="font-size:12px;color:${C.sub}">${escapeHtml(t('v3PerFrame'))}</span></div>
+<div style="display:flex;align-items:baseline;gap:5px"><span style="font-size:24px;font-weight:500;color:${beatsAllSaved ? GOLD.fg : C.sub}">${CUR()}</span><span style="font-size:66px;font-weight:700;line-height:.84;color:${beatsAllSaved ? GOLD.fg : (cheaper.tone === 'warn' ? C.red : C.text)};letter-spacing:-.035em">${home ? money(homeCpp) : '—'}</span><span style="font-size:12px;color:${beatsAllSaved ? '#c9b98a' : C.sub}">${escapeHtml(t('v3PerFrame'))}</span></div>
 <div style="text-align:right;padding-bottom:6px"><div style="font-size:11px;color:${C.sub}">${escapeHtml(t('v3TotalCost'))}</div><div style="font-size:24px;font-weight:600;color:${C.text}">${CUR()}${home ? money(perRoll + homeDev + homePush + homeFee) : '0.00'}</div></div>
 </div>
 ${cheaper.tone === 'warn' ? `<div style="display:flex;align-items:center;gap:7px;margin-top:10px;padding:7px 10px;border-radius:8px;background:${C.redBg};border:1px solid ${C.redBorder}">
@@ -1083,22 +1102,23 @@ ${cheaper.buyLink ? `<a href="${sanitizeUrl(cheaper.buyLink)}" target="_blank" r
 
     const totalLabs = Object.keys(getAllLabs()).filter(n => !getAllLabs()[n].hidden).length;
     const rows = state.tab === 'labs'
-        ? r.ranked.map((x, i) => `<button type="button" onclick="App.openLibDetail(App.labDetail('${jsAttr(x.name)}'))" style="display:flex;align-items:center;gap:12px;width:100%;padding:14px 0;background:transparent;border:0;border-top:${i === 0 ? '2px solid ' + C.blue : '1px solid ' + C.border};font:inherit;text-align:left;cursor:pointer">
-<span style="flex:1;min-width:0"><span style="display:block;font-size:16px;color:${C.text}">${escapeHtml(x.name)}${x.name === state.homeLab ? ' ' + escapeHtml(t('v3HomeSuffix')) : ''}</span><span style="display:block;font-size:12px;color:${C.faint};margin-top:3px">${CUR()}${money(x.pick.devCost)} · ${escapeHtml(x.pick.label.toLowerCase())} · ${(turnaroundLabels[x.pick.turnaroundTime] || '').toLowerCase()}</span></span>
-<span style="text-align:right;flex:none"><span style="display:block;font-size:24px;font-weight:600;color:${i === 0 ? C.blue : C.text2}">${money(x.cpp)}</span><span style="display:block;font-size:11px;color:${i === 0 ? C.blue : C.faint};margin-top:2px">${i === 0 ? escapeHtml(t('v3TagCheapestLower')) : '+' + ((x.cpp - best.cpp) * 100).toFixed(1) + 'c'}</span></span>
-<span style="color:${C.border3};font-size:18px;flex:none">›</span>
-</button>`).join('')
+        ? r.ranked.map((x, i) => { const rec = i === 0; return `<button type="button" onclick="App.openLibDetail(App.labDetail('${jsAttr(x.name)}'))" style="display:flex;align-items:center;gap:12px;width:100%;padding:14px 0;background:${rec ? GOLD.bg : 'transparent'};border:0;border-top:${rec ? '2px solid ' + GOLD.border : '1px solid ' + C.border};box-shadow:${rec ? GOLD.shadow : 'none'};animation:${rec ? GOLD.anim : 'none'};font:inherit;text-align:left;cursor:pointer">
+<span style="flex:1;min-width:0"><span style="display:block;font-size:16px;color:${rec ? GOLD.fg : C.text}">${escapeHtml(x.name)}${x.name === state.homeLab ? ' ' + escapeHtml(t('v3HomeSuffix')) : ''}</span><span style="display:block;font-size:12px;color:${rec ? '#c9b98a' : C.faint};margin-top:3px">${CUR()}${money(x.pick.devCost)} · ${escapeHtml(x.pick.label.toLowerCase())} · ${(turnaroundLabels[x.pick.turnaroundTime] || '').toLowerCase()}</span></span>
+<span style="text-align:right;flex:none"><span style="display:block;font-size:24px;font-weight:600;color:${rec ? GOLD.fg : (i === 0 ? C.blue : C.text2)}">${money(x.cpp)}</span><span style="display:block;font-size:11px;color:${rec ? GOLD.fg : C.faint};margin-top:2px">${rec ? escapeHtml(t('v3TagCheapestLower')) : '+' + ((x.cpp - best.cpp) * 100).toFixed(1) + 'c'}</span></span>
+<span style="color:${rec ? GOLD.fg : C.border3};font-size:18px;flex:none">›</span>
+</button>`; }).join('')
         : filmRows.map((row, i) => {
             const st = row.f;
+            const rec = i === 0 && !row.overLimit;
             const meta = row.overLimit
                 ? t('v3MetaOverLimit', { iso: st.boxSpeed, process: PROCESS_LABEL[st.process], limit: parseFloat(st.maxPushPull ?? 1) })
                 : row.feeBlocked
                     ? t('v3MetaFeeBlocked', { iso: st.boxSpeed, process: PROCESS_LABEL[st.process], lab: home ? home.name.split(' ')[0] : t('v3GenericLab') })
                     : t('v3MetaNormal', { iso: st.boxSpeed, process: PROCESS_LABEL[st.process], pushPart: row.stopsAbs ? t('v3MetaPushPart', { sign: row.dir === 'push' ? '+' : '-', n: row.stopsAbs }) : t('v3MetaNativePart'), amount: CUR() + money(row.perFrame) });
-            return `<button type="button" onclick="App.openLibDetail(App.filmDetail('${jsAttr(filmKeyOf(st))}'))" style="display:flex;align-items:center;gap:12px;width:100%;padding:14px 0;background:transparent;border:0;border-top:${i === 0 ? '2px solid ' + C.green : '1px solid ' + C.border};font:inherit;text-align:left;cursor:pointer">
-<span style="flex:1;min-width:0"><span style="display:block;font-size:16px;color:${row.overLimit ? C.sub : C.text}">${escapeHtml(st.name)}</span><span style="display:block;font-size:12px;color:${C.faint};margin-top:3px">${escapeHtml(meta)}</span></span>
-<span style="text-align:right;flex:none"><span style="display:block;font-size:24px;font-weight:600;color:${row.overLimit ? '#8a5c50' : (i === 0 ? C.green : C.text2)}">${money(row.perRoll)}</span><span style="display:block;font-size:11px;color:${C.faint};margin-top:2px">${escapeHtml(t('v3PerRollAmount', { amount: CUR() }))}</span></span>
-<span style="color:${C.border3};font-size:18px;flex:none">›</span>
+            return `<button type="button" onclick="App.openLibDetail(App.filmDetail('${jsAttr(filmKeyOf(st))}'))" style="display:flex;align-items:center;gap:12px;width:100%;padding:14px 0;background:${rec ? GOLD.bg : 'transparent'};border:0;border-top:${rec ? '2px solid ' + GOLD.border : '1px solid ' + C.border};box-shadow:${rec ? GOLD.shadow : 'none'};animation:${rec ? GOLD.anim : 'none'};font:inherit;text-align:left;cursor:pointer">
+<span style="flex:1;min-width:0"><span style="display:block;font-size:16px;color:${row.overLimit ? C.sub : (rec ? GOLD.fg : C.text)}">${escapeHtml(st.name)}</span><span style="display:block;font-size:12px;color:${rec ? '#c9b98a' : C.faint};margin-top:3px">${escapeHtml(meta)}</span></span>
+<span style="text-align:right;flex:none"><span style="display:block;font-size:24px;font-weight:600;color:${row.overLimit ? '#8a5c50' : (rec ? GOLD.fg : (i === 0 ? C.green : C.text2))}">${money(row.perRoll)}</span><span style="display:block;font-size:11px;color:${rec ? GOLD.fg : C.faint};margin-top:2px">${escapeHtml(t('v3PerRollAmount', { amount: CUR() }))}</span></span>
+<span style="color:${rec ? GOLD.fg : C.border3};font-size:18px;flex:none">›</span>
 </button>`;
         }).join('');
 
@@ -3270,6 +3290,14 @@ const App = {
         state.pushPull = String(cheaper.pickStops);
         state.format = Object.keys(FORMAT_VALUE).find(k => FORMAT_VALUE[k] === (cheaper.pick.format || '35mm')) || state.format;
         state.filmColor = filmColorType(cheaper.pick);
+        // The chosen bundle's own rolls/exposures, not whatever was left
+        // over from the previous roll — a 10-roll pack's price divided by a
+        // stale rolls=1 overstated cost-per-roll by 10x.
+        if (cheaper.bundle) {
+            state.packCost = String(cheaper.bundle.filmCost);
+            state.rolls = String(cheaper.bundle.rolls || 1);
+            state.exposures = String(cheaper.bundle.exposures || 36);
+        }
         say(t('v3NameLoadedToast', { name: cheaper.pick.name }));
     },
     labDetail: App_labDetail,
@@ -3290,7 +3318,15 @@ const App = {
                 state.filmColor = filmColorType(f);
                 state.process = f.process || state.process;
                 const bundles = f.bundles || [];
-                if (bundles.length) state.packCost = String(bundles.slice().sort((a, b) => a.filmCost / (a.rolls || 1) - b.filmCost / (b.rolls || 1))[0].filmCost);
+                if (bundles.length) {
+                    // The cheapest bundle's own rolls/exposures too, not
+                    // just its price — otherwise a 10-roll pack's price
+                    // divided by a stale rolls count overstated cost-per-roll.
+                    const cheapest = bundles.slice().sort((a, b) => a.filmCost / (a.rolls || 1) - b.filmCost / (b.rolls || 1))[0];
+                    state.packCost = String(cheapest.filmCost);
+                    state.rolls = String(cheapest.rolls || 1);
+                    state.exposures = String(cheapest.exposures || 36);
+                }
             }
             say(t('v3NameLoadedToast', { name: f ? f.name : t('v3StockFallbackName') }));
         } else {
@@ -3832,7 +3868,25 @@ function init() {
     // App.openChangelog() still handles as a fallback via the same
     // `!state.changelog` guard) so the "v{number}" version tag next to
     // "What's new" has something to show without waiting for a click.
-    fetch('changelog.json').then(r => r.ok ? r.json() : []).then(list => { state.changelog = list; render(); }).catch(() => {});
+    fetch('changelog.json').then(r => r.ok ? r.json() : []).then(list => {
+        state.changelog = list;
+        // Auto-open "What's new" once per deploy, on the first load after
+        // it — never on every load, and never for a brand-new user (no
+        // 'setupSeen' yet: they get the setup wizard instead, and a
+        // changelog of changes they never experienced "before" means
+        // nothing to them). Stamps lastSeenVersion right away so this
+        // can't re-fire on a second render before the user dismisses it,
+        // and skips popping over the wizard if that's still open.
+        try {
+            const v = currentVersionLabel();
+            const lastSeen = localStorage.getItem('lastSeenVersion');
+            if (v && lastSeen && lastSeen !== v && localStorage.getItem('setupSeen') && !state.setupOpen) {
+                state.changelogOpen = true;
+            }
+            if (v) localStorage.setItem('lastSeenVersion', v);
+        } catch {}
+        render();
+    }).catch(() => {});
 
     // Chemicals aren't region-split like films/labs (see chemicals/presets.yaml's
     // own header comment), so there's no wizard step to opt into — the whole
