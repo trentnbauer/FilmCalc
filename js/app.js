@@ -1911,6 +1911,17 @@ ${items.map(([key, label, meta]) => `<button type="button" onclick="App.setView(
 
 function viewSetup() {
     const step = state.setupStep;
+    // Step 1 shows a Correct/Incorrect confirm panel (renderPresetPicker,
+    // same condition mirrored here) before the actual region checklist —
+    // while that's up, the footer's Next button sits directly below
+    // "Correct" with identical accent styling, so a user going for the
+    // lower/habitual bottom-CTA can skip confirming (or rejecting) the
+    // guess entirely. presetChecked stays empty, setupNext()'s size guard
+    // then silently skips the import while the wizard still advances —
+    // "it detected my city but imported nothing." Hiding Next here forces
+    // Correct/Incorrect first; both of those already lead to a screen with
+    // its own Next available (the ticked checklist, or the country picker).
+    const showingGeoConfirm = step === 1 && geoDetectionActive() && geoGuess && state.geoConfirm === null;
     const labNames = Object.keys(getAllLabs()).filter(n => !getAllLabs()[n].hidden);
     // Same "stable internal marker" pattern as Settings' Home lab card
     // (viewSettings) — untranslated so the <option value>/state.tier
@@ -1942,7 +1953,7 @@ ${step === 2 ? `<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${e
 <div style="font-size:12px;line-height:1.5;color:${C.faint};margin-top:10px">${escapeHtml(t('v3HomeLabExplainerNote'))}</div>` : ''}
 <div style="display:flex;gap:10px;margin-top:20px">
 ${step > 0 ? `<button type="button" onclick="App.setupBack()" style="flex:1;height:46px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text2};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v2ButtonBack'))}</button>` : ''}
-${step === SETUP_STEPS.length - 1
+${showingGeoConfirm ? '' : step === SETUP_STEPS.length - 1
         ? `<button type="button" onclick="App.closeSetup()" style="flex:2;height:46px;border-radius:8px;background:${C.text};border:0;color:${C.shell};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${escapeHtml(t('v2ButtonDone'))}</button>`
         : `<button type="button" onclick="App.setupNext()" style="flex:2;height:46px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${escapeHtml(t('v2ButtonNext'))}</button>`}
 </div>
