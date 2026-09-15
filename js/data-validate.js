@@ -53,6 +53,9 @@ function validateFilmEntries(entries, schema) {
         if (s && film.colorType && !s.enums.colorType.includes(film.colorType)) errors.push(`${where}: colorType '${film.colorType}' must be one of ${s.enums.colorType.join(', ')}`);
         if (s && film.format && !s.enums.format.includes(film.format)) errors.push(`${where}: format '${film.format}' must be one of ${s.enums.format.join(', ')}`);
         if ('maxPushPull' in film && typeof film.maxPushPull !== 'number') errors.push(`${where}: maxPushPull must be a plain number, not text`);
+        if ('devTimeSec' in film && typeof film.devTimeSec !== 'number') errors.push(`${where}: devTimeSec must be a plain number of seconds, not text`);
+        else if (typeof film.devTimeSec === 'number' && film.devTimeSec <= 0) errors.push(`${where}: devTimeSec must be greater than 0`);
+        if ('devTempC' in film && typeof film.devTempC !== 'number') errors.push(`${where}: devTempC must be a plain number in Celsius, not text`);
         const bundleKeys = new Map();
         (film.bundles || []).forEach((b, j) => {
             const bw = `${where}, price #${j + 1}`;

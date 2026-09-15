@@ -9,6 +9,8 @@ films:
     boxSpeed: 400
     maxPushPull: 2
     process: BW
+    devTimeSec: 780
+    devTempC: 20
     format: 35mm
     hidden: false
     bundles:
@@ -24,6 +26,8 @@ films:
     boxSpeed: 200
     maxPushPull: 1
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     format: 35mm
     hidden: false
     bundles:
@@ -47,6 +51,8 @@ films:
     boxSpeed: 400
     maxPushPull: 1
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     format: 35mm
     hidden: false
     bundles:
@@ -70,6 +76,8 @@ films:
     boxSpeed: 400
     maxPushPull: 2
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     format: 35mm
     hidden: false
     bundles:
@@ -93,6 +101,8 @@ films:
     boxSpeed: 200
     maxPushPull: 1
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     format: 35mm
     hidden: false
     bundles:
@@ -116,6 +126,8 @@ films:
     boxSpeed: 400
     maxPushPull: 1
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     format: 35mm
     hidden: false
     bundles:
@@ -131,6 +143,8 @@ films:
     boxSpeed: 200
     maxPushPull: 1
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     format: 35mm
     hidden: false
     bundles:
@@ -146,6 +160,8 @@ films:
     boxSpeed: 400
     maxPushPull: 2
     process: BW
+    devTimeSec: 585
+    devTempC: 20
     format: 35mm
     hidden: false
     bundles:
@@ -161,6 +177,8 @@ films:
     boxSpeed: 125
     maxPushPull: 2
     process: BW
+    devTimeSec: 660
+    devTempC: 20
     format: 35mm
     hidden: false
     bundles:
@@ -176,6 +194,8 @@ films:
     boxSpeed: 400
     maxPushPull: 1
     process: BW
+    devTimeSec: 990
+    devTempC: 20
     format: 35mm
     hidden: false
     bundles:
@@ -191,6 +211,8 @@ films:
     boxSpeed: 100
     maxPushPull: 0
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     format: 35mm
     hidden: false
     bundles:
@@ -206,6 +228,8 @@ films:
     boxSpeed: 800
     maxPushPull: 2
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     format: 35mm
     hidden: false
     bundles:
@@ -221,6 +245,8 @@ films:
     boxSpeed: 400
     maxPushPull: 3
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     format: 35mm
     hidden: false
     bundles:
@@ -236,6 +262,8 @@ films:
     boxSpeed: 200
     maxPushPull: 1
     process: BW
+    devTimeSec: 330
+    devTempC: 20
     format: 35mm
     hidden: false
     bundles:
@@ -251,6 +279,8 @@ films:
     boxSpeed: 100
     maxPushPull: 1
     process: BW
+    devTimeSec: 450
+    devTempC: 20
     format: 35mm
     hidden: false
     bundles:
@@ -266,6 +296,8 @@ films:
     boxSpeed: 400
     maxPushPull: 2
     process: BW
+    devTimeSec: 840
+    devTempC: 20
     format: 35mm
     hidden: false
     bundles:
@@ -281,6 +313,8 @@ films:
     boxSpeed: 100
     maxPushPull: 2
     process: BW
+    devTimeSec: 660
+    devTempC: 20
     format: 35mm
     hidden: false
     bundles:
@@ -296,6 +330,8 @@ films:
     boxSpeed: 3200
     maxPushPull: 2
     process: BW
+    devTimeSec: 570
+    devTempC: 20
     format: 35mm
     hidden: false
     bundles:
@@ -311,6 +347,8 @@ films:
     boxSpeed: 400
     maxPushPull: 1
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     colorType: bw
     format: 35mm
     hidden: false
@@ -327,6 +365,8 @@ films:
     boxSpeed: 160
     maxPushPull: 2
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     format: 35mm
     hidden: false
     bundles:
@@ -342,6 +382,8 @@ films:
     boxSpeed: 400
     maxPushPull: 2
     process: BW
+    devTimeSec: 615
+    devTempC: 20
     format: 35mm
     hidden: false
     bundles:
@@ -357,6 +399,8 @@ films:
     boxSpeed: 3200
     maxPushPull: 2
     process: BW
+    devTimeSec: 840
+    devTempC: 20
     format: 35mm
     hidden: false
     bundles:
@@ -372,6 +416,8 @@ films:
     boxSpeed: 100
     maxPushPull: 1
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     format: 35mm
     hidden: false
     bundles:
@@ -387,6 +433,8 @@ films:
     boxSpeed: 100
     maxPushPull: 1
     process: E6
+    devTimeSec: 360
+    devTempC: 38
     format: 35mm
     hidden: false
     bundles:

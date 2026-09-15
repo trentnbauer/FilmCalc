@@ -8,6 +8,8 @@ films:
   - name: Kodak Gold
     boxSpeed: 200
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     format: 35mm
     hidden: false
     bundles:
@@ -22,6 +24,8 @@ films:
   - name: Kodak ColorPlus
     boxSpeed: 200
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     format: 35mm
     hidden: false
     bundles:

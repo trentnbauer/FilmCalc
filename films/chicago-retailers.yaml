@@ -9,6 +9,8 @@ films:
     boxSpeed: 400
     maxPushPull: 2
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     format: 35mm
     hidden: false
     bundles:
@@ -24,6 +26,8 @@ films:
     boxSpeed: 400
     maxPushPull: 2
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     format: '120'
     hidden: false
     bundles:
@@ -39,6 +43,8 @@ films:
     boxSpeed: 200
     maxPushPull: 1
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     format: 35mm
     hidden: false
     bundles:
@@ -70,6 +76,8 @@ films:
     boxSpeed: 200
     maxPushPull: 1
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     format: '120'
     hidden: false
     bundles:
@@ -85,6 +93,8 @@ films:
     boxSpeed: 400
     maxPushPull: 1
     process: C41
+    devTimeSec: 195
+    devTempC: 38
     format: 35mm
     hidden: false
     bundles:
@@ -108,6 +118,8 @@ films:
     boxSpeed: 400
     maxPushPull: 2
     process: BW
+    devTimeSec: 780
+    devTempC: 20
     format: 35mm
     hidden: false
     bundles:
@@ -131,6 +143,8 @@ films:
     boxSpeed: 400
     maxPushPull: 2
     process: BW
+    devTimeSec: 780
+    devTempC: 20
     format: '120'
     hidden: false
     bundles:
