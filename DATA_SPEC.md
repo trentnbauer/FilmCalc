@@ -202,6 +202,37 @@ chemicals:
 
 ---
 
+## Developer entries
+
+Goes in `developers.yaml` — a single flat file like `chemicals/presets.yaml`, not region-split, and not part of the AI-assisted contribution flow below: edit it by hand. It powers the Process tab's dev-time/push-pull/temperature calculator (`js/app.js`, `DEVELOPERS`/`loadDevelopers()`), fetched eagerly on every app load rather than on demand.
+
+```yaml
+developers:
+- value: d76
+  label: Kodak D-76
+  type: bw
+  percentPerStop: 30
+  baseTempC: 20
+  factorPerDegC: 0.90
+  tempRange: [18, 24]
+  agitation: { initial: 30, intervalSec: 30, forSec: 5 }
+  source: Kodak D-76 datasheet (J-78)
+```
+
+| Field | Rules |
+|---|---|
+| `value` | Stable key, stored in localStorage/app state. Keyed by exact value — a duplicate silently overwrites the earlier entry. **Never rename an existing one** (it'd orphan every returning user's saved choice) — add a new entry instead. |
+| `label` | Shown in the Developer dropdown, e.g. `Kodak D-76`, `Ilford Ilfotec DD-X`. |
+| `type` | Exactly one of: `bw`, `c41`, `e6`, `ecn2` — which Development-type segment this developer appears under. |
+| `percentPerStop` | This developer's own recommended time increase per stop pushed/pulled, offered as the "recommended" chip. Plain number (percent, so `30` not `0.3`). |
+| `baseTempC` | The temperature this developer's own published times are quoted at, in Celsius. |
+| `factorPerDegC` | Time-temperature compensation slope from the published chart — the calculator multiplies the time by this per °C away from `baseTempC`. Typically 0.88–0.93. |
+| `tempRange` | `[min, max]` in °C — the span the published chart actually covers. A temperature outside it still computes, but the app flags it as an extrapolation rather than published data. |
+| `agitation` | `initial` (seconds of continuous agitation at the very start), `intervalSec` (how often after that), `forSec` (how long each subsequent agitation lasts). All plain numbers. |
+| `source` | The datasheet or chart this row is built from, e.g. `Kodak D-76 datasheet (J-78)` — shown to the user as the basis for the numbers. |
+
+---
+
 ## What to tell the user at the end
 
 After the YAML, add a short note with exactly these three things:
