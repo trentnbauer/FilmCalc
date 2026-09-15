@@ -2981,6 +2981,22 @@ const App = {
                 localStorage.setItem('procBaseTime', time); localStorage.setItem('procBaseTempC', String(temp));
                 localStorage.setItem('procTempC', String(temp));
             } catch {}
+        } else {
+            // A stock with no saved dev time still needs the fields to
+            // change on pick — leaving the *previous* selection's time and
+            // temperature on screen looked like this film's own published
+            // figures instead of leftovers from whatever was chosen before.
+            // Base time clears to empty (the field's existing "nothing
+            // entered yet" state); temperature resets to the developer's
+            // own chart default rather than to blank, since the rest of
+            // the calculator always expects a real number there.
+            const d = procDev();
+            state.procBaseTime = ''; state.procBaseTempC = d.baseTempC;
+            state.procTempC = procSnapTemp(d.baseTempC, null, d.baseTempC);
+            try {
+                localStorage.setItem('procBaseTime', ''); localStorage.setItem('procBaseTempC', String(d.baseTempC));
+                localStorage.setItem('procTempC', String(state.procTempC));
+            } catch {}
         }
         render();
     },
