@@ -64,6 +64,23 @@ function getAllChemicals() { return readJSON('chemicalProfiles', {}); }
 function setAllFilms(v) { writeJSON('filmProfiles', v); }
 function setAllLabs(v) { writeJSON('labProfiles', v); }
 function setAllChemicals(v) { writeJSON('chemicalProfiles', v); }
+// Shared by init()'s one-time auto-import and App.confirmDeleteAll()'s
+// re-import after a full reset — see call sites for why each needs it.
+function seedChemicalsPreset() {
+    fetch('chemicals/presets.yaml').then(r => r.ok ? r.text() : null).then(text => {
+        if (text) {
+            const doc = jsyaml.load(text) || {};
+            const entries = Array.isArray(doc.chemicals) ? doc.chemicals : [];
+            if (entries.length) {
+                const all = getAllChemicals();
+                entries.forEach(c => { if (c.name && !(c.name in all)) all[c.name] = { ...c, hidden: false }; });
+                setAllChemicals(all);
+                render();
+            }
+        }
+        try { localStorage.setItem('chemicalsPresetSeeded', '1'); } catch {}
+    }).catch(() => {});
+}
 function getHomeLab() { return localStorage.getItem('homeLab') || ''; }
 function setHomeLab(name) { try { localStorage.setItem('homeLab', name || ''); } catch {} }
 function getDefaultTierLabel() { return localStorage.getItem('defaultTierLabel') || ''; }
@@ -3488,6 +3505,13 @@ const App = {
                 state.homeLab = ''; state.tier = '';
                 state.confirm = null;
                 say(t('v3LibraryDeletedToast'));
+                // Chemicals aren't part of the region wizard (see
+                // seedChemicalsPreset()), so wiping the library also has to
+                // clear the one-time seed flag and re-run the import here —
+                // otherwise a full reset left the user with an empty
+                // chemicals list until localStorage was cleared by hand.
+                try { localStorage.removeItem('chemicalsPresetSeeded'); } catch {}
+                seedChemicalsPreset();
             }
         };
         render();
@@ -3928,21 +3952,7 @@ function init() {
     // 'chemicalsPresetSeeded' rather than "chemicalProfiles is empty" so a
     // user who deletes every preset chemical doesn't get them all back on
     // their next visit.
-    if (!localStorage.getItem('chemicalsPresetSeeded')) {
-        fetch('chemicals/presets.yaml').then(r => r.ok ? r.text() : null).then(text => {
-            if (text) {
-                const doc = jsyaml.load(text) || {};
-                const entries = Array.isArray(doc.chemicals) ? doc.chemicals : [];
-                if (entries.length) {
-                    const all = getAllChemicals();
-                    entries.forEach(c => { if (c.name && !(c.name in all)) all[c.name] = { ...c, hidden: false }; });
-                    setAllChemicals(all);
-                    render();
-                }
-            }
-            try { localStorage.setItem('chemicalsPresetSeeded', '1'); } catch {}
-        }).catch(() => {});
-    }
+    if (!localStorage.getItem('chemicalsPresetSeeded')) seedChemicalsPreset();
 
     // Eager, not just on first opening the Process tab: a deep link straight
     // to /process sets state.view directly (restoreViewFromLocation(), not
