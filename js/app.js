@@ -925,12 +925,36 @@ function isDarkNow() {
 function render() {
     const el = document.getElementById('app');
     if (!el) return;
+    // Preserve focus (and cursor position) across the full-innerHTML
+    // rebuild below, for any field that updates live as you type (oninput,
+    // not onchange) — replacing innerHTML discards the focused DOM node
+    // entirely, which silently drops focus after the very first keystroke
+    // and, on mobile, dismisses the on-screen keyboard with it. Identified
+    // by a stable data-focus-id rather than the browser's own id, so it
+    // can't collide with an id reused across different views. A no-op for
+    // every other field in the app (they all use onchange, which only
+    // fires on blur/Enter — by then losing focus is moot).
+    const active = document.activeElement;
+    const focusId = active && active.getAttribute && active.getAttribute('data-focus-id');
+    let selStart, selEnd;
+    if (focusId && typeof active.selectionStart === 'number') {
+        selStart = active.selectionStart; selEnd = active.selectionEnd;
+    }
     // Filter goes on <body>, not #app: on desktop the shell is a centered
     // column narrower than the viewport, and body's own background paints
     // the side gutters — putting the filter on #app left that background
     // un-inverted, so light mode showed black bars down both sides.
     document.body.style.filter = isDarkNow() ? '' : 'invert(1) hue-rotate(180deg)';
     el.innerHTML = viewShell();
+    if (focusId) {
+        const next = el.querySelector(`[data-focus-id="${focusId}"]`);
+        if (next) {
+            next.focus();
+            if (typeof selStart === 'number' && typeof next.setSelectionRange === 'function') {
+                try { next.setSelectionRange(selStart, selEnd); } catch {}
+            }
+        }
+    }
 }
 
 function fmtDate(iso) {
@@ -2097,7 +2121,7 @@ function viewProcess() {
 <span style="font-size:11px;color:${C.sub}">Film stock</span>
 <span style="font-size:11px;color:${C.faint};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(vals.filmNote)}</span>
 </div>
-<input type="text" value="${escapeHtml(state.procFilmOpen ? state.procFilmQuery : vals.filmLabel)}" oninput="App.procSetFilmQuery(this.value)" onfocus="App.procOpenFilmSearch()" placeholder="Search your saved films…" aria-label="Film stock" autocomplete="off" style="width:100%;box-sizing:border-box;height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text}">
+<input type="text" data-focus-id="proc-film-search" value="${escapeHtml(state.procFilmOpen ? state.procFilmQuery : vals.filmLabel)}" oninput="App.procSetFilmQuery(this.value)" onfocus="App.procOpenFilmSearch()" placeholder="Search your saved films…" aria-label="Film stock" autocomplete="off" style="width:100%;box-sizing:border-box;height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text}">
 ${state.procFilmOpen ? `<div onclick="App.procCloseFilmSearch()" style="position:fixed;inset:0;z-index:39"></div>
 <div style="position:absolute;top:100%;left:0;right:0;margin-top:4px;max-height:260px;overflow:auto;background:${C.panel};border:1px solid ${C.border};border-radius:8px;z-index:40;box-shadow:0 12px 30px rgba(0,0,0,.45)">
 ${vals.filmResults.map(o => `<button type="button" onclick="App.procPickFilm('${jsAttr(o.value)}')" style="display:block;width:100%;text-align:left;padding:9px 12px;background:${o.value === state.procFilmKey ? C.field : 'transparent'};border:0;border-bottom:1px solid ${C.border};font:inherit;font-size:13px;color:${C.text};cursor:pointer">${escapeHtml(o.label)}</button>`).join('')}
@@ -3222,7 +3246,11 @@ const App = {
     procDecStops() { const n = Math.max(-3, state.procStops - 1); state.procStops = n; try { localStorage.setItem('procStops', String(n)); } catch {} render(); },
     procOpenSheet() { state.procSheet = true; render(); },
     procCloseSheet() { state.procSheet = false; render(); },
-    procOpenFilmSearch() { state.procFilmOpen = true; state.procFilmQuery = ''; render(); },
+    // Guarded on !procFilmOpen: this also fires from render()'s programmatic
+    // refocus (restoring focus after the box's own re-render clears the DOM
+    // node), not just a real user tap. Resetting the query unconditionally
+    // wiped out whatever the user had just typed on every keystroke.
+    procOpenFilmSearch() { if (!state.procFilmOpen) { state.procFilmOpen = true; state.procFilmQuery = ''; render(); } },
     procCloseFilmSearch() { state.procFilmOpen = false; render(); },
     procSetFilmQuery(v) { state.procFilmQuery = v; state.procFilmOpen = true; render(); },
     procOpenTimer() {
