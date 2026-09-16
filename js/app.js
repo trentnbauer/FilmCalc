@@ -1641,8 +1641,10 @@ function loadDevelopers() {
         PROC_DATA_SOURCE = 'developers.yaml';
         // A reload can drop or rename what was selected — re-resolve rather
         // than leaving the menus pointing at a developer that no longer
-        // exists.
-        const d = DEVELOPERS.find(x => x.value === state.procDeveloper) || DEVELOPERS.find(x => x.type === state.procDevType) || DEVELOPERS[0];
+        // exists. Checked against procDeveloperProfiles() first since a
+        // selected value may be a saved chemical ('chem:...'), which never
+        // lives in the raw DEVELOPERS list.
+        const d = procDeveloperProfiles(state.procDevType).find(x => x.value === state.procDeveloper) || DEVELOPERS.find(x => x.type === state.procDevType) || DEVELOPERS[0];
         if (d && d.value !== state.procDeveloper) {
             state.procDeveloper = d.value; state.procDevType = d.type; state.procPct = d.percentPerStop;
             state.procBaseTempC = d.baseTempC; state.procTempC = procSnapTemp(d.baseTempC, null, d.baseTempC);
@@ -1675,7 +1677,49 @@ function procParseMmss(str) {
     const s = parseInt(String(parts[1]).slice(0, 2), 10) || 0;
     return m * 60 + s;
 }
-function procDev() { return DEVELOPERS.find(d => d.value === state.procDeveloper) || DEVELOPERS[0]; }
+// Matches a saved chemical's free-text name to one of the built-in
+// chemistry math profiles (percentPerStop, baseTempC, agitation, ...) by
+// shared significant words — e.g. a "Kodak D-76" chemical matches the
+// 'd76' profile's label "Kodak D-76", "Ilford DD-X" matches "Ilford
+// Ilfotec DD-X". Returns null if nothing shares a word, so an unrecognised
+// chemical still gets a usable (if generic) slope rather than being
+// unselectable.
+function matchDeveloperProfile(name) {
+    const sig = (String(name || '').toLowerCase().match(/[a-z0-9]+/g) || []).filter(w => w.length > 2);
+    if (!sig.length) return null;
+    let best = null, bestScore = 0;
+    DEVELOPERS.forEach(d => {
+        const dWords = new Set((d.label.toLowerCase().match(/[a-z0-9]+/g) || []).filter(w => w.length > 2));
+        const score = sig.reduce((n, w) => n + (dWords.has(w) ? 1 : 0), 0);
+        if (score > bestScore) { bestScore = score; best = d; }
+    });
+    return best;
+}
+// Developer picker options for a process type: the user's own saved,
+// non-hidden chemicals of that process first (matched to a known math
+// profile by name where possible, generic slope otherwise), then any
+// built-in profile not already represented by one of those chemicals —
+// so someone with a stocked darkroom sees their own bottles, not a
+// generic catalogue, while still being able to reach an unowned developer.
+function procDeveloperProfiles(type) {
+    type = type || state.procDevType;
+    const owned = Object.values(getAllChemicals())
+        .filter(c => !c.hidden && PROC_PROCESS_TO_TYPE[c.process] === type)
+        .sort((a, b) => a.name.localeCompare(b.name));
+    const matched = new Set();
+    const ownedProfiles = owned.map(c => {
+        const m = matchDeveloperProfile(c.name);
+        if (m) matched.add(m.value);
+        const base = m || DEVELOPERS.find(d => d.type === type) || DEVELOPERS[0];
+        return { ...base, value: 'chem:' + c.name, label: c.name };
+    });
+    const genericRest = DEVELOPERS.filter(d => d.type === type && !matched.has(d.value));
+    return ownedProfiles.concat(genericRest);
+}
+function procDev() {
+    return procDeveloperProfiles(state.procDevType).find(d => d.value === state.procDeveloper)
+        || DEVELOPERS.find(d => d.value === state.procDeveloper) || DEVELOPERS[0];
+}
 function procToC(v) { return state.procUnits === 'f' ? (v - 32) * 5 / 9 : v; }
 function procFromC(c) { return state.procUnits === 'f' ? c * 9 / 5 + 32 : c; }
 function procTempLabel(c) {
@@ -1920,7 +1964,7 @@ function procValues() {
         stopsBorder: bigPush ? C.redBorder : C.border,
         stopsLabelColor: bigPush ? C.red : C.sub,
         developer: state.procDeveloper, developerLabel: dev.label,
-        developers: DEVELOPERS.filter(d => d.type === state.procDevType).map(d => ({ value: d.value, label: d.label })),
+        developers: procDeveloperProfiles().map(d => ({ value: d.value, label: d.label })),
         typeOpts: PROC_DEV_TYPES.map(([k, l]) => ({ label: l, ...procSegOn(k === state.procDevType), pick: `App.procPickType('${k}')` })),
         pctLabel: '+' + state.procPct + '%',
         pctOpts: [...new Set([...PROC_PCT_CHOICES, dev.percentPerStop])].sort((a, b) => a - b).map(p => {
@@ -3151,7 +3195,7 @@ const App = {
     // way setFormat() re-picks a film elsewhere, rather than leaving a
     // mismatched type/developer pair on screen.
     procPickType(k) {
-        const d = DEVELOPERS.find(x => x.type === k) || DEVELOPERS[0];
+        const d = procDeveloperProfiles(k)[0] || DEVELOPERS[0];
         const temp = procSnapTemp(d.baseTempC, null, d.baseTempC);
         state.procDevType = k; state.procDeveloper = d.value; state.procPct = d.percentPerStop;
         state.procBaseTempC = d.baseTempC; state.procTempC = temp; state.procFilmKey = 'custom';
@@ -3163,7 +3207,7 @@ const App = {
         render();
     },
     procPickDeveloper(v) {
-        const d = DEVELOPERS.find(x => x.value === v);
+        const d = procDeveloperProfiles(state.procDevType).find(x => x.value === v) || DEVELOPERS.find(x => x.value === v);
         const nextBase = d ? d.baseTempC : state.procBaseTempC;
         // Keep a temperature the user deliberately set, but only if the new
         // developer's chart actually covers it — C-41 at 24 °C is nonsense,
@@ -3207,7 +3251,7 @@ const App = {
         // already deliberately chosen within the same type.
         const type = PROC_PROCESS_TO_TYPE[f.process];
         if (type && type !== state.procDevType) {
-            const d = DEVELOPERS.find(x => x.type === type) || DEVELOPERS[0];
+            const d = procDeveloperProfiles(type)[0] || DEVELOPERS[0];
             state.procDevType = type; state.procDeveloper = d.value; state.procPct = d.percentPerStop;
             try {
                 localStorage.setItem('procDevType', type); localStorage.setItem('procDeveloper', d.value);
