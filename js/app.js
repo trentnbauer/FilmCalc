@@ -450,7 +450,7 @@ function dxCells(src, target) {
     for (let i = 0; i < 5; i++) {
         const s = src.bits[i], tt = target.bits[i];
         if (s && !tt) out.push({ ...DX_TAPE, tag: 'TAPE' });
-        else if (!s && tt) out.push({ ...DX_FOIL, tag: 'FOIL' });
+        else if (!s && tt) out.push({ ...DX_FOIL, tag: 'SCRATCH' });
         else out.push({ ...(s ? DX_SILVER : DX_BLACK), tag: '' });
     }
     DX_ROW2.forEach(on => out.push({ ...(on ? DX_SILVER : DX_BLACK), tag: '' }));
@@ -1067,8 +1067,12 @@ function viewLookup() {
     // already beats every saved stock — mutually exclusive with
     // cheaper.tone === 'warn' (that fires when a SAVED stock beats the
     // current entry, the opposite direction), so the two never compete.
+    // Also requires ISO and pack price to actually be filled in: with
+    // packCost blank, filmPerRoll silently computes as 0, so homeCpp becomes
+    // dev-cost-only and can undercut every real (film-cost-inclusive) saved
+    // stock — a false "cheapest" before the user has entered anything.
     const cheapestSavedPerFrame = filmRows.length ? Math.min(...filmRows.map(row => row.perFrame)) : null;
-    const beatsAllSaved = !!home && homeCpp > 0 && cheapestSavedPerFrame !== null && homeCpp < cheapestSavedPerFrame;
+    const beatsAllSaved = !!home && homeCpp > 0 && cheapestSavedPerFrame !== null && homeCpp < cheapestSavedPerFrame && num(state.boxSpeed) > 0 && num(state.packCost) > 0;
     const pushStopsAbs = Math.abs(pushStops());
     const loadedFilm = Object.values(getAllFilms()).find(f => !f.hidden && parseInt(f.boxSpeed, 10) === (parseInt(state.boxSpeed, 10) || -1) && (f.format || '35mm') === FORMAT_VALUE[state.format]);
     const pushLimit = loadedFilm ? parseFloat(loadedFilm.maxPushPull ?? 1) : 1;
@@ -2932,7 +2936,7 @@ function viewChangelog() {
 </div>
 <p style="margin:0 0 8px;font-size:12px;color:${C.faint}">${escapeHtml(t('v3ChangelogIntro'))}</p>
 <div style="max-height:320px;overflow:auto">
-${items.length ? items.slice(0, 30).map(c => `<div style="padding:12px 0;border-top:1px solid ${C.border}"><div style="font-size:14px;line-height:1.45;color:${C.text2}">${escapeHtml(c.title)}</div><div style="font-size:11px;color:${C.faint};margin-top:3px">#${c.number} · ${fmtDate(c.mergedAt)}</div></div>`).join('') : `<div style="padding:12px 0;font-size:12px;color:${C.faint}">${escapeHtml(t('v3LoadingEllipsis'))}</div>`}
+${items.length ? items.slice(0, 30).map(c => `<div style="padding:12px 0;border-top:1px solid ${C.border}"><div style="font-size:14px;line-height:1.45">${c.url ? `<a href="${escapeHtml(c.url)}" target="_blank" rel="noopener" style="color:${C.text2};text-decoration:underline;text-decoration-color:${C.border2}">${escapeHtml(c.title)}</a>` : `<span style="color:${C.text2}">${escapeHtml(c.title)}</span>`}</div><div style="font-size:11px;color:${C.faint};margin-top:3px">#${c.number} · ${fmtDate(c.mergedAt)}</div></div>`).join('') : `<div style="padding:12px 0;font-size:12px;color:${C.faint}">${escapeHtml(t('v3LoadingEllipsis'))}</div>`}
 </div>
 <button type="button" onclick="App.closeChangelog()" style="width:100%;height:48px;margin-top:16px;border-radius:10px;background:${C.text};border:0;color:${C.shell};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${escapeHtml(t('v2ButtonDone'))}</button>
 </div>
