@@ -67,17 +67,20 @@ function setAllChemicals(v) { writeJSON('chemicalProfiles', v); }
 // Shared by init()'s one-time auto-import and App.confirmDeleteAll()'s
 // re-import after a full reset — see call sites for why each needs it.
 function seedChemicalsPreset() {
-    fetch('chemicals/presets.yaml').then(r => r.ok ? r.text() : null).then(text => {
-        if (text) {
-            const doc = jsyaml.load(text) || {};
-            const entries = Array.isArray(doc.chemicals) ? doc.chemicals : [];
-            if (entries.length) {
-                const all = getAllChemicals();
-                entries.forEach(c => { if (c.name && !(c.name in all)) all[c.name] = { ...c, hidden: false }; });
-                setAllChemicals(all);
-                render();
-            }
+    fetch('chemicals/presets.yaml').then(r => r.ok ? r.text() : Promise.reject(new Error('fetch failed'))).then(text => {
+        const doc = jsyaml.load(text) || {};
+        const entries = Array.isArray(doc.chemicals) ? doc.chemicals : [];
+        if (entries.length) {
+            const all = getAllChemicals();
+            entries.forEach(c => { if (c.name && !(c.name in all)) all[c.name] = { ...c, hidden: false }; });
+            setAllChemicals(all);
+            render();
         }
+        // Only mark seeded once the fetch genuinely succeeded — marking it
+        // unconditionally used to permanently block every future retry
+        // whenever the fetch failed (e.g. chemicals/presets.yaml wasn't
+        // actually deployed — see build-github-page.yml's Stage site files
+        // step, which never copied the chemicals/ folder to _site/).
         try { localStorage.setItem('chemicalsPresetSeeded', '1'); } catch {}
     }).catch(() => {});
 }
@@ -3992,8 +3995,13 @@ function init() {
     // file is merged into the library once, automatically. Gated on
     // 'chemicalsPresetSeeded' rather than "chemicalProfiles is empty" so a
     // user who deletes every preset chemical doesn't get them all back on
-    // their next visit.
-    if (!localStorage.getItem('chemicalsPresetSeeded')) seedChemicalsPreset();
+    // their next visit. The "|| empty" half is a one-time self-heal for
+    // visitors who hit the deploy bug above before it was fixed: the old
+    // code set this flag even when the fetch 404'd, so anyone who loaded
+    // the app before chemicals/ was actually deployed is stuck with the
+    // flag set and nothing imported — this lets them retry once, and it
+    // stops mattering for everyone else the moment their import succeeds.
+    if (!localStorage.getItem('chemicalsPresetSeeded') || !Object.keys(getAllChemicals()).length) seedChemicalsPreset();
 
     // Eager, not just on first opening the Process tab: a deep link straight
     // to /process sets state.view directly (restoreViewFromLocation(), not
