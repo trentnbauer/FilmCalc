@@ -783,7 +783,6 @@ const STRINGS = {
         v4DxAnd: 'and',
         v4DxCameraReads: 'Camera reads ISO {iso}',
         v4DxRowNote: 'bottom row is exposure count and latitude — never taped',
-        v4DxFilmComesOut: 'film comes out this side →',
         v4DxLegendSilver: 'silver = conductive',
         v4DxLegendBlack: 'black = insulated',
         v4DxWhyOrientation: 'Hold the cassette the way the diagram shows it, with the film lip on the right. Flipped the other way the squares count backwards and you will tape the wrong ones.',

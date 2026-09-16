@@ -464,16 +464,21 @@ function dxListNames(idx) {
     if (names.length <= 1) return names.join('');
     return names.slice(0, -1).join(', ') + ' ' + t('v4DxAnd') + ' ' + names[names.length - 1];
 }
+// Returns one entry per contact position (G, S1-S5), each pairing that
+// position's DX-speed cell with its film-length/latitude cell directly
+// below it — the shape the vertical diagram in viewExpiredDxCard renders
+// straight down the cassette, rewind-knob end first, instead of the two
+// separate left-to-right rows a real cassette's contacts actually run in.
 function dxCells(src, target) {
-    const out = [{ ...DX_SILVER, tag: '' }];
+    const row1 = [{ ...DX_SILVER, tag: '' }];
     for (let i = 0; i < 5; i++) {
         const s = src.bits[i], tt = target.bits[i];
-        if (s && !tt) out.push({ ...DX_TAPE, tag: 'TAPE' });
-        else if (!s && tt) out.push({ ...DX_FOIL, tag: 'SCRATCH' });
-        else out.push({ ...(s ? DX_SILVER : DX_BLACK), tag: '' });
+        if (s && !tt) row1.push({ ...DX_TAPE, tag: 'TAPE' });
+        else if (!s && tt) row1.push({ ...DX_FOIL, tag: 'SCRATCH' });
+        else row1.push({ ...(s ? DX_SILVER : DX_BLACK), tag: '' });
     }
-    DX_ROW2.forEach(on => out.push({ ...(on ? DX_SILVER : DX_BLACK), tag: '' }));
-    return out;
+    const row2 = DX_ROW2.map(on => ({ ...(on ? DX_SILVER : DX_BLACK), tag: '' }));
+    return DX_S_LABELS.map((label, i) => ({ label, row1: row1[i], row2: row2[i] }));
 }
 function dxPlan(src, target, kind, ei) {
     const tape = [], foil = [];
@@ -552,16 +557,23 @@ ${dx.plans.map(plan => `<div style="background:${C.panel2};border:1px solid ${pl
 <span style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:${C.faint}">${escapeHtml(plan.badgeMeta)}</span>
 </div>
 <div style="font-size:24px;font-weight:700;letter-spacing:-.02em;color:${C.text};margin-top:6px">${escapeHtml(plan.isoLabel)}</div>
-<div style="margin-top:12px;background:${C.field};border:1px solid ${C.border2};border-radius:9px;padding:10px 12px">
-<div style="display:flex;align-items:center;gap:9px">
-<div style="flex:1;min-width:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:3px">
-${plan.cells.map(cell => `<div style="height:21px;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;letter-spacing:.04em;background:${cell.bg};border:1px solid ${cell.border};color:${cell.ink}">${escapeHtml(cell.tag)}</div>`).join('')}
-${DX_S_LABELS.map(lab => `<div style="text-align:center;font-size:8.5px;letter-spacing:.06em;color:${C.faint}">${lab}</div>`).join('')}
+<div style="margin-top:12px;background:${C.field};border:1px solid ${C.border2};border-radius:9px;padding:14px 12px 10px">
+<div style="display:flex;flex-direction:column;align-items:center;gap:0">
+<svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true" style="flex:none"><circle cx="15" cy="15" r="13" fill="#3a3f46" stroke="#54595f" stroke-width="1.5"/><rect x="8" y="13" width="14" height="4" rx="1" fill="#1b1d20"/></svg>
+<span style="width:2px;height:9px;background:${C.border2}"></span>
+</div>
+<div style="display:flex;flex-direction:column;gap:3px;margin-top:2px">
+${plan.cells.map(row => `<div style="display:flex;align-items:center;gap:8px">
+<span style="width:16px;flex:none;text-align:right;font-size:8.5px;letter-spacing:.06em;color:${C.faint}">${row.label}</span>
+<div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:3px">
+<div style="height:21px;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;letter-spacing:.04em;background:${row.row1.bg};border:1px solid ${row.row1.border};color:${row.row1.ink}">${escapeHtml(row.row1.tag)}</div>
+<div style="height:21px;border-radius:2px;background:${row.row2.bg};border:1px solid ${row.row2.border}"></div>
+</div>
+</div>`).join('')}
 </div>
 </div>
-<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-top:8px">
+<div style="margin-top:8px">
 <span style="font-size:10px;line-height:1.4;letter-spacing:.03em;color:${C.faint}">${escapeHtml(plan.rowNote)}</span>
-<span style="font-size:10px;line-height:1.4;letter-spacing:.03em;color:${C.sub};text-align:right">${escapeHtml(t('v4DxFilmComesOut'))}</span>
 </div>
 </div>
 ${plan.warn ? `<div style="margin-top:11px;padding:10px 12px;background:${C.redBg};border:1px solid ${C.redBorder};border-radius:8px;display:flex;gap:8px;align-items:flex-start">
