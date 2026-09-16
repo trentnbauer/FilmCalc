@@ -557,17 +557,15 @@ ${dx.plans.map(plan => `<div style="background:${C.panel2};border:1px solid ${pl
 <span style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:${C.faint}">${escapeHtml(plan.badgeMeta)}</span>
 </div>
 <div style="font-size:24px;font-weight:700;letter-spacing:-.02em;color:${C.text};margin-top:6px">${escapeHtml(plan.isoLabel)}</div>
-<div style="margin-top:12px;background:${C.field};border:1px solid ${C.border2};border-radius:9px;padding:14px 12px 10px">
-<div style="display:flex;flex-direction:column;align-items:center;gap:0">
-<svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true" style="flex:none"><circle cx="15" cy="15" r="13" fill="#3a3f46" stroke="#54595f" stroke-width="1.5"/><rect x="8" y="13" width="14" height="4" rx="1" fill="#1b1d20"/></svg>
-<span style="width:2px;height:9px;background:${C.border2}"></span>
-</div>
-<div style="display:flex;flex-direction:column;gap:3px;margin-top:2px">
+<div style="margin-top:12px;background:${C.field};border:1px solid ${C.border2};border-radius:9px;padding:16px 12px 12px;display:flex;flex-direction:column;align-items:center">
+<svg width="76" height="26" viewBox="0 0 76 26" aria-hidden="true" style="flex:none"><rect x="1" y="1" width="74" height="24" rx="6" fill="#3a3f46" stroke="#54595f" stroke-width="1.5"/><rect x="30" y="10" width="16" height="6" rx="1.5" fill="#1b1d20"/></svg>
+<span style="width:2px;height:8px;background:${C.border2}"></span>
+<div style="width:100%;max-width:190px;display:flex;flex-direction:column;gap:4px">
 ${plan.cells.map(row => `<div style="display:flex;align-items:center;gap:8px">
 <span style="width:16px;flex:none;text-align:right;font-size:8.5px;letter-spacing:.06em;color:${C.faint}">${row.label}</span>
-<div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:3px">
-<div style="height:21px;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;letter-spacing:.04em;background:${row.row1.bg};border:1px solid ${row.row1.border};color:${row.row1.ink}">${escapeHtml(row.row1.tag)}</div>
-<div style="height:21px;border-radius:2px;background:${row.row2.bg};border:1px solid ${row.row2.border}"></div>
+<div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:4px">
+<div style="height:32px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;letter-spacing:.04em;background:${row.row1.bg};border:1px solid ${row.row1.border};color:${row.row1.ink}">${escapeHtml(row.row1.tag)}</div>
+<div style="height:32px;border-radius:3px;background:${row.row2.bg};border:1px solid ${row.row2.border}"></div>
 </div>
 </div>`).join('')}
 </div>
