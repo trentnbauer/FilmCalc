@@ -456,7 +456,6 @@ function dxSnapDown(v) {
     DX_TABLE.forEach(d => { if (d.iso <= v) best = d; });
     return best;
 }
-function dxTapeReachable(src, d) { return d.bits.every((b, i) => !b || src.bits[i]); }
 function dxListNames(idx) {
     const names = idx.map(i => DX_S_LABELS[i + 1]);
     if (names.length <= 1) return names.join('');
@@ -516,12 +515,10 @@ function computeDxPlans(ex) {
         plans.push(dxPlan(src, target, 'tape', ex.ei));
     } else {
         // Tape alone can only remove contacts, never add one back, so when
-        // the exact target needs a contact restored, the tape-only plan
-        // instead targets the nearest speed tape actually can reach —
-        // shown first — with the exact match (needing foil) shown second.
-        const reach = DX_TABLE.filter(d => dxTapeReachable(src, d));
-        const best = reach.reduce((a, b) => Math.abs(Math.log2(b.iso / ex.ei)) < Math.abs(Math.log2(a.iso / ex.ei)) ? b : a, reach[0]);
-        plans.push(dxPlan(src, best, 'tape', ex.ei));
+        // the exact target needs a contact restored, only the exact match
+        // (tape + scratch) is shown — the nearest tape-only speed used to
+        // be offered first too, but that's a worse result than just doing
+        // the scratch, so it's gone.
         plans.push(dxPlan(src, target, 'foil', ex.ei));
     }
     const srcNote = src.iso === ex.boxSpeed

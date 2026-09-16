@@ -765,7 +765,7 @@ const STRINGS = {
         v4DxHeadlineTapeIt: 'Tape it to read ISO {iso}',
         v4DxSrcCodesAs: 'This roll codes as ISO {iso}.',
         v4DxSrcAssumed: 'ISO {box} has no DX speed of its own, so this assumes the ISO {iso} pattern — check the squares on your cassette.',
-        v4DxSubNeedsFoil: 'Tape alone can only remove contacts, and ISO {iso} needs one added back. Nearest tape-only speed first, exact match below.',
+        v4DxSubNeedsFoil: 'Tape alone can only remove contacts, and ISO {iso} needs one added back — scratch the black paint off that square instead.',
         v4DxSubTapeGetsThere: 'ISO {iso} is the nearest DX speed to EI {ei}, and tape gets the whole way there.',
         v4DxBadgeTapeFoil: 'Tape + scratch',
         v4DxBadgeTapeOnly: 'Tape only',
