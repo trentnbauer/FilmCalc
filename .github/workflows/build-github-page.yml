@@ -135,6 +135,12 @@ jobs:
         # need to be live on the deployed site, not just present in the repo.
         # Both index.json files were just regenerated into the working tree
         # by the step above, so this picks up the fresh copies.
+        # chemicals/presets.yaml (auto-imported into the Chemicals library
+        # on first load, see js/app.js's seedChemicalsPreset()) and
+        # developers.yaml (Process tab chemistry math profiles, see
+        # loadDevelopers()) are fetched at runtime the same way — both were
+        # missing from this list entirely, so every fetch 404'd in
+        # production and the chemicals import silently never ran.
         # js/ is index.html's own calculation engine
         # (issue #61), loaded via <script src> — also needs to be live, not
         # just present in the repo. ads.txt (AdSense site verification,
@@ -158,8 +164,8 @@ jobs:
         # dead weight nobody was linking to.)
         run: |
           mkdir -p _site
-          cp index.html privacy.html terms.html 404.html sw.js favicon.ico icon.ico icon.svg icon-192.png icon-512.png apple-touch-icon.png manifest.json options.yaml changelog.json ads.txt robots.txt sitemap.xml _site/
-          cp -r films labs schema js _site/
+          cp index.html privacy.html terms.html 404.html sw.js favicon.ico icon.ico icon.svg icon-192.png icon-512.png apple-touch-icon.png manifest.json options.yaml developers.yaml changelog.json ads.txt robots.txt sitemap.xml _site/
+          cp -r films labs chemicals schema js _site/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
         with:
