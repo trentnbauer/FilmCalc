@@ -416,7 +416,7 @@ function computeExpired() {
     const now = new Date();
     const years = Math.max(0, (now.getFullYear() - year) + (now.getMonth() + 1 - month) / 12);
     const per = (YEARS_PER_STOP[state.expProcess] || YEARS_PER_STOP.c41)[state.storage] || YEARS_PER_STOP.c41.controlled;
-    const high = boxSpeed > 400 ? Math.floor(Math.log2(boxSpeed / 400)) * 0.5 : 0;
+    const high = years > 0 && boxSpeed > 400 ? Math.floor(Math.log2(boxSpeed / 400)) * 0.5 : 0;
     const stops = Math.round((years / per + high) * 2) / 2;
     const ei = Math.max(1, Math.round(boxSpeed / Math.pow(2, stops)));
     return {
