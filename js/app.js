@@ -557,17 +557,26 @@ ${dx.plans.map(plan => `<div style="background:${C.panel2};border:1px solid ${pl
 <span style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:${C.faint}">${escapeHtml(plan.badgeMeta)}</span>
 </div>
 <div style="font-size:24px;font-weight:700;letter-spacing:-.02em;color:${C.text};margin-top:6px">${escapeHtml(plan.isoLabel)}</div>
-<div style="margin-top:12px;background:${C.field};border:1px solid ${C.border2};border-radius:9px;padding:16px 12px 12px;display:flex;flex-direction:column;align-items:center">
-<svg width="76" height="26" viewBox="0 0 76 26" aria-hidden="true" style="flex:none"><rect x="1" y="1" width="74" height="24" rx="6" fill="#3a3f46" stroke="#54595f" stroke-width="1.5"/><rect x="30" y="10" width="16" height="6" rx="1.5" fill="#1b1d20"/></svg>
-<span style="width:2px;height:8px;background:${C.border2}"></span>
-<div style="width:100%;max-width:190px;display:flex;flex-direction:column;gap:4px">
-${plan.cells.map(row => `<div style="display:flex;align-items:center;gap:8px">
-<span style="width:16px;flex:none;text-align:right;font-size:8.5px;letter-spacing:.06em;color:${C.faint}">${row.label}</span>
-<div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:4px">
-<div style="height:32px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;letter-spacing:.04em;background:${row.row1.bg};border:1px solid ${row.row1.border};color:${row.row1.ink}">${escapeHtml(row.row1.tag)}</div>
-<div style="height:32px;border-radius:3px;background:${row.row2.bg};border:1px solid ${row.row2.border}"></div>
+<div style="margin-top:14px;background:${C.field};border:1px solid ${C.border2};border-radius:9px;padding:18px 12px 14px">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+<span style="font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:${C.faint}">${escapeHtml(t('v4DxHoldLikeThis'))}</span>
+<span style="font-size:9.5px;letter-spacing:.06em;color:${C.faint}">${escapeHtml(t('v4DxSpoolKnobUp'))}</span>
 </div>
-</div>`).join('')}
+<div style="display:flex;justify-content:center;align-items:center;gap:0">
+<div style="flex:none;display:flex;flex-direction:column;align-items:center">
+<span style="width:62px;height:18px;border-radius:4px 4px 0 0;background:repeating-linear-gradient(90deg,#585e66 0 3px,#2b2f34 3px 6px);border:1px solid ${C.faint};border-bottom:0"></span>
+<div style="width:190px;border-radius:4px;padding:12px 10px;display:flex;gap:10px;background:linear-gradient(90deg,#191b1e 0%,#454a51 10%,#868d96 30%,#5b616a 52%,#3a3f45 74%,#22252a 100%);border:1px solid ${C.faint};box-shadow:inset 0 1px 0 rgba(255,255,255,.2), 0 10px 22px rgba(0,0,0,.5)">
+<div style="flex:none;width:18px;display:flex;flex-direction:column;gap:6px">
+${plan.cells.map(row => `<span style="height:40px;display:flex;align-items:center;justify-content:flex-end;font-size:10px;font-weight:700;letter-spacing:.04em;color:#eef1f4;text-shadow:0 1px 1px rgba(0,0,0,.7)">${escapeHtml(row.label)}</span>`).join('')}
+</div>
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">
+${plan.cells.map(row => `<span style="height:40px;display:grid;grid-template-columns:1fr 1fr;gap:6px">
+<span style="border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;letter-spacing:.02em;background:${row.row1.bg};border:1px solid ${row.row1.border};color:${row.row1.ink};box-shadow:inset 0 1px 0 rgba(255,255,255,.16)">${escapeHtml(row.row1.tag)}</span>
+<span style="border-radius:3px;background:${row.row2.bg};border:1px solid ${row.row2.border};box-shadow:inset 0 1px 0 rgba(255,255,255,.1)"></span>
+</span>`).join('')}
+</div>
+</div>
+</div>
 </div>
 </div>
 <div style="margin-top:8px">
