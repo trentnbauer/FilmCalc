@@ -1,0 +1,76 @@
+label: Stockholm Labs
+country: Sweden
+state: Stockholm County
+city: Stockholm
+lat: 59.3293
+lon: 18.0686
+labs:
+  - name: OdenLab
+    hidden: false
+    address: Vidargatan 2, 113 27 Stockholm, Sweden
+    phone: 08 790 50 00
+    website: https://www.odenlab.se
+    source: https://www.odenlab.se/butikstjanster/framkalla-film/
+    services:
+      - devCost: 119
+        pushPullCost: 30
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 129
+        pushPullCost: 30
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+  - name: Södermalms Foto
+    hidden: false
+    address: Renstiernas gata 16, 116 28 Stockholm, Sweden
+    phone: 08-642 72 24
+    email: info@sodermalmsfoto.se
+    website: https://sodermalmsfoto.se
+    source: https://sodermalmsfoto.se/prislista
+    services:
+      - devCost: 169
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 129
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 99
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 169
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - BW
