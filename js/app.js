@@ -719,18 +719,28 @@ function detectUserLocation() {
     return geoDetectPromise;
 }
 
+// Country-wide film presets (e.g. "Australian-Retailers" — country set,
+// no city/state of its own) apply to literally everyone who picked that
+// country, unlike a specific city's shop list — there's no meaningful
+// choice to offer, so App.setPresetCountry()/confirmGeoGuess() include it
+// automatically instead of showing a redundant "Australia" row inside the
+// Australia picker asking the user to select the country they just
+// selected. Labs are always city-scoped (DATA_SPEC.md requires it), so
+// this only ever filters films.
+function isCountryWide(f) { return !f.city; }
+
 // Checkboxes rather than a single-choice picker — someone setting up for,
 // say, Melbourne wants both the Melbourne film AND lab/retailer files in
-// one go. Films and labs sharing the same place (city/state/country) are
-// merged into a single row/tick here, since picking "Melbourne" once
-// should grab both — rather than making the user find and tick the same
-// place twice in separate Films/Labs lists. Checked state still lives in
+// one go. Films and labs sharing the same place (city/state) are merged
+// into a single row/tick here, since picking "Melbourne" once should grab
+// both — rather than making the user find and tick the same place twice
+// in separate Films/Labs lists. Checked state still lives in
 // state.presetChecked as separate "films:file"/"labs:file" keys; a merged
 // row just toggles whichever of the two exist for that place together.
 function presetCheckList(films, labs) {
     const groups = new Map();
-    const placeKey = f => f.city || f.state || f.country || f.label;
-    films.forEach(f => {
+    const placeKey = f => f.city || f.state || f.label;
+    films.filter(f => !isCountryWide(f)).forEach(f => {
         const k = placeKey(f);
         if (!groups.has(k)) groups.set(k, { display: k });
         groups.get(k).filmFile = f.file;
@@ -3716,16 +3726,23 @@ const App = {
         }
         render();
     },
-    setPresetCountry(country) { state.presetCountry = country; render(); },
+    // Picking a country always includes that country's own country-wide
+    // film preset (see isCountryWide()) — it isn't shown as a checkbox
+    // inside the country's own picker (nothing to opt into, you just
+    // opted into it), so it has to happen here instead.
+    setPresetCountry(country) {
+        state.presetCountry = country;
+        (presetFilmIndex || []).filter(e => e.country === country && isCountryWide(e)).forEach(e => state.presetChecked.add(`films:${e.file}`));
+        render();
+    },
     backToPresetCountries() { state.presetCountry = null; render(); },
     // "Correct" pre-ticks the guessed city's own film/lab presets (real
     // per-city precision now, via the CITY_COORDS match, not a country-
-    // wide guess) and lands on that country's page; country-wide-only
-    // files are left unticked either way — deliberate, still the user's
-    // call, same reasoning as the country-list note.
+    // wide guess) plus the country-wide preset (see setPresetCountry())
+    // and lands on that country's page.
     confirmGeoGuess() {
         state.geoConfirm = 'correct';
-        state.presetCountry = geoGuess.country;
+        App.setPresetCountry(geoGuess.country);
         if (geoGuess.city) {
             (presetFilmIndex || []).filter(e => e.city === geoGuess.city).forEach(e => state.presetChecked.add(`films:${e.file}`));
             (presetLabIndex || []).filter(e => e.city === geoGuess.city).forEach(e => state.presetChecked.add(`labs:${e.file}`));
