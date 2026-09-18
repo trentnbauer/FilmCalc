@@ -1,0 +1,25 @@
+label: Puebla Labs
+country: Mexico
+state: Puebla
+city: Puebla
+lat: 19.0414
+lon: -98.2063
+labs:
+  - name: Foto Star
+    hidden: false
+    address: Calle 5 de mayo 605, Centro, Puebla, Mexico
+    phone: 222-242-2452
+    email: info@fotostar.mx
+    website: https://fotostar.mx
+    source: https://fotostar.mx/products/copia-de-revelado-digitalizado-rollos-nacional
+    services:
+      - devCost: 285
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+          - BW
