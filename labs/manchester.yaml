@@ -1,0 +1,299 @@
+label: Manchester Labs
+country: United Kingdom
+state: England
+city: Manchester
+lat: 53.4808
+lon: -2.2426
+labs:
+  - name: Come Through Lab
+    hidden: false
+    address: 84 Silk Street, Ancoats, Manchester M4 6BJ, United Kingdom
+    phone: "0161 413 5779"
+    email: hello@comethroughlab.com
+    website: https://comethroughlab.com
+    source: https://comethroughlab.com/collections/all
+    services:
+      - devCost: 5
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes: [C41]
+      - devCost: 8
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes: [C41]
+      - devCost: 10
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes: [C41]
+      - devCost: 13
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes: [C41]
+      - devCost: 16
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes: [C41]
+      - devCost: 17
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes: [C41]
+      - devCost: 7
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes: [BW]
+      - devCost: 10
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes: [BW]
+      - devCost: 13
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes: [BW]
+      - devCost: 16
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes: [BW]
+      - devCost: 18
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes: [BW]
+      - devCost: 19
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes: [BW]
+      - devCost: 12
+        pushPullCost: 2
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes: [E6]
+      - devCost: 14
+        pushPullCost: 2
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes: [E6]
+      - devCost: 16
+        pushPullCost: 2
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes: [E6]
+      - devCost: 18
+        pushPullCost: 2
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes: [E6]
+      - devCost: 20
+        pushPullCost: 2
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes: [E6]
+      - devCost: 22
+        pushPullCost: 2
+        pushPullType: flat
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes: [E6]
+      - devCost: 10
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes: [ECN2]
+      - devCost: 12
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes: [ECN2]
+      - devCost: 14
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes: [ECN2]
+      - devCost: 17
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes: [ECN2]
+      - devCost: 19
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes: [ECN2]
+      - devCost: 20
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes: [ECN2]
+  - name: DS Colour Labs
+    hidden: false
+    address: 720 Wilmslow Road, Didsbury, Manchester M20 2DW, United Kingdom
+    phone: "0161 445 3481"
+    email: didsbury@dscolourlabs.co.uk
+    website: https://www.dscolourlabs.co.uk
+    source: https://www.dscolourlabs.co.uk/film-processing/
+    services:
+      - devCost: 5
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes: [C41]
+      - devCost: 6
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes: [C41]
+      - devCost: 8
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes: [C41]
+      - devCost: 12
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes: [C41]
+      - devCost: 16
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes: [C41]
+      - devCost: 20
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes: [C41]
+      - devCost: 7
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes: [BW]
+      - devCost: 10
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes: [BW]
+      - devCost: 13
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes: [BW]
+      - devCost: 16
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes: [BW]
+      - devCost: 18
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes: [BW]
+      - devCost: 10
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes: [E6]
+      - devCost: 15
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes: [E6]
+      - devCost: 18
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes: [E6]
+      - devCost: 20
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes: [E6]
+      - devCost: 22
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes: [E6]
