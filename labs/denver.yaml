@@ -1,0 +1,31 @@
+label: Denver Labs
+country: United States
+state: Colorado
+city: Denver
+lat: 39.7392
+lon: -104.9903
+labs:
+  - name: Denver Digital Imaging Center
+    hidden: false
+    address: 145 W Alameda Ave, Denver, CO 80223, United States
+    phone: 303-698-2962
+    email: customerservice@theslideprinter.com
+    website: https://www.theslideprinter.com
+    source: https://www.theslideprinter.com/services/c-41-and-black-and-white-film-processing/
+    services:
+      - devCost: 10.5
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 10.5
+        pushPullCost: 5
+        pushPullType: per_stop
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
