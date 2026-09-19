@@ -1,0 +1,57 @@
+label: Seattle Labs
+country: United States
+state: Washington
+city: Seattle
+lat: 47.6062
+lon: -122.3321
+labs:
+  - name: Seattle Film Lab
+    hidden: false
+    address: 12316 Lake City Way NE, Seattle, WA 98125, United States
+    phone: 206-588-2793
+    email: seattlefilmlab@gmail.com
+    website: https://www.shotonfilmstore.com
+    source: https://www.shotonfilmstore.com/pages/film-developing
+    services:
+      - devCost: 12.9
+        pushPullCost: 3.99
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 19.9
+        pushPullCost: 3.99
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 21.9
+        pushPullCost: 6.99
+        pushPullType: per_stop
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+  - name: Panda Lab
+    hidden: false
+    address: 533 Warren Ave N, Seattle, WA 98109, United States
+    phone: (206) 285-7091
+    website: https://www.pandalab.com
+    source: https://findmyfilmlab.com/location/panda-lab/
+    services:
+      - devCost: 19
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        processes:
+          - C41
+          - BW
+          - E6
