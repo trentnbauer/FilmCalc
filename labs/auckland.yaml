@@ -1,0 +1,50 @@
+label: Auckland Labs
+country: New Zealand
+state: Auckland
+city: Auckland
+lat: -36.8485
+lon: 174.7633
+labs:
+  - name: Splendid Photo
+    hidden: false
+    address: 69 Mt Eden Road, Grafton, Auckland 1023, New Zealand
+    phone: +64 9 300 7403
+    website: https://splendid.nz
+    source: https://splendid.nz/collections/lab-services
+    services:
+      - devCost: 13.5
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        processes:
+          - C41
+      - devCost: 17.5
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        processes:
+          - BW
+      - devCost: 25
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        processes:
+          - C41
+      - devCost: 28
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        processes:
+          - BW
+  - name: Jacobs Digital
+    hidden: false
+    address: 9 Mokoia Road, Birkenhead, Auckland 0626, New Zealand
+    phone: +64 9 480 5903
+    website: https://www.jacobsdigital.co.nz
+    source: https://www.jacobsdigital.co.nz/pages/film-developing
+    services:
+      - devCost: 16
+        highResScan: false
+        tiffScan: false
+        processes:
+          - C41
