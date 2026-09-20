@@ -55,7 +55,10 @@ function readJSON(key, fallback) {
     } catch { return fallback; }
 }
 function writeJSON(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch {} }
-function num(v) { const n = parseFloat(v); return isNaN(n) ? 0 : n; }
+// A decimal comma ("3,95") is what es/de/fr/it/pt/ru keyboards type;
+// parseFloat alone would read it as 3.
+function parseDecimal(v) { const str = String(v == null ? '' : v).trim(); return parseFloat(/^-?\d+,\d+$/.test(str) ? str.replace(',', '.') : str); }
+function num(v) { const n = parseDecimal(v); return isNaN(n) ? 0 : n; }
 function money(n) { return (n || 0).toFixed(2); }
 function CUR() { return escapeHtml(localStorage.getItem('currencySymbol') || '$'); }
 function getAllFilms() { return readJSON('filmProfiles', {}); }
@@ -167,15 +170,18 @@ const STORAGE_HELP_KEY = { cold: 'v3StorageColdHelp', controlled: 'v3StorageCont
 // for the same on-print sharpness, so need a smaller circle to match.
 const DEPTH_COC = { '35mm': 0.030, '120': 0.053, 'sheet': 0.100 };
 const DEPTH_FORMAT_LABELS = { '35mm': '35mm', '120': '120 / 220', 'sheet': '4×5 sheet' };
+// 'sheet' is the only descriptive one; the rest are format names.
+function depthFormatLabel(k) { return k === 'sheet' ? t('depthFormatSheet') : DEPTH_FORMAT_LABELS[k]; }
 // depth/tall are metres, used only to size and lay out the side-on
 // diagram — not shown to the user directly except via depthLabel (fmt).
 const DEPTH_SUBJECTS = {
-    flower: { label: 'Flower', short: 'Flower', depth: 0.15, tall: 0.22, rows: 1, glyph: '🌼', glyphFont: 'min(102cqh,118cqw)', help: 'A single bloom — petals to stamen, about 15 cm front to back.' },
-    portrait: { label: 'Portrait', short: 'Portrait', depth: 0.40, tall: 0.60, rows: 1, glyph: '🧑', glyphFont: 'min(108cqh,150cqw)', help: 'Head and shoulders — nose to back of the head, about 40 cm.' },
-    group: { label: 'Group of people', short: 'Group', depth: 1.00, tall: 1.70, rows: 2, glyph: '🧑‍🤝‍🧑', glyphFont: 'min(104cqh,86cqw)', help: 'Two rows of three, a metre from the front row to the back.' },
-    car: { label: 'Car', short: 'Car', depth: 4.60, tall: 1.95, rows: 3, glyph: '🚗', glyphFont: 'min(104cqh,92cqw)', help: 'A saloon nose to tail, 4.6 m.' }
+    flower: { labelKey: 'depthSubjFlower', shortKey: 'depthSubjFlowerShort', depth: 0.15, tall: 0.22, rows: 1, glyph: '🌼', glyphFont: 'min(102cqh,118cqw)', helpKey: 'depthSubjFlowerHelp' },
+    portrait: { labelKey: 'depthSubjPortrait', shortKey: 'depthSubjPortraitShort', depth: 0.40, tall: 0.60, rows: 1, glyph: '🧑', glyphFont: 'min(108cqh,150cqw)', helpKey: 'depthSubjPortraitHelp' },
+    group: { labelKey: 'depthSubjGroup', shortKey: 'depthSubjGroupShort', depth: 1.00, tall: 1.70, rows: 2, glyph: '🧑‍🤝‍🧑', glyphFont: 'min(104cqh,86cqw)', helpKey: 'depthSubjGroupHelp' },
+    car: { labelKey: 'depthSubjCar', shortKey: 'depthSubjCarShort', depth: 4.60, tall: 1.95, rows: 3, glyph: '🚗', glyphFont: 'min(104cqh,92cqw)', helpKey: 'depthSubjCarHelp' }
 };
-const DEPTH_TARGETS = { front: 'Closest', middle: 'Center', back: 'Furthest' };
+const DEPTH_TARGET_KEYS = { front: 'depthTargetFront', middle: 'depthTargetMiddle', back: 'depthTargetBack' };
+function depthSubjectText(s) { return { ...s, label: t(s.labelKey), short: t(s.shortKey), help: t(s.helpKey) }; }
 const DEPTH_APS = [1.4, 2, 2.8, 4, 5.6, 8, 11, 16, 22, 32];
 
 // ---------- App state ----------
@@ -1007,7 +1013,7 @@ function render() {
 function fmtDate(iso) {
     try {
         const d = new Date(iso);
-        return d.getDate() + ' ' + MONTHS[d.getMonth()] + ' ' + d.getFullYear();
+        return d.getDate() + ' ' + t('monthShort' + (d.getMonth() + 1)) + ' ' + d.getFullYear();
     } catch { return ''; }
 }
 // changelog.json is sorted newest-first (generate-changelog.py sorts by
@@ -1063,7 +1069,7 @@ ${state.toast ? `<div style="position:fixed;left:50%;transform:translateX(-50%);
 }
 
 function viewMobileHeader() {
-    const title = state.view === 'expired' ? t('v3TitleExpiredFilm') : state.view === 'settings' ? t('navSettings') : state.view === 'library' ? t('navLibrary') : state.view === 'depth' ? t('v4NavDepth') : state.view === 'process' ? 'Process' : t('appTitle');
+    const title = state.view === 'expired' ? t('v3TitleExpiredFilm') : state.view === 'settings' ? t('navSettings') : state.view === 'library' ? t('navLibrary') : state.view === 'depth' ? t('v4NavDepth') : state.view === 'process' ? t('v4NavProcess') : t('appTitle');
     return `<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px">
 <span style="font-size:17px;font-weight:700;letter-spacing:-.01em;color:${C.text}">${escapeHtml(title)}</span>
 <button type="button" onclick="App.openMenu()" aria-label="${escapeHtml(t('v3MenuHeading'))}" style="width:44px;height:44px;margin-right:-12px;display:flex;align-items:center;justify-content:center;background:transparent;border:0;color:${C.sub};cursor:pointer"><svg style="width:20px;height:20px" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"></path></svg></button>
@@ -1080,7 +1086,7 @@ function viewDesktopHeader() {
     // like backend configuration for it (saved data, preferences) — kept
     // visually separate on the right rather than lumped in with the
     // calculator tabs on the left.
-    const frontTabs = [['lookup', t('v3NavLookup')], ['expired', t('v3NavExpired')], ['depth', t('v4NavDepth')], ['process', 'Process']].map(([k, l]) => tab(k, l)).join('');
+    const frontTabs = [['lookup', t('v3NavLookup')], ['expired', t('v3NavExpired')], ['depth', t('v4NavDepth')], ['process', t('v4NavProcess')]].map(([k, l]) => tab(k, l)).join('');
     const backTabs = [['library', t('navLibrary')], ['settings', t('navSettings')]].map(([k, l]) => tab(k, l)).join('');
     return `<div style="display:flex;align-items:center;gap:26px;padding:16px 28px;border-bottom:1px solid ${C.border}">
 <span style="font-size:18px;font-weight:700;letter-spacing:-.01em;color:${C.text}">${escapeHtml(t('appTitle'))}</span>
@@ -1297,14 +1303,14 @@ function viewBody() {
 }
 
 // metres <-> whichever unit the two distance fields are currently shown in
-function depthToM(v) { const n = parseFloat(v); if (!isFinite(n) || n <= 0) return 0; return state.depthUnits === 'ft' ? n * 0.3048 : n; }
+function depthToM(v) { const n = parseDecimal(v); if (!isFinite(n) || n <= 0) return 0; return state.depthUnits === 'ft' ? n * 0.3048 : n; }
 function depthFmt(m) {
     if (!isFinite(m)) return '∞';
     if (state.depthUnits === 'ft') {
         const ft = m / 0.3048;
-        return ft < 1 ? Math.round(ft * 12) + ' in' : (ft < 20 ? ft.toFixed(1) : Math.round(ft)) + ' ft';
+        return ft < 1 ? t('depthUnitIn', { n: Math.round(ft * 12) }) : t('depthUnitFt', { n: ft < 20 ? ft.toFixed(1) : Math.round(ft) });
     }
-    return m < 1 ? Math.round(m * 100) + ' cm' : (m < 20 ? m.toFixed(2) : m.toFixed(1)) + ' m';
+    return m < 1 ? t('depthUnitCm', { n: Math.round(m * 100) }) : t('depthUnitM', { n: m < 20 ? m.toFixed(2) : m.toFixed(1) });
 }
 // Classic thin-lens DOF: hyperfocal distance H, then near/far limits at
 // subject distance s (mm throughout — distances arrive/leave in metres).
@@ -1324,7 +1330,7 @@ function depthDof(distM, N) {
 // in sync without duplicating the maths, unlike the original mockup which
 // duplicated the whole panel per breakpoint.
 function depthValues() {
-    const subj = DEPTH_SUBJECTS[state.depthSubject];
+    const subj = depthSubjectText(DEPTH_SUBJECTS[state.depthSubject]);
     const distM = depthToM(state.depthDist) || 0.5;
     const depth = subj.depth;
     const cur = depthDof(distM, state.depthAp);
@@ -1382,21 +1388,21 @@ function depthValues() {
 
     const segOn = (on) => ({ bg: on ? '#1f2228' : 'transparent', border: on ? '1px solid ' + C.border3 : '0', fg: on ? C.text : C.sub, weight: on ? 600 : 400 });
     const missFront = Math.max(0, cur.near - front), missBack = Math.max(0, back - (isFinite(cur.far) ? cur.far : back));
-    const verdictHead = covers ? 'All of it lands' : (missFront > 0 && missBack > 0 ? 'Front and back fall off' : missFront > 0 ? 'Front falls off' : 'Back falls off');
+    const verdictHead = covers ? t('depthVerdictAll') : (missFront > 0 && missBack > 0 ? t('depthVerdictBoth') : missFront > 0 ? t('depthVerdictFront') : t('depthVerdictBack'));
     const verdictNote = covers
-        ? 'f/' + state.depthAp + ' already holds the whole ' + subj.label.toLowerCase() + ' at this distance. f/' + recAp + ' is the widest stop that still does it — anything wider starts cutting in.'
+        ? t('depthNoteCovers', { ap: state.depthAp, rec: recAp, subject: subj.label })
         : (recAp
-            ? 'At f/' + state.depthAp + ' you lose ' + depthFmt(Math.max(missFront, missBack)) + ' of the ' + subj.label.toLowerCase() + '. Stop down to f/' + recAp + ' and all of it sits inside the focus band.'
-            : 'Even at f/32 the ' + subj.label.toLowerCase() + ' is deeper than the lens can hold from ' + depthFmt(distM) + '. Back off, go wider, or accept the falloff.');
+            ? t('depthNoteLose', { ap: state.depthAp, lose: depthFmt(Math.max(missFront, missBack)), subject: subj.label, rec: recAp })
+            : t('depthNoteNone', { subject: subj.label, dist: depthFmt(distM) }));
 
     return {
         subjects: Object.keys(DEPTH_SUBJECTS).map(k => {
-            const s = DEPTH_SUBJECTS[k], on = k === state.depthSubject, sg = segOn(on);
+            const s = depthSubjectText(DEPTH_SUBJECTS[k]), on = k === state.depthSubject, sg = segOn(on);
             return { label: s.label, short: s.short, help: s.help, depth: depthFmt(s.depth), glyph: s.glyph, ...sg, pick: `App.depthSetSubject('${k}')` };
         }),
-        targets: Object.keys(DEPTH_TARGETS).map(k => ({ label: DEPTH_TARGETS[k], ...segOn(k === state.depthTarget), pick: `App.depthSetTarget('${k}')` })),
-        unitOpts: [['m', 'Metres'], ['ft', 'Feet']].map(([k, l]) => ({ label: l, ...segOn(k === state.depthUnits), pick: `App.depthSetUnits('${k}')` })),
-        formats: Object.keys(DEPTH_COC).map(k => ({ value: k, label: DEPTH_FORMAT_LABELS[k] })),
+        targets: Object.keys(DEPTH_TARGET_KEYS).map(k => ({ label: t(DEPTH_TARGET_KEYS[k]), ...segOn(k === state.depthTarget), pick: `App.depthSetTarget('${k}')` })),
+        unitOpts: [['m', t('depthUnitMetres')], ['ft', t('depthUnitFeet')]].map(([k, l]) => ({ label: l, ...segOn(k === state.depthUnits), pick: `App.depthSetUnits('${k}')` })),
+        formats: Object.keys(DEPTH_COC).map(k => ({ value: k, label: depthFormatLabel(k) })),
         format: state.depthFormat, focalField: state.depthFocal, distField: state.depthDist,
         unitShort: state.depthUnits === 'ft' ? 'ft' : 'm',
         subjectLabel: subj.label, subjectHelp: subj.help, subjectGlyph: subj.glyph, glyphFont: subj.glyphFont,
@@ -1405,16 +1411,16 @@ function depthValues() {
         nearLabel: depthFmt(cur.near), farLabel: depthFmt(cur.far),
         totalLabel: isFinite(cur.far) ? depthFmt(cur.far - cur.near) : '∞',
         apLabel: state.depthAp + '', recNumber: recAp ? recAp + '' : '—',
-        recHead: 'Stop down to', recTail: recAp ? 'holds it all' : 'no stop holds it from here',
+        recHead: t('depthStopDownTo'), recTail: recAp ? t('depthHoldsItAll') : t('depthNoStopHolds'),
         recColor: recAp ? (covers ? C.text : C.acc) : C.red,
         coverColor: covers ? C.green : C.red,
         verdictBg: covers ? C.panel : C.redBg, verdictBorder: covers ? C.border : C.redBorder,
         verdictHead, verdictNote,
-        shootingNote: subj.label + ' · focus ' + DEPTH_TARGETS[state.depthTarget].toLowerCase() + ' · ' + depthFmt(distM),
-        shotSummary: 'focus ' + DEPTH_TARGETS[state.depthTarget].toLowerCase(),
-        cocNote: 'Circle of confusion ' + (DEPTH_COC[state.depthFormat] || 0.03).toFixed(3) + ' mm on ' + DEPTH_FORMAT_LABELS[state.depthFormat] + ' — bigger negatives need smaller apertures for the same depth.',
-        scaleNote: depthFmt(dMin) + ' to ' + depthFmt(dMax) + ' across',
-        ladderNote: recAp ? 'f/' + recAp + ' is the widest stop that holds it' : 'no stop holds it from here',
+        shootingNote: t('depthShootingNote', { subject: subj.label, target: t(DEPTH_TARGET_KEYS[state.depthTarget]), dist: depthFmt(distM) }),
+        shotSummary: t('depthShotSummary', { target: t(DEPTH_TARGET_KEYS[state.depthTarget]) }),
+        cocNote: t('depthCocNote', { n: (DEPTH_COC[state.depthFormat] || 0.03).toFixed(3), format: depthFormatLabel(state.depthFormat) }),
+        scaleNote: t('depthScaleNote', { min: depthFmt(dMin), max: depthFmt(dMax) }),
+        ladderNote: recAp ? t('depthLadderNote', { ap: recAp }) : t('depthNoStopHolds'),
         ladder, ticks, rows,
         bandLeft: px(nearP), bandW: px(Math.max(0.4, farP - nearP)),
         focusLeft: px(focusP), nearLabelLeft: px(Math.min(nearP + 1, 72)),
@@ -1446,17 +1452,17 @@ function depthDiagram(vals, size) {
 <div style="position:absolute;left:${vals.subjLeft};width:${vals.subjW};bottom:${floorBottom}px;aspect-ratio:${vals.subjAspect};max-height:42%;container-type:size;border:2px solid ${vals.subjBorder};border-radius:6px;box-sizing:border-box">
 ${vals.rows.map(r => `<div style="position:absolute;top:8%;bottom:8%;left:${r.left};width:0;border-left:2px solid ${r.color}"></div>`).join('')}
 <span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:${vals.glyphFont};line-height:1;opacity:.92;pointer-events:none">${vals.subjectGlyph}</span>
-<span style="position:absolute;left:0;top:0;transform:translateY(-215%);white-space:nowrap;font-size:11px;color:${vals.subjBorder}">${escapeHtml(vals.subjectLabel)} · ${escapeHtml(vals.depthLabel)} deep</span>
+<span style="position:absolute;left:0;top:0;transform:translateY(-215%);white-space:nowrap;font-size:11px;color:${vals.subjBorder}">${escapeHtml(t('depthSubjectDeep', { subject: vals.subjectLabel, depth: vals.depthLabel }))}</span>
 </div>
 ${vals.ticks.map(tk => `<div style="position:absolute;bottom:${size === 'lg' ? 14 : 10}px;left:${tk.left};font-size:10px;color:${C.faint}">${escapeHtml(tk.label)}</div>`).join('')}
 ${size === 'lg' ? `<div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:${C.faint}">
 <span style="font-size:34px;line-height:1">📷</span>
-<span>camera</span>
+<span>${escapeHtml(t('depthCamera'))}</span>
 </div>` : ''}
 <div style="position:absolute;right:6px;top:50%;transform:translateY(-50%);display:${vals.farClipped};align-items:center;font-size:17px;color:${C.acc}">→∞</div>
-<div style="position:absolute;left:${vals.nearLabelLeft};top:${size === 'lg' ? 12 : 10}px;font-size:10px;color:${C.acc}">near ${escapeHtml(vals.nearLabel)}</div>
-${size === 'lg' ? `<div style="position:absolute;left:${vals.farLabelLeft};top:12px;white-space:nowrap;font-size:10px;color:${C.acc}">far ${escapeHtml(vals.farLabel)}</div>
-<div style="position:absolute;left:${vals.focusLeft};top:32px;font-size:10px;color:#ff9a5c">focused ${escapeHtml(vals.distLabel)}</div>` : ''}
+<div style="position:absolute;left:${vals.nearLabelLeft};top:${size === 'lg' ? 12 : 10}px;font-size:10px;color:${C.acc}">${escapeHtml(t('depthNear', { x: vals.nearLabel }))}</div>
+${size === 'lg' ? `<div style="position:absolute;left:${vals.farLabelLeft};top:12px;white-space:nowrap;font-size:10px;color:${C.acc}">${escapeHtml(t('depthFar', { x: vals.farLabel }))}</div>
+<div style="position:absolute;left:${vals.focusLeft};top:32px;font-size:10px;color:#ff9a5c">${escapeHtml(t('depthFocused', { x: vals.distLabel }))}</div>` : ''}
 </div>`;
 }
 function depthRecCard(vals, size) {
@@ -1469,9 +1475,9 @@ ${tall ? `<div style="display:flex;align-items:center;justify-content:space-betw
 </div>` : `<div style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.acc}">${escapeHtml(vals.recHead)}</div>`}
 <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-top:8px;flex-wrap:${tall ? 'nowrap' : 'wrap'}">
 <div style="display:flex;align-items:baseline;gap:5px"><span style="font-size:${tall ? 24 : 22}px;font-weight:500;color:${C.sub}">f/</span><span style="font-size:${tall ? '66px' : '56px'};font-weight:700;line-height:.9;letter-spacing:-.035em;color:${vals.recColor}">${escapeHtml(vals.recNumber)}</span>${tall ? `<span style="font-size:12px;color:${C.sub}">${escapeHtml(vals.recTail)}</span>` : ''}</div>
-${tall ? `<div style="text-align:right;padding-bottom:6px"><div style="font-size:11px;color:${C.sub}">In focus at f/${escapeHtml(vals.apLabel)}</div><div style="font-size:24px;font-weight:600;color:${vals.coverColor}">${escapeHtml(vals.totalLabel)}</div></div>` : `<div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;padding-bottom:3px">
+${tall ? `<div style="text-align:right;padding-bottom:6px"><div style="font-size:11px;color:${C.sub}">${escapeHtml(t('depthInFocusAt', { ap: vals.apLabel }))}</div><div style="font-size:24px;font-weight:600;color:${vals.coverColor}">${escapeHtml(vals.totalLabel)}</div></div>` : `<div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;padding-bottom:3px">
 <span style="font-size:13px;color:${C.text2};white-space:nowrap">${escapeHtml(vals.nearLabel)} → ${escapeHtml(vals.farLabel)}</span>
-<span style="font-size:12px;color:${C.faint};white-space:nowrap">at f/${escapeHtml(vals.apLabel)}</span>
+<span style="font-size:12px;color:${C.faint};white-space:nowrap">${escapeHtml(t('depthAtAp', { ap: vals.apLabel }))}</span>
 </div>`}
 </div>
 ${tall ? `<div style="position:relative;height:4px;margin-top:16px;border-radius:2px;overflow:hidden;background:${C.field}">
@@ -1479,9 +1485,9 @@ ${tall ? `<div style="position:relative;height:4px;margin-top:16px;border-radius
 <div style="position:absolute;top:0;bottom:0;left:${vals.subjLeft};width:${vals.subjW};background:${C.green}"></div>
 </div>
 <div style="display:flex;gap:12px;margin-top:10px">
-<div style="flex:1"><div style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:2px;background:${C.acc}"></span><span style="font-size:11px;color:${C.sub}">Near limit</span></div><div style="font-size:15px;font-weight:600;color:${C.text};margin-top:3px">${escapeHtml(vals.nearLabel)}</div></div>
-<div style="flex:1"><div style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:2px;background:#ff9a5c"></span><span style="font-size:11px;color:${C.sub}">Far limit</span></div><div style="font-size:15px;font-weight:600;color:${C.text};margin-top:3px">${escapeHtml(vals.farLabel)}</div></div>
-<div style="flex:1.2;min-width:0"><div style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;flex:none;border-radius:2px;background:${vals.coverColor}"></span><span style="font-size:11px;color:${C.sub}">Subject depth</span></div><div style="font-size:15px;font-weight:600;color:${C.text};margin-top:3px">${escapeHtml(vals.depthLabel)}</div></div>
+<div style="flex:1"><div style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:2px;background:${C.acc}"></span><span style="font-size:11px;color:${C.sub}">${escapeHtml(t('depthNearLimit'))}</span></div><div style="font-size:15px;font-weight:600;color:${C.text};margin-top:3px">${escapeHtml(vals.nearLabel)}</div></div>
+<div style="flex:1"><div style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:2px;background:#ff9a5c"></span><span style="font-size:11px;color:${C.sub}">${escapeHtml(t('depthFarLimit'))}</span></div><div style="font-size:15px;font-weight:600;color:${C.text};margin-top:3px">${escapeHtml(vals.farLabel)}</div></div>
+<div style="flex:1.2;min-width:0"><div style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;flex:none;border-radius:2px;background:${vals.coverColor}"></span><span style="font-size:11px;color:${C.sub}">${escapeHtml(t('depthSubjectDepth'))}</span></div><div style="font-size:15px;font-weight:600;color:${C.text};margin-top:3px">${escapeHtml(vals.depthLabel)}</div></div>
 </div>` : ''}
 </div>
 <div style="padding:13px 20px 15px;background:${vals.verdictBg};border-top:1px solid ${vals.verdictBorder}">
@@ -1494,18 +1500,18 @@ ${tall ? `<div style="position:relative;height:4px;margin-top:16px;border-radius
 // column) and the mobile bottom sheet: target/format/units controls.
 function depthSettingsPanel(vals) {
     return `<div>
-<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Focus target</div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('depthFocusTarget'))}</div>
 <div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${depthSeg(vals.targets)}</div>
-<div style="font-size:11px;line-height:1.5;color:${C.faint};margin-top:6px">Have you focused on the closest, center or furthest away part of the subject?</div>
+<div style="font-size:11px;line-height:1.5;color:${C.faint};margin-top:6px">${escapeHtml(t('depthFocusTargetHelp'))}</div>
 </div>
 <label style="display:block">
-<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Camera format</div>
-<select onchange="App.depthSetFormat(this.value)" aria-label="Camera format" style="width:100%;box-sizing:border-box;height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer">
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('depthCameraFormat'))}</div>
+<select onchange="App.depthSetFormat(this.value)" aria-label="${escapeHtml(t('depthCameraFormat'))}" style="width:100%;box-sizing:border-box;height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer">
 ${vals.formats.map(f => `<option value="${escapeHtml(f.value)}" ${f.value === vals.format ? 'selected' : ''}>${escapeHtml(f.label)}</option>`).join('')}
 </select>
 </label>
 <div>
-<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Units</div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('procUnits'))}</div>
 <div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${depthSeg(vals.unitOpts)}</div>
 </div>
 <div style="font-size:12px;line-height:1.5;color:${C.faint}">${escapeHtml(vals.cocNote)}</div>`;
@@ -1520,16 +1526,16 @@ function viewDepth() {
 </button>`).join('')}</div>`;
     const distFocalRow = `<div style="display:flex;gap:10px">
 <label style="flex:1;display:block">
-<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Focus distance</div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('depthFocusDistance'))}</div>
 <div style="height:56px;background:${C.field};border:1px solid ${C.acc};border-radius:8px;display:flex;align-items:center;gap:4px;padding:0 12px">
-<input type="text" inputmode="decimal" value="${escapeHtml(vals.distField)}" onchange="App.setField('depthDist',this.value)" aria-label="Focus distance" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:28px;font-weight:600;color:${C.text}">
+<input type="text" inputmode="decimal" value="${escapeHtml(vals.distField)}" onchange="App.setField('depthDist',this.value)" aria-label="${escapeHtml(t('depthFocusDistance'))}" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:28px;font-weight:600;color:${C.text}">
 <span style="font-size:13px;color:${C.faint}">${escapeHtml(vals.unitShort)}</span>
 </div>
 </label>
 <label style="flex:1;display:block">
-<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Focal length</div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('depthFocalLength'))}</div>
 <div style="height:56px;background:${C.field};border:1px solid ${C.border};border-radius:8px;display:flex;align-items:center;gap:4px;padding:0 12px">
-<input type="text" inputmode="numeric" value="${escapeHtml(vals.focalField)}" onchange="App.setField('depthFocal',this.value)" aria-label="Focal length" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:28px;font-weight:600;color:${C.text}">
+<input type="text" inputmode="numeric" value="${escapeHtml(vals.focalField)}" onchange="App.setField('depthFocal',this.value)" aria-label="${escapeHtml(t('depthFocalLength'))}" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:28px;font-weight:600;color:${C.text}">
 <span style="font-size:13px;color:${C.faint}">mm</span>
 </div>
 </label>
@@ -1537,27 +1543,27 @@ function viewDepth() {
 
     if (desktop) {
         const left = `<div style="display:flex;flex-direction:column;gap:14px;padding-top:10px">
-<p style="margin:0;font-size:14px;line-height:1.55;color:${C.sub}">Pick what you're shooting and where you focused. This works out what actually lands in focus, and the aperture that holds all of it.</p>
+<p style="margin:0;font-size:14px;line-height:1.55;color:${C.sub}">${escapeHtml(t('depthIntro'))}</p>
 <div>
-<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Subject</div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('depthSubject'))}</div>
 ${subjectButtons('lg')}
 <div style="font-size:11px;line-height:1.5;color:${C.faint};margin-top:6px">${escapeHtml(vals.subjectHelp)}</div>
 </div>
 ${distFocalRow}
 <div>
-<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Focus target</div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('depthFocusTarget'))}</div>
 <div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${depthSeg(vals.targets)}</div>
-<div style="font-size:11px;line-height:1.5;color:${C.faint};margin-top:6px">Have you focused on the closest, center or furthest away part of the subject?</div>
+<div style="font-size:11px;line-height:1.5;color:${C.faint};margin-top:6px">${escapeHtml(t('depthFocusTargetHelp'))}</div>
 </div>
 <div style="display:flex;gap:10px">
 <label style="flex:1.3;display:block">
-<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Camera format</div>
-<select onchange="App.depthSetFormat(this.value)" aria-label="Camera format" style="width:100%;box-sizing:border-box;height:44px;background:${C.shell};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer">
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('depthCameraFormat'))}</div>
+<select onchange="App.depthSetFormat(this.value)" aria-label="${escapeHtml(t('depthCameraFormat'))}" style="width:100%;box-sizing:border-box;height:44px;background:${C.shell};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer">
 ${vals.formats.map(f => `<option value="${escapeHtml(f.value)}" ${f.value === vals.format ? 'selected' : ''}>${escapeHtml(f.label)}</option>`).join('')}
 </select>
 </label>
 <div style="flex:1;min-width:0">
-<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Units</div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('procUnits'))}</div>
 <div style="display:flex;gap:4px;padding:4px;background:${C.shell};border:1px solid ${C.border};border-radius:9px">${depthSeg(vals.unitOpts)}</div>
 </div>
 </div>
@@ -1568,15 +1574,15 @@ ${vals.formats.map(f => `<option value="${escapeHtml(f.value)}" ${f.value === va
 ${depthRecCard(vals, 'lg')}
 <div style="margin-top:14px;background:${C.panel};border:1px solid ${C.border};border-radius:10px;padding:14px">
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px">
-<span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.sub}">Side on · camera at the left</span>
+<span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.sub}">${escapeHtml(t('depthSideOn'))}</span>
 <span style="font-size:11px;color:${C.faint}">${escapeHtml(vals.scaleNote)}</span>
 </div>
 ${depthDiagram(vals, 'lg')}
 </div>
 <div style="margin-top:14px">
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
-<span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.sub}">Aperture ladder</span>
-<span style="font-size:11px;color:${C.faint}">Tap a stop to redraw · ${escapeHtml(vals.ladderNote)}</span>
+<span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.sub}">${escapeHtml(t('depthApertureLadder'))}</span>
+<span style="font-size:11px;color:${C.faint}">${escapeHtml(t('depthTapStop', { note: vals.ladderNote }))}</span>
 </div>
 ${depthLadder(vals, 'lg')}
 </div>
@@ -1596,19 +1602,19 @@ ${distFocalRow}
 <button type="button" onclick="App.depthOpenSheet()" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px;padding:9px 14px;background:${C.panel};border:1px solid ${C.border};border-radius:10px;font:inherit;text-align:left;cursor:pointer">
 <span style="display:flex;flex-direction:column;gap:3px;min-width:0">
 <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-<span style="font-size:13px;color:${C.text}">${escapeHtml(DEPTH_FORMAT_LABELS[vals.format])}</span><span style="color:${C.border3}">·</span><span style="font-size:13px;color:${C.acc}">${escapeHtml(vals.shotSummary)}</span>
+<span style="font-size:13px;color:${C.text}">${escapeHtml(depthFormatLabel(vals.format))}</span><span style="color:${C.border3}">·</span><span style="font-size:13px;color:${C.acc}">${escapeHtml(vals.shotSummary)}</span>
 </span>
 <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-<span style="font-size:12px;color:${C.sub}">${escapeHtml(vals.subjectLabel)}</span><span style="color:${C.border3}">·</span><span style="font-size:12px;color:${C.sub}">${escapeHtml(vals.depthLabel)} deep</span>
+<span style="font-size:12px;color:${C.sub}">${escapeHtml(vals.subjectLabel)}</span><span style="color:${C.border3}">·</span><span style="font-size:12px;color:${C.sub}">${escapeHtml(t('depthDeep', { depth: vals.depthLabel }))}</span>
 </span>
 </span>
-<span style="font-size:12px;color:${C.sub};white-space:nowrap">Change ›</span>
+<span style="font-size:12px;color:${C.sub};white-space:nowrap">${escapeHtml(t('procChange'))}</span>
 </button>
 </div>
 ${depthRecCard(vals, 'sm')}
 <div style="margin:14px 20px 0;background:${C.panel};border:1px solid ${C.border};border-radius:10px;padding:12px">
 <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:2px 2px 9px">
-<span style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:${C.sub}">Side on · camera at the left</span>
+<span style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:${C.sub}">${escapeHtml(t('depthSideOn'))}</span>
 <span style="font-size:10px;color:${C.faint};white-space:nowrap">${escapeHtml(vals.scaleNote)}</span>
 </div>
 ${depthDiagram(vals, 'sm')}
@@ -1618,8 +1624,8 @@ ${state.depthSheet ? `<div style="position:absolute;inset:0;display:flex;flex-di
 <div onclick="App.depthCloseSheet()" style="position:absolute;inset:0"></div>
 <div style="position:relative;background:${C.shell};border-top:1px solid ${C.border};border-radius:14px 14px 12px 12px;padding:18px 20px 22px;display:flex;flex-direction:column;gap:14px">
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-<span style="font-size:17px;font-weight:700;letter-spacing:-.01em;color:${C.text}">Shot settings</span>
-<button type="button" onclick="App.depthCloseSheet()" style="height:34px;padding:0 12px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:12px;font-weight:600;cursor:pointer">Done</button>
+<span style="font-size:17px;font-weight:700;letter-spacing:-.01em;color:${C.text}">${escapeHtml(t('depthShotSettings'))}</span>
+<button type="button" onclick="App.depthCloseSheet()" style="height:34px;padding:0 12px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:12px;font-weight:600;cursor:pointer">${escapeHtml(t('procDone'))}</button>
 </div>
 ${depthSettingsPanel(vals)}
 </div>
@@ -1642,6 +1648,8 @@ let DEVELOPERS = [
     { value: 'c41', label: 'C-41 colour negative', type: 'c41', percentPerStop: 30, baseTempC: 37.8, factorPerDegC: 0.93, tempRange: [37.5, 38.1], agitation: { initial: 10, intervalSec: 30, forSec: 2 }, source: 'Kodak Flexicolor C-41 spec (3:15 at 37.8 °C)' },
     { value: 'e6', label: 'E-6 transparency (first dev)', type: 'e6', percentPerStop: 30, baseTempC: 37.8, factorPerDegC: 0.93, tempRange: [37.5, 38.1], agitation: { initial: 15, intervalSec: 30, forSec: 2 }, source: 'Kodak E-6 spec (6:00 first developer at 37.8 °C)' }
 ];
+// Built-in profiles whose label is descriptive rather than a product name.
+const PROC_LABEL_KEYS = { standard: 'procDevStandard', c41: 'procDevC41', e6: 'procDevE6' };
 const PROC_PCT_CHOICES = [20, 25, 30, 40];
 const PROC_DEV_TYPES = [['bw', 'B&W'], ['c41', 'C-41'], ['e6', 'E-6']];
 const PROC_PROCESS_TO_TYPE = { BW: 'bw', C41: 'c41', E6: 'e6', ECN2: 'ecn2' };
@@ -1760,7 +1768,8 @@ function procDeveloperProfiles(type) {
         const base = m || DEVELOPERS.find(d => d.type === type) || DEVELOPERS[0];
         return { ...base, value: 'chem:' + c.name, label: c.name };
     });
-    const genericRest = DEVELOPERS.filter(d => d.type === type && !matched.has(d.value));
+    const genericRest = DEVELOPERS.filter(d => d.type === type && !matched.has(d.value))
+        .map(d => PROC_LABEL_KEYS[d.value] ? { ...d, label: t(PROC_LABEL_KEYS[d.value]) } : d);
     return ownedProfiles.concat(genericRest);
 }
 // A stored developer can vanish (chemical deleted/renamed/hidden, or the
@@ -1819,37 +1828,37 @@ function procTimes() {
 // pattern, versus the generic one for fix/blix baths.
 const PROC_GENERIC_AGITATION = { initial: 30, intervalSec: 60, forSec: 10 };
 function procStageList() {
-    const t = procTimes();
-    const dev = { name: 'Develop', seconds: Math.round(t.final || 0), agitate: true, useDev: true };
+    const tm = procTimes();
+    const dev = { name: t('procStageDevelop'), seconds: Math.round(tm.final || 0), agitate: true, useDev: true };
     if (state.procDevType === 'c41') {
         return [dev,
-            { name: 'Blix', seconds: 390, agitate: true },
-            { name: 'Wash', seconds: 195, agitate: false },
-            { name: 'Stabilizer', seconds: 60, agitate: false }];
+            { name: t('procStageBlix'), seconds: 390, agitate: true },
+            { name: t('procStageWash'), seconds: 195, agitate: false },
+            { name: t('procStageStabilizer'), seconds: 60, agitate: false }];
     }
     if (state.procDevType === 'e6') {
-        return [{ ...dev, name: 'First developer' },
-            { name: 'First wash', seconds: 120, agitate: false },
-            { name: 'Reversal', seconds: 120, agitate: false },
-            { name: 'Colour developer', seconds: 360, agitate: true, useDev: true },
-            { name: 'Conditioner', seconds: 120, agitate: false },
-            { name: 'Bleach', seconds: 360, agitate: true },
-            { name: 'Fixer', seconds: 240, agitate: true },
-            { name: 'Wash', seconds: 240, agitate: false },
-            { name: 'Final rinse', seconds: 60, agitate: false }];
+        return [{ ...dev, name: t('procStageFirstDev') },
+            { name: t('procStageFirstWash'), seconds: 120, agitate: false },
+            { name: t('procStageReversal'), seconds: 120, agitate: false },
+            { name: t('procStageColourDev'), seconds: 360, agitate: true, useDev: true },
+            { name: t('procStageConditioner'), seconds: 120, agitate: false },
+            { name: t('procStageBleach'), seconds: 360, agitate: true },
+            { name: t('procStageFixer'), seconds: 240, agitate: true },
+            { name: t('procStageWash'), seconds: 240, agitate: false },
+            { name: t('procStageFinalRinse'), seconds: 60, agitate: false }];
     }
     return [dev,
-        { name: 'Stop bath', seconds: 60, agitate: false },
-        { name: 'Fixer', seconds: 300, agitate: true },
-        { name: 'Wash', seconds: 300, agitate: false }];
+        { name: t('procStageStopBath'), seconds: 60, agitate: false },
+        { name: t('procStageFixer'), seconds: 300, agitate: true },
+        { name: t('procStageWash'), seconds: 300, agitate: false }];
 }
 function procStageAgitation(stage) { return stage.useDev ? procDev().agitation : PROC_GENERIC_AGITATION; }
 function procAgitationPoints(stage) {
     if (!stage.agitate) return [];
     const a = procStageAgitation(stage);
-    const pts = [{ at: 0, note: 'Continuous — ' + a.initial + 's' }];
+    const pts = [{ at: 0, note: t('procAgContinuous', { n: a.initial }) }];
     for (let s = a.intervalSec; s < stage.seconds - 2; s += a.intervalSec) {
-        pts.push({ at: s, note: 'Agitate ' + a.forSec + 's' });
+        pts.push({ at: s, note: t('procAgPulse', { n: a.forSec }) });
     }
     return pts;
 }
@@ -1882,7 +1891,7 @@ function procEnsureAudio() {
         if (procAudioCtx.state === 'suspended') procAudioCtx.resume();
     } catch {}
 }
-function procBeepNow() {
+function procBeepNow(delay, freq) {
     if (!state.procBeep) return;
     try {
         procEnsureAudio();
@@ -1892,8 +1901,8 @@ function procBeepNow() {
         // too, not just on the button press that started the timer.
         if (procAudioCtx.state === 'suspended') procAudioCtx.resume();
         const o = procAudioCtx.createOscillator(), g = procAudioCtx.createGain();
-        const now = procAudioCtx.currentTime;
-        o.frequency.value = 880;
+        const now = procAudioCtx.currentTime + (delay || 0);
+        o.frequency.value = freq || 880;
         // A hard on/off at a fixed gain is easy to lose entirely on a phone
         // speaker; ramping up then down both raises perceived loudness and
         // avoids the click a sudden stop produces.
@@ -1904,7 +1913,64 @@ function procBeepNow() {
         o.start(now); o.stop(now + 0.23);
     } catch {}
 }
+// A single 0.2 s blip is easy to miss over running water, so the two cues
+// that matter — "start pouring out" and "stage over" — are multi-beep plus
+// vibration where the device has it. Both follow the beep toggle.
+const PROC_POUR_LEAD = 10;
+function procAlert(kind) {
+    if (!state.procBeep) return;
+    if (kind === 'pour') { procBeepNow(0, 660); procBeepNow(0.3, 660); }
+    else { procBeepNow(0, 880); procBeepNow(0.3, 880); procBeepNow(0.6, 1040); }
+    try { if (navigator.vibrate) navigator.vibrate(kind === 'pour' ? [200, 100, 200] : [300, 100, 300, 100, 300]); } catch {}
+}
+// Keep the screen on while a run is going — a locked phone suspends audio,
+// which would silence every cue.
+let procWakeSentinel = null;
+async function procAcquireWake() {
+    try {
+        if (!navigator.wakeLock || procWakeSentinel) return;
+        procWakeSentinel = await navigator.wakeLock.request('screen');
+        procWakeSentinel.addEventListener('release', () => { procWakeSentinel = null; });
+    } catch { procWakeSentinel = null; }
+}
+function procReleaseWake() {
+    try { if (procWakeSentinel) procWakeSentinel.release(); } catch {}
+    procWakeSentinel = null;
+}
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && state.procRunning) procAcquireWake();
+});
+// A run survives a reload / killed mobile tab: the end time is stored, and
+// only restored if the stage plan it was made for is unchanged.
+function procStageSig() { return procStageList().map(x => x.seconds).join(',') + '|' + state.procDevType + '|' + state.procDeveloper; }
+function procSaveTimer() {
+    try {
+        if (!state.procTimerOpen) { localStorage.removeItem('procTimer'); return; }
+        localStorage.setItem('procTimer', JSON.stringify({ idx: state.procStageIdx, running: state.procRunning, endAt: state.procEndAt, remaining: state.procRemaining, started: state.procStarted, sig: procStageSig() }));
+    } catch {}
+}
+function procRestoreTimer() {
+    try {
+        const raw = localStorage.getItem('procTimer');
+        if (!raw) return;
+        const saved = JSON.parse(raw);
+        const stages = procStageList();
+        if (!saved || saved.sig !== procStageSig() || !(saved.idx >= 0 && saved.idx < stages.length)) { localStorage.removeItem('procTimer'); return; }
+        state.procTimerOpen = true; state.procStageIdx = saved.idx; state.procStarted = !!saved.started;
+        state.procEndAt = Number(saved.endAt) || 0; state.procRemaining = Math.max(0, parseInt(saved.remaining, 10) || 0);
+        if (saved.running && state.procEndAt) {
+            // Never below 1, so the first tick always sees a change and
+            // handles any stage boundaries passed while the page was gone.
+            state.procRemaining = Math.max(1, Math.ceil((state.procEndAt - Date.now()) / 1000));
+            state.procRunning = true;
+            procStartInterval(); procAcquireWake();
+        }
+    } catch {}
+}
 let procTick = null;
+// Drain time is part of the stage: the last PROC_POUR_LEAD seconds of every
+// stage that a further bath follows are the pour-out window.
+function procHasPourCue(stage, idx, count) { return idx < count - 1 && stage.seconds > PROC_POUR_LEAD * 2; }
 // Wall-clock based: procEndAt is when the current stage ends, so a
 // throttled background tab or locked phone catches up instead of drifting.
 function procStartInterval() {
@@ -1916,13 +1982,14 @@ function procStartInterval() {
         let next = Math.ceil((state.procEndAt - now) / 1000);
         if (next === state.procRemaining) return;
         if (next <= 0) {
-            procBeepNow();
+            procAlert('end');
             // Carry any overshoot into the following stage(s).
             while (next <= 0) {
                 if (state.procStageIdx + 1 >= stages.length) {
                     state.procRunning = false;
                     state.procRemaining = 0;
                     clearInterval(procTick);
+                    procReleaseWake(); procSaveTimer();
                     render();
                     return;
                 }
@@ -1931,6 +1998,7 @@ function procStartInterval() {
                 next = Math.ceil((state.procEndAt - now) / 1000);
             }
             state.procRemaining = next;
+            procSaveTimer();
             render();
             return;
         }
@@ -1940,7 +2008,8 @@ function procStartInterval() {
         // at the start — a single 220ms blip is easy to miss over running
         // water; a beep every second for the length of the window reads as
         // continuous and can't be mistaken for "did that already happen?".
-        if (procIsAgitatingAt(stage, elapsed)) procBeepNow();
+        if (procHasPourCue(stage, state.procStageIdx, stages.length) && next === PROC_POUR_LEAD) procAlert('pour');
+        else if (procIsAgitatingAt(stage, elapsed) && !(procHasPourCue(stage, state.procStageIdx, stages.length) && next < PROC_POUR_LEAD)) procBeepNow();
         state.procRemaining = next;
         render();
     }, 250);
@@ -1953,43 +2022,52 @@ function procSegOn(on) { return { bg: on ? '#1f2228' : 'transparent', border: on
 function procValues() {
     procHealDeveloper();
     const dev = procDev();
-    const t = procTimes();
-    const empty = t.base <= 0;
+    const tm = procTimes();
+    const empty = tm.base <= 0;
     const range = dev.tempRange;
     const outOfRange = state.procTempC < range[0] || state.procTempC > range[1];
     const bigPush = Math.abs(state.procStops) >= 3;
-    const shortTime = !empty && t.final < 240;
+    // 4 min is only a short B&W time — C-41's own chart time is 3:15.
+    const shortTime = !empty && state.procDevType === 'bw' && tm.final < 240;
     const warn = !empty && (bigPush || outOfRange || shortTime);
 
-    const pushDelta = t.afterPush - t.base;
-    const tempDelta = t.final - t.afterPush;
-    const scale = Math.max(t.base, t.final, 1);
+    const pushDelta = tm.afterPush - tm.base;
+    const tempDelta = tm.final - tm.afterPush;
+    const scale = Math.max(tm.base, tm.final, 1);
     const pctOf = (v) => (Math.max(0, v) / scale * 100).toFixed(2) + '%';
 
     const breakdown = [
-        { label: 'Base', value: empty ? '—:—' : procMmss(t.base), color: C.green, sep: '→' },
-        { label: state.procStops === 0 ? 'Box speed' : (state.procStops > 0 ? '+' + state.procStops + ' stop, +' + Math.round((procPushFactor() - 1) * 100) + '%' : state.procStops + ' stop, −' + Math.round((1 - procPushFactor()) * 100) + '%'), value: empty ? '—:—' : procMmss(t.afterPush), color: state.procStops === 0 ? C.sub : C.acc, sep: '→' },
-        { label: procTempLabel(state.procTempC) + (state.procUnits === 'f' ? 'F' : 'C') + ', ×' + procTempFactor(state.procTempC).toFixed(2), value: empty ? '—:—' : procMmss(t.final), color: Math.abs(tempDelta) < 1 ? C.sub : C.blue, sep: '=' },
-        { label: 'Final', value: empty ? '—:—' : procMmss(t.final), color: C.text, sep: '' }
+        { label: t('procBase'), value: empty ? '—:—' : procMmss(tm.base), color: C.green, sep: '→' },
+        { label: state.procStops === 0 ? t('procBoxSpeed') : (state.procStops > 0 ? t('procBreakdownPush', { n: state.procStops, pct: Math.round((procPushFactor() - 1) * 100) }) : t('procBreakdownPull', { n: -state.procStops, pct: Math.round((1 - procPushFactor()) * 100) })), value: empty ? '—:—' : procMmss(tm.afterPush), color: state.procStops === 0 ? C.sub : C.acc, sep: '→' },
+        { label: procTempLabel(state.procTempC) + (state.procUnits === 'f' ? 'F' : 'C') + ', ×' + procTempFactor(state.procTempC).toFixed(2), value: empty ? '—:—' : procMmss(tm.final), color: Math.abs(tempDelta) < 1 ? C.sub : C.blue, sep: '=' },
+        { label: t('procFinal'), value: empty ? '—:—' : procMmss(tm.final), color: C.text, sep: '' }
     ];
 
+    // The window is anchored on the chart temperature so it holds still as
+    // you tap; it only re-centres if the selected temperature leaves it.
     const ladder = [];
     const stepF = state.procUnits === 'f';
-    const stepC = procLadderStepC();
-    const centre = stepF ? Math.round(procFromC(state.procTempC)) : state.procTempC;
-    const step = stepF ? 1 : stepC;
+    const step = stepF ? 1 : procLadderStepC();
+    const toDisp = (c) => stepF ? Math.round(procFromC(c)) : Math.round(c / step) * step;
+    const toC = (x) => stepF ? (x - 32) * 5 / 9 : x;
+    const selDisp = toDisp(state.procTempC);
+    let centre = toDisp(state.procBaseTempC);
+    if (selDisp < centre - 3 * step - 1e-6 || selDisp > centre + 4 * step + 1e-6) centre = selDisp;
     const dp = (n) => (Math.abs(n - Math.round(n)) < 0.05 ? String(Math.round(n)) : n.toFixed(1));
     for (let d = -3; d <= 4; d++) {
-        const raw = centre + d * step;
-        const c = d === 0 ? state.procTempC : procSnapTemp(stepF ? (raw - 32) * 5 / 9 : raw);
+        const disp = centre + d * step;
+        const sel = Math.abs(disp - selDisp) < 1e-6;
+        // The selected cell carries the exact stored temperature (e.g. the
+        // 37.8 °C chart temp), the rest sit on the grid.
+        const c = sel ? state.procTempC : procSnapToGrid(toC(disp), state.procUnits, null);
         const shown = stepF ? procFromC(c) : c;
-        const sel = d === 0;
         const inRange = c >= range[0] && c <= range[1];
-        const tone = inRange ? (Math.abs(c - state.procBaseTempC) <= 2 * stepC ? C.green : C.acc) : C.red;
+        const tone = inRange ? (Math.abs(c - state.procBaseTempC) <= 2 * step * (stepF ? 5 / 9 : 1) ? C.green : C.acc) : C.red;
         ladder.push({
             label: dp(shown) + '°' + (stepF ? 'F' : 'C'),
             short: dp(shown) + '°',
-            time: empty ? '—:—' : procMmss(t.afterPush * procTempFactor(c)),
+            time: empty ? '—:—' : procMmss(tm.afterPush * procTempFactor(c)),
+            selected: sel,
             fg: sel ? '#ffeab8' : tone,
             bg: sel
                 ? 'linear-gradient(100deg,#2a1f0a 0%,#4a3712 28%,#8a6c22 46%,#c9a144 50%,#8a6c22 54%,#4a3712 72%,#2a1f0a 100%) 0 0 / 260% 100% no-repeat'
@@ -2007,14 +2085,18 @@ function procValues() {
     const pts = procAgitationPoints(stage);
     const elapsed = Math.max(0, stage.seconds - state.procRemaining);
     const nextPt = pts.find(p => p.at > elapsed);
-    const inInitial = stage.agitate && elapsed < dev.agitation.initial;
-    const agitateMsg = !stage.agitate
-        ? stage.name + ' — no agitation needed, keep it moving gently if you like'
+    const sa = procStageAgitation(stage);
+    const pouring = state.procRunning && procHasPourCue(stage, state.procStageIdx, stages.length) && state.procRemaining > 0 && state.procRemaining <= PROC_POUR_LEAD;
+    const inInitial = !pouring && stage.agitate && elapsed < sa.initial;
+    const agitateMsg = pouring
+        ? t('procPourOut', { n: PROC_POUR_LEAD })
+        : !stage.agitate
+        ? t('procNoAgitation', { stage: stage.name })
         : inInitial
-            ? 'Agitate now — continuous for the first ' + dev.agitation.initial + 's'
+            ? t('procAgitateNow', { n: sa.initial })
             : nextPt
-                ? 'Next agitation in ' + procMmss(nextPt.at - elapsed) + ' · ' + dev.agitation.forSec + 's at ' + procMmss(nextPt.at)
-                : 'No more agitation — leave it still until the stage ends';
+                ? t('procNextAgitation', { in: procMmss(nextPt.at - elapsed), n: sa.forSec, at: procMmss(nextPt.at) })
+                : t('procNoMoreAgitation');
     const schedule = pts.map(p => {
         const done = p.at < elapsed - 1;
         const isNext = nextPt && p.at === nextPt.at;
@@ -2028,16 +2110,16 @@ function procValues() {
 
     const allFilms = getAllFilms();
     const filmEntries = Object.entries(allFilms).filter(([, f]) => !f.hidden).sort((a, b) => a[1].name.localeCompare(b[1].name));
-    const CUSTOM_FILM_OPT = { value: 'custom', label: 'Custom — type it in' };
+    const CUSTOM_FILM_OPT = { value: 'custom', label: t('procFilmCustom') };
     const filmOpts = [CUSTOM_FILM_OPT].concat(
-        filmEntries.map(([key, f]) => ({ value: key, label: f.name + ' (' + f.boxSpeed + ' ISO, ' + (FORMAT_LABEL[f.format || '35mm'] || f.format) + ')' }))
+        filmEntries.map(([key, f]) => ({ value: key, label: f.name + ' (' + t('v3IsoValue', { iso: f.boxSpeed }) + ', ' + (FORMAT_LABEL[f.format || '35mm'] || f.format) + ')' }))
     );
     const pickedFilm = state.procFilmKey !== 'custom' ? allFilms[state.procFilmKey] : null;
     const filmNote = !pickedFilm
         ? ''
         : pickedFilm.devTimeSec
-            ? formatDevTime(pickedFilm.devTimeSec) + ' at ' + pickedFilm.devTempC + '°C · from your library'
-            : 'No dev time saved for this stock — enter it below';
+            ? t('procFilmFromLibrary', { time: formatDevTime(pickedFilm.devTimeSec), temp: pickedFilm.devTempC }) + ' · ' + t('procFilmDevCheck', { dev: dev.label })
+            : t('procFilmNoTime');
     const filmLabel = state.procFilmKey === 'custom'
         ? CUSTOM_FILM_OPT.label
         : ((filmOpts.find(o => o.value === state.procFilmKey) || CUSTOM_FILM_OPT).label);
@@ -2053,8 +2135,8 @@ function procValues() {
         desktop: state.desktop,
         baseField: state.procBaseTime,
         tempNowLabel: procTempLabel(state.procTempC) + (state.procUnits === 'f' ? 'F' : 'C'),
-        chartAnchorShort: 'your chart',
-        chartTempShort: 'chart at ' + procTempLabel(state.procBaseTempC) + (state.procUnits === 'f' ? 'F' : 'C'),
+        chartAnchorShort: t('procYourChart'),
+        chartTempShort: t('procChartAt', { temp: procTempLabel(state.procBaseTempC) + (state.procUnits === 'f' ? 'F' : 'C') }),
         tempField: procTempLabel(state.procBaseTempC).replace('°', ''),
         unitShort: state.procUnits === 'f' ? 'F' : 'C',
         stopsLabel: state.procStops > 0 ? '+' + state.procStops : String(state.procStops),
@@ -2080,44 +2162,44 @@ function procValues() {
                 pick: `App.procSetPct(${p})`
             };
         }),
-        pctSourceNote: dev.label + ' recommends +' + dev.percentPerStop + '%',
-        unitOpts: [['c', 'Celsius'], ['f', 'Fahrenheit']].map(([k, l]) => ({ label: l, ...procSegOn(k === state.procUnits), pick: `App.procSetUnits('${k}')` })),
-        coeffNote: 'Base times for ' + dev.label + ' are published at ' + dev.baseTempC + ' °C (' + (dev.baseTempC * 9 / 5 + 32).toFixed(0) + ' °F). Temperature factor ×' + dev.factorPerDegC.toFixed(2) + ' per °C away from that — ' + dev.source + '. Chart covers ' + range[0] + '–' + range[1] + ' °C.',
-        coeffShort: '×' + dev.factorPerDegC.toFixed(2) + ' per °C',
+        pctSourceNote: t('procRecommends', { dev: dev.label, pct: dev.percentPerStop }),
+        unitOpts: [['c', t('procUnitC')], ['f', t('procUnitF')]].map(([k, l]) => ({ label: l, ...procSegOn(k === state.procUnits), pick: `App.procSetUnits('${k}')` })),
+        coeffNote: t('procCoeffNote', { dev: dev.label, c: dev.baseTempC, f: (dev.baseTempC * 9 / 5 + 32).toFixed(0), factor: dev.factorPerDegC.toFixed(2), source: dev.source, min: range[0], max: range[1] }),
+        coeffShort: t('procCoeffShort', { factor: dev.factorPerDegC.toFixed(2) }),
 
-        finalLabel: empty ? '—:—' : procMmss(t.final),
+        finalLabel: empty ? '—:—' : procMmss(tm.final),
         finalColor: empty ? C.faint : (warn ? C.acc : C.text),
-        finalTail: empty ? 'enter your chart time' : 'at ' + procTempLabel(state.procTempC) + (state.procUnits === 'f' ? 'F' : 'C'),
-        baseLabel: empty ? '—:—' : procMmss(t.base),
-        deltaLabel: empty ? '—' : (t.final >= t.base ? '+' : '−') + procMmss(Math.abs(t.final - t.base)),
-        deltaColor: empty ? C.faint : (t.final >= t.base ? C.acc : C.blue),
-        shotNote: dev.label + ' · ' + (state.procStops === 0 ? 'box speed' : (state.procStops > 0 ? '+' + state.procStops + ' stop push' : state.procStops + ' stop pull')) + ' · ' + procTempLabel(state.procTempC) + (state.procUnits === 'f' ? 'F' : 'C'),
+        finalTail: empty ? t('procEnterChartTime') : t('procAtTemp', { temp: procTempLabel(state.procTempC) + (state.procUnits === 'f' ? 'F' : 'C') }),
+        baseLabel: empty ? '—:—' : procMmss(tm.base),
+        deltaLabel: empty ? '—' : (tm.final >= tm.base ? '+' : '−') + procMmss(Math.abs(tm.final - tm.base)),
+        deltaColor: empty ? C.faint : (tm.final >= tm.base ? C.acc : C.blue),
+        shotNote: dev.label + ' · ' + (state.procStops === 0 ? t('procShotBoxSpeed') : (state.procStops > 0 ? t('procShotPush', { n: state.procStops }) : t('procShotPull', { n: -state.procStops }))) + ' · ' + procTempLabel(state.procTempC) + (state.procUnits === 'f' ? 'F' : 'C'),
         pushStepLabel: empty ? '—:—' : (pushDelta >= 0 ? '+' : '−') + procMmss(Math.abs(pushDelta)),
         tempStepLabel: empty ? '—:—' : (tempDelta >= 0 ? '+' : '−') + procMmss(Math.abs(tempDelta)),
-        barBase: pctOf(Math.min(t.base, t.final)),
-        barPushLeft: pctOf(t.base), barPush: pctOf(pushDelta),
-        barTempLeft: pctOf(tempDelta >= 0 ? t.afterPush : t.final),
+        barBase: pctOf(Math.min(tm.base, tm.final)),
+        barPushLeft: pctOf(tm.base), barPush: pctOf(pushDelta),
+        barTempLeft: pctOf(tempDelta >= 0 ? tm.afterPush : tm.final),
         barTemp: pctOf(Math.abs(tempDelta)),
         barTempColor: tempDelta >= 0 ? C.blue : '#2f333a',
         breakdown, ladder,
-        ladderNote: empty ? 'enter a base time' : 'chart covers ' + range[0] + '–' + range[1] + ' °C',
+        ladderNote: empty ? t('procEnterBase') : t('procChartCovers', { min: range[0], max: range[1] }),
 
         verdictBg: warn ? C.redBg : C.panel,
         verdictBorder: warn ? C.redBorder : C.border,
         verdictHeadColor: warn ? C.red : (empty ? C.sub : C.green),
-        verdictHead: empty ? 'Nothing to adjust yet' : warn ? (bigPush ? 'Large push' : outOfRange ? 'Off the published chart' : 'Very short development') : 'Straight off the chart',
+        verdictHead: empty ? t('procVerdictNone') : warn ? (bigPush ? t(state.procStops > 0 ? 'procVerdictLargePush' : 'procVerdictLargePull') : outOfRange ? t('procVerdictOffChart') : t('procVerdictShort')) : t('procVerdictOk'),
         verdictNote: empty
-            ? 'Put in the time your own dev chart gives for this film in ' + dev.label + ' at box speed, ' + dev.baseTempC + ' °C. Push, pull and temperature get applied to that.'
+            ? t('procNoteEmpty', { dev: dev.label, c: dev.baseTempC })
             : bigPush
-                ? 'Large pushes increase contrast and grain, and the time-per-stop rule drifts at ±3 — confirm with a test roll before you commit a real one.'
+                ? t(state.procStops > 0 ? 'procNoteLargePush' : 'procNoteLargePull')
                 : outOfRange
-                    ? 'The ' + dev.label + ' chart only covers ' + range[0] + '–' + range[1] + ' °C. Outside it the factor is an extrapolation, not published data — bring the soup back toward ' + dev.baseTempC + ' °C if you can.'
+                    ? t('procNoteOff', { dev: dev.label, min: range[0], max: range[1], c: dev.baseTempC })
                     : shortTime
-                        ? 'Under 4 minutes the pour and drain time itself starts to matter, and unevenness shows. Cool the developer or dilute it to buy yourself a longer time.'
-                        : 'Base ' + procMmss(t.base) + ' with ' + (state.procStops === 0 ? 'no push or pull' : Math.abs(state.procStops) + ' stop ' + (state.procStops > 0 ? 'push' : 'pull')) + ' at ' + procTempLabel(state.procTempC) + (state.procUnits === 'f' ? 'F' : 'C') + ' — every step is shown above, nothing hidden.',
+                        ? t('procNoteShort')
+                        : t(state.procStops === 0 ? 'procNoteOkNone' : (state.procStops > 0 ? 'procNoteOkPush' : 'procNoteOkPull'), { base: procMmss(tm.base), n: Math.abs(state.procStops), temp: procTempLabel(state.procTempC) + (state.procUnits === 'f' ? 'F' : 'C') }),
         warn,
 
-        startLabel: empty ? 'Enter a base time to start the timer' : 'Start timer · ' + procMmss(t.final) + ' develop',
+        startLabel: empty ? t('procEnterBaseToStart') : t('procStartTimer', { time: procMmss(tm.final) }),
         startBg: empty ? 'transparent' : C.accBg,
         startBorder: empty ? C.border2 : C.accBorder,
         startFg: empty ? C.faint : C.acc,
@@ -2125,7 +2207,7 @@ function procValues() {
         startOpacity: empty ? '.6' : '1',
         timerDisabled: empty,
 
-        timerStageHead: stage.name + ' · step ' + (state.procStageIdx + 1) + ' of ' + stages.length,
+        timerStageHead: t('procStageHead', { stage: stage.name, i: state.procStageIdx + 1, n: stages.length }),
         timerClock: procMmss(state.procRemaining),
         timerProgress: Math.min(100, Math.max(0, stage.seconds ? (1 - state.procRemaining / stage.seconds) * 100 : 0)).toFixed(1) + '%',
         stages: stages.map((s, i) => ({
@@ -2134,13 +2216,13 @@ function procValues() {
             fg: i === state.procStageIdx ? C.text : C.faint
         })),
         agitateMsg,
-        agitateBg: inInitial ? C.accBg : C.panel,
-        agitateBorder: inInitial ? C.accBorder : C.border,
-        agitateFg: inInitial ? C.acc : C.text2,
-        agitateDot: inInitial ? C.acc : C.blue,
-        agitationRule: stage.agitate ? dev.agitation.initial + 's initial, ' + dev.agitation.forSec + 's every ' + dev.agitation.intervalSec + 's' : 'no schedule for this stage',
+        agitateBg: (inInitial || pouring) ? C.accBg : C.panel,
+        agitateBorder: (inInitial || pouring) ? C.accBorder : C.border,
+        agitateFg: (inInitial || pouring) ? C.acc : C.text2,
+        agitateDot: (inInitial || pouring) ? C.acc : C.blue,
+        agitationRule: stage.agitate ? t('procAgRule', { initial: sa.initial, n: sa.forSec, every: sa.intervalSec }) : t('procNoSchedule'),
         schedule,
-        runLabel: state.procRunning ? 'Running · ' + procMmss(state.procRemaining) + ' left' : (state.procStarted ? (state.procRemaining > 0 ? 'Resume ' + stage.name.toLowerCase() : 'All done') : 'Start ' + stage.name.toLowerCase()),
+        runLabel: state.procRunning ? t('procRunning', { time: procMmss(state.procRemaining) }) : (state.procStarted ? (state.procRemaining > 0 ? t('procResume', { stage: stage.name }) : t('procAllDone')) : t('procStart', { stage: stage.name })),
         beepJustify: state.procBeep ? 'flex-end' : 'flex-start',
         beepTrack: state.procBeep ? C.accBorder : C.border,
         beepKnob: state.procBeep ? C.acc : C.faint,
@@ -2152,7 +2234,7 @@ function procValues() {
 
 function procLadder(vals, size) {
     const sm = size === 'sm';
-    return `<div style="display:flex;gap:${sm ? 5 : 6}px">${vals.ladder.map(row => `<button type="button" onclick="${row.pick}" style="flex:1;min-width:0;padding:${sm ? '8px 0' : '10px 0 9px'};border-radius:${sm ? 7 : 8}px;cursor:pointer;font:inherit;background:${row.bg};border:1px solid ${row.border};box-shadow:${row.shadow};animation:${row.anim};display:flex;flex-direction:column;align-items:center;gap:${sm ? 4 : 5}px">
+    return `<div style="display:flex;gap:${sm ? 5 : 6}px">${vals.ladder.map(row => `<button type="button" onclick="${row.pick}" aria-label="${escapeHtml(t('procLadderAria', { temp: row.label, time: row.time }))}" aria-pressed="${row.selected ? 'true' : 'false'}" style="flex:1;min-width:0;padding:${sm ? '8px 0' : '10px 0 9px'};border-radius:${sm ? 7 : 8}px;cursor:pointer;font:inherit;background:${row.bg};border:1px solid ${row.border};box-shadow:${row.shadow};animation:${row.anim};display:flex;flex-direction:column;align-items:center;gap:${sm ? 4 : 5}px">
 <span style="font-size:${sm ? 11 : 14}px;font-weight:700;color:${row.fg}">${escapeHtml(sm ? row.short : row.label)}</span>
 <span style="font-size:${sm ? 9 : 10}px;color:${C.faint}">${escapeHtml(row.time)}</span>
 <span style="width:62%;height:3px;border-radius:2px;background:${row.bar}"></span>
@@ -2161,24 +2243,24 @@ function procLadder(vals, size) {
 
 function procSettingsFields(vals) {
     return `<div>
-<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Development type</div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('procDevType'))}</div>
 <div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${vals.typeOpts.map(o => `<button type="button" onclick="${o.pick}" style="flex:1;height:40px;border-radius:6px;font:inherit;font-size:13px;cursor:pointer;background:${o.bg};border:${o.border};color:${o.fg};font-weight:${o.weight}">${escapeHtml(o.label)}</button>`).join('')}</div>
 </div>
 <label style="display:block">
-<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Developer</div>
-<select onchange="App.procPickDeveloper(this.value)" aria-label="Developer" style="width:100%;box-sizing:border-box;height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer">
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('procDeveloper'))}</div>
+<select onchange="App.procPickDeveloper(this.value)" aria-label="${escapeHtml(t('procDeveloper'))}" style="width:100%;box-sizing:border-box;height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer">
 ${vals.developers.map(d => `<option value="${escapeHtml(d.value)}" ${d.value === vals.developer ? 'selected' : ''}>${escapeHtml(d.label)}</option>`).join('')}
 </select>
 </label>
 <div>
 <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px">
-<span style="font-size:11px;color:${C.sub}">Time added per stop</span>
+<span style="font-size:11px;color:${C.sub}">${escapeHtml(t('procTimePerStop'))}</span>
 </div>
 <div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${vals.pctOpts.map(o => `<button type="button" onclick="${o.pick}" style="flex:1;height:40px;border-radius:6px;font:inherit;font-size:13px;cursor:pointer;background:${o.bg};border:${o.border};box-shadow:${o.shadow};animation:${o.anim};color:${o.fg};font-weight:${o.weight}">${escapeHtml(o.label)}</button>`).join('')}</div>
 <div style="font-size:11px;line-height:1.5;color:${C.faint};margin-top:6px">${escapeHtml(vals.pctSourceNote)}</div>
 </div>
 <div>
-<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Units</div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('procUnits'))}</div>
 <div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${vals.unitOpts.map(o => `<button type="button" onclick="${o.pick}" style="flex:1;height:40px;border-radius:6px;font:inherit;font-size:13px;cursor:pointer;background:${o.bg};border:${o.border};color:${o.fg};font-weight:${o.weight}">${escapeHtml(o.label)}</button>`).join('')}</div>
 </div>
 <div style="font-size:12px;line-height:1.5;color:${C.faint}">${escapeHtml(vals.coeffNote)}</div>`;
@@ -2188,12 +2270,12 @@ function procDevelopCard(vals) {
     return `<div style="margin-top:14px;background:${C.panel};border:1px solid ${C.border};border-radius:10px;overflow:hidden">
 <div style="padding:18px 20px">
 <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-<span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.acc}">Develop for</span>
+<span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.acc}">${escapeHtml(t('procDevelopFor'))}</span>
 <span style="font-size:12px;color:${C.blue}">${escapeHtml(vals.shotNote)}</span>
 </div>
 <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-top:8px;flex-wrap:wrap">
-<div style="display:flex;align-items:baseline;gap:5px"><span style="font-size:${vals.desktop ? 66 : 56}px;font-weight:700;line-height:.9;letter-spacing:-.035em;color:${vals.finalColor}">${escapeHtml(vals.finalLabel)}</span><span style="font-size:${vals.desktop ? 24 : 22}px;font-weight:500;color:${C.sub}">min</span>${vals.desktop ? `<span style="font-size:12px;color:${C.sub}">${escapeHtml(vals.finalTail)}</span>` : ''}</div>
-<div style="text-align:right;padding-bottom:6px"><div style="font-size:11px;color:${C.sub}">Against base ${escapeHtml(vals.baseLabel)}</div><div style="font-size:24px;font-weight:600;color:${vals.deltaColor}">${escapeHtml(vals.deltaLabel)}</div></div>
+<div style="display:flex;align-items:baseline;gap:5px"><span style="font-size:${vals.desktop ? 66 : 56}px;font-weight:700;line-height:.9;letter-spacing:-.035em;color:${vals.finalColor}">${escapeHtml(vals.finalLabel)}</span><span style="font-size:${vals.desktop ? 24 : 22}px;font-weight:500;color:${C.sub}">${escapeHtml(t('procMin'))}</span>${vals.desktop ? `<span style="font-size:12px;color:${C.sub}">${escapeHtml(vals.finalTail)}</span>` : ''}</div>
+<div style="text-align:right;padding-bottom:6px"><div style="font-size:11px;color:${C.sub}">${escapeHtml(t('procAgainstBase', { time: vals.baseLabel }))}</div><div style="font-size:24px;font-weight:600;color:${vals.deltaColor}">${escapeHtml(vals.deltaLabel)}</div></div>
 </div>
 <div style="position:relative;height:4px;margin-top:16px;border-radius:2px;overflow:hidden;background:${C.field}">
 <div style="position:absolute;top:0;bottom:0;left:0;width:${vals.barBase};background:${C.green}"></div>
@@ -2201,9 +2283,9 @@ function procDevelopCard(vals) {
 <div style="position:absolute;top:0;bottom:0;left:${vals.barTempLeft};width:${vals.barTemp};background:${vals.barTempColor}"></div>
 </div>
 <div style="display:flex;gap:12px;margin-top:10px">
-<div style="flex:1"><div style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:2px;background:${C.green}"></span><span style="font-size:11px;color:${C.sub}">Base</span></div><div style="font-size:15px;font-weight:600;color:${C.text};margin-top:3px">${escapeHtml(vals.baseLabel)}</div></div>
-<div style="flex:1"><div style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:2px;background:${C.acc}"></span><span style="font-size:11px;color:${C.sub}">Push / pull</span></div><div style="font-size:15px;font-weight:600;color:${C.text};margin-top:3px">${escapeHtml(vals.pushStepLabel)}</div></div>
-<div style="flex:1.2;min-width:0"><div style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;flex:none;border-radius:2px;background:${vals.barTempColor}"></span><span style="font-size:11px;color:${C.sub}">Temperature</span></div><div style="font-size:15px;font-weight:600;color:${C.text};margin-top:3px">${escapeHtml(vals.tempStepLabel)}</div></div>
+<div style="flex:1"><div style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:2px;background:${C.green}"></span><span style="font-size:11px;color:${C.sub}">${escapeHtml(t('procBase'))}</span></div><div style="font-size:15px;font-weight:600;color:${C.text};margin-top:3px">${escapeHtml(vals.baseLabel)}</div></div>
+<div style="flex:1"><div style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:2px;background:${C.acc}"></span><span style="font-size:11px;color:${C.sub}">${escapeHtml(t('procPushPull'))}</span></div><div style="font-size:15px;font-weight:600;color:${C.text};margin-top:3px">${escapeHtml(vals.pushStepLabel)}</div></div>
+<div style="flex:1.2;min-width:0"><div style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;flex:none;border-radius:2px;background:${vals.barTempColor}"></span><span style="font-size:11px;color:${C.sub}">${escapeHtml(t('procTemperature'))}</span></div><div style="font-size:15px;font-weight:600;color:${C.text};margin-top:3px">${escapeHtml(vals.tempStepLabel)}</div></div>
 </div>
 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px;padding:10px 12px;border-radius:8px;background:${C.field};border:1px solid ${C.border}">${vals.breakdown.map(b => `<span style="display:flex;align-items:center;gap:8px">
 <span style="display:flex;flex-direction:column;gap:2px">
@@ -2228,7 +2310,7 @@ function procTimerView(vals) {
     return `<div style="position:absolute;inset:0;z-index:60;background:${C.shell};display:flex;flex-direction:column">
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px">
 <span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.acc}">${escapeHtml(vals.timerStageHead)}</span>
-<button type="button" onclick="App.procCloseTimer()" aria-label="Close timer" style="width:32px;height:32px;border-radius:8px;background:#1f2228;border:0;color:${C.sub};font:inherit;font-size:15px;line-height:1;cursor:pointer">✕</button>
+<button type="button" onclick="App.procCloseTimer()" aria-label="${escapeHtml(t('procCloseTimer'))}" style="width:32px;height:32px;border-radius:8px;background:#1f2228;border:0;color:${C.sub};font:inherit;font-size:15px;line-height:1;cursor:pointer">✕</button>
 </div>
 <div style="padding:0 20px;display:flex;flex-direction:column;gap:6px">
 <div style="display:flex;gap:6px">${vals.stages.map(s => `<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:5px">
@@ -2251,7 +2333,7 @@ function procTimerView(vals) {
 <div style="padding:0 20px 22px;display:flex;flex-direction:column;gap:12px">
 <div style="background:${C.panel};border:1px solid ${C.border};border-radius:10px;padding:12px 14px">
 <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px">
-<span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.sub}">Agitation schedule</span>
+<span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.sub}">${escapeHtml(t('procAgitationSchedule'))}</span>
 <span style="font-size:11px;color:${C.faint}">${escapeHtml(vals.agitationRule)}</span>
 </div>
 <div style="display:flex;flex-direction:column;gap:2px;max-height:168px;overflow:auto">${vals.schedule.map(row => `<div style="display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:7px;background:${row.bg}">
@@ -2261,12 +2343,12 @@ function procTimerView(vals) {
 </div>
 <div style="display:flex;align-items:center;gap:12px;background:${C.panel};border:1px solid ${C.border};border-radius:10px;padding:12px 14px">
 <span style="flex:1;min-width:0">
-<span style="display:block;font-size:14px;color:${C.text}">Beep on agitation</span>
-<span style="display:block;font-size:12px;color:${C.faint};margin-top:3px">A short tone at each agitation point, and at the end of every stage.</span>
+<span style="display:block;font-size:14px;color:${C.text}">${escapeHtml(t('procBeepTitle'))}</span>
+<span style="display:block;font-size:12px;color:${C.faint};margin-top:3px">${escapeHtml(t('procBeepDesc'))}</span>
 </span>
 <button type="button" onclick="App.procToggleBeep()" aria-pressed="${state.procBeep}" style="width:52px;height:30px;flex:none;border-radius:15px;border:0;padding:3px;cursor:pointer;display:flex;align-items:center;justify-content:${vals.beepJustify};background:${vals.beepTrack}"><span style="width:24px;height:24px;border-radius:50%;background:${vals.beepKnob}"></span></button>
 </div>
-<div style="font-size:12px;line-height:1.5;color:${C.faint}">Keep the screen awake while this runs — the countdown pauses with the tab on some phones. Plug in, turn auto-lock off, or keep the app in the foreground.</div>
+<div style="font-size:12px;line-height:1.5;color:${C.faint}">${escapeHtml(t('procKeepAwake'))}</div>
 </div>
 </div>`;
 }
@@ -2281,73 +2363,73 @@ function viewProcess() {
     // everything that isn't a match, same as the Library tab's own search.
     const filmField = `<div style="position:relative">
 <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px">
-<span style="font-size:11px;color:${C.sub}">Film stock</span>
+<span style="font-size:11px;color:${C.sub}">${escapeHtml(t('procFilmStock'))}</span>
 <span style="font-size:11px;color:${C.faint};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(vals.filmNote)}</span>
 </div>
-<input type="text" data-focus-id="proc-film-search" value="${escapeHtml(state.procFilmOpen ? state.procFilmQuery : vals.filmLabel)}" oninput="App.procSetFilmQuery(this.value)" onfocus="App.procOpenFilmSearch()" placeholder="Search your saved films…" aria-label="Film stock" autocomplete="off" style="width:100%;box-sizing:border-box;height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text}">
+<input type="text" data-focus-id="proc-film-search" value="${escapeHtml(state.procFilmOpen ? state.procFilmQuery : vals.filmLabel)}" oninput="App.procSetFilmQuery(this.value)" onfocus="App.procOpenFilmSearch()" placeholder="${escapeHtml(t('procSearchFilms'))}" aria-label="${escapeHtml(t('procFilmStock'))}" autocomplete="off" style="width:100%;box-sizing:border-box;height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text}">
 ${state.procFilmOpen ? `<div onclick="App.procCloseFilmSearch()" style="position:fixed;inset:0;z-index:39"></div>
 <div style="position:absolute;top:100%;left:0;right:0;margin-top:4px;max-height:260px;overflow:auto;background:${C.panel};border:1px solid ${C.border};border-radius:8px;z-index:40;box-shadow:0 12px 30px rgba(0,0,0,.45)">
 ${vals.filmResults.map(o => `<button type="button" onclick="App.procPickFilm('${jsAttr(o.value)}')" style="display:block;width:100%;text-align:left;padding:9px 12px;background:${o.value === state.procFilmKey ? C.field : 'transparent'};border:0;border-bottom:1px solid ${C.border};font:inherit;font-size:13px;color:${C.text};cursor:pointer">${escapeHtml(o.label)}</button>`).join('')}
-${state.procFilmQuery.trim() && vals.filmResults.length <= 1 ? `<div style="padding:12px;font-size:12px;color:${C.faint}">No saved films match "${escapeHtml(state.procFilmQuery)}"</div>` : ''}
+${state.procFilmQuery.trim() && vals.filmResults.length <= 1 ? `<div style="padding:12px;font-size:12px;color:${C.faint}">${escapeHtml(t('procNoFilmsMatch', { q: state.procFilmQuery }))}</div>` : ''}
 </div>` : ''}
 </div>`;
     const baseTempRow = `<div style="display:flex;gap:10px">
 <label style="flex:1.2;display:block">
 <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px">
-<span style="font-size:11px;color:${C.sub}">Base time · mm:ss</span>
+<span style="font-size:11px;color:${C.sub}">${escapeHtml(t('procBaseTimeLabel'))}</span>
 <span style="font-size:11px;color:${C.faint}">${escapeHtml(vals.chartAnchorShort)}</span>
 </div>
 <div style="height:56px;background:${C.field};border:1px solid ${C.acc};border-radius:8px;display:flex;align-items:center;gap:4px;padding:0 12px">
-<input type="text" inputmode="numeric" value="${escapeHtml(vals.baseField)}" onchange="App.procOnBase(this.value)" placeholder="7:30" aria-label="Base development time" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:28px;font-weight:600;color:${C.text}">
-<span style="font-size:13px;color:${C.faint}">min</span>
+<input type="text" inputmode="numeric" value="${escapeHtml(vals.baseField)}" onchange="App.procOnBase(this.value)" placeholder="7:30" aria-label="${escapeHtml(t('procBaseTimeAria'))}" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:28px;font-weight:600;color:${C.text}">
+<span style="font-size:13px;color:${C.faint}">${escapeHtml(t('procMin'))}</span>
 </div>
 </label>
 <label style="flex:1;display:block">
 <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px">
-<span style="font-size:11px;color:${C.sub}">Dev temp</span>
-<span style="font-size:11px;color:${C.faint}">on that chart</span>
+<span style="font-size:11px;color:${C.sub}">${escapeHtml(t('procDevTemp'))}</span>
+<span style="font-size:11px;color:${C.faint}">${escapeHtml(t('procOnThatChart'))}</span>
 </div>
 <div style="height:56px;background:${C.field};border:1px solid ${C.border};border-radius:8px;display:flex;align-items:center;gap:4px;padding:0 12px">
-<input type="text" inputmode="decimal" value="${escapeHtml(vals.tempField)}" onchange="App.procOnTemp(this.value)" aria-label="Development temperature" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:28px;font-weight:600;color:${C.text}">
+<input type="text" inputmode="decimal" value="${escapeHtml(vals.tempField)}" onchange="App.procOnTemp(this.value)" aria-label="${escapeHtml(t('procDevTempAria'))}" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:28px;font-weight:600;color:${C.text}">
 <span style="font-size:13px;color:${C.faint}">°${escapeHtml(vals.unitShort)}</span>
 </div>
 </label>
 </div>`;
     const stopsBlock = (wide) => `<div${wide ? '' : ' style="flex:1;min-width:0"'}>
-<div style="font-size:11px;color:${vals.stopsLabelColor};margin-bottom:6px">Push / pull</div>
+<div style="font-size:11px;color:${vals.stopsLabelColor};margin-bottom:6px">${escapeHtml(t('procPushPull'))}</div>
 <div style="display:flex;align-items:center;gap:2px;height:44px;background:${C.field};border:1px solid ${vals.stopsBorder};border-radius:8px;padding:3px;box-sizing:border-box">
-<button type="button" onclick="App.procDecStops()" aria-label="One stop less" style="width:${wide ? 44 : 38}px;height:36px;flex:none;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:19px;font-weight:600;line-height:1;cursor:pointer">−</button>
+<button type="button" onclick="App.procDecStops()" aria-label="${escapeHtml(t('v3OneStopLess'))}" style="width:${wide ? 44 : 38}px;height:36px;flex:none;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:19px;font-weight:600;line-height:1;cursor:pointer">−</button>
 <span style="flex:1;text-align:center;font-size:18px;font-weight:700;color:${vals.stopsColor}">${escapeHtml(vals.stopsLabel)}</span>
-<button type="button" onclick="App.procIncStops()" aria-label="One stop more" style="width:${wide ? 44 : 38}px;height:36px;flex:none;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:19px;font-weight:600;line-height:1;cursor:pointer">+</button>
+<button type="button" onclick="App.procIncStops()" aria-label="${escapeHtml(t('v3OneStopMore'))}" style="width:${wide ? 44 : 38}px;height:36px;flex:none;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:19px;font-weight:600;line-height:1;cursor:pointer">+</button>
 </div>
 </div>`;
 
     if (state.desktop) {
         const left = `<div style="display:flex;flex-direction:column;gap:14px;padding-top:10px">
-<p style="margin:0;font-size:14px;line-height:1.55;color:${C.sub}">Start from the time on your dev chart — box speed at the temperature that chart is published for. Tell it what you pushed and how warm the soup actually is, and it works out how long to leave it in.</p>
+<p style="margin:0;font-size:14px;line-height:1.55;color:${C.sub}">${escapeHtml(t('procIntro'))}</p>
 ${filmField}
 ${baseTempRow}
-<div style="font-size:11px;line-height:1.5;color:${C.faint};margin-top:-4px">Both fields are the chart figure. Tap the ladder to say what the developer is actually sitting at — that's what moves the develop time.</div>
+<div style="font-size:11px;line-height:1.5;color:${C.faint};margin-top:-4px">${escapeHtml(t('procChartHint'))}</div>
 <div style="display:flex;gap:10px">
 ${stopsBlock(false)}
 <div style="flex:1;min-width:0">
-<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Units</div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('procUnits'))}</div>
 <div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${vals.unitOpts.map(o => `<button type="button" onclick="${o.pick}" style="flex:1;height:36px;border-radius:6px;font:inherit;font-size:13px;cursor:pointer;background:${o.bg};border:${o.border};color:${o.fg};font-weight:${o.weight}">${escapeHtml(o.label)}</button>`).join('')}</div>
 </div>
 </div>
 <div>
-<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Development type</div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('procDevType'))}</div>
 <div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${vals.typeOpts.map(o => `<button type="button" onclick="${o.pick}" style="flex:1;height:36px;border-radius:6px;font:inherit;font-size:13px;cursor:pointer;background:${o.bg};border:${o.border};color:${o.fg};font-weight:${o.weight}">${escapeHtml(o.label)}</button>`).join('')}</div>
 </div>
 <label style="display:block">
-<div style="font-size:11px;color:${C.sub};margin-bottom:6px">Developer</div>
-<select onchange="App.procPickDeveloper(this.value)" aria-label="Developer" style="width:100%;box-sizing:border-box;height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer">
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('procDeveloper'))}</div>
+<select onchange="App.procPickDeveloper(this.value)" aria-label="${escapeHtml(t('procDeveloper'))}" style="width:100%;box-sizing:border-box;height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};cursor:pointer">
 ${vals.developers.map(d => `<option value="${escapeHtml(d.value)}" ${d.value === vals.developer ? 'selected' : ''}>${escapeHtml(d.label)}</option>`).join('')}
 </select>
 </label>
 <div>
 <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px">
-<span style="font-size:11px;color:${C.sub}">Time added per stop</span>
+<span style="font-size:11px;color:${C.sub}">${escapeHtml(t('procTimePerStop'))}</span>
 </div>
 <div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${vals.pctOpts.map(o => `<button type="button" onclick="${o.pick}" style="flex:1;height:36px;border-radius:6px;font:inherit;font-size:13px;cursor:pointer;background:${o.bg};border:${o.border};box-shadow:${o.shadow};animation:${o.anim};color:${o.fg};font-weight:${o.weight}">${escapeHtml(o.label)}</button>`).join('')}</div>
 <div style="font-size:11px;line-height:1.5;color:${C.faint};margin-top:6px">${escapeHtml(vals.pctSourceNote)}</div>
@@ -2358,8 +2440,8 @@ ${vals.developers.map(d => `<option value="${escapeHtml(d.value)}" ${d.value ===
         const right = `<div>
 <div style="margin-top:14px;padding-top:4px">
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
-<span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.sub}">Actually developing at · ${escapeHtml(vals.tempNowLabel)}</span>
-<span style="font-size:11px;color:${C.faint}">Tap the real temperature · ${escapeHtml(vals.ladderNote)}</span>
+<span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.sub}">${escapeHtml(t('procActuallyAt', { temp: vals.tempNowLabel }))}</span>
+<span style="font-size:11px;color:${C.faint}">${escapeHtml(t('procTapReal', { note: vals.ladderNote }))}</span>
 </div>
 ${procLadder(vals, 'lg')}
 </div>
@@ -2377,19 +2459,19 @@ ${stopsBlock(true)}
 <button type="button" onclick="App.procOpenSheet()" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px;padding:9px 14px;background:${C.panel};border:1px solid ${C.border};border-radius:10px;font:inherit;text-align:left;cursor:pointer">
 <span style="display:flex;flex-direction:column;gap:3px;min-width:0">
 <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-<span style="font-size:13px;color:${C.text}">${escapeHtml(vals.developerLabel)}</span><span style="color:${C.border3}">·</span><span style="font-size:13px;color:${C.acc}">${escapeHtml(vals.pctLabel)} / stop</span>
+<span style="font-size:13px;color:${C.text}">${escapeHtml(vals.developerLabel)}</span><span style="color:${C.border3}">·</span><span style="font-size:13px;color:${C.acc}">${escapeHtml(t('procPerStop', { pct: vals.pctLabel }))}</span>
 </span>
 <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
 <span style="font-size:12px;color:${C.sub}">${escapeHtml(vals.coeffShort)}</span><span style="color:${C.border3}">·</span><span style="font-size:12px;color:${C.sub}">${escapeHtml(vals.chartTempShort)}</span>
 </span>
 </span>
-<span style="font-size:12px;color:${C.sub};white-space:nowrap">Change ›</span>
+<span style="font-size:12px;color:${C.sub};white-space:nowrap">${escapeHtml(t('procChange'))}</span>
 </button>
 </div>
 <div style="margin:14px 20px 0;background:${C.panel};border:1px solid ${C.border};border-radius:10px;padding:12px">
 <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:2px 2px 9px">
-<span style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:${C.sub}">Developing at · ${escapeHtml(vals.tempNowLabel)}</span>
-<span style="font-size:10px;color:${C.faint};white-space:nowrap">tap the real temp</span>
+<span style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:${C.sub}">${escapeHtml(t('procDevelopingAt', { temp: vals.tempNowLabel }))}</span>
+<span style="font-size:10px;color:${C.faint};white-space:nowrap">${escapeHtml(t('procTapRealShort'))}</span>
 </div>
 ${procLadder(vals, 'sm')}
 </div>
@@ -2398,8 +2480,8 @@ ${state.procSheet ? `<div style="position:absolute;inset:0;display:flex;flex-dir
 <div onclick="App.procCloseSheet()" style="position:absolute;inset:0"></div>
 <div style="position:relative;background:${C.shell};border-top:1px solid ${C.border};border-radius:14px 14px 12px 12px;padding:18px 20px 22px;display:flex;flex-direction:column;gap:14px">
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-<span style="font-size:17px;font-weight:700;letter-spacing:-.01em;color:${C.text}">Development settings</span>
-<button type="button" onclick="App.procCloseSheet()" style="height:34px;padding:0 12px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:12px;font-weight:600;cursor:pointer">Done</button>
+<span style="font-size:17px;font-weight:700;letter-spacing:-.01em;color:${C.text}">${escapeHtml(t('procDevSettings'))}</span>
+<button type="button" onclick="App.procCloseSheet()" style="height:34px;padding:0 12px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:12px;font-weight:600;cursor:pointer">${escapeHtml(t('procDone'))}</button>
 </div>
 ${procSettingsFields(vals)}
 </div>
@@ -2508,7 +2590,7 @@ function viewExpired() {
 <label style="flex:1.25;display:block">
 <div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v3ExpiredFieldLabel'))}</div>
 <div style="height:56px;background:${C.panel};border:1px solid ${C.acc};border-radius:8px;display:flex;align-items:center;gap:6px;padding:0 10px 0 12px">
-<select onchange="App.setField('expMonth',this.value)" aria-label="${escapeHtml(t('v3ExpiryMonth'))}" style="background:transparent;border:0;outline:none;font:inherit;font-size:15px;color:${C.text2};cursor:pointer">${MONTHS.map(m => `<option value="${m}" ${state.expMonth === m ? 'selected' : ''}>${m}</option>`).join('')}</select>
+<select onchange="App.setField('expMonth',this.value)" aria-label="${escapeHtml(t('v3ExpiryMonth'))}" style="background:transparent;border:0;outline:none;font:inherit;font-size:15px;color:${C.text2};cursor:pointer">${MONTHS.map(m => `<option value="${m}" ${state.expMonth === m ? 'selected' : ''}>${escapeHtml(t('monthShort' + (MONTHS.indexOf(m) + 1)))}</option>`).join('')}</select>
 <input type="text" inputmode="numeric" value="${escapeHtml(state.expYear)}" onchange="App.setField('expYear',this.value)" aria-label="${escapeHtml(t('v3ExpiryYear'))}" placeholder="2006" style="width:100%;min-width:0;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:28px;font-weight:600;color:${C.text}">
 </div>
 </label>
@@ -2989,7 +3071,7 @@ function viewMenu() {
         ['lookup', t('v3NavLookup'), t('v3MenuLookupMeta')],
         ['expired', t('v3TitleExpiredFilm'), t('v3MenuExpiredMeta')],
         ['depth', t('v4NavDepth'), t('v4MenuDepthMeta')],
-        ['process', 'Process', 'Push/pull, temperature and a develop-stage timer'],
+        ['process', t('v4NavProcess'), t('v4MenuProcessMeta')],
         ['library', t('navLibrary'), t('v3MenuLibraryMeta')],
         ['settings', t('navSettings'), t('v3MenuSettingsMeta')]
     ];
@@ -3294,6 +3376,13 @@ const App = {
     // mismatched type/developer pair on screen.
     procPickType(k) {
         const d = procDeveloperProfiles(k)[0] || DEVELOPERS[0];
+        // A base time is a chart figure for one chemistry — "7:30" makes no
+        // sense as a C-41 time at 37.8 °C — so a real change of type clears
+        // it and the field asks for the new chart figure.
+        if (k !== state.procDevType) {
+            state.procBaseTime = '';
+            try { localStorage.setItem('procBaseTime', ''); } catch {}
+        }
         const temp = procSnapTemp(d.baseTempC, null, d.baseTempC);
         state.procDevType = k; state.procDeveloper = d.value; state.procPct = d.percentPerStop;
         state.procBaseTempC = d.baseTempC; state.procTempC = temp; state.procFilmKey = 'custom';
@@ -3401,10 +3490,11 @@ const App = {
     },
     procOnTemp(v) {
         const n = parseFloat(v);
-        if (!isFinite(n)) return;
         const raw = state.procUnits === 'f' ? (n - 32) * 5 / 9 : n;
-        // Outside any real chemistry the time factor collapses to ~0.
-        if (raw < 0 || raw > 60) return;
+        // Outside any real chemistry the time factor collapses to ~0. Render
+        // on reject so the field snaps back to the value actually in use
+        // instead of still showing what was typed.
+        if (!isFinite(n) || raw < 0 || raw > 60) { render(); return; }
         const c = procSnapToGrid(raw, state.procUnits, raw);
         state.procBaseTempC = c; state.procTempC = c; state.procFilmKey = 'custom';
         try {
@@ -3430,9 +3520,10 @@ const App = {
         if (t.base <= 0) return;
         state.procTimerOpen = true; state.procStageIdx = 0; state.procRemaining = Math.round(t.final);
         state.procRunning = false; state.procStarted = false;
+        procSaveTimer();
         render();
     },
-    procCloseTimer() { clearInterval(procTick); state.procTimerOpen = false; state.procRunning = false; render(); },
+    procCloseTimer() { clearInterval(procTick); state.procTimerOpen = false; state.procRunning = false; procReleaseWake(); procSaveTimer(); render(); },
     procToggleRun() {
         const next = !state.procRunning;
         // Must happen synchronously inside this click handler, not later
@@ -3449,7 +3540,8 @@ const App = {
         const cur = stages[state.procStageIdx] || stage;
         state.procRunning = next; state.procStarted = true;
         state.procRemaining = state.procRemaining > 0 ? state.procRemaining : Math.round(cur.seconds);
-        if (next) { state.procEndAt = Date.now() + state.procRemaining * 1000; procStartInterval(); } else clearInterval(procTick);
+        if (next) { state.procEndAt = Date.now() + state.procRemaining * 1000; procStartInterval(); procAcquireWake(); } else { clearInterval(procTick); procReleaseWake(); }
+        procSaveTimer();
         render();
     },
     procToggleBeep() {
@@ -4042,6 +4134,7 @@ function restoreFromQuery() {
 // ---------- Init ----------
 function init() {
     restoreFromQuery();
+    procRestoreTimer();
     window.addEventListener('popstate', () => {
         const path = location.pathname.replace(/\/$/, '').replace(/^\//, '') || 'lookup';
         state.view = LINKABLE_VIEWS.includes(path) ? path : 'lookup';
