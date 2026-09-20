@@ -10,12 +10,12 @@
     <meta name="robots" content="noindex">
     <script>
     // GitHub Pages has no real server-side routes, so /depth, /expired,
-    // /library and /settings land here — hand them straight to the app
+    // /process, /library and /settings land here — hand them straight to the app
     // (js/app.js's restoreViewFromLocation() unpacks ?view= and puts the
     // pretty path back). Anything else is a genuine 404, so it falls
     // through to the page below rather than redirecting.
     (function () {
-        var LINKABLE = ['expired', 'depth', 'library', 'settings'];
+        var LINKABLE = ['expired', 'depth', 'process', 'library', 'settings'];
         var path = location.pathname.replace(/\/$/, '').replace(/^\//, '');
         if (LINKABLE.indexOf(path) !== -1) location.replace('/?view=' + path);
     })();
@@ -53,10 +53,11 @@
 <body>
 <main>
     <div class="code">404</div>
-    <h1>That page doesn't exist</h1>
-    <p>The link might be old, or the address was typed wrong. FilmCalc itself is a single page —<br>
-    everything lives at the address below.</p>
-    <a class="home" href="/">← Back to FilmCalc</a>
+    <h1 data-i18n="notFoundHeading">That page doesn't exist</h1>
+    <p data-i18n="notFoundBody">The link might be old, or the address was typed wrong. FilmCalc itself is a single page — everything lives at the address below.</p>
+    <a class="home" href="/" data-i18n="notFoundBack">← Back to FilmCalc</a>
 </main>
+<script src="/js/i18n.js"></script>
+<script>document.title = t('notFoundTitle');</script>
 </body>
 </html>
