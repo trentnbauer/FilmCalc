@@ -222,17 +222,18 @@ const state = {
     // round trip. procFilmKey 'custom' means the fields were typed by hand
     // rather than loaded from a saved film stock's devTimeSec/devTempC.
     procBaseTime: localStorage.getItem('procBaseTime') || '7:30',
-    procStops: parseInt(localStorage.getItem('procStops'), 10) || 0,
+    procStops: Math.max(-3, Math.min(3, parseInt(localStorage.getItem('procStops'), 10) || 0)),
     procUnits: localStorage.getItem('procUnits') || 'c',
-    procBaseTempC: parseFloat(localStorage.getItem('procBaseTempC')) || 20,
-    procTempC: parseFloat(localStorage.getItem('procTempC')) || 20,
+    // isFinite rather than `|| 20` so a genuine 0 °C isn't read back as 20.
+    procBaseTempC: (v => isFinite(v) ? v : 20)(parseFloat(localStorage.getItem('procBaseTempC'))),
+    procTempC: (v => isFinite(v) ? v : 20)(parseFloat(localStorage.getItem('procTempC'))),
     procDeveloper: localStorage.getItem('procDeveloper') || 'd76',
-    procDevType: localStorage.getItem('procDevType') || 'bw',
+    procDevType: ['bw', 'c41', 'e6'].includes(localStorage.getItem('procDevType')) ? localStorage.getItem('procDevType') : 'bw',
     procFilmKey: localStorage.getItem('procFilmKey') || 'custom',
     procPct: parseInt(localStorage.getItem('procPct'), 10) || 30,
     procSheet: false,
     procFilmOpen: false, procFilmQuery: '',
-    procTimerOpen: false, procStageIdx: 0, procRemaining: 0, procRunning: false, procStarted: false,
+    procTimerOpen: false, procStageIdx: 0, procRemaining: 0, procRunning: false, procStarted: false, procEndAt: 0,
     procBeep: localStorage.getItem('procBeep') !== '0'
 };
 let toastTimer = null;
@@ -1693,51 +1694,68 @@ function procSnapToGrid(c, units, anchor) {
 }
 function procMmss(sec) { return formatDevTime(Math.max(0, Math.round(sec || 0))); }
 function procParseMmss(str) {
-    const txt = String(str || '').trim().replace(/[.,]/g, ':');
+    const txt = String(str || '').trim();
     if (!txt) return 0;
-    const parts = txt.split(':');
+    // "7.5" / "7,5" is decimal minutes, not 7 min 5 s.
+    if (/^\d+[.,]\d+$/.test(txt)) return Math.round(parseFloat(txt.replace(',', '.')) * 60);
+    const parts = txt.replace(/[.,]/g, ':').split(':');
     if (parts.length === 1) {
         const digits = parts[0].replace(/\D/g, '');
         if (!digits) return 0;
         if (digits.length > 2) return (parseInt(digits.slice(0, -2), 10) || 0) * 60 + (parseInt(digits.slice(-2), 10) || 0);
         return (parseInt(digits, 10) || 0) * 60;
     }
-    const m = parseInt(parts[0], 10) || 0;
-    const s = parseInt(String(parts[1]).slice(0, 2), 10) || 0;
-    return m * 60 + s;
+    const nums = parts.map(x => parseInt(String(x).slice(0, 2), 10) || 0);
+    // h:mm:ss
+    if (nums.length >= 3) return nums[0] * 3600 + nums[1] * 60 + nums[2];
+    return nums[0] * 60 + nums[1];
+}
+// Words that say nothing about which chemistry a name is — brands and
+// packaging — so "Kodak Flexicolor C41 Kit" can't match "Kodak D-76" on
+// "kodak" alone.
+const PROC_MATCH_STOPWORDS = new Set(['kodak', 'ilford', 'adox', 'agfa', 'fuji', 'fujifilm', 'tetenal', 'cinestill', 'unicolor', 'kit', 'developer', 'stock', 'colour', 'color', 'negative', 'transparency', 'first', 'dev', 'chart', 'standard', 'unknown']);
+// Saved chemicals that aren't a developer at all (fixer, stop bath, ...) —
+// they share a process tag with developers but have no dev-time slope.
+const PROC_NON_DEVELOPER = /\b(fix(er|ing)?|stop\s*bath|stop|blix|bleach|stabili[sz]er|hypo|clearing|wetting|wash(ing)?\s*aid|rinse|conditioner|reversal)\b/i;
+function procNameTokens(text) {
+    return String(text || '').toLowerCase().split(/\s+/)
+        .map(w => w.replace(/[^a-z0-9]/g, ''))
+        .filter(w => w.length >= 2 && /[a-z]/.test(w) && !PROC_MATCH_STOPWORDS.has(w));
 }
 // Matches a saved chemical's free-text name to one of the built-in
-// chemistry math profiles (percentPerStop, baseTempC, agitation, ...) by
-// shared significant words — e.g. a "Kodak D-76" chemical matches the
-// 'd76' profile's label "Kodak D-76", "Ilford DD-X" matches "Ilford
-// Ilfotec DD-X". Returns null if nothing shares a word, so an unrecognised
-// chemical still gets a usable (if generic) slope rather than being
-// unselectable.
-function matchDeveloperProfile(name) {
-    const sig = (String(name || '').toLowerCase().match(/[a-z0-9]+/g) || []).filter(w => w.length > 2);
+// chemistry math profiles of the SAME type (percentPerStop, baseTempC,
+// agitation, ...) by a shared distinctive word — "Kodak D-76" matches the
+// 'd76' profile, "Ilford DD-X" matches "Ilford Ilfotec DD-X". Brand words
+// don't count. Returns null if nothing distinctive is shared, so an
+// unrecognised chemical still gets a usable (if generic) slope rather than
+// being unselectable.
+function matchDeveloperProfile(name, type) {
+    const sig = procNameTokens(name);
     if (!sig.length) return null;
     let best = null, bestScore = 0;
     DEVELOPERS.forEach(d => {
-        const dWords = new Set((d.label.toLowerCase().match(/[a-z0-9]+/g) || []).filter(w => w.length > 2));
+        if (type && d.type !== type) return;
+        const dWords = new Set(procNameTokens(d.label));
         const score = sig.reduce((n, w) => n + (dWords.has(w) ? 1 : 0), 0);
         if (score > bestScore) { bestScore = score; best = d; }
     });
     return best;
 }
 // Developer picker options for a process type: the user's own saved,
-// non-hidden chemicals of that process first (matched to a known math
-// profile by name where possible, generic slope otherwise), then any
+// non-hidden developer chemicals of that process first (matched to a known
+// math profile by name where possible, generic slope otherwise), then any
 // built-in profile not already represented by one of those chemicals —
 // so someone with a stocked darkroom sees their own bottles, not a
 // generic catalogue, while still being able to reach an unowned developer.
+// Fixers, stop baths and the like are left out.
 function procDeveloperProfiles(type) {
     type = type || state.procDevType;
     const owned = Object.values(getAllChemicals())
-        .filter(c => !c.hidden && PROC_PROCESS_TO_TYPE[c.process] === type)
+        .filter(c => c && c.name && !c.hidden && PROC_PROCESS_TO_TYPE[c.process] === type && !PROC_NON_DEVELOPER.test(c.name))
         .sort((a, b) => a.name.localeCompare(b.name));
     const matched = new Set();
     const ownedProfiles = owned.map(c => {
-        const m = matchDeveloperProfile(c.name);
+        const m = matchDeveloperProfile(c.name, type);
         if (m) matched.add(m.value);
         const base = m || DEVELOPERS.find(d => d.type === type) || DEVELOPERS[0];
         return { ...base, value: 'chem:' + c.name, label: c.name };
@@ -1745,9 +1763,27 @@ function procDeveloperProfiles(type) {
     const genericRest = DEVELOPERS.filter(d => d.type === type && !matched.has(d.value));
     return ownedProfiles.concat(genericRest);
 }
+// A stored developer can vanish (chemical deleted/renamed/hidden, or the
+// developers.yaml reload dropped it). Fall back within the SAME type so the
+// select, the maths and the chart temperature all agree.
 function procDev() {
-    return procDeveloperProfiles(state.procDevType).find(d => d.value === state.procDeveloper)
+    const list = procDeveloperProfiles(state.procDevType);
+    return list.find(d => d.value === state.procDeveloper)
+        || list[0]
         || DEVELOPERS.find(d => d.value === state.procDeveloper) || DEVELOPERS[0];
+}
+// Re-point state at a real developer if the stored one is gone. Idempotent,
+// so it is safe to call at the top of every procValues().
+function procHealDeveloper() {
+    const list = procDeveloperProfiles(state.procDevType);
+    if (!list.length || list.some(d => d.value === state.procDeveloper)) return;
+    const d = list[0];
+    state.procDeveloper = d.value; state.procPct = d.percentPerStop;
+    state.procBaseTempC = d.baseTempC; state.procTempC = procSnapTemp(d.baseTempC, null, d.baseTempC);
+    try {
+        localStorage.setItem('procDeveloper', d.value); localStorage.setItem('procPct', String(d.percentPerStop));
+        localStorage.setItem('procBaseTempC', String(d.baseTempC)); localStorage.setItem('procTempC', String(state.procTempC));
+    } catch {}
 }
 function procToC(v) { return state.procUnits === 'f' ? (v - 32) * 5 / 9 : v; }
 function procFromC(c) { return state.procUnits === 'f' ? c * 9 / 5 + 32 : c; }
@@ -1768,7 +1804,7 @@ function procTempFactor(c) {
     // adjustment — the displayed grid is whole °F / half °C, so a 37.8 °C
     // process reads at 100 °F or 38 °C, and neither should invent a
     // correction.
-    if (Math.abs(d) < 0.1) return 1;
+    if (Math.abs(d) < 1 / 3) return 1;
     return Math.pow(procDev().factorPerDegC, d);
 }
 function procLadderStepC() { return state.procBaseTempC >= 30 ? 0.5 : 1; }
@@ -1778,18 +1814,39 @@ function procTimes() {
     const final = afterPush * procTempFactor(state.procTempC);
     return { base, afterPush, final };
 }
+// Only the developer step is computed; every other bath is a standard
+// fixed time for its process. useDev: agitate on the developer's own
+// pattern, versus the generic one for fix/blix baths.
+const PROC_GENERIC_AGITATION = { initial: 30, intervalSec: 60, forSec: 10 };
 function procStageList() {
     const t = procTimes();
-    return [
-        { name: 'Develop', seconds: t.final || 0, agitate: true },
+    const dev = { name: 'Develop', seconds: Math.round(t.final || 0), agitate: true, useDev: true };
+    if (state.procDevType === 'c41') {
+        return [dev,
+            { name: 'Blix', seconds: 390, agitate: true },
+            { name: 'Wash', seconds: 195, agitate: false },
+            { name: 'Stabilizer', seconds: 60, agitate: false }];
+    }
+    if (state.procDevType === 'e6') {
+        return [{ ...dev, name: 'First developer' },
+            { name: 'First wash', seconds: 120, agitate: false },
+            { name: 'Reversal', seconds: 120, agitate: false },
+            { name: 'Colour developer', seconds: 360, agitate: true, useDev: true },
+            { name: 'Conditioner', seconds: 120, agitate: false },
+            { name: 'Bleach', seconds: 360, agitate: true },
+            { name: 'Fixer', seconds: 240, agitate: true },
+            { name: 'Wash', seconds: 240, agitate: false },
+            { name: 'Final rinse', seconds: 60, agitate: false }];
+    }
+    return [dev,
         { name: 'Stop bath', seconds: 60, agitate: false },
         { name: 'Fixer', seconds: 300, agitate: true },
-        { name: 'Wash', seconds: 300, agitate: false }
-    ];
+        { name: 'Wash', seconds: 300, agitate: false }];
 }
+function procStageAgitation(stage) { return stage.useDev ? procDev().agitation : PROC_GENERIC_AGITATION; }
 function procAgitationPoints(stage) {
     if (!stage.agitate) return [];
-    const a = procDev().agitation;
+    const a = procStageAgitation(stage);
     const pts = [{ at: 0, note: 'Continuous — ' + a.initial + 's' }];
     for (let s = a.intervalSec; s < stage.seconds - 2; s += a.intervalSec) {
         pts.push({ at: s, note: 'Agitate ' + a.forSec + 's' });
@@ -1802,7 +1859,7 @@ function procAgitationPoints(stage) {
 // than once at the moment it starts.
 function procIsAgitatingAt(stage, elapsed) {
     if (!stage.agitate) return false;
-    const a = procDev().agitation;
+    const a = procStageAgitation(stage);
     if (elapsed < a.initial) return true;
     for (let s = a.intervalSec; s < stage.seconds - 2; s += a.intervalSec) {
         if (elapsed >= s && elapsed < s + a.forSec) return true;
@@ -1848,25 +1905,36 @@ function procBeepNow() {
     } catch {}
 }
 let procTick = null;
+// Wall-clock based: procEndAt is when the current stage ends, so a
+// throttled background tab or locked phone catches up instead of drifting.
 function procStartInterval() {
     clearInterval(procTick);
     procTick = setInterval(() => {
         if (!state.procRunning) return;
         const stages = procStageList();
-        const stage = stages[state.procStageIdx];
-        const next = state.procRemaining - 1;
+        const now = Date.now();
+        let next = Math.ceil((state.procEndAt - now) / 1000);
+        if (next === state.procRemaining) return;
         if (next <= 0) {
             procBeepNow();
-            if (state.procStageIdx + 1 < stages.length) {
+            // Carry any overshoot into the following stage(s).
+            while (next <= 0) {
+                if (state.procStageIdx + 1 >= stages.length) {
+                    state.procRunning = false;
+                    state.procRemaining = 0;
+                    clearInterval(procTick);
+                    render();
+                    return;
+                }
                 state.procStageIdx += 1;
-                state.procRemaining = stages[state.procStageIdx].seconds;
-            } else {
-                state.procRunning = false;
-                state.procRemaining = 0;
+                state.procEndAt += stages[state.procStageIdx].seconds * 1000;
+                next = Math.ceil((state.procEndAt - now) / 1000);
             }
+            state.procRemaining = next;
             render();
             return;
         }
+        const stage = stages[state.procStageIdx];
         const elapsed = stage.seconds - next;
         // Beeps on every second inside an agitation window, not just once
         // at the start — a single 220ms blip is easy to miss over running
@@ -1875,7 +1943,7 @@ function procStartInterval() {
         if (procIsAgitatingAt(stage, elapsed)) procBeepNow();
         state.procRemaining = next;
         render();
-    }, 1000);
+    }, 250);
 }
 function procSegOn(on) { return { bg: on ? '#1f2228' : 'transparent', border: on ? '1px solid ' + C.border3 : '0', fg: on ? C.text : C.sub, weight: on ? 600 : 400 }; }
 
@@ -1883,6 +1951,7 @@ function procSegOn(on) { return { bg: on ? '#1f2228' : 'transparent', border: on
 // so desktop/mobile/sheet/timer stay in sync without duplicating the maths —
 // same pattern as depthValues() above.
 function procValues() {
+    procHealDeveloper();
     const dev = procDev();
     const t = procTimes();
     const empty = t.base <= 0;
@@ -1899,7 +1968,7 @@ function procValues() {
 
     const breakdown = [
         { label: 'Base', value: empty ? '—:—' : procMmss(t.base), color: C.green, sep: '→' },
-        { label: state.procStops === 0 ? 'Box speed' : (state.procStops > 0 ? '+' + state.procStops + ' stop, +' + state.procPct + '%' : state.procStops + ' stop, −' + state.procPct + '%'), value: empty ? '—:—' : procMmss(t.afterPush), color: state.procStops === 0 ? C.sub : C.acc, sep: '→' },
+        { label: state.procStops === 0 ? 'Box speed' : (state.procStops > 0 ? '+' + state.procStops + ' stop, +' + Math.round((procPushFactor() - 1) * 100) + '%' : state.procStops + ' stop, −' + Math.round((1 - procPushFactor()) * 100) + '%'), value: empty ? '—:—' : procMmss(t.afterPush), color: state.procStops === 0 ? C.sub : C.acc, sep: '→' },
         { label: procTempLabel(state.procTempC) + (state.procUnits === 'f' ? 'F' : 'C') + ', ×' + procTempFactor(state.procTempC).toFixed(2), value: empty ? '—:—' : procMmss(t.final), color: Math.abs(tempDelta) < 1 ? C.sub : C.blue, sep: '=' },
         { label: 'Final', value: empty ? '—:—' : procMmss(t.final), color: C.text, sep: '' }
     ];
@@ -3237,18 +3306,23 @@ const App = {
     },
     procPickDeveloper(v) {
         const d = procDeveloperProfiles(state.procDevType).find(x => x.value === v) || DEVELOPERS.find(x => x.value === v);
-        const nextBase = d ? d.baseTempC : state.procBaseTempC;
+        // A base time loaded from a film stock was measured at that film's
+        // own temperature, so switching developer must not re-anchor it to
+        // the new developer's chart temp — the "7:30 at 20 °C" would
+        // silently become "7:30 at 24 °C".
+        const keepAnchor = state.procFilmKey !== 'custom';
+        const nextBase = (d && !keepAnchor) ? d.baseTempC : state.procBaseTempC;
         // Keep a temperature the user deliberately set, but only if the new
         // developer's chart actually covers it — C-41 at 24 °C is nonsense,
         // so a process change that far out lands on its own chart temp.
         // 0.3 °C tolerance covers the °F snap (75 °F is 23.89, not 24).
         const inNewRange = d ? (state.procTempC >= d.tempRange[0] - 0.3 && state.procTempC <= d.tempRange[1] + 0.3) : true;
-        const wasAtChart = Math.abs(state.procTempC - state.procBaseTempC) < 0.3 || !inNewRange;
+        const wasAtChart = !keepAnchor && (Math.abs(state.procTempC - state.procBaseTempC) < 0.3 || !inNewRange);
         const nextTemp = wasAtChart ? procSnapTemp(nextBase, null, nextBase) : state.procTempC;
         state.procDeveloper = v; state.procPct = d ? d.percentPerStop : state.procPct;
-        state.procBaseTempC = nextBase; state.procTempC = nextTemp; state.procFilmKey = 'custom';
+        state.procBaseTempC = nextBase; state.procTempC = nextTemp;
         try {
-            localStorage.setItem('procFilmKey', 'custom'); localStorage.setItem('procDeveloper', v);
+            localStorage.setItem('procDeveloper', v);
             localStorage.setItem('procBaseTempC', String(nextBase)); localStorage.setItem('procPct', String(state.procPct));
             if (wasAtChart) localStorage.setItem('procTempC', String(nextTemp));
         } catch {}
@@ -3279,7 +3353,9 @@ const App = {
         // picking a second C41 film doesn't bounce away from a developer
         // already deliberately chosen within the same type.
         const type = PROC_PROCESS_TO_TYPE[f.process];
-        if (type && type !== state.procDevType) {
+        // ECN-2 (and anything else without a segment) has no developer
+        // profiles here, so leave the type alone rather than orphaning it.
+        if (type && PROC_DEV_TYPES.some(([k]) => k === type) && type !== state.procDevType) {
             const d = procDeveloperProfiles(type)[0] || DEVELOPERS[0];
             state.procDevType = type; state.procDeveloper = d.value; state.procPct = d.percentPerStop;
             try {
@@ -3327,6 +3403,8 @@ const App = {
         const n = parseFloat(v);
         if (!isFinite(n)) return;
         const raw = state.procUnits === 'f' ? (n - 32) * 5 / 9 : n;
+        // Outside any real chemistry the time factor collapses to ~0.
+        if (raw < 0 || raw > 60) return;
         const c = procSnapToGrid(raw, state.procUnits, raw);
         state.procBaseTempC = c; state.procTempC = c; state.procFilmKey = 'custom';
         try {
@@ -3363,9 +3441,15 @@ const App = {
         if (next && state.procBeep) procEnsureAudio();
         const stages = procStageList();
         const stage = stages[state.procStageIdx] || stages[0];
+        // Finished run: Start begins again from the first stage rather than
+        // re-running only the last one.
+        if (next && state.procStarted && state.procRemaining <= 0 && state.procStageIdx >= stages.length - 1) {
+            state.procStageIdx = 0; state.procRemaining = Math.round(stages[0].seconds);
+        }
+        const cur = stages[state.procStageIdx] || stage;
         state.procRunning = next; state.procStarted = true;
-        state.procRemaining = state.procRemaining > 0 ? state.procRemaining : Math.round(stage.seconds);
-        if (next) procStartInterval(); else clearInterval(procTick);
+        state.procRemaining = state.procRemaining > 0 ? state.procRemaining : Math.round(cur.seconds);
+        if (next) { state.procEndAt = Date.now() + state.procRemaining * 1000; procStartInterval(); } else clearInterval(procTick);
         render();
     },
     procToggleBeep() {
