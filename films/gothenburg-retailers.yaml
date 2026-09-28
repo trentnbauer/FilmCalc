@@ -1,0 +1,56 @@
+label: Gothenburg Retailers
+country: Sweden
+state: Västra Götaland County
+city: Gothenburg
+lat: 57.7089
+lon: 11.9746
+films:
+  - name: Kodak Gold
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 3
+        exposures: 36
+        filmCost: 469
+        storeName: Bildskanning
+        buyLink: https://bildskanning.com/produkt/kodak-gold-3/
+        availability: city
+        state: Västra Götaland County
+        city: Gothenburg
+  - name: Ilford HP5 Plus
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 149
+        storeName: Bildskanning
+        buyLink: https://bildskanning.com/produkt/ilford-hp5-plus/
+        availability: city
+        state: Västra Götaland County
+        city: Gothenburg
+  - name: Kodak Portra 800
+    boxSpeed: 800
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 349
+        storeName: Bildskanning
+        buyLink: https://bildskanning.com/produkt/kodak-portra-800-1st/
+        availability: city
+        state: Västra Götaland County
+        city: Gothenburg
