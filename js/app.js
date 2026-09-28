@@ -55,7 +55,7 @@ function readJSON(key, fallback) {
     } catch { return fallback; }
 }
 function writeJSON(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch {} }
-// A decimal comma ("3,95") is what es/de/fr/it/pt/ru keyboards type;
+// A decimal comma ("3,95") is what es/de/fr/it/pt/ru/sv/pl keyboards type;
 // parseFloat alone would read it as 3.
 function parseDecimal(v) { const str = String(v == null ? '' : v).trim(); return parseFloat(/^-?\d+,\d+$/.test(str) ? str.replace(',', '.') : str); }
 function num(v) { const n = parseDecimal(v); return isNaN(n) ? 0 : n; }
@@ -140,7 +140,8 @@ const FRAME35_KEY = { full: 'v3FrameFull', half: 'v3FrameHalf', xpan: 'v3FrameXp
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const LANGUAGE_OPTIONS = [
     ['en', 'English'], ['es', 'Español'], ['ja', '日本語'], ['de', 'Deutsch'], ['pt', 'Português (BR)'],
-    ['fr', 'Français'], ['ko', '한국어'], ['zh', '中文 (简体)'], ['it', 'Italiano'], ['ru', 'Русский']
+    ['fr', 'Français'], ['ko', '한국어'], ['zh', '中文 (简体)'], ['it', 'Italiano'], ['ru', 'Русский'],
+    ['sv', 'Svenska'], ['pl', 'Polski']
 ];
 // Internal step tokens, not display text — kept untranslated/stable since
 // only .length and array index matter structurally. Display label comes
