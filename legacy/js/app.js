@@ -139,7 +139,8 @@ function filmTypeOptions() {
 // picker (Settings and the first-run Setup wizard both read this same list).
 const LANGUAGE_OPTIONS = [
     ['en', 'English'], ['es', 'Español'], ['ja', '日本語'], ['de', 'Deutsch'], ['pt', 'Português (BR)'],
-    ['fr', 'Français'], ['ko', '한국어'], ['zh', '中文 (简体)'], ['it', 'Italiano'], ['ru', 'Русский']
+    ['fr', 'Français'], ['ko', '한국어'], ['zh', '中文 (简体)'], ['it', 'Italiano'], ['ru', 'Русский'],
+    ['sv', 'Svenska'], ['pl', 'Polski']
 ];
 // Speciality stocks (redscale, Harman Phoenix, Switch Azure, …) are
 // virtually always C-41 in practice, same as plain color — still just a

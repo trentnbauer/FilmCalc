@@ -1,0 +1,134 @@
+label: Växjö Retailers
+country: Sweden
+state: Kronoberg County
+city: Växjö
+lat: 56.8777
+lon: 14.8091
+films:
+  - name: Kodak Gold
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 24
+        filmCost: 129
+        storeName: Ernstson Foto
+        buyLink: https://www.ernstsonfoto.se/kodak-eastman-kodak-gold-200-135-24-exp/
+        availability: city
+        state: Kronoberg County
+        city: Växjö
+      - rolls: 1
+        exposures: 36
+        filmCost: 169
+        storeName: Ernstson Foto
+        buyLink: https://www.ernstsonfoto.se/kodak-eastman-kodak-gold-200-135-36-exp/
+        availability: city
+        state: Kronoberg County
+        city: Växjö
+  - name: Kodak ColorPlus
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 24
+        filmCost: 149
+        storeName: Ernstson Foto
+        buyLink: https://www.ernstsonfoto.se/kodak-colorplus-200-boxed-24x1/
+        availability: city
+        state: Kronoberg County
+        city: Växjö
+      - rolls: 1
+        exposures: 36
+        filmCost: 169
+        storeName: Ernstson Foto
+        buyLink: https://www.ernstsonfoto.se/kodak-colorplus-200-boxed-36x1/
+        availability: city
+        state: Kronoberg County
+        city: Växjö
+  - name: Kodak UltraMax
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 24
+        filmCost: 189
+        storeName: Ernstson Foto
+        buyLink: https://www.ernstsonfoto.se/kodak-135-ultra-max-400-24x1-boxed/
+        availability: city
+        state: Kronoberg County
+        city: Växjö
+  - name: Fujifilm 400
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 199
+        storeName: Ernstson Foto
+        buyLink: https://www.ernstsonfoto.se/135-fujifilm-400-36ex/
+        availability: city
+        state: Kronoberg County
+        city: Växjö
+  - name: Fujifilm 200
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 209
+        storeName: Ernstson Foto
+        buyLink: https://www.ernstsonfoto.se/fujifilm-200-fargfilm-135-iso-200-36-exp/
+        availability: city
+        state: Kronoberg County
+        city: Växjö
+  - name: Ilford XP2 Super
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    colorType: bw
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 24
+        filmCost: 159
+        storeName: Ernstson Foto
+        buyLink: https://www.ernstsonfoto.se/ilford-film-xp2-super-135-24/
+        availability: city
+        state: Kronoberg County
+        city: Växjö
+      - rolls: 1
+        exposures: 36
+        filmCost: 189
+        storeName: Ernstson Foto
+        buyLink: https://www.ernstsonfoto.se/ilford-film-xp2-super-135-36/
+        availability: city
+        state: Kronoberg County
+        city: Växjö

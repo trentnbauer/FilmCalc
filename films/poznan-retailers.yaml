@@ -1,0 +1,111 @@
+label: Poznań Retailers
+country: Poland
+state: Greater Poland Voivodeship
+city: Poznań
+lat: 52.4064
+lon: 16.9252
+films:
+  - name: Kodak Tri-X 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 24
+        filmCost: 48.0
+        storeName: Film-Graf
+        buyLink: https://filmgraf.pl/kodak-tri-x-400-135-24-negatyw-film-czarno-bialy-iso400-24-klatki-p-32236.html
+        availability: city
+        state: Greater Poland Voivodeship
+        city: Poznań
+      - rolls: 1
+        exposures: 36
+        filmCost: 61.0
+        storeName: Film-Graf
+        buyLink: https://filmgraf.pl/kodak-tri-x-400-135-36-negatyw-film-czarno-bialy-iso400-36-klatek-p-32229.html
+        availability: city
+        state: Greater Poland Voivodeship
+        city: Poznań
+  - name: Kodak T-Max 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 89.0
+        storeName: Film-Graf
+        buyLink: https://filmgraf.pl/kodak-professional-t-max-400-135-36-negatyw-film-czarno-bialy-iso400-36-klatek-p-24257.html
+        availability: city
+        state: Greater Poland Voivodeship
+        city: Poznań
+  - name: Kodak T-Max P3200
+    boxSpeed: 3200
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 109.0
+        storeName: Film-Graf
+        buyLink: https://filmgraf.pl/kodak-professional-t-max-3200-135-36-negatyw-film-czarno-bialy-iso3200-36-klatek-p-24258.html
+        availability: city
+        state: Greater Poland Voivodeship
+        city: Poznań
+  - name: Kodak Ektar 100
+    boxSpeed: 100
+    maxPushPull: 0
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 119.0
+        storeName: Film-Graf
+        buyLink: https://filmgraf.pl/kodak-professional-ektar-100-135-36-negatyw-film-kolorowy-iso100-36-klatek-p-22823.html
+        availability: city
+        state: Greater Poland Voivodeship
+        city: Poznań
+  - name: Kodak Portra 800
+    boxSpeed: 800
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 139.0
+        storeName: Film-Graf
+        buyLink: https://filmgraf.pl/kodak-professional-portra-800-135-36-negatyw-film-kolorowy-iso800-36-klatek-p-24259.html
+        availability: city
+        state: Greater Poland Voivodeship
+        city: Poznań
+  - name: Kodak UltraMax
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 76.0
+        storeName: Film-Graf
+        buyLink: https://filmgraf.pl/kodak-gcultramax-400-135-36-negatyw-film-kolorowy-iso400-36-klatek-p-24255.html
+        availability: city
+        state: Greater Poland Voivodeship
+        city: Poznań

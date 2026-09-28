@@ -1,0 +1,71 @@
+label: Katowice Labs
+country: Poland
+state: Silesian Voivodeship
+city: Katowice
+lat: 50.2649
+lon: 19.0238
+labs:
+  - name: FotoSilesia
+    hidden: false
+    address: al. Korfantego 44a, 40-161 Katowice, Poland
+    phone: "+48 690 428 800"
+    email: lab@fotosilesia.pl
+    website: https://www.fotosilesia.pl
+    source: https://www.fotosilesia.pl/cennik/
+    services:
+      - devCost: 31.9
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 127.9
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 38.8
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 134.8
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 56.0
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 152.0
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 41.6
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - ECN2
+      - devCost: 137.6
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - ECN2

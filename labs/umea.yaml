@@ -1,0 +1,43 @@
+label: Umeå Labs
+country: Sweden
+state: Västerbotten County
+city: Umeå
+lat: 63.8258
+lon: 20.263
+labs:
+  - name: Elon Ljud & Bild Umeå
+    hidden: false
+    address: Kungsgatan 54, 903 26 Umeå, Sweden
+    phone: "090-77 00 22"
+    email: umeacity@elonljudbild.se
+    website: https://umeabild.se
+    source: https://umeabild.se/analog-framkallning/
+    services:
+      - devCost: 109
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 179
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 159
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 229
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41

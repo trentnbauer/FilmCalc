@@ -1,0 +1,75 @@
+label: Norrköping Labs
+country: Sweden
+state: Östergötland County
+city: Norrköping
+lat: 58.5877
+lon: 16.1924
+labs:
+  - name: Bildcompaniet
+    hidden: false
+    address: Repslagaregatan 12, 602 32 Norrköping, Sweden
+    phone: "011-10 43 50"
+    email: butik@bildcompaniet.se
+    website: https://www.bildcompaniet.se
+    source: https://www.bildcompaniet.se/analogframkallning/
+    services:
+      - devCost: 149
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 299
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 349
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 379
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 299
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 419
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 429
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 469
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 479
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 449
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6

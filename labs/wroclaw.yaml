@@ -1,0 +1,36 @@
+label: Wrocław Labs
+country: Poland
+state: Lower Silesian Voivodeship
+city: Wrocław
+lat: 51.1079
+lon: 17.0385
+labs:
+  - name: Fotoborek (Kodak Express)
+    hidden: false
+    address: Al. Hallera 52, 53-324 Wrocław, Poland
+    phone: "+48 733 666 499"
+    email: borek@fotoborek.pl
+    website: https://fotoborek.pl
+    source: https://fotoborek.pl/wywolanie-kliszy
+    services:
+      - devCost: 19.99
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 44.98
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 54.98
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
