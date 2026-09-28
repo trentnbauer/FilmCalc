@@ -1,0 +1,29 @@
+label: Uppsala Labs
+country: Sweden
+state: Uppsala County
+city: Uppsala
+lat: 59.8586
+lon: 17.6389
+labs:
+  - name: Uppsala Fotokompani
+    hidden: false
+    address: Dragarbrunnsgatan 42, 753 20 Uppsala, Sweden
+    phone: "018-10 20 40"
+    email: info@ufk.se
+    website: https://www.ufk.se
+    source: https://cdn.abicart.com/shop/24981/files/2025/Uppsala%20Fotokompani%20-%20Framkallning%20av%20film.pdf
+    services:
+      - devCost: 188
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 69
+        processes:
+          - C41
+      - devCost: 269
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 69
+        processes:
+          - C41

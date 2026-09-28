@@ -1,0 +1,166 @@
+label: Warsaw Labs
+country: Poland
+state: Masovian Voivodeship
+city: Warsaw
+lat: 52.2297
+lon: 21.0122
+labs:
+  - name: LP Foto
+    hidden: false
+    address: ul. Hoża 39, 00-681 Warszawa, Poland
+    website: https://lpfoto.pl
+    source: https://lpfoto.pl/warszawa/oferta/wywolanie-i-skanowanie-filmu/
+    services:
+      - devCost: 15
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 30
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 45
+        highResScan: true
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 20
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 35
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 50
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+  - name: Fotoxero
+    hidden: false
+    address: ul. Grochowska 289, 03-842 Warszawa, Poland
+    phone: "+48 730 299 766"
+    email: info@fotoxero.com
+    website: https://www.fotoxero.com
+    source: https://www.fotoxero.com/usluga/wywolywanie-filmow-warszawa-praga-poludnie/
+    services:
+      - devCost: 30
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 40
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 50
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+  - name: fotoFOTKA
+    hidden: false
+    address: ul. Tarczyńska 3A, 02-025 Warszawa, Poland
+    phone: "+48 22 822 73 16"
+    email: lab@fotoFOTKA.pl
+    website: https://fotofotka.pl
+    source: https://fotofotka.pl/cennik/wywolanie-negatywu/
+    services:
+      - devCost: 19.5
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 35
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 42
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 31
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 47
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 54
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+  - name: Relax-Foto
+    hidden: false
+    address: ul. Zgoda 13, 00-012 Warszawa, Poland
+    phone: "+48 22 827 15 87"
+    email: prolab@op.pl
+    website: http://www.relax-foto.pl
+    source: http://www.relax-foto.pl/index.php?pdst=41
+    services:
+      - devCost: 20
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 40
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 24
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 45
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 42
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 29
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - ECN2

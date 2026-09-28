@@ -1,0 +1,62 @@
+label: Kraków Labs
+country: Poland
+state: Lesser Poland Voivodeship
+city: Kraków
+lat: 50.0647
+lon: 19.9450
+labs:
+  - name: Kodak Express Pryzmat
+    hidden: false
+    address: ul. Zygmunta Miłkowskiego 21/LU8, 30-349 Kraków, Poland
+    phone: "+48 12 263 15 20"
+    email: biuro@ekodak.pl
+    website: https://ekodak.pl
+    source: https://ekodak.pl/cennik/
+    services:
+      - devCost: 25
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 40
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 35
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 50
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+  - name: Fabryka Zdjęć
+    hidden: false
+    address: ul. Madalińskiego 5, 30-303 Kraków, Poland
+    phone: "+48 12 260 54 70"
+    email: biuro@fabrykazdjec.pl
+    website: http://www.fabrykazdjec.pl
+    source: http://www.fabrykazdjec.pl/wywoływanie_filmow.html
+    services:
+      - devCost: 15
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 50
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6

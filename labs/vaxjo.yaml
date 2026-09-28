@@ -1,0 +1,35 @@
+label: Växjö Labs
+country: Sweden
+state: Kronoberg County
+city: Växjö
+lat: 56.8777
+lon: 14.8091
+labs:
+  - name: Ernstson Foto
+    hidden: false
+    address: Klostergatan 4, 352 30 Växjö, Sweden
+    phone: "0470-12015"
+    email: info@ernstsonfoto.se
+    website: https://www.ernstsonfoto.se
+    source: https://www.ernstsonfoto.se/Tjanster/Bildtjanster/Analog-framkallning/
+    services:
+      - devCost: 80
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 160
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 249
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+          - E6

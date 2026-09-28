@@ -1,0 +1,672 @@
+label: Kraków Retailers
+country: Poland
+state: Lesser Poland Voivodeship
+city: Kraków
+lat: 50.0647
+lon: 19.9450
+films:
+  - name: Ilford HP5 Plus
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 53
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-ilford-hp5-40036/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Ilford HP5 Plus
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 45
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-ilford-hp5-400120/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Ilford FP4 Plus
+    boxSpeed: 125
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 50
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-ilford-fp4-plus-12536/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Ilford FP4 Plus
+    boxSpeed: 125
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 45
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-ilford-fp4-plus-125120/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Ilford Delta 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 57
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-ilford-delta-10036/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Ilford Delta 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 45
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-ilford-delta-100120/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Ilford Delta 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 57
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-ilford-delta-40036/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Ilford Delta 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 47
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-ilford-delta-400120/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Ilford Delta 3200
+    boxSpeed: 3200
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 64
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-ilford-delta-320036/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Ilford Delta 3200
+    boxSpeed: 3200
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 55
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-ilford-delta-3200-120/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Ilford Pan F Plus
+    boxSpeed: 50
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 44
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-ilford-pan-f-5036/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Ilford Pan F Plus
+    boxSpeed: 50
+    maxPushPull: 1
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 44
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-ilford-pan-f-50120/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Ilford XP2 Super
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    colorType: bw
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 52
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-ilford-xp2-40036-do-c-41/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Kentmere Pan 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 31
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-ilford-kentmere-100-36/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Kentmere Pan 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 30
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-ilford-kentmere-100-120/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Kentmere Pan 200
+    boxSpeed: 200
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 32
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-ilford-kentmere-200-36/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Kentmere Pan 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 33
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-ilford-kentmere-400-36/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Kentmere Pan 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 30
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-ilford-kentmere-400-120/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Fomapan Classic 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 28
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-fomapan-classic-100-36/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Fomapan Classic 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 28
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-fomapan-classic-100-120/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Fomapan 200
+    boxSpeed: 200
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 30
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-fomapan-200-36/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Fomapan 200
+    boxSpeed: 200
+    maxPushPull: 1
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 28
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-fomapan-200-120/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Fomapan 400
+    boxSpeed: 400
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 31
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-fomapan-400-36/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Fomapan 400
+    boxSpeed: 400
+    maxPushPull: 1
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 28
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-fomapan-400-120/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Kodak Tri-X 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 55
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-kodak-tri-x-40036/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Kodak Tri-X 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 53
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-kodak-tri-x-400-120/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Kodak T-Max 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 69
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-kodak-t-max-10036/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Kodak T-Max 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 72
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-kodak-t-max-40036/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Kodak Gold
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 24
+        filmCost: 45
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-kodak-gold-200-24/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+      - rolls: 3
+        exposures: 36
+        filmCost: 144
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-kodak-gold-200-36-x3-trojpak-kopia/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Kodak ColorPlus
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 24
+        filmCost: 45
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-kodak-colorplus-200-24/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+      - rolls: 1
+        exposures: 36
+        filmCost: 48
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-kodak-colorplus-200-36-2/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Kodak UltraMax
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 3
+        exposures: 36
+        filmCost: 174
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-kodak-ultramax-400-36-trojpak/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Kodak Pro Image 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 60
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-kodak-pro-image-100-36-1-rolka/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Kodak Ektar 100
+    boxSpeed: 100
+    maxPushPull: 0
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 85
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-kodak-ektar-100-36/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Kodak Portra 160
+    boxSpeed: 160
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 87
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-kodak-portra-16036/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Kodak Portra 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 98
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-kodak-portra-40036/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Kodak Portra 800
+    boxSpeed: 800
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 105
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-kodak-portra-80036/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Rollei RPX 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 36
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-rollei-rpx-100-36/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Rollei RPX 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 36
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-rollei-rpx-100-120/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Rollei RPX 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 36
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-rollei-rpx-40036/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Rollei RPX 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 38
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-rollei-rpx-400120/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Rollei Retro 400S
+    boxSpeed: 400
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 38
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-rollei-retro-400s-36/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
+  - name: Rollei Superpan 200
+    boxSpeed: 200
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 37
+        storeName: Foto-Kram
+        buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-rollei-superpan-200-36/
+        availability: city
+        state: Lesser Poland Voivodeship
+        city: Kraków
