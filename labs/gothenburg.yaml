@@ -1,0 +1,160 @@
+label: Gothenburg Labs
+country: Sweden
+state: Västra Götaland County
+city: Gothenburg
+lat: 57.7089
+lon: 11.9746
+labs:
+  - name: Grafi Foto
+    hidden: false
+    address: Mariaplan 2, 414 71 Göteborg, Sweden
+    phone: "031-14 02 91"
+    email: info@grafifoto.se
+    website: https://www.grafifoto.se
+    source: https://www.grafifoto.se/prislista_analogt/
+    services:
+      - devCost: 99
+        pushPullCost: 199
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 99
+        processes:
+          - C41
+      - devCost: 199
+        pushPullCost: 199
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 99
+        processes:
+          - C41
+      - devCost: 249
+        pushPullCost: 199
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 99
+        processes:
+          - C41
+      - devCost: 145
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 99
+        processes:
+          - BW
+      - devCost: 265
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 99
+        processes:
+          - BW
+      - devCost: 315
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 99
+        processes:
+          - BW
+      - devCost: 109
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 99
+        processes:
+          - C41
+      - devCost: 400
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        mailBackCost: 99
+        processes:
+          - C41
+      - devCost: 340
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        mailBackCost: 99
+        processes:
+          - BW
+      - devCost: 400
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        mailBackCost: 99
+        processes:
+          - BW
+      - devCost: 280
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 99
+        processes:
+          - E6
+      - devCost: 400
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 99
+        processes:
+          - E6
+  - name: Bildskanning
+    hidden: false
+    address: Kolgruvegatan 12, 417 07 Göteborg, Sweden
+    email: Hampus@bildskanning.com
+    website: https://bildskanning.com
+    source: https://bildskanning.com/tjanster/framkalla-analog-film/
+    services:
+      - devCost: 109
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 49
+        processes:
+          - C41
+          - BW
+      - devCost: 109
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 49
+        processes:
+          - E6
+          - ECN2
+      - devCost: 209
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 49
+        processes:
+          - C41
+          - BW
+      - devCost: 209
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 49
+        processes:
+          - E6
+          - ECN2
