@@ -1,0 +1,376 @@
+label: Dublin Retailers
+authorship: ai
+country: Ireland
+state: Leinster
+city: Dublin
+lat: 53.3498
+lon: -6.2603
+films:
+  - name: Ilford XP2 Super
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    colorType: bw
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 13.25
+        storeName: John Gunn Camera Shop
+        buyLink: https://www.johngunn.ie/ILFORD-XP2-36EXP-35MM-019498839573-155/
+        availability: city
+        state: Leinster
+        city: Dublin
+  - name: Kodak ColorPlus
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 12
+        storeName: John Gunn Camera Shop
+        buyLink: https://www.johngunn.ie/KODAK-COLOUR-PLUS-200-35MM-36EXP-086806031479-506/
+        availability: city
+        state: Leinster
+        city: Dublin
+  - name: Kodak Ektar 100
+    boxSpeed: 100
+    maxPushPull: 0
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 20.5
+        storeName: John Gunn Camera Shop
+        buyLink: https://www.johngunn.ie/KODAK-EKTAR100-36EXP-35MM-086806031332-504/
+        availability: city
+        state: Leinster
+        city: Dublin
+  - name: Kodak Portra 800
+    boxSpeed: 800
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 26.5
+        storeName: John Gunn Camera Shop
+        buyLink: https://www.johngunn.ie/KODAK-PORTRA-800-36-EXP-35MM-041771451851-345/
+        availability: city
+        state: Leinster
+        city: Dublin
+  - name: Ilford Delta 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 14.5
+        storeName: John Gunn Camera Shop
+        buyLink: https://www.johngunn.ie/ILFORD-DELTA-100-36EXP-35MM-019498780622-153/
+        availability: city
+        state: Leinster
+        city: Dublin
+  - name: Ilford Delta 3200
+    boxSpeed: 3200
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 13.25
+        storeName: John Gunn Camera Shop
+        buyLink: https://www.johngunn.ie/ILFORD-DELTA-3200-36EXP-35MM-019498887710-157/
+        availability: city
+        state: Leinster
+        city: Dublin
+  - name: Ilford Delta 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 14.5
+        storeName: John Gunn Camera Shop
+        buyLink: https://www.johngunn.ie/ILFORD-DELTA-400-36EXP-35MM-019498748196-150/
+        availability: city
+        state: Leinster
+        city: Dublin
+  - name: Ilford FP4 Plus
+    boxSpeed: 125
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 12.75
+        storeName: John Gunn Camera Shop
+        buyLink: https://www.johngunn.ie/ILFORD-FP4-125-36EXP-35MM-019498649653-141/
+        availability: city
+        state: Leinster
+        city: Dublin
+  - name: Ilford HP5 Plus
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 12.75
+        storeName: John Gunn Camera Shop
+        buyLink: https://www.johngunn.ie/ILFORD-HP5-36EXP-35MM-019498574573-139/
+        availability: city
+        state: Leinster
+        city: Dublin
+  - name: Fomapan Classic 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 5.75
+        storeName: John Gunn Camera Shop
+        buyLink: https://www.johngunn.ie/FOMAPAN-100-36EXP-35MM-8593346111315-1309/
+        availability: city
+        state: Leinster
+        city: Dublin
+  - name: Fomapan 400
+    boxSpeed: 400
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 5.8
+        storeName: John Gunn Camera Shop
+        buyLink: https://www.johngunn.ie/FOMAPAN-400-36-EXP-35MM-8593346115023-1312/
+        availability: city
+        state: Leinster
+        city: Dublin
+  - name: Kentmere Pan 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 7.75
+        storeName: John Gunn Camera Shop
+        buyLink: https://www.johngunn.ie/KENTMERE-100-36EXP-35MM-019498010460-123/
+        availability: city
+        state: Leinster
+        city: Dublin
+  - name: Kodak T-Max 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 22.85
+        storeName: John Gunn Camera Shop
+        buyLink: https://www.johngunn.ie/KODAK-TMAX-100-36EXP-35MM-041778532843-364/
+        availability: city
+        state: Leinster
+        city: Dublin
+  - name: Kodak T-Max 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 19.5
+        storeName: John Gunn Camera Shop
+        buyLink: https://www.johngunn.ie/KODAK-TMAX-400-36EXP-35MM-041778947944-371/
+        availability: city
+        state: Leinster
+        city: Dublin
+  - name: Kodak Tri-X 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 12.75
+        storeName: John Gunn Camera Shop
+        buyLink: https://www.johngunn.ie/KODAK-TRI-X-400TX-36EXP-35MM-041778667071-369/
+        availability: city
+        state: Leinster
+        city: Dublin
+  - name: Ilford HP5 Plus
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 12
+        storeName: John Gunn Camera Shop
+        buyLink: https://www.johngunn.ie/ILFORD-HP5-120-019498629013-140/
+        availability: city
+        state: Leinster
+        city: Dublin
+  - name: Ilford FP4 Plus
+    boxSpeed: 125
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 12
+        storeName: John Gunn Camera Shop
+        buyLink: https://www.johngunn.ie/ILFORD-FP4-125-120-019498678165-142/
+        availability: city
+        state: Leinster
+        city: Dublin
+  - name: Ilford Delta 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 12
+        storeName: John Gunn Camera Shop
+        buyLink: https://www.johngunn.ie/ILFORD-DELTA-100-120-019498743399-146/
+        availability: city
+        state: Leinster
+        city: Dublin
+  - name: Ilford Delta 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 13
+        storeName: John Gunn Camera Shop
+        buyLink: https://www.johngunn.ie/ILFORD-DELTA-400-120-019498780660-1404/
+        availability: city
+        state: Leinster
+        city: Dublin
+  - name: Ilford Delta 3200
+    boxSpeed: 3200
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 12.95
+        storeName: John Gunn Camera Shop
+        buyLink: https://www.johngunn.ie/ILFORD-DELTA-3200-120-019498921537-159/
+        availability: city
+        state: Leinster
+        city: Dublin
+  - name: Ilford XP2 Super
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    colorType: bw
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 12
+        storeName: John Gunn Camera Shop
+        buyLink: https://www.johngunn.ie/ILFORD-XP2-120-019498839641-156/
+        availability: city
+        state: Leinster
+        city: Dublin
+  - name: Fomapan 400
+    boxSpeed: 400
+    maxPushPull: 1
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 5.5
+        storeName: John Gunn Camera Shop
+        buyLink: https://www.johngunn.ie/FOMAPAN-400-120-8593346115610-1313/
+        availability: city
+        state: Leinster
+        city: Dublin
+  - name: Kentmere Pan 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 6.5
+        storeName: John Gunn Camera Shop
+        buyLink: https://www.johngunn.ie/KENTMERE-PAN-100-120-FILM-019498014819-2905/
+        availability: city
+        state: Leinster
+        city: Dublin
+  - name: Kentmere Pan 400
+    boxSpeed: 400
+    maxPushPull: 1
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 6
+        storeName: John Gunn Camera Shop
+        buyLink: https://www.johngunn.ie/KENTMERE-PAN-400-120-019498014826-2842/
+        availability: city
+        state: Leinster
+        city: Dublin

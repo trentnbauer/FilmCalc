@@ -1,0 +1,28 @@
+label: Cologne Labs
+authorship: ai
+country: Germany
+state: North Rhine-Westphalia
+city: Cologne
+lat: 50.9375
+lon: 6.9603
+labs:
+  - name: Fotolabor Köln
+    hidden: false
+    address: Severinstraße 40, 50678 Köln, Germany
+    phone: +49 221 938 59 80
+    website: https://www.fotolaborkoeln.de
+    source: https://www.fotolaborkoeln.de/fotolabor-analog-preisliste
+    services:
+      - devCost: 10
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 20
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41

@@ -1,0 +1,99 @@
+label: Sofia Labs
+authorship: ai
+country: Bulgaria
+state: Sofia City Province
+city: Sofia
+lat: 42.6977
+lon: 23.3219
+labs:
+  - name: PhotoSynthesis Print Center
+    hidden: false
+    address: bul. Vasil Levski 57, 1142 Sofia, Bulgaria
+    phone: +359 889 903 911
+    email: print@photosynthesis.bg
+    website: https://www.printcenter.bg
+    source: https://www.printcenter.bg/bg/catalog/filmova-fotografiya/53
+    services:
+      - devCost: 6.13
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 7.16
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 9.2
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+  - name: Foto Dekov
+    hidden: false
+    address: 34 Tsar Ivan Asen II Street, 1124 Sofia, Bulgaria
+    phone: +359 2 843 5414
+    website: https://www.foto-dekov.com
+    source: https://www.foto-dekov.com/bg/classic-foto-2
+    services:
+      - devCost: 6.5
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 7.5
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 11.61
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 16.7
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 12.61
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 17.7
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+  - name: Photohub
+    hidden: false
+    address: bul. Vitosha 104, 1463 Sofia, Bulgaria
+    phone: +359 876 11 22 13
+    email: info@photohub.bg
+    website: https://photohub.bg
+    source: https://photohub.bg/%D0%BD%D0%B0%D1%88%D0%B8%D1%82%D0%B5-%D1%83%D1%81%D0%BB%D1%83%D0%B3%D0%B8/%D0%BF%D1%80%D0%BE%D1%8F%D0%B2%D1%8F%D0%B2%D0%B0%D0%BD%D0%B5-%D0%BD%D0%B0-%D1%84%D0%B8%D0%BB%D0%BC%D0%B8.html
+    services:
+      - devCost: 6.39
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 7.41
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW

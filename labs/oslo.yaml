@@ -1,0 +1,184 @@
+label: Oslo Labs
+authorship: ai
+country: Norway
+state: Oslo
+city: Oslo
+lat: 59.9139
+lon: 10.7522
+labs:
+  - name: Oslo Foto
+    hidden: false
+    address: Møllergata 2B, 0179 Oslo, Norway
+    phone: +47 22 33 55 22
+    email: ordre@oslofoto.as
+    website: https://oslofoto.as
+    source: https://oslofoto.as/en/pages/priser-fremkalling
+    services:
+      - devCost: 99
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 109
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 119
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 199
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+        turnaroundTime: same_week
+      - devCost: 125
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 150
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 279
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 399
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 798
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 249
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 359
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 698
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 219
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 319
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 598
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 369
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+        turnaroundTime: same_week
+      - devCost: 489
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - BW
+        turnaroundTime: same_week
+      - devCost: 814
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - BW
+        turnaroundTime: same_week
+      - devCost: 245
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 345
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 624
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 349
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 399
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 698
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - E6

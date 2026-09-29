@@ -1,0 +1,71 @@
+label: Lisbon Labs
+authorship: ai
+country: Portugal
+state: Lisbon District
+city: Lisbon
+lat: 38.7223
+lon: -9.1393
+labs:
+  - name: Colorfoto Alvalade
+    hidden: false
+    address: Avenida da Igreja, 39 D/E, 1700-233 Lisboa, Portugal
+    phone: +351 213 129 490
+    email: lab.alvalade@colorfoto.pt
+    website: https://www.colorfoto.pt
+    source: https://www.colorfoto.pt/servicos-laboratorio/revelacao/
+    services:
+      - devCost: 7
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 8
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 9
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 12
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 17
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 18
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 16
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 21
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 20
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW

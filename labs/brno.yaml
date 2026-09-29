@@ -1,0 +1,96 @@
+label: Brno Labs
+authorship: ai
+country: Czech Republic
+state: South Moravian Region
+city: Brno
+lat: 49.1951
+lon: 16.6068
+labs:
+  - name: Polagraph Brno
+    hidden: false
+    address: Dominikánská 9, 602 00 Brno, Czech Republic
+    phone: +420 604 457 363
+    email: shop@polagraph.cz
+    website: https://www.polagraph.cz
+    source: https://www.polagraph.cz/wp-content/uploads/2026/08/cenik_vyvolavani_polagraph_2026.pdf
+    services:
+      - devCost: 130
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 129
+        processes:
+          - C41
+        pushPullCost: 100
+        pushPullType: flat
+      - devCost: 130
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 129
+        processes:
+          - BW
+        pushPullCost: 100
+        pushPullType: flat
+      - devCost: 230
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        mailBackCost: 129
+        processes:
+          - C41
+        pushPullCost: 100
+        pushPullType: flat
+      - devCost: 230
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        mailBackCost: 129
+        processes:
+          - BW
+        pushPullCost: 100
+        pushPullType: flat
+      - devCost: 290
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        mailBackCost: 129
+        processes:
+          - C41
+        pushPullCost: 100
+        pushPullType: flat
+      - devCost: 290
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        mailBackCost: 129
+        processes:
+          - BW
+        pushPullCost: 100
+        pushPullType: flat
+      - devCost: 490
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        mailBackCost: 129
+        processes:
+          - C41
+        pushPullCost: 100
+        pushPullType: flat
+      - devCost: 490
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        mailBackCost: 129
+        processes:
+          - BW
+        pushPullCost: 100
+        pushPullType: flat

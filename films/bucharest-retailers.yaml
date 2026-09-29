@@ -1,0 +1,677 @@
+label: Bucharest Retailers
+authorship: ai
+country: Romania
+state: Bucharest
+city: Bucharest
+lat: 44.4268
+lon: 26.1025
+films:
+  - name: Kodak Gold
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 65
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/gold200/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Fujifilm 200
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 65
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/fujifilm-200/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Kodak UltraMax
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 70
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/ultramax400/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Ilford HP5 Plus
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 75
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/hp5/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Kentmere Pan 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 40
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/kentmere-400/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Ilford XP2 Super
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    colorType: bw
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 75
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/ilford-xp2-super-400/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Fujifilm 400
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 80
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/fujifilm-400/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Ilford Delta 3200
+    boxSpeed: 3200
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 85
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/delta3200/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Kentmere Pan 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 35
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/kentmere400-120/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Kentmere Pan 200
+    boxSpeed: 200
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 45
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/kentmere-pan-200/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Kentmere Pan 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 40
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/kentmere-100/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Kodak Ektar 100
+    boxSpeed: 100
+    maxPushPull: 0
+    process: C41
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 120
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/ektar/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Kodak Portra 160
+    boxSpeed: 160
+    maxPushPull: 2
+    process: C41
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 115
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/portra160/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Harman Phoenix II
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    colorType: speciality
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 75
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/harman-phoenix-ii/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Cinestill 800Tungsten
+    boxSpeed: 800
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 120
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/cs800/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Kentmere Pan 200
+    boxSpeed: 200
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 30
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/kentmere-pan-200-120/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Kodak Portra 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    format: '120'
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 120
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/portra-400-120/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Ilford Delta 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 85
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/ilford-delta-400/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Ilford HP5 Plus
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 60
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/hp5-120/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Kodak Gold
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: '120'
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 75
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/kodak-gold-200-120/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Kentmere Pan 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 35
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/kentmere-pan-100-120/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Ilford Delta 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 85
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/ilford-delta-100/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Ilford FP4 Plus
+    boxSpeed: 125
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 75
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/ilford-fp4/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Kodak Kodacolor 200
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 65
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/kodak-kodacolor-200/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Fomapan 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 30
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/fomapan-100-120/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Ilford FP4 Plus
+    boxSpeed: 125
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 60
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/fp4-120/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Kodak Tri-X 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 85
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/kodaktrix400/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Rollei Retro 400S
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 50
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/rollei-retro-400s/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Ilford Delta 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 70
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/ilford-delta-400-120/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Harman Phoenix II
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    colorType: speciality
+    format: '120'
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 65
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/harman-phoenix-ii-120/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Fomapan 200
+    boxSpeed: 200
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 35
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/fomapan-200-120/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Ilford Delta 3200
+    boxSpeed: 3200
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 75
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/ilford-delta-3200-120/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Harman Phoenix
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    colorType: speciality
+    format: '120'
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 60
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/harman-phoenix-200-120/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Rollei Superpan 200
+    boxSpeed: 200
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 50
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/rollei-superpan-200/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Kodak Kodacolor 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 75
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/kodak-kodacolor-100/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Kodak Tri-X 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 70
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/kodak-tri-x-400-120/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Harman Switch Azure
+    boxSpeed: 125
+    maxPushPull: 1
+    process: C41
+    colorType: speciality
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 70
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/harman-switch-azure/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Ilford Delta 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 70
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/ilford-delta-100-120/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Kodak Ektar 100
+    boxSpeed: 100
+    maxPushPull: 0
+    process: C41
+    format: '120'
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 105
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/ektar-100-120/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Ilford Pan F Plus
+    boxSpeed: 50
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 80
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/ilford-panf-50/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Kodak T-Max 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 79.99
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/kodak-t-max-100-120/
+        availability: city
+        state: Bucharest
+        city: Bucharest
+  - name: Kodak T-Max 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 79.99
+        storeName: °isopatrusute
+        buyLink: https://isopatrusute.ro/shop/kodak-t-max-400-120/
+        availability: city
+        state: Bucharest
+        city: Bucharest

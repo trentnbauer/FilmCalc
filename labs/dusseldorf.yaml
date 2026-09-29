@@ -1,0 +1,58 @@
+label: Düsseldorf Labs
+authorship: ai
+country: Germany
+state: North Rhine-Westphalia
+city: Düsseldorf
+lat: 51.2277
+lon: 6.7735
+labs:
+  - name: Schwarzweiß Fotolabor
+    hidden: false
+    address: Albertstraße 113, 40233 Düsseldorf, Germany
+    phone: +49 211 352021
+    email: mail@schwarzweiss-fotolabor.de
+    website: https://schwarzweiss-fotolabor.de
+    source: https://schwarzweiss-fotolabor.de/en/services-2/
+    services:
+      - devCost: 8
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 9
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 15
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 20
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 21
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 23
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 24
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41

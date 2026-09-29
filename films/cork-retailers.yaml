@@ -1,0 +1,80 @@
+label: Cork Retailers
+authorship: ai
+country: Ireland
+state: Munster
+city: Cork
+lat: 51.8985
+lon: -8.4756
+films:
+  - name: Kodak T-Max 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 18.95
+        storeName: Dev My Film
+        buyLink: https://devmyfilm.ie/products/kodak-t-max-400
+        availability: city
+        state: Munster
+        city: Cork
+  - name: Kodak T-Max P3200
+    boxSpeed: 3200
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 25.95
+        storeName: Dev My Film
+        buyLink: https://devmyfilm.ie/products/kodak-t-max-p3200
+        availability: city
+        state: Munster
+        city: Cork
+  - name: Kodak ColorPlus
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 15.25
+        storeName: Dev My Film
+        buyLink: https://devmyfilm.ie/products/kodak-colorplus
+        availability: city
+        state: Munster
+        city: Cork
+  - name: Lucky C200
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 15.5
+        storeName: Dev My Film
+        buyLink: https://devmyfilm.ie/products/lucky-c200
+        availability: city
+        state: Munster
+        city: Cork
+      - rolls: 10
+        exposures: 36
+        filmCost: 148
+        storeName: Dev My Film
+        buyLink: https://devmyfilm.ie/products/lucky-c200
+        availability: city
+        state: Munster
+        city: Cork

@@ -1,0 +1,23 @@
+label: Munich Labs
+authorship: ai
+country: Germany
+state: Bavaria
+city: Munich
+lat: 48.1351
+lon: 11.582
+labs:
+  - name: Sedan Sieben
+    hidden: false
+    address: Sedanstraße 7, 81667 München, Germany
+    phone: +49 89 448 94 71
+    email: info@sedan-sieben.de
+    website: https://sedan-sieben.de
+    source: https://sedan-sieben.de/Preise_Labor.pdf
+    services:
+      - devCost: 8.7
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW

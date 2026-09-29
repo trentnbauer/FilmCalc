@@ -1,0 +1,535 @@
+label: Prague Retailers
+authorship: ai
+country: Czech Republic
+state: Prague
+city: Prague
+lat: 50.0755
+lon: 14.4378
+films:
+  - name: Kentmere Pan 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 180
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/kentmere-400-135-36/
+        availability: city
+        state: Prague
+        city: Prague
+  - name: Ilford XP2 Super
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    colorType: bw
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 280
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/ilford-xp2-400-135-36-2/
+        availability: city
+        state: Prague
+        city: Prague
+  - name: Ilford HP5 Plus
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 290
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/ilford-hp5-400-135-36/
+        availability: city
+        state: Prague
+        city: Prague
+  - name: Ilford FP4 Plus
+    boxSpeed: 125
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 295
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/ilford-fp4-125-135-36/
+        availability: city
+        state: Prague
+        city: Prague
+  - name: Ilford Delta 3200
+    boxSpeed: 3200
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 320
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/ilford-delta-3200-135-36/
+        availability: city
+        state: Prague
+        city: Prague
+  - name: Kodak T-Max 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 350
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/kodak-t-max-100-135-36/
+        availability: city
+        state: Prague
+        city: Prague
+  - name: Kodak Tri-X 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 350
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/kodak-tri-x-400-135-36/
+        availability: city
+        state: Prague
+        city: Prague
+  - name: Kodak T-Max 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 380
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/kodak-t-max-tmy-400-135-36/
+        availability: city
+        state: Prague
+        city: Prague
+  - name: Kodak Portra 160
+    boxSpeed: 160
+    maxPushPull: 2
+    process: C41
+    format: '120'
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 400
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/kodak-portra-160-120/
+        availability: city
+        state: Prague
+        city: Prague
+  - name: Kodak Gold
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: '120'
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 300
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/kodak-gold-120/
+        availability: city
+        state: Prague
+        city: Prague
+  - name: Kodak Portra 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    format: '120'
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 470
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/kodak-portra-400-120/
+        availability: city
+        state: Prague
+        city: Prague
+  - name: Ilford HP5 Plus
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 240
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/ilford-hp5--400-120/
+        availability: city
+        state: Prague
+        city: Prague
+  - name: Cinestill 800Tungsten
+    boxSpeed: 800
+    maxPushPull: 1
+    process: C41
+    format: '120'
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 490
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/cinestill-800t-120/
+        availability: city
+        state: Prague
+        city: Prague
+  - name: Harman Switch Azure
+    boxSpeed: 125
+    maxPushPull: 1
+    process: C41
+    colorType: speciality
+    format: '120'
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 290
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/harman-switch-azure-125-120/
+        availability: city
+        state: Prague
+        city: Prague
+  - name: Ilford Delta 3200
+    boxSpeed: 3200
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 290
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/ilford-delta-3200-120/
+        availability: city
+        state: Prague
+        city: Prague
+  - name: Ilford FP4 Plus
+    boxSpeed: 125
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 200
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/ilford-fp4-125-120/
+        availability: city
+        state: Prague
+        city: Prague
+  - name: Kentmere Pan 200
+    boxSpeed: 200
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 170
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/kentmere-200-120/
+        availability: city
+        state: Prague
+        city: Prague
+  - name: Kentmere Pan 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 160
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/kentmere-400-120/
+        availability: city
+        state: Prague
+        city: Prague
+  - name: Kodak Ektar 100
+    boxSpeed: 100
+    maxPushPull: 0
+    process: C41
+    format: '120'
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 400
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/kodak-ektar-100-120/
+        availability: city
+        state: Prague
+        city: Prague
+  - name: Kodak T-Max 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 280
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/kodak-t-max-tmy-100-120/
+        availability: city
+        state: Prague
+        city: Prague
+  - name: Kodak T-Max 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 280
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/kodak-t-max-tmy-400-120/
+        availability: city
+        state: Prague
+        city: Prague
+  - name: Kodak Kodacolor 200
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 320
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/kodak-kodacolor-200-135-36/
+        availability: city
+        state: Prague
+        city: Prague
+  - name: Kodak Portra 160
+    boxSpeed: 160
+    maxPushPull: 2
+    process: C41
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 420
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/kodak-portra-160-135-36/
+        availability: city
+        state: Prague
+        city: Prague
+  - name: Kodak Gold
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 300
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/kodak-gold-200-135-36/
+        availability: city
+        state: Prague
+        city: Prague
+      - rolls: 3
+        exposures: 36
+        filmCost: 820
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/kodak-gold-200-135-36-baleni-3ks/
+        availability: city
+        state: Prague
+        city: Prague
+  - name: Kodak UltraMax
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 320
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/kodak-ultramax-400-135-36/
+        availability: city
+        state: Prague
+        city: Prague
+  - name: Cinestill 800Tungsten
+    boxSpeed: 800
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 490
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/cinestill-800t-135-36/
+        availability: city
+        state: Prague
+        city: Prague
+  - name: Fujifilm 400
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 320
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/fujifilm-color-400-135-36/
+        availability: city
+        state: Prague
+        city: Prague
+  - name: Fujifilm 200
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 300
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/fujifilm-ec-eu-200-135-36/
+        availability: city
+        state: Prague
+        city: Prague
+  - name: Harman Phoenix II
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    colorType: speciality
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 290
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/harman-phoenix-ii-200-135-36/
+        availability: city
+        state: Prague
+        city: Prague
+  - name: Kodak ColorPlus
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 300
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/kodak-colorplus-200-135-36/
+        availability: city
+        state: Prague
+        city: Prague
+  - name: Kodak Ektar 100
+    boxSpeed: 100
+    maxPushPull: 0
+    process: C41
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 460
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/kodak-ektar-100-135-36/
+        availability: city
+        state: Prague
+        city: Prague
+  - name: Kodak Pro Image 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 300
+        storeName: Filmstore
+        buyLink: https://www.filmstore.cz/kodak-proimage-100-135-36/
+        availability: city
+        state: Prague
+        city: Prague

@@ -1,0 +1,66 @@
+label: Milan Labs
+authorship: ai
+country: Italy
+state: Lombardy
+city: Milan
+lat: 45.4642
+lon: 9.19
+labs:
+  - name: FCF Lab
+    hidden: false
+    address: Via Friuli 72, 20135 Milano, Italy
+    phone: +39 02 5453512
+    email: fcf@fcf.it
+    website: https://www.fcf.it
+    source: https://www.fcf.it/index.php?cms_rewrite=fcfscansioniesviluppopellicolefotografiche&controller=cms
+    services:
+      - devCost: 9.5
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 14
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 16
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 19.5
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 16
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 18
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 21
+        turnaroundTime: longer
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW

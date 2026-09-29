@@ -1,0 +1,70 @@
+label: Graz Retailers
+authorship: ai
+country: Austria
+state: Styria
+city: Graz
+lat: 47.0707
+lon: 15.4395
+films:
+  - name: Kodak Portra 800
+    boxSpeed: 800
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 21.0
+        storeName: Blendpunkt Lab
+        buyLink: https://blendpunkt-lab.at/shop/produkt/kodak-portra-800-120/
+        availability: city
+        state: Styria
+        city: Graz
+  - name: Ilford HP5 Plus
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 9.99
+        storeName: Blendpunkt Lab
+        buyLink: https://blendpunkt-lab.at/shop/produkt/ilford-hp5-120/
+        availability: city
+        state: Styria
+        city: Graz
+  - name: Kodak T-Max 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 9.99
+        storeName: Blendpunkt Lab
+        buyLink: https://blendpunkt-lab.at/shop/produkt/kodak-tmax-400/
+        availability: city
+        state: Styria
+        city: Graz
+  - name: Fomapan 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 5.99
+        storeName: Blendpunkt Lab
+        buyLink: https://blendpunkt-lab.at/shop/produkt/fomapan-400-120/
+        availability: city
+        state: Styria
+        city: Graz

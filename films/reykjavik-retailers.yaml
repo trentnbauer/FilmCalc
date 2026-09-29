@@ -1,0 +1,217 @@
+label: Reykjavik Retailers
+authorship: ai
+country: Iceland
+state: Capital Region
+city: Reykjavik
+lat: 64.1466
+lon: -21.9426
+films:
+  - name: Cinestill 800Tungsten
+    boxSpeed: 800
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 4750
+        storeName: Ljósmyndavörur
+        buyLink: https://ljosmyndavorur.is/en/products/cinestill-800-tungsten-135-36
+        availability: city
+        state: Capital Region
+        city: Reykjavik
+  - name: Cinestill 800Tungsten
+    boxSpeed: 800
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 4750
+        storeName: Ljósmyndavörur
+        buyLink: https://ljosmyndavorur.is/en/products/cinestill-800-tungsten-medium-format-120
+        availability: city
+        state: Capital Region
+        city: Reykjavik
+  - name: Rollei Retro 400S
+    boxSpeed: 400
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 2060
+        storeName: Ljósmyndavörur
+        buyLink: https://ljosmyndavorur.is/en/products/rollei-retro-135-36-400-svart-hvit
+        availability: city
+        state: Capital Region
+        city: Reykjavik
+  - name: Rollei RPX 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 2090
+        storeName: Ljósmyndavörur
+        buyLink: https://ljosmyndavorur.is/en/products/rollei-rpx-135-36-100-svart-hvit
+        availability: city
+        state: Capital Region
+        city: Reykjavik
+  - name: Rollei RPX 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 1990
+        storeName: Ljósmyndavörur
+        buyLink: https://ljosmyndavorur.is/en/products/rollei-120-rpx-100-asa-svart-hvit
+        availability: city
+        state: Capital Region
+        city: Reykjavik
+  - name: Rollei RPX 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 2090
+        storeName: Ljósmyndavörur
+        buyLink: https://ljosmyndavorur.is/en/products/rollei-rpx-135-36-400-svart-hvit
+        availability: city
+        state: Capital Region
+        city: Reykjavik
+  - name: Rollei RPX 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 2190
+        storeName: Ljósmyndavörur
+        buyLink: https://ljosmyndavorur.is/en/products/rollei-120-rpx-400-asa-svart-hvit
+        availability: city
+        state: Capital Region
+        city: Reykjavik
+  - name: Fujifilm Neopan Acros 100 II
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 2890
+        storeName: Ljósmyndavörur
+        buyLink: https://ljosmyndavorur.is/en/products/fujifilm-neopan-acros-100-ii-135-36-exp
+        availability: city
+        state: Capital Region
+        city: Reykjavik
+  - name: Fujifilm 200
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 2690
+        storeName: Ljósmyndavörur
+        buyLink: https://ljosmyndavorur.is/en/products/fujifilm-135-36-c200-asa
+        availability: city
+        state: Capital Region
+        city: Reykjavik
+  - name: Fujifilm 400
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 3190
+        storeName: Ljósmyndavörur
+        buyLink: https://ljosmyndavorur.is/en/products/fujifilm-13536-400-asa
+        availability: city
+        state: Capital Region
+        city: Reykjavik
+  - name: Ilford XP2 Super
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    colorType: bw
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 3250
+        storeName: Ljósmyndavörur
+        buyLink: https://ljosmyndavorur.is/en/products/ilford-xp2-135-36
+        availability: city
+        state: Capital Region
+        city: Reykjavik
+  - name: Ilford XP2 Super
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    colorType: bw
+    devTimeSec: 195
+    devTempC: 38
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 2690
+        storeName: Ljósmyndavörur
+        buyLink: https://ljosmyndavorur.is/en/products/ilford-xp2-120
+        availability: city
+        state: Capital Region
+        city: Reykjavik
+  - name: Ilford HP5 Plus
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 2650
+        storeName: Ljósmyndavörur
+        buyLink: https://ljosmyndavorur.is/en/products/ilford-hp5-135-36
+        availability: city
+        state: Capital Region
+        city: Reykjavik

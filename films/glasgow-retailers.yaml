@@ -1,0 +1,201 @@
+label: Glasgow Retailers
+authorship: ai
+country: United Kingdom
+state: Scotland
+city: Glasgow
+lat: 55.8642
+lon: -4.2518
+films:
+  - name: Cinestill 50Daylight
+    boxSpeed: 50
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 18
+        storeName: Gulabi
+        buyLink: https://store.gulabi.co.uk/products/cinestill-50d
+        availability: city
+        state: Scotland
+        city: Glasgow
+  - name: Kodak Portra 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 18
+        storeName: Gulabi
+        buyLink: https://store.gulabi.co.uk/products/kodak-portra-400
+        availability: city
+        state: Scotland
+        city: Glasgow
+  - name: Kodak Portra 160
+    boxSpeed: 160
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 15
+        storeName: Gulabi
+        buyLink: https://store.gulabi.co.uk/products/kodak-portra-400-kh4tw
+        availability: city
+        state: Scotland
+        city: Glasgow
+  - name: Kodak Ektar 100
+    boxSpeed: 100
+    maxPushPull: 0
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 17
+        storeName: Gulabi
+        buyLink: https://store.gulabi.co.uk/products/kodak-ektar
+        availability: city
+        state: Scotland
+        city: Glasgow
+  - name: Ilford Delta 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 8
+        storeName: Gulabi
+        buyLink: https://store.gulabi.co.uk/products/ilford-delta-100
+        availability: city
+        state: Scotland
+        city: Glasgow
+  - name: Ilford Delta 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 9
+        storeName: Gulabi
+        buyLink: https://store.gulabi.co.uk/products/ilford-delta-400
+        availability: city
+        state: Scotland
+        city: Glasgow
+  - name: Ilford Delta 3200
+    boxSpeed: 3200
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 10
+        storeName: Gulabi
+        buyLink: https://store.gulabi.co.uk/products/ilford-delta-3200
+        availability: city
+        state: Scotland
+        city: Glasgow
+  - name: Ilford XP2 Super
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    colorType: bw
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 9
+        storeName: Gulabi
+        buyLink: https://store.gulabi.co.uk/products/ilford-xp2
+        availability: city
+        state: Scotland
+        city: Glasgow
+  - name: Ilford FP4 Plus
+    boxSpeed: 125
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 7
+        storeName: Gulabi
+        buyLink: https://store.gulabi.co.uk/products/ilford-fp4
+        availability: city
+        state: Scotland
+        city: Glasgow
+  - name: Ilford HP5 Plus
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 7
+        storeName: Gulabi
+        buyLink: https://store.gulabi.co.uk/products/ilford-hp5
+        availability: city
+        state: Scotland
+        city: Glasgow
+  - name: Cinestill 800Tungsten
+    boxSpeed: 800
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 18
+        storeName: Gulabi
+        buyLink: https://store.gulabi.co.uk/products/cinestill-800t
+        availability: city
+        state: Scotland
+        city: Glasgow
+  - name: Kodak Gold
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 10
+        storeName: Gulabi
+        buyLink: https://store.gulabi.co.uk/products/kodak-gold-200
+        availability: city
+        state: Scotland
+        city: Glasgow

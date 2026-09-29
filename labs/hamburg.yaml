@@ -1,0 +1,105 @@
+label: Hamburg Labs
+authorship: ai
+country: Germany
+state: Hamburg
+city: Hamburg
+lat: 53.5511
+lon: 9.9937
+labs:
+  - name: Spieker Film Lab
+    hidden: false
+    address: Humboldtstraße 128, 22083 Hamburg, Germany
+    email: info@spiekerfilmlab.de
+    website: https://www.spiekerfilmlab.de
+    source: https://www.spiekerfilmlab.de/shop/p/filmentwicklung-amp-scan
+    services:
+      - devCost: 7.5
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 11
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 12.5
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 16
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 15
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 18
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 19
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - BW
+  - name: Khrome
+    hidden: false
+    address: Kaiser-Wilhelm-Straße 75-77, 20355 Hamburg, Germany
+    phone: +49 40 81991084
+    website: https://khrome.de
+    source: https://khrome.de/products/35mm-c-41-aura
+    services:
+      - devCost: 15
+        pushPullCost: 3
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 20
+        pushPullCost: 3
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 17
+        pushPullCost: 3
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 22
+        pushPullCost: 3
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - BW

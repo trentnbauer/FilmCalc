@@ -1,0 +1,42 @@
+label: Hamburg Retailers
+authorship: ai
+country: Germany
+state: Hamburg
+city: Hamburg
+lat: 53.5511
+lon: 9.9937
+films:
+  - name: Kodak Portra 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 5
+        exposures: 36
+        filmCost: 105.0
+        storeName: Spieker Film Lab
+        buyLink: https://www.spiekerfilmlab.de/shop/p/wpmc5pqx1zr973xjepqj63h5vue4pw
+        availability: city
+        state: Hamburg
+        city: Hamburg
+  - name: Kodak Pro Image 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 5
+        exposures: 36
+        filmCost: 52.0
+        storeName: Spieker Film Lab
+        buyLink: https://www.spiekerfilmlab.de/shop/p/wpmc5pqx1zr973xjepqj63h5vue4pw-63s5b
+        availability: city
+        state: Hamburg
+        city: Hamburg

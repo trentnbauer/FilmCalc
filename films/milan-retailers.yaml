@@ -1,0 +1,547 @@
+label: Milan Retailers
+authorship: ai
+country: Italy
+state: Lombardy
+city: Milan
+lat: 45.4642
+lon: 9.19
+films:
+  - name: Kodak Portra 160
+    boxSpeed: 160
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 19
+        storeName: FCF
+        buyLink: https://www.fcf.it/kodak-portra-160-135-36-160-iso-rullino-singolo.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Kodak Portra 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 26
+        storeName: FCF
+        buyLink: https://www.fcf.it/kodak-portra-400-135-36-400-iso-rullino-singolo.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Kodak Portra 800
+    boxSpeed: 800
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 28
+        storeName: FCF
+        buyLink: https://www.fcf.it/kodak-portra-800-135-36-800-iso-rullino-singolo.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Kodak Ektar 100
+    boxSpeed: 100
+    maxPushPull: 0
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 22.5
+        storeName: FCF
+        buyLink: https://www.fcf.it/kodak-ektar-100-135-36-100-iso-rullino-singolo.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Kodak ColorPlus
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 12
+        storeName: FCF
+        buyLink: https://www.fcf.it/kodak-colorplus-200-135-36-200-iso.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Kodak Pro Image 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 12
+        storeName: FCF
+        buyLink: https://www.fcf.it/kodak-pro-image-100-13536-rullino-singolo.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Kodak UltraMax
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 3
+        exposures: 36
+        filmCost: 42
+        storeName: FCF
+        buyLink: https://www.fcf.it/kodak-ultramax-400-135-36-400-iso-3-rullini.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Fujifilm 200
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 13
+        storeName: FCF
+        buyLink: https://www.fcf.it/fujicolor-200-135-36-200-iso-rullino-singolo.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Cinestill 800Tungsten
+    boxSpeed: 800
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 26
+        storeName: FCF
+        buyLink: https://www.fcf.it/cinestill-c-41-800-tungsten-135-36-rullino-singolo.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Kodak Tri-X 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 14
+        storeName: FCF
+        buyLink: https://www.fcf.it/kodak-tri-x-400-135-36-400-iso-rullino-singolo.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Kodak T-Max 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 16
+        storeName: FCF
+        buyLink: https://www.fcf.it/kodak-t-max-100-135-36-100-iso-rullino-singolo.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Ilford HP5 Plus
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 15
+        storeName: FCF
+        buyLink: https://www.fcf.it/ilford-hp5-plus-135-36-400-iso-rullino-singolo.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Ilford FP4 Plus
+    boxSpeed: 125
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 15
+        storeName: FCF
+        buyLink: https://www.fcf.it/ilford-fp4-plus-135-36-125-iso-rullino-singolo.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Ilford Delta 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 17
+        storeName: FCF
+        buyLink: https://www.fcf.it/ilford-delta-100-135-36-100-iso-rullino-singolo.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Ilford Delta 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 17
+        storeName: FCF
+        buyLink: https://www.fcf.it/ilford-delta-400-135-36-400-iso-rullino-singolo.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Ilford Delta 3200
+    boxSpeed: 3200
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 17
+        storeName: FCF
+        buyLink: https://www.fcf.it/ilford-dp3200-delta-3200-135-36-rullino-singolo.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Ilford XP2 Super
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    colorType: bw
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 15.2
+        storeName: FCF
+        buyLink: https://www.fcf.it/ilford-xp2s-400-135-36-400-iso-rullino-singolo.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Kentmere Pan 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 9
+        storeName: FCF
+        buyLink: https://www.fcf.it/kentmere-100-135-36-100-iso-rullino-singolo.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Kentmere Pan 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 9
+        storeName: FCF
+        buyLink: https://www.fcf.it/kentmere-400-135-36-400-iso-rullino-singolo.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Fomapan Classic 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 7.5
+        storeName: FCF
+        buyLink: https://www.fcf.it/fomapan-100-classic-135-36-rullino-singolo.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Fomapan 200
+    boxSpeed: 200
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 9.5
+        storeName: FCF
+        buyLink: https://www.fcf.it/fomapan-200-creative-135-36-200-iso-rullino-singolo.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Rollei RPX 25
+    boxSpeed: 25
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 8
+        storeName: FCF
+        buyLink: https://www.fcf.it/rollei-rpx-25-135-36-25-iso-rullino-singolo.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Rollei RPX 400
+    boxSpeed: 400
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 10
+        storeName: FCF
+        buyLink: https://www.fcf.it/rollei-rpx-400-b-n-135-36-rullino-singolo.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Kodak Portra 160
+    boxSpeed: 160
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 19
+        storeName: FCF
+        buyLink: https://www.fcf.it/kodak-portra-160-120-160-iso-rullino-singolo.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Kodak Portra 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 23.5
+        storeName: FCF
+        buyLink: https://www.fcf.it/kodak-portra-400-120-400-iso-rullino-singolo.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Kodak Portra 800
+    boxSpeed: 800
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 28
+        storeName: FCF
+        buyLink: https://www.fcf.it/kodak-portra-800-120-800-iso-rullino-singolo.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Cinestill 800Tungsten
+    boxSpeed: 800
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 23.5
+        storeName: FCF
+        buyLink: https://www.fcf.it/cinestill-c-41-800-tungsten-120-rullino-singolo.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Kodak Tri-X 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 13.5
+        storeName: FCF
+        buyLink: https://www.fcf.it/kodak-tri-x-400-120-400-iso-rullino-singolo.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Ilford HP5 Plus
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 12
+        storeName: FCF
+        buyLink: https://www.fcf.it/ilford-hp5-plus-120-400-iso-rullino-signolo.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Ilford FP4 Plus
+    boxSpeed: 125
+    maxPushPull: 1
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 12
+        storeName: FCF
+        buyLink: https://www.fcf.it/ilford-fp4-plus-120-125-iso-rullino-singolo.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Ilford Delta 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 14
+        storeName: FCF
+        buyLink: https://www.fcf.it/ilford-delta-400-120-400-iso-rullino-singolo.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Fomapan 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 7.5
+        storeName: FCF
+        buyLink: https://www.fcf.it/fomapan-100-120-rullino-singolo.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Rollei RPX 400
+    boxSpeed: 400
+    maxPushPull: 1
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 10
+        storeName: FCF
+        buyLink: https://www.fcf.it/rollei-rpx-400-120-400-iso-rullino-singolo.html
+        availability: city
+        state: Lombardy
+        city: Milan
+  - name: Rollei Superpan 200
+    boxSpeed: 200
+    maxPushPull: 1
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 10.5
+        storeName: FCF
+        buyLink: https://www.fcf.it/rollei-superpan-200-120-200-iso-rullino-singolo.html
+        availability: city
+        state: Lombardy
+        city: Milan

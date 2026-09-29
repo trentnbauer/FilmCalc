@@ -1,0 +1,255 @@
+label: Ljubljana Labs
+authorship: ai
+country: Slovenia
+state: Central Slovenia
+city: Ljubljana
+lat: 46.0569
+lon: 14.5058
+labs:
+  - name: Lux Pictura
+    hidden: false
+    address: Metelkova ulica 7/a, 1000 Ljubljana, Slovenia
+    email: info@luxpictura.si
+    website: https://luxpictura.si
+    source: https://luxpictura.si/en/price-list/
+    services:
+      - devCost: 4.5
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+        pushPullCost: 2
+        pushPullType: flat
+      - devCost: 5
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+        pushPullCost: 2
+        pushPullType: flat
+      - devCost: 7.5
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+        pushPullCost: 2
+        pushPullType: flat
+      - devCost: 8
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+        pushPullCost: 2
+        pushPullType: flat
+      - devCost: 9.5
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+        pushPullCost: 2
+        pushPullType: flat
+      - devCost: 10
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+        pushPullCost: 2
+        pushPullType: flat
+      - devCost: 10
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+        pushPullCost: 2
+        pushPullType: flat
+      - devCost: 16
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+        pushPullCost: 2
+        pushPullType: flat
+      - devCost: 22
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+        pushPullCost: 2
+        pushPullType: flat
+      - devCost: 25
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+        pushPullCost: 2
+        pushPullType: flat
+      - devCost: 18
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+        pushPullCost: 2
+        pushPullType: flat
+      - devCost: 24
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+        pushPullCost: 2
+        pushPullType: flat
+      - devCost: 27
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+        pushPullCost: 2
+        pushPullType: flat
+      - devCost: 14
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+        pushPullCost: 2
+        pushPullType: flat
+      - devCost: 20
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+        pushPullCost: 2
+        pushPullType: flat
+      - devCost: 25
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+        pushPullCost: 2
+        pushPullType: flat
+      - devCost: 28
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+        pushPullCost: 2
+        pushPullType: flat
+      - devCost: 22
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+        pushPullCost: 2
+        pushPullType: flat
+      - devCost: 27
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+        pushPullCost: 2
+        pushPullType: flat
+      - devCost: 30
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+        pushPullCost: 2
+        pushPullType: flat
+      - devCost: 16
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+        pushPullCost: 2
+        pushPullType: flat
+      - devCost: 22
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+        pushPullCost: 2
+        pushPullType: flat
+      - devCost: 27
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+        pushPullCost: 2
+        pushPullType: flat
+      - devCost: 30
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+        pushPullCost: 2
+        pushPullType: flat
+      - devCost: 24
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+        pushPullCost: 2
+        pushPullType: flat
+      - devCost: 29
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+        pushPullCost: 2
+        pushPullType: flat
+      - devCost: 32
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+        pushPullCost: 2
+        pushPullType: flat
+      - devCost: 12
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+        pushPullCost: 2
+        pushPullType: flat
+      - devCost: 16
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+        pushPullCost: 2
+        pushPullType: flat
+      - devCost: 18
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+        pushPullCost: 2
+        pushPullType: flat

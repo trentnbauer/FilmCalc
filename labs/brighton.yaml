@@ -1,0 +1,201 @@
+label: Brighton Labs
+authorship: ai
+country: United Kingdom
+state: England
+city: Brighton
+lat: 50.8225
+lon: -0.1372
+labs:
+  - name: Brighton Film Lab
+    hidden: false
+    address: 123 St James's Street, Brighton BN2 1TH, United Kingdom
+    phone: +44 7392 431555
+    email: hello@brightonfilmlab.com
+    website: https://brightonfilmlab.com
+    source: https://brightonfilmlab.com/price-list/
+    services:
+      - devCost: 6
+        pushPullCost: 2.5
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 2.5
+        processes:
+          - C41
+      - devCost: 13
+        pushPullCost: 2.5
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 2.5
+        processes:
+          - C41
+      - devCost: 18
+        pushPullCost: 2.5
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 2.5
+        processes:
+          - C41
+      - devCost: 6
+        pushPullCost: 0
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 2.5
+        processes:
+          - BW
+      - devCost: 13
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 2.5
+        processes:
+          - BW
+      - devCost: 18
+        pushPullCost: 0
+        pushPullType: flat
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 2.5
+        processes:
+          - BW
+      - devCost: 13
+        pushPullCost: 2.5
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 2.5
+        processes:
+          - E6
+  - name: Picture This Film Lab
+    hidden: false
+    address: 67 Trafalgar Street, Brighton BN1 4EB, United Kingdom
+    website: https://picturethisfilmlab.com
+    source: https://picturethisfilmlab.com/pages/film-developing-in-brighton
+    services:
+      - devCost: 7
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 8
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 9
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 14
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 17
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 16
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 19
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 20
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 22
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 16
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 19
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 18
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 21
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 22
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 24
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+          - BW

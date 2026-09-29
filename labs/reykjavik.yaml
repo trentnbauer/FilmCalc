@@ -1,0 +1,37 @@
+label: Reykjavik Labs
+authorship: ai
+country: Iceland
+state: Capital Region
+city: Reykjavik
+lat: 64.1466
+lon: -21.9426
+labs:
+  - name: Ljósmyndavörur
+    hidden: false
+    address: Skipholti 31, 105 Reykjavík, Iceland
+    phone: +354 568 0450
+    email: verslun@ljosmyndavorur.is
+    website: https://ljosmyndavorur.is
+    source: https://ljosmyndavorur.is/en/pages/filmuframkollun
+    services:
+      - devCost: 1550
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 1750
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 2490
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41

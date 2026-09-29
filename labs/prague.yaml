@@ -1,0 +1,253 @@
+label: Prague Labs
+authorship: ai
+country: Czech Republic
+state: Prague
+city: Prague
+lat: 50.0755
+lon: 14.4378
+labs:
+  - name: Filmstore
+    hidden: false
+    address: Národní obrany 457/4, 160 00 Praha 6, Czech Republic
+    phone: +420 775 570 733
+    email: hello@filmstore.cz
+    website: https://www.filmstore.cz
+    source: https://www.filmstore.cz/cenik/
+    services:
+      - devCost: 50
+        pushPullCost: 20
+        pushPullType: per_stop
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 200
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 300
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 80
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 400
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 200
+        pushPullCost: 50
+        pushPullType: per_stop
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - ECN2
+      - devCost: 300
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - ECN2
+      - devCost: 400
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - ECN2
+      - devCost: 150
+        pushPullCost: 50
+        pushPullType: per_stop
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 300
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 400
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - BW
+  - name: FotoŠkoda
+    hidden: false
+    address: Vodičkova 37, 110 00 Praha 1, Czech Republic
+    phone: +420 222 929 039
+    email: fotosluzby@fotoskoda.cz
+    website: https://www.fotoskoda.cz
+    source: https://www.fotoskoda.cz/vyvolani-barevne-negativy/
+    services:
+      - devCost: 129
+        pushPullCost: 50
+        pushPullType: per_stop
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 199
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 299
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 499
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 349
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 599
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 899
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 160
+        pushPullCost: 50
+        pushPullType: per_stop
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 299
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 399
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 499
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 549
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 749
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 949
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - BW
+  - name: Polagraph
+    hidden: false
+    address: Husinecká 14, 130 00 Praha 3, Czech Republic
+    phone: +420 774 966 646
+    email: shop@polagraph.cz
+    website: https://www.polagraph.cz
+    source: https://www.polagraph.cz/wp-content/uploads/2026/08/cenik_vyvolavani_polagraph_2026.pdf
+    services:
+      - devCost: 130
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 129
+        processes:
+          - C41
+          - BW
+        pushPullCost: 100
+        pushPullType: flat
+      - devCost: 230
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        mailBackCost: 129
+        processes:
+          - C41
+          - BW
+        pushPullCost: 100
+        pushPullType: flat
+      - devCost: 290
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: true
+        noPushPull: false
+        mailBackCost: 129
+        processes:
+          - C41
+          - BW
+        pushPullCost: 100
+        pushPullType: flat
+      - devCost: 490
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        mailBackCost: 129
+        processes:
+          - C41
+          - BW
+        pushPullCost: 100
+        pushPullType: flat

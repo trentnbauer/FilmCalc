@@ -1,0 +1,22 @@
+label: Zagreb Labs
+authorship: ai
+country: Croatia
+state: City of Zagreb
+city: Zagreb
+lat: 45.815
+lon: 15.9819
+labs:
+  - name: Foto Studio Duga
+    hidden: false
+    address: Ozaljska ulica 11, 10000 Zagreb, Croatia
+    phone: +385 1 3097 882
+    email: fotoduga@fotoduga.hr
+    website: http://www.fotoduga.hr
+    source: http://www.fotoduga.hr/hr/?page_id=24
+    services:
+      - devCost: 15
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW

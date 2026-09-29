@@ -1,0 +1,102 @@
+label: Budapest Labs
+authorship: ai
+country: Hungary
+state: Budapest
+city: Budapest
+lat: 47.4979
+lon: 19.0402
+labs:
+  - name: Café Analóg
+    hidden: false
+    address: Kazinczy utca 35, 1075 Budapest, Hungary
+    phone: +36 1 445 2560
+    email: hello@cafeanalog.hu
+    website: https://cafeanalog.hu
+    source: https://cafeanalog.hu/labor-arlista-67
+    services:
+      - devCost: 1800
+        pushPullCost: 300
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 2000
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 2500
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - ECN2
+      - devCost: 3990
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 3990
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 4690
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+  - name: Digital11
+    hidden: false
+    address: Városmajor utca 23, 1122 Budapest, Hungary
+    phone: +36 70 746 4262
+    email: info@digital11.hu
+    website: https://www.digital11.hu
+    source: https://www.digital11.hu/film-elohivas
+    services:
+      - devCost: 2000
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 2200
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+          - ECN2
+      - devCost: 3600
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+  - name: Fényképlabor.hu
+    hidden: false
+    address: Kőrösi Csoma Sándor út 40, 1102 Budapest, Hungary
+    phone: +36 30 436 0484
+    email: info@fenykeplabor.hu
+    website: https://fenykeplabor.hu
+    source: https://fenykeplabor.hu/film-elohivas-film-kidolgozas-negativ-kep-scanneles
+    services:
+      - devCost: 1990
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 2990
+        turnaroundTime: longer
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW

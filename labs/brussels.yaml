@@ -1,0 +1,121 @@
+label: Brussels Labs
+authorship: ai
+country: Belgium
+state: Brussels-Capital Region
+city: Brussels
+lat: 50.8503
+lon: 4.3517
+labs:
+  - name: Studio Francine
+    hidden: false
+    address: Boulevard du Jardin Botanique 41, 1000 Brussels, Belgium
+    phone: +32 2 218 20 20
+    website: https://www.studiofrancine.be
+    source: https://www.studiofrancine.be/impressions-developpement
+    services:
+      - devCost: 6.5
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 10
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 7
+        pushPullCost: 5
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 11
+        pushPullCost: 5
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 8
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 10
+        pushPullCost: 7
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 12.5
+        pushPullCost: 7
+        pushPullType: flat
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+  - name: Mori Film Lab
+    hidden: false
+    address: Rue du Croissant 66B, 1190 Forest, Brussels, Belgium
+    email: info@morifilmlab.com
+    website: https://morifilmlab.com
+    source: https://morifilmlab.com/pages/info-and-pricing
+    services:
+      - devCost: 6
+        pushPullCost: 2
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 8
+        pushPullCost: 2
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 9.5
+        pushPullCost: 2
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 13
+        pushPullCost: 2
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 14
+        pushPullCost: 2
+        pushPullType: per_stop
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW

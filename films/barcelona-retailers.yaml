@@ -1,0 +1,53 @@
+label: Barcelona Retailers
+authorship: ai
+country: Spain
+state: Catalonia
+city: Barcelona
+lat: 41.3874
+lon: 2.1686
+films:
+  - name: Ilford Delta 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 13.5
+        storeName: REVELAB
+        buyLink: https://www.revelab.es/comprar/ilford-delta-100-professional-135-35mm/
+        availability: city
+        state: Catalonia
+        city: Barcelona
+  - name: Ilford FP4 Plus
+    boxSpeed: 125
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 24
+        filmCost: 10
+        storeName: REVELAB
+        buyLink: https://www.revelab.es/comprar/ilford-fp4-plus-125-35mm/
+        availability: city
+        state: Catalonia
+        city: Barcelona
+  - name: Kentmere Pan 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 24
+        filmCost: 7
+        storeName: REVELAB
+        buyLink: https://www.revelab.es/comprar/kentmere-100-35mm/
+        availability: city
+        state: Catalonia
+        city: Barcelona

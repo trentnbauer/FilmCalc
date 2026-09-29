@@ -1,0 +1,92 @@
+label: Graz Labs
+authorship: ai
+country: Austria
+state: Styria
+city: Graz
+lat: 47.0707
+lon: 15.4395
+labs:
+  - name: Blendpunkt Lab
+    hidden: false
+    address: Hans-Resel-Gasse 20, 8020 Graz, Austria
+    phone: +43 664 157 94 89
+    email: fotolabor@blendpunkt.at
+    website: https://blendpunkt-lab.at
+    source: https://blendpunkt-lab.at/shop/produkt/c41-filmentwicklung/
+    services:
+      - devCost: 5.99
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 6.99
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 16.99
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+  - name: Digital Camera Graz
+    hidden: false
+    address: Jakominiplatz 5, 8010 Graz, Austria
+    phone: +43 316 82 99 00
+    website: https://www.digitalcameragraz.at
+    source: https://www.digitalcameragraz.at/service/analog-service/
+    services:
+      - devCost: 9.9
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 12.9
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 12.9
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 15.9
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 14.9
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 19.9
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 19.9
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 22.9
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW

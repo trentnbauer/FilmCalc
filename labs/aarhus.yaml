@@ -1,0 +1,28 @@
+label: Aarhus Labs
+authorship: ai
+country: Denmark
+state: Central Denmark Region
+city: Aarhus
+lat: 56.1629
+lon: 10.2039
+labs:
+  - name: PhotoCare Aarhus
+    hidden: false
+    address: Otte Rudsgade 98, 8200 Aarhus N, Denmark
+    phone: +45 86 25 32 11
+    email: aarhus@photocare.dk
+    website: https://photocare.dk/pages/aarhus
+    source: https://photocare.dk/pages/aarhus
+    services:
+      - devCost: 99
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 150
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41

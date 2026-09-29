@@ -1,0 +1,75 @@
+label: Leeds Labs
+authorship: ai
+country: United Kingdom
+state: England
+city: Leeds
+lat: 53.8008
+lon: -1.5491
+labs:
+  - name: Take It Easy Lab
+    hidden: false
+    address: 30-34 Aire Street, Leeds LS1 4HT, United Kingdom
+    website: https://takeiteasylab.com
+    source: https://takeiteasylab.com/products/colour-c41-film-developing-inc-disposables
+    services:
+      - devCost: 5
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 8
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 11
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 14
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 16
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 8
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 11
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 14
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 17
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 19
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - BW
+    email: hello@takeiteasylab.com

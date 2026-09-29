@@ -1,0 +1,46 @@
+label: Thessaloniki Labs
+authorship: ai
+country: Greece
+state: Central Macedonia
+city: Thessaloniki
+lat: 40.6401
+lon: 22.9444
+labs:
+  - name: Technofilm
+    hidden: false
+    address: Mitropoleos 87, 546 22 Thessaloniki, Greece
+    phone: +30 2310 279537
+    email: info@technofilm-eshop.com
+    website: https://technofilm-eshop.com
+    source: https://technofilm-eshop.com/en/pricelist/
+    services:
+      - devCost: 5
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 8
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 8
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 9
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 15
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
