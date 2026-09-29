@@ -946,7 +946,7 @@ async function importPresetFiles(filmFiles, labFiles) {
 const C = {
     bg: '#08090a', shell: '#0e0f11', panel: '#16181b', panel2: '#131518', field: '#0e0f11',
     border: '#26292e', border2: '#2f333a', border3: '#3a3e45',
-    text: '#eceef1', text2: '#c8ccd2', sub: '#9aa0a8', faint: '#6a7078',
+    text: '#eceef1', text2: '#c8ccd2', sub: '#9aa0a8', faint: '#8a9098',
     acc: '#ff7a2f', accBg: '#241a13', accBorder: '#5a3a1c',
     blue: '#5fa8d3', green: '#8fbf6a', red: '#ef6a54', redBg: '#1c1210', redBorder: '#5a2420'
 };
@@ -1439,7 +1439,7 @@ function depthLadder(vals, size) {
     const tall = size === 'lg';
     return `<div style="display:flex;gap:${tall ? '6px' : '5px'}">${vals.ladder.map((row, i) => `<button type="button" onclick="App.depthSetAp(${DEPTH_APS[i]})" style="flex:1;min-width:0;padding:${tall ? '10px 0 9px' : '8px 0'};border-radius:${tall ? '8px' : '7px'};cursor:pointer;font:inherit;background:${row.bg};border:1px solid ${row.border};box-shadow:${row.shadow};animation:${row.anim};display:flex;flex-direction:column;align-items:center;gap:${tall ? '5px' : '4px'}">
 <span style="font-size:${tall ? '14px' : '11px'};font-weight:700;color:${row.fg}">${tall ? escapeHtml(row.label) : escapeHtml(row.short)}</span>
-${tall ? `<span style="font-size:10px;color:#6a7078">${escapeHtml(row.total)}</span>` : ''}
+${tall ? `<span style="font-size:10px;color:${C.faint}">${escapeHtml(row.total)}</span>` : ''}
 <span style="width:62%;height:3px;border-radius:2px;background:${row.bar}"></span>
 </button>`).join('')}</div>`;
 }
