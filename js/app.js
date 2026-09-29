@@ -2499,7 +2499,12 @@ function viewRollDetails() {
     const stops = pushStops();
     const overLimit = Math.abs(stops) > pushLimit;
     const shotIso = Math.round((parseInt(state.boxSpeed, 10) || 0) * Math.pow(2, stops));
-    const cameraDisabled = state.format !== '35mm';
+    const frameTable = frameTableFor(state.format);
+    // 120/220/127 pick a back (6x7, 6x9, ...) instead of 35mm's frame style;
+    // a stale stored key from another format falls back to the table's first,
+    // matching exposuresPerRoll().
+    const camKey = frameTable ? (state.frame120 in frameTable ? state.frame120 : Object.keys(frameTable)[0]) : state.frame35;
+    const cameraDisabled = !frameTable && state.format !== '35mm';
     const exp = exposuresPerRoll();
 
     const body = `<div style="display:flex;flex-direction:column;gap:14px">
@@ -2523,7 +2528,9 @@ ${overLimit ? `<svg style="width:13px;height:13px;flex:none;color:${C.red}" fill
 <button type="button" onclick="App.incField('pushPull',1,-3,3)" aria-label="${escapeHtml(t('v3OneStopMore'))}" style="width:38px;height:36px;flex:none;border-radius:6px;background:transparent;border:0;color:${C.text};font:inherit;font-size:19px;font-weight:600;line-height:1;cursor:pointer">+</button>
 </div>
 </div>
-<label style="flex:1;display:block"><div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v3CameraLabel'))}</div><select onchange="App.setField('frame35',this.value)" ${cameraDisabled ? 'disabled' : ''} aria-label="${escapeHtml(t('v3CameraTypeLabel'))}" style="width:100%;box-sizing:border-box;height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};opacity:${cameraDisabled ? '.45' : '1'};cursor:${cameraDisabled ? 'not-allowed' : 'pointer'}">${Object.keys(FRAME35).map(k => `<option value="${k}" ${state.frame35 === k ? 'selected' : ''}>${escapeHtml(t(FRAME35_KEY[k]))}</option>`).join('')}</select></label>
+<label style="flex:1;display:block"><div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v3CameraLabel'))}</div><select onchange="App.setField('${frameTable ? 'frame120' : 'frame35'}',this.value)" ${cameraDisabled ? 'disabled' : ''} aria-label="${escapeHtml(t('v3CameraTypeLabel'))}" style="width:100%;box-sizing:border-box;height:44px;background:${C.field};border:1px solid ${C.border};border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:${C.text};opacity:${cameraDisabled ? '.45' : '1'};cursor:${cameraDisabled ? 'not-allowed' : 'pointer'}">${frameTable
+    ? Object.keys(frameTable).map(k => `<option value="${k}" ${camKey === k ? 'selected' : ''}>${escapeHtml(k.replace('x', '×') + ' · ' + t('v3ExpCount', { n: frameTable[k] }))}</option>`).join('')
+    : Object.keys(FRAME35).map(k => `<option value="${k}" ${camKey === k ? 'selected' : ''}>${escapeHtml(t(FRAME35_KEY[k]))}</option>`).join('')}</select></label>
 </div>
 <div style="font-size:12px;line-height:1.5;color:${overLimit ? C.red : C.faint}">${overLimit ? escapeHtml(t(pushLimit === 1 ? 'v3PushOverLimitOne' : 'v3PushOverLimit', { iso: shotIso, limit: pushLimit })) : (stops === 0 ? escapeHtml(t('v3DevelopedAtBoxSpeed')) : escapeHtml(t('v3ShootingAtIsoHidden', { iso: shotIso })))}</div>
 <div style="height:1px;background:${C.border}"></div>
@@ -2555,7 +2562,7 @@ ${state.format === '35mm' ? `<span style="display:flex;align-items:center;gap:2p
 </span>` : `<span style="font-size:20px;font-weight:700;color:${C.text}">${exp}</span>`}
 </div>
 ${frameTableFor(state.format) ? `<div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px;flex-wrap:wrap">
-${Object.keys(frameTableFor(state.format)).map(k => `<button type="button" onclick="App.setField('frame120','${k}')" style="flex:1;min-width:70px;height:44px;border-radius:6px;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:${state.frame120 === k ? '#1f2228' : 'transparent'};border:${state.frame120 === k ? '1px solid ' + C.border3 : '0'};color:${state.frame120 === k ? C.text : C.sub};font-weight:${state.frame120 === k ? 600 : 400}"><span style="font-size:13px">${k.replace('x', '×')}</span><span style="font-size:10px;font-weight:400;color:${C.faint}">${escapeHtml(t('v3ExpCount', { n: frameTableFor(state.format)[k] }))}</span></button>`).join('')}
+${Object.keys(frameTableFor(state.format)).map(k => `<button type="button" onclick="App.setField('frame120','${k}')" style="flex:1;min-width:70px;height:44px;border-radius:6px;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:${camKey === k ? '#1f2228' : 'transparent'};border:${camKey === k ? '1px solid ' + C.border3 : '0'};color:${camKey === k ? C.text : C.sub};font-weight:${camKey === k ? 600 : 400}"><span style="font-size:13px">${k.replace('x', '×')}</span><span style="font-size:10px;font-weight:400;color:${C.faint}">${escapeHtml(t('v3ExpCount', { n: frameTableFor(state.format)[k] }))}</span></button>`).join('')}
 </div>` : ''}
 ${state.format === '110' || state.format === 'Sheet' ? `<div style="font-size:12px;color:${C.faint};line-height:1.5">${state.format === '110' ? escapeHtml(t('v3The110AlwaysNote')) : escapeHtml(t('v3SheetPricedOneFrameNote'))}</div>` : ''}
 </div>
@@ -3337,6 +3344,9 @@ const App = {
             try { localStorage.setItem('mailBackRollCount', state.postRolls); } catch {}
         }
         if (key === 'libFilterModal' && val === true) { /* keep current tab's filters */ }
+        // 127's back sizes share this state key but aren't 120 backs — don't let one clobber the remembered 120 back.
+        if (key === 'frame120' && val in FRAME120) try { localStorage.setItem('globalCamera120Type', val); } catch {}
+        if (key === 'frame35') try { localStorage.setItem('globalCamera35Type', val); } catch {}
         if (key === 'depthDist') try { localStorage.setItem('depthDist', val); } catch {}
         if (key === 'depthFocal') try { localStorage.setItem('depthFocal', val); } catch {}
         render();
@@ -3356,7 +3366,17 @@ const App = {
         }
         render();
     },
-    setFormat(label) { state.format = label; try { localStorage.setItem('globalFormat', label); } catch {} render(); },
+    setFormat(label) {
+        state.format = label;
+        // A 127 back size sitting in frame120 isn't a 120 back — go back to the remembered one.
+        if ((label === '120' || label === '220') && !(state.frame120 in FRAME120)) {
+            let saved = null;
+            try { saved = localStorage.getItem('globalCamera120Type'); } catch {}
+            state.frame120 = saved in FRAME120 ? saved : '6x7';
+        }
+        try { localStorage.setItem('globalFormat', label); } catch {}
+        render();
+    },
     depthSetSubject(k) { state.depthSubject = k; try { localStorage.setItem('depthSubject', k); } catch {} render(); },
     depthSetTarget(k) { state.depthTarget = k; try { localStorage.setItem('depthTarget', k); } catch {} render(); },
     depthSetFormat(v) { state.depthFormat = v; try { localStorage.setItem('depthFormat', v); } catch {} render(); },
