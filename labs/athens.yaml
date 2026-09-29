@@ -1,0 +1,33 @@
+label: Athens Labs
+authorship: ai
+country: Greece
+state: Attica
+city: Athens
+lat: 37.9838
+lon: 23.7275
+labs:
+  - name: Photo Papaioakeim
+    hidden: false
+    address: Λεωφόρος Ηρακλείου 231, 142 31 Νέα Ιωνία, Athens, Greece
+    website: https://photopapaioakeim-eshop.gr
+    source: https://photopapaioakeim-eshop.gr/emfanisi-film/
+    services:
+      - devCost: 6
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 7.5
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 10
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+    phone: +30 210 279 9767

@@ -1,0 +1,52 @@
+label: The Hague Labs
+authorship: ai
+country: Netherlands
+state: South Holland
+city: The Hague
+lat: 52.0705
+lon: 4.3007
+labs:
+  - name: Analog Film Lab (Foto Americaine)
+    hidden: false
+    address: Wagenstraat 41, 2512 AP The Hague, Netherlands
+    email: info@foto-denhaag.nl
+    website: https://analogfilmlab.nl
+    source: https://analogfilmlab.nl/products/filmontwikkeling
+    services:
+      - devCost: 7.95
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 8.5
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 8.95
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 17.95
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 25.45
+        turnaroundTime: next_day
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW

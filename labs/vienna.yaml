@@ -1,0 +1,157 @@
+label: Vienna Labs
+authorship: ai
+country: Austria
+state: Vienna
+city: Vienna
+lat: 48.2082
+lon: 16.3738
+labs:
+  - name: Farbraum Wien
+    hidden: false
+    address: Linke Wienzeile 46/6, 1060 Wien, Austria
+    website: https://farbraumwien.at
+    source: https://farbraumwien.at/scanfilm/
+    services:
+      - devCost: 5.5
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 7.9
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+          - E6
+    phone: +43 1 305 6101
+    email: hello@farbraumwien.at
+  - name: cyberlab
+    hidden: false
+    address: Schottenfeldgasse 51, 1070 Wien, Austria
+    email: office@cyberlab.at
+    website: https://www.cyberlab.at
+    source: https://www.cyberlab.at/produkte/fotoausarbeitung/von_filme/entwickeln/index.html
+    services:
+      - devCost: 6.6
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 9.6
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 15.9
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 18.9
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 18.9
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 21.9
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+  - name: Fotospeed
+    hidden: false
+    address: Lerchenfelder Straße 66-68, 1080 Wien, Austria
+    email: info@fotospeed.at
+    website: https://fotospeed.at
+    source: https://fotospeed.at/content/fotos/filmentwicklung-c41-schwarzweiss/filmentwicklung.html
+    services:
+      - devCost: 6
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 10
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+    phone: +43 1 4061661
+  - name: plusfoto
+    hidden: false
+    address: Stolzenthalergasse 6/1B, 1080 Wien, Austria
+    email: mail@plusfoto.at
+    website: https://www.plusfoto.at
+    source: https://www.plusfoto.at/preise
+    services:
+      - devCost: 6.5
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 12.5
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 15.5
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 19.5
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 9.9
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 16.5
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 19.5
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 23.5
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW

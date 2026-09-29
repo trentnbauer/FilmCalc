@@ -1,0 +1,34 @@
+label: Toulouse Labs
+authorship: ai
+country: France
+state: Occitania
+city: Toulouse
+lat: 43.6047
+lon: 1.4442
+labs:
+  - name: Photo Signe des Temps
+    hidden: false
+    address: 68 Rue Pargaminières, 31000 Toulouse, France
+    phone: +33 5 62 30 02 00
+    website: https://signedestemps.com
+    source: https://signedestemps.com/developpement-de-films-argentiques-toulouse
+    services:
+      - devCost: 6
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 7
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 12
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW

@@ -1,0 +1,109 @@
+label: Frankfurt Labs
+authorship: ai
+country: Germany
+state: Hesse
+city: Frankfurt
+lat: 50.1109
+lon: 8.6821
+labs:
+  - name: Foto Express Frankfurt
+    hidden: false
+    address: Schweizer Straße 48, 60594 Frankfurt am Main, Germany
+    phone: +49 69 84772804
+    website: https://www.fotoexpress-frankfurt.de
+    source: https://www.fotoexpress-frankfurt.de/
+    services:
+      - devCost: 5
+        turnaroundTime: next_day
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 11
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 15
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 17
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 8
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 14
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 18
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 20
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - BW
+    email: foto-express@mail.de
+  - name: ON FILM LAB
+    hidden: false
+    address: Sandweg 131A, 60316 Frankfurt am Main, Germany
+    email: hello@onfilmlab.de
+    website: https://onfilmlab.de
+    source: https://onfilmlab.de/
+    services:
+      - devCost: 7
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 15
+        highResScan: true
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 19
+        highResScan: true
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+      - devCost: 10
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 18
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 22
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW

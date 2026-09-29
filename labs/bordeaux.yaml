@@ -1,0 +1,58 @@
+label: Bordeaux Labs
+authorship: ai
+country: France
+state: Nouvelle-Aquitaine
+city: Bordeaux
+lat: 44.8378
+lon: -0.5792
+labs:
+  - name: Chroma Films
+    hidden: false
+    address: 13 Cours Portal, 33000 Bordeaux, France
+    phone: +33 5 56 81 55 52
+    email: chromafilmsbordeaux@gmail.com
+    website: https://www.chroma-films.com
+    source: https://www.chroma-films.com/developpement-argentique/
+    services:
+      - devCost: 7
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 5
+        processes:
+          - C41
+      - devCost: 8
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 5
+        processes:
+          - BW
+      - devCost: 12
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 5
+        processes:
+          - C41
+      - devCost: 14
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 5
+        processes:
+          - BW
+      - devCost: 18
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        mailBackCost: 5
+        processes:
+          - C41
+      - devCost: 20
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        mailBackCost: 5
+        processes:
+          - BW

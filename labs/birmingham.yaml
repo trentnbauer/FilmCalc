@@ -1,0 +1,80 @@
+label: Birmingham Labs
+authorship: ai
+country: United Kingdom
+state: England
+city: Birmingham
+lat: 52.4862
+lon: -1.8904
+labs:
+  - name: PPP Film Lab
+    hidden: false
+    address: Space Station Stirchley, 1581 Pershore Road, Birmingham B30 2JF, United Kingdom
+    phone: +44 7810 283318
+    email: info@pppcameras.co.uk
+    website: https://pppcameras.co.uk/lab
+    source: https://pppcameras.co.uk/lab/p/35mm-film
+    services:
+      - devCost: 8
+        highResScan: false
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+        turnaroundTime: same_week
+        mailBackCost: 3
+      - devCost: 10
+        highResScan: true
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+        turnaroundTime: same_week
+        mailBackCost: 3
+      - devCost: 13
+        highResScan: true
+        tiffScan: false
+        noPushPull: true
+        processes:
+          - C41
+        turnaroundTime: same_week
+        mailBackCost: 3
+      - devCost: 16
+        highResScan: true
+        tiffScan: true
+        noPushPull: true
+        processes:
+          - C41
+        turnaroundTime: same_week
+        mailBackCost: 3
+      - devCost: 11
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+        turnaroundTime: longer
+        mailBackCost: 3
+      - devCost: 14
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+        turnaroundTime: longer
+        mailBackCost: 3
+      - devCost: 17
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+        turnaroundTime: longer
+        mailBackCost: 3
+      - devCost: 19
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - BW
+        turnaroundTime: longer
+        mailBackCost: 3

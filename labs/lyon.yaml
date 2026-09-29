@@ -1,0 +1,142 @@
+label: Lyon Labs
+authorship: ai
+country: France
+state: Auvergne-Rhône-Alpes
+city: Lyon
+lat: 45.764
+lon: 4.8357
+labs:
+  - name: Labo Gris Souris
+    hidden: false
+    address: 11 Rue de l'Annonciade, 69001 Lyon, France
+    phone: +33 4 72 07 94 01
+    email: labo@labo-gris-souris.com
+    website: https://www.labo-gris-souris.com
+    source: https://www.labo-gris-souris.com/prix-developpement-pellicule/
+    services:
+      - devCost: 7
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 13
+        processes:
+          - C41
+          - BW
+        pushPullCost: 0
+        pushPullType: flat
+      - devCost: 9.9
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 13
+        processes:
+          - C41
+          - BW
+        pushPullCost: 0
+        pushPullType: flat
+      - devCost: 11.3
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 13
+        processes:
+          - C41
+          - BW
+        pushPullCost: 0
+        pushPullType: flat
+      - devCost: 14.6
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 13
+        processes:
+          - C41
+          - BW
+        pushPullCost: 0
+        pushPullType: flat
+      - devCost: 18.1
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 13
+        processes:
+          - C41
+          - BW
+        pushPullCost: 0
+        pushPullType: flat
+      - devCost: 20.6
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 13
+        processes:
+          - C41
+          - BW
+        pushPullCost: 0
+        pushPullType: flat
+      - devCost: 19.2
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 13
+        processes:
+          - C41
+          - BW
+        pushPullCost: 0
+        pushPullType: flat
+      - devCost: 21.6
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 13
+        processes:
+          - C41
+          - BW
+        pushPullCost: 0
+        pushPullType: flat
+      - devCost: 25.1
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 13
+        processes:
+          - C41
+          - BW
+        pushPullCost: 0
+        pushPullType: flat
+      - devCost: 28
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 13
+        processes:
+          - C41
+          - BW
+        pushPullCost: 0
+        pushPullType: flat
+      - devCost: 14.5
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 13
+        processes:
+          - E6
+      - devCost: 16.3
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        mailBackCost: 13
+        processes:
+          - E6

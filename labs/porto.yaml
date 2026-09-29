@@ -1,0 +1,159 @@
+label: Porto Labs
+authorship: ai
+country: Portugal
+state: Porto District
+city: Porto
+lat: 41.1579
+lon: -8.6291
+labs:
+  - name: Máquinas de Outros Tempos
+    hidden: false
+    address: Rua dos Mártires da Liberdade, 154, 4050-359 Porto, Portugal
+    phone: +351 223 212 968
+    website: https://maquinasdeoutrostempos.pt
+    source: https://maquinasdeoutrostempos.pt/laboratorio/
+    services:
+      - devCost: 6
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 9
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 9
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 10
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 8
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 11
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 19
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+          - ECN2
+      - devCost: 22
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 22
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 24
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - E6
+      - devCost: 12
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - ECN2
+      - devCost: 15
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - ECN2
+      - devCost: 19
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - ECN2
+  - name: Colorfoto Sá da Bandeira
+    hidden: false
+    address: Rua de Sá da Bandeira, 526, 4000-430 Porto, Portugal
+    phone: +351 220 163 090
+    email: lab.porto@colorfoto.pt
+    website: https://www.colorfoto.pt
+    source: https://www.colorfoto.pt/servicos-laboratorio/revelacao/
+    services:
+      - devCost: 7
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 8
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+      - devCost: 9
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 12
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 17
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 18
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 16
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 21
+        highResScan: true
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 20
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW

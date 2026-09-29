@@ -1,0 +1,52 @@
+label: Bucharest Labs
+authorship: ai
+country: Romania
+state: Bucharest
+city: Bucharest
+lat: 44.4268
+lon: 26.1025
+labs:
+  - name: °isopatrusute
+    hidden: false
+    address: Strada Puțul cu Plopi 12, 010178 București, Romania
+    phone: +40 31 405 1053
+    email: ask@isopatrusute.ro
+    website: https://isopatrusute.ro
+    source: https://isopatrusute.ro/servicii/
+    services:
+      - devCost: 30
+        turnaroundTime: same_week
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+          - E6
+      - devCost: 60
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+          - E6
+      - devCost: 65
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+          - E6
+      - devCost: 75
+        turnaroundTime: same_week
+        highResScan: true
+        tiffScan: true
+        noPushPull: false
+        processes:
+          - C41
+          - BW
+          - E6

@@ -1,0 +1,401 @@
+label: Utrecht Retailers
+authorship: ai
+country: Netherlands
+state: Utrecht
+city: Utrecht
+lat: 52.0907
+lon: 5.1214
+films:
+  - name: Kodak Gold
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 13.45
+        storeName: Bram's Film Lab
+        buyLink: https://bramhisfilmlab.nl/products/kodak-gold-200-35mm
+        availability: city
+        state: Utrecht
+        city: Utrecht
+  - name: Kodak ColorPlus
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 12.45
+        storeName: Bram's Film Lab
+        buyLink: https://bramhisfilmlab.nl/products/kodak-colorplus-200-35mm
+        availability: city
+        state: Utrecht
+        city: Utrecht
+  - name: Fujifilm 200
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 14.45
+        storeName: Bram's Film Lab
+        buyLink: https://bramhisfilmlab.nl/products/fujifilm-fujicolor-200-35mm
+        availability: city
+        state: Utrecht
+        city: Utrecht
+  - name: Ilford HP5 Plus
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 14.45
+        storeName: Bram's Film Lab
+        buyLink: https://bramhisfilmlab.nl/products/ilford-hp5-plus-35mm
+        availability: city
+        state: Utrecht
+        city: Utrecht
+  - name: Kodak Portra 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 21.95
+        storeName: Bram's Film Lab
+        buyLink: https://bramhisfilmlab.nl/products/kodak-portra-400-35mm
+        availability: city
+        state: Utrecht
+        city: Utrecht
+  - name: Ilford XP2 Super
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    colorType: bw
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 14.95
+        storeName: Bram's Film Lab
+        buyLink: https://bramhisfilmlab.nl/products/ilford-xp2-super-35mm
+        availability: city
+        state: Utrecht
+        city: Utrecht
+  - name: Kodak Kodacolor 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 11.95
+        storeName: Bram's Film Lab
+        buyLink: https://bramhisfilmlab.nl/products/kodacolor-100-35mm
+        availability: city
+        state: Utrecht
+        city: Utrecht
+  - name: Kodak Tri-X 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 13.95
+        storeName: Bram's Film Lab
+        buyLink: https://bramhisfilmlab.nl/products/kodak-tri-x-400-35mm
+        availability: city
+        state: Utrecht
+        city: Utrecht
+  - name: Ilford Delta 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 16.45
+        storeName: Bram's Film Lab
+        buyLink: https://bramhisfilmlab.nl/products/ilford-delta-400-35mm
+        availability: city
+        state: Utrecht
+        city: Utrecht
+  - name: Kodak T-Max 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 16.45
+        storeName: Bram's Film Lab
+        buyLink: https://bramhisfilmlab.nl/products/kodak-t-max-400-35mm
+        availability: city
+        state: Utrecht
+        city: Utrecht
+  - name: Kodak Pro Image 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 11.0
+        storeName: Bram's Film Lab
+        buyLink: https://bramhisfilmlab.nl/products/kodak-pro-image-100-35mm
+        availability: city
+        state: Utrecht
+        city: Utrecht
+  - name: Kodak T-Max P3200
+    boxSpeed: 3200
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 17.95
+        storeName: Bram's Film Lab
+        buyLink: https://bramhisfilmlab.nl/products/kodak-t-max-3200-35mm
+        availability: city
+        state: Utrecht
+        city: Utrecht
+  - name: Kodak Portra 160
+    boxSpeed: 160
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 19.95
+        storeName: Bram's Film Lab
+        buyLink: https://bramhisfilmlab.nl/products/kodak-portra-160-35mm
+        availability: city
+        state: Utrecht
+        city: Utrecht
+  - name: Kodak Ektar 100
+    boxSpeed: 100
+    maxPushPull: 0
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 19.95
+        storeName: Bram's Film Lab
+        buyLink: https://bramhisfilmlab.nl/products/kodak-ektar-100-35mm
+        availability: city
+        state: Utrecht
+        city: Utrecht
+  - name: Kodak Portra 800
+    boxSpeed: 800
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 23.95
+        storeName: Bram's Film Lab
+        buyLink: https://bramhisfilmlab.nl/products/kodak-portra-800-35mm
+        availability: city
+        state: Utrecht
+        city: Utrecht
+  - name: Ilford Delta 3200
+    boxSpeed: 3200
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 14.45
+        storeName: Bram's Film Lab
+        buyLink: https://bramhisfilmlab.nl/products/ilford-delta-3200-35mm
+        availability: city
+        state: Utrecht
+        city: Utrecht
+  - name: Kodak Portra 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 19.45
+        storeName: Bram's Film Lab
+        buyLink: https://bramhisfilmlab.nl/products/kodak-portra-400-120mm
+        availability: city
+        state: Utrecht
+        city: Utrecht
+  - name: Kodak T-Max 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 12.49
+        storeName: Bram's Film Lab
+        buyLink: https://bramhisfilmlab.nl/products/kodak-t-max-400-120mm
+        availability: city
+        state: Utrecht
+        city: Utrecht
+  - name: Kodak Portra 800
+    boxSpeed: 800
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 23.45
+        storeName: Bram's Film Lab
+        buyLink: https://bramhisfilmlab.nl/products/kodak-portra-800-120
+        availability: city
+        state: Utrecht
+        city: Utrecht
+  - name: Ilford HP5 Plus
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 12.95
+        storeName: Bram's Film Lab
+        buyLink: https://bramhisfilmlab.nl/products/ilford-hp5-plus-120mm
+        availability: city
+        state: Utrecht
+        city: Utrecht
+  - name: Kodak Gold
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 12.45
+        storeName: Bram's Film Lab
+        buyLink: https://bramhisfilmlab.nl/products/kodak-gold-200-120mm
+        availability: city
+        state: Utrecht
+        city: Utrecht
+  - name: Kodak Portra 160
+    boxSpeed: 160
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 18.45
+        storeName: Bram's Film Lab
+        buyLink: https://bramhisfilmlab.nl/products/kodak-portra-160-120
+        availability: city
+        state: Utrecht
+        city: Utrecht
+  - name: Kodak Ektar 100
+    boxSpeed: 100
+    maxPushPull: 0
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 18.45
+        storeName: Bram's Film Lab
+        buyLink: https://bramhisfilmlab.nl/products/kodak-ektar-100-120
+        availability: city
+        state: Utrecht
+        city: Utrecht
+  - name: Ilford InfoColor Vintage Tone
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 24
+        filmCost: 15.95
+        storeName: Bram's Film Lab
+        buyLink: https://bramhisfilmlab.nl/products/ilford-ilfocolor-400-35mm
+        availability: city
+        state: Utrecht
+        city: Utrecht

@@ -1,0 +1,23 @@
+label: Lille Labs
+authorship: ai
+country: France
+state: Hauts-de-France
+city: Lille
+lat: 50.6292
+lon: 3.0573
+labs:
+  - name: Studio Reflex Photo (Au Labo de Lille)
+    hidden: false
+    address: 34 Rue Saint-André, 59800 Lille, France
+    phone: +33 3 20 55 99 83
+    email: info@studioreflexphoto.com
+    website: https://aulabodelille.com
+    source: https://aulabodelille.com/developpement-film-argentique-a-lille
+    services:
+      - devCost: 8
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+          - BW

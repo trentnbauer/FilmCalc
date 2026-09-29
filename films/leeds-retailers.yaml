@@ -1,0 +1,439 @@
+label: Leeds Retailers
+authorship: ai
+country: United Kingdom
+state: England
+city: Leeds
+lat: 53.8008
+lon: -1.5491
+films:
+  - name: Ilford Delta 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 9.5
+        storeName: Take It Easy Lab
+        buyLink: https://takeiteasylab.com/products/ilford-delta-400-35mm
+        availability: city
+        state: England
+        city: Leeds
+  - name: Ilford Pan F Plus
+    boxSpeed: 50
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 9
+        storeName: Take It Easy Lab
+        buyLink: https://takeiteasylab.com/products/ilford-panf-50-35mm
+        availability: city
+        state: England
+        city: Leeds
+  - name: Kentmere Pan 400
+    boxSpeed: 400
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 6
+        storeName: Take It Easy Lab
+        buyLink: https://takeiteasylab.com/products/kentmere-400-35mm-film
+        availability: city
+        state: England
+        city: Leeds
+  - name: Kentmere Pan 200
+    boxSpeed: 200
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 6
+        storeName: Take It Easy Lab
+        buyLink: https://takeiteasylab.com/products/kentmere-200-35mm
+        availability: city
+        state: England
+        city: Leeds
+  - name: Kentmere Pan 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 6
+        storeName: Take It Easy Lab
+        buyLink: https://takeiteasylab.com/products/kentmere-100-35mm-film
+        availability: city
+        state: England
+        city: Leeds
+  - name: Kodak Portra 160
+    boxSpeed: 160
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 18
+        storeName: Take It Easy Lab
+        buyLink: https://takeiteasylab.com/products/kodak-portra-35mm-160-iso-36-exposure
+        availability: city
+        state: England
+        city: Leeds
+  - name: Candido
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 13
+        storeName: Take It Easy Lab
+        buyLink: https://takeiteasylab.com/products/candido-400-35mm
+        availability: city
+        state: England
+        city: Leeds
+  - name: Harman Phoenix II
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    colorType: speciality
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 12
+        storeName: Take It Easy Lab
+        buyLink: https://takeiteasylab.com/products/harman-phoenix-ii-200-35mm
+        availability: city
+        state: England
+        city: Leeds
+  - name: Ilford FP4 Plus
+    boxSpeed: 125
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 9
+        storeName: Take It Easy Lab
+        buyLink: https://takeiteasylab.com/products/ilford-fp4-35mm-film
+        availability: city
+        state: England
+        city: Leeds
+  - name: Ilford XP2 Super
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    colorType: bw
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 10
+        storeName: Take It Easy Lab
+        buyLink: https://takeiteasylab.com/products/ilford-xp2-36-exp-35mm-film
+        availability: city
+        state: England
+        city: Leeds
+  - name: Kodak ColorPlus
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 10
+        storeName: Take It Easy Lab
+        buyLink: https://takeiteasylab.com/products/kodak-colorplus-200-35mm
+        availability: city
+        state: England
+        city: Leeds
+  - name: Fomapan Classic 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 6
+        storeName: Take It Easy Lab
+        buyLink: https://takeiteasylab.com/products/fomapan-100-35mm-film
+        availability: city
+        state: England
+        city: Leeds
+  - name: Ilford HP5 Plus
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 10
+        storeName: Take It Easy Lab
+        buyLink: https://takeiteasylab.com/products/ilford-hp5-35mm-film
+        availability: city
+        state: England
+        city: Leeds
+  - name: Kodak UltraMax
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 12
+        storeName: Take It Easy Lab
+        buyLink: https://takeiteasylab.com/products/kodak-ultramax-400-35mm-film
+        availability: city
+        state: England
+        city: Leeds
+  - name: Ilford Delta 3200
+    boxSpeed: 3200
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 10
+        storeName: Take It Easy Lab
+        buyLink: https://takeiteasylab.com/products/ilford-delta-3200-120
+        availability: city
+        state: England
+        city: Leeds
+  - name: Kentmere Pan 400
+    boxSpeed: 400
+    maxPushPull: 1
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 6
+        storeName: Take It Easy Lab
+        buyLink: https://takeiteasylab.com/products/kentmere-400-120
+        availability: city
+        state: England
+        city: Leeds
+  - name: Ilford FP4 Plus
+    boxSpeed: 125
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 7
+        storeName: Take It Easy Lab
+        buyLink: https://takeiteasylab.com/products/ilford-fp4-120
+        availability: city
+        state: England
+        city: Leeds
+  - name: Kodak Portra 800
+    boxSpeed: 800
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 22
+        storeName: Take It Easy Lab
+        buyLink: https://takeiteasylab.com/products/kodak-portra-800-120
+        availability: city
+        state: England
+        city: Leeds
+  - name: Fomapan Classic 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 6
+        storeName: Take It Easy Lab
+        buyLink: https://takeiteasylab.com/products/fomapan-100-iso-120
+        availability: city
+        state: England
+        city: Leeds
+  - name: Harman Phoenix II
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    colorType: speciality
+    devTimeSec: 195
+    devTempC: 38
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 10
+        storeName: Take It Easy Lab
+        buyLink: https://takeiteasylab.com/products/harman-phoenix-ii-200-120
+        availability: city
+        state: England
+        city: Leeds
+  - name: Ilford HP5 Plus
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 7
+        storeName: Take It Easy Lab
+        buyLink: https://takeiteasylab.com/products/ilford-hp5-120
+        availability: city
+        state: England
+        city: Leeds
+  - name: Ilford XP2 Super
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    colorType: bw
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 8
+        storeName: Take It Easy Lab
+        buyLink: https://takeiteasylab.com/products/ilford-xp2-120
+        availability: city
+        state: England
+        city: Leeds
+  - name: Kodak Gold
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 11
+        storeName: Take It Easy Lab
+        buyLink: https://takeiteasylab.com/products/kodak-gold-200-120
+        availability: city
+        state: England
+        city: Leeds
+  - name: Fomapan 400
+    boxSpeed: 400
+    maxPushPull: 1
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 6
+        storeName: Take It Easy Lab
+        buyLink: https://takeiteasylab.com/products/fomapan-400-iso-120
+        availability: city
+        state: England
+        city: Leeds
+  - name: Kodak Portra 160
+    boxSpeed: 160
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 14
+        storeName: Take It Easy Lab
+        buyLink: https://takeiteasylab.com/products/kodak-portra-120-160-iso
+        availability: city
+        state: England
+        city: Leeds
+  - name: Kodak Portra 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 18
+        storeName: Take It Easy Lab
+        buyLink: https://takeiteasylab.com/products/kodak-portra-120-400-iso-film
+        availability: city
+        state: England
+        city: Leeds
+  - name: Lucky C200
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 10
+        storeName: Take It Easy Lab
+        buyLink: https://takeiteasylab.com/products/lucky-c200-120
+        availability: city
+        state: England
+        city: Leeds

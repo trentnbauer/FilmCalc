@@ -1,0 +1,126 @@
+label: Vienna Retailers
+authorship: ai
+country: Austria
+state: Vienna
+city: Vienna
+lat: 48.2082
+lon: 16.3738
+films:
+  - name: Kodak Gold
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 3
+        exposures: 36
+        filmCost: 33.0
+        storeName: plusfoto
+        buyLink: https://www.plusfoto.at/filme/kodak-gold-200-36-3er-pack
+        availability: city
+        state: Vienna
+        city: Vienna
+  - name: Kodak Gold
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 5
+        exposures: 12
+        filmCost: 62.0
+        storeName: plusfoto
+        buyLink: https://www.plusfoto.at/filme/kodak-gold-200-120-5er-pack
+        availability: city
+        state: Vienna
+        city: Vienna
+  - name: Kodak Portra 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 5
+        exposures: 36
+        filmCost: 99.0
+        storeName: plusfoto
+        buyLink: https://www.plusfoto.at/filme/kkodak-portra-400-36-5er
+        availability: city
+        state: Vienna
+        city: Vienna
+  - name: Kodak UltraMax
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 13.4
+        storeName: plusfoto
+        buyLink: https://www.plusfoto.at/filme/kodak-ultra-max-400-135-36
+        availability: city
+        state: Vienna
+        city: Vienna
+  - name: Kodak ColorPlus
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 11.9
+        storeName: plusfoto
+        buyLink: https://www.plusfoto.at/filme/skodak-color-plus-200-36
+        availability: city
+        state: Vienna
+        city: Vienna
+  - name: Ilford HP5 Plus
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 13.0
+        storeName: plusfoto
+        buyLink: https://www.plusfoto.at/filme/ilford-hp5-plus-400-36
+        availability: city
+        state: Vienna
+        city: Vienna
+  - name: Ilford XP2 Super
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    colorType: bw
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 13.0
+        storeName: plusfoto
+        buyLink: https://www.plusfoto.at/filme/ilfordxp2-400-36
+        availability: city
+        state: Vienna
+        city: Vienna

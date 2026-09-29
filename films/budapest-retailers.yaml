@@ -1,0 +1,711 @@
+label: Budapest Retailers
+authorship: ai
+country: Hungary
+state: Budapest
+city: Budapest
+lat: 47.4979
+lon: 19.0402
+films:
+  - name: Kodak Kodacolor 200
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 4990
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/kodak-kodacolor-200-35mm
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Fujifilm 200
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 4990
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/fuji-c200-135-36-kockas
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Fujifilm 400
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 5890
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/fuji-400-135-szines-film
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Harman Switch Azure
+    boxSpeed: 125
+    maxPushPull: 1
+    process: C41
+    colorType: speciality
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 4990
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/harman-switch-azure-film
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Kodak ColorPlus
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 4990
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/kodak-colorplus-36-kockas
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Kodak Ektar 100
+    boxSpeed: 100
+    maxPushPull: 0
+    process: C41
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 8990
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/kodak-ektar
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Kodak Gold
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 5590
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/kodak-gold-135-36-szines-film
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Kodak Kodacolor 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 4990
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/kodak-kodacolor100-film
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Kodak Portra 160
+    boxSpeed: 160
+    maxPushPull: 2
+    process: C41
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 7990
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/kodak-portra-160-135-36-szines-film
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Kodak Portra 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 9490
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/kodak-portra-400-135-36
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Kodak Portra 800
+    boxSpeed: 800
+    maxPushPull: 2
+    process: C41
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 10990
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/kodak-portra-800-135-36-szines-film
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Kodak Pro Image 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 6490
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/kodak-pro-image-100
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Kodak UltraMax
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 5890
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/kodak-ultramax-400-135-36-szines-film
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Cinestill 800Tungsten
+    boxSpeed: 800
+    maxPushPull: 1
+    process: C41
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 7990
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/cinestill-135-800t-szines-film
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Ilford Delta 3200
+    boxSpeed: 3200
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 5190
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/ilford-delta-3200-135-fekete-feher-film
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Ilford Delta 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 4990
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/ilford-delta-400
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Ilford HP5 Plus
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 4690
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/ilford-hp5-135-fekete-feher-film
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Ilford XP2 Super
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    colorType: bw
+    format: 35mm
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 4990
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/ilford-xp2-135-fekete-feher-film
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Kentmere Pan 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 2790
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/kentmere-pan-fekete-feher-film-100-135
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Kentmere Pan 200
+    boxSpeed: 200
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 2790
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/kentmere-pan200-135fekete-feher-film
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Kentmere Pan 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 2890
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/kentmere-pan-fekete-feher-film-400-135
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Fomapan 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 2690
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/foma-fomapan-100-135-fekete-feher-kisfilm
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Fomapan 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 2890
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/foma-400-fekete-feher-kisfilm
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Kodak T-Max 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 6590
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/kodak-tmax-100-135-fekete-feher-film
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Kodak T-Max P3200
+    boxSpeed: 3200
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 8790
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/kodak-tmax-3200-135-fekete-feher-film
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Fomapan 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 2190
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/foma-fomapan-100-120-rollfilm
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Fomapan 200
+    boxSpeed: 200
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 2490
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/foma-fomapan-200-120-rollfilm
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Fomapan 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 2590
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/foma-fomapan-400-120-rollfilm
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Ilford Delta 3200
+    boxSpeed: 3200
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 4190
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/ilford-delta-3200-120-fekete-feher-rollfilm
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Ilford Delta 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 4190
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/ilford-delta-400-120-fekete-feher-rollfilm
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Ilford Delta 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 4290
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/ilford-delta100-120-fekete-feher-rollfilm
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Ilford FP4 Plus
+    boxSpeed: 125
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 3990
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/ilford-fp4-120-fekete-feher-rollfilm
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Ilford HP5 Plus
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 3990
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/ilford-hp5-120-fekete-feher-rollfilm
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Kentmere Pan 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 2190
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/kentmere-pan-fekete-feher-film-100-120
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Kentmere Pan 200
+    boxSpeed: 200
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 2290
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/kentmere-pan200-rollfilm
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Kentmere Pan 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 2290
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/kentmere-pan-fekete-feher-film-400-120
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Kodak T-Max 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 6690
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/kodak-t-max-100-120-fekete-feher-rollfilm
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Kodak T-Max 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 5590
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/kodak-t-max-400-120-fekete-feher-rollfilm
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Kodak Tri-X 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 4990
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/kodak-tri-x-400-120-fekete-feher-rollfilm
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Cinestill 800Tungsten
+    boxSpeed: 800
+    maxPushPull: 1
+    process: C41
+    format: '120'
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 7990
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/cinestill-800t-120-szines-film
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Harman Switch Azure
+    boxSpeed: 125
+    maxPushPull: 1
+    process: C41
+    colorType: speciality
+    format: '120'
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 4490
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/harman-switch-azure-szines-rollfilm
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Kodak Ektar 100
+    boxSpeed: 100
+    maxPushPull: 0
+    process: C41
+    format: '120'
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 6990
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/kodak-ektar-120-szines-film
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Kodak Portra 160
+    boxSpeed: 160
+    maxPushPull: 2
+    process: C41
+    format: '120'
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 5990
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/kodak-portra-160-120-szines-film
+        availability: city
+        state: Budapest
+        city: Budapest
+  - name: Kodak Portra 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    format: '120'
+    devTimeSec: 195
+    devTempC: 38
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 8990
+        storeName: Café Analóg
+        buyLink: https://cafeanalog.hu/kodak-portra-400-120-szines-film
+        availability: city
+        state: Budapest
+        city: Budapest

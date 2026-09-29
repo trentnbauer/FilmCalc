@@ -1,0 +1,927 @@
+label: Oslo Retailers
+authorship: ai
+country: Norway
+state: Oslo
+city: Oslo
+lat: 59.9139
+lon: 10.7522
+films:
+  - name: Fomapan 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 89
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/fomapan-100-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Fomapan 200
+    boxSpeed: 200
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 99
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/fomapan-200-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Fomapan 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 99
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/fomapan-400-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: AgfaPhoto APX 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 95
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/agfa-apx-100-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: AgfaPhoto APX 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 109
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/agfa-apx-400-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Rollei RPX 25
+    boxSpeed: 25
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 99
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/rollei-rpx-25-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Rollei RPX 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 119
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/rollei-rpx-400-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Kentmere Pan 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 129
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/kentmere-100-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Kentmere Pan 200
+    boxSpeed: 200
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 129
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/kentmere-200-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Ilford Delta 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 229
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/ilford-delta-100-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Ilford Delta 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 229
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/ilford-delta-400-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Ilford Delta 3200
+    boxSpeed: 3200
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 189
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/ilford-delta-3200-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Ilford FP4 Plus
+    boxSpeed: 125
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 229
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/ilford-fp4-plus-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Ilford HP5 Plus
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 209
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/ilford-hp5-plus-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Ilford Pan F Plus
+    boxSpeed: 50
+    maxPushPull: 1
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 219
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/ilford-pan-f-plus-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Ilford XP2 Super
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    colorType: bw
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 219
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/ilford-xp2-super-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Kodak Tri-X 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 189
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/kodak-tri-x-400tx-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Kodak T-Max 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 199
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/kodak-100-tmax-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Kodak T-Max 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 259
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/kodak-400-tmax-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Kodak T-Max P3200
+    boxSpeed: 3200
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 249
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/kodak-p3200-tmax-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Fujifilm Neopan Acros 100 II
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 189
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/fujifilm-neopan-acros-100-ll-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Cinestill BwXX
+    boxSpeed: 250
+    maxPushPull: 2
+    process: BW
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 239
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/cinestill-bwxx-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Kodak ColorPlus
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 179
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/kodak-colorplus-200-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Kodak Gold
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 2
+        exposures: 24
+        filmCost: 259
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/kodak-gold-200-135-24-2pk
+        availability: city
+        state: Oslo
+        city: Oslo
+      - rolls: 3
+        exposures: 24
+        filmCost: 399
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/kodak-gold-200-135-24-3pk
+        availability: city
+        state: Oslo
+        city: Oslo
+      - rolls: 3
+        exposures: 36
+        filmCost: 489
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/kodak-gold-200-135-36-3pk
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Kodak UltraMax
+    boxSpeed: 400
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 219
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/kodak-ultramax-400-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+      - rolls: 3
+        exposures: 36
+        filmCost: 499
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/kodak-ultramax-400-135-36-3pk
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Kodak Portra 160
+    boxSpeed: 160
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 279
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/kodak-portra-160-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Kodak Portra 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 299
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/kodak-portra-400-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Kodak Portra 800
+    boxSpeed: 800
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 299
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/kodak-portra-800-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Kodak Ektar 100
+    boxSpeed: 100
+    maxPushPull: 0
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 279
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/kodak-ektar-100-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Kodak Pro Image 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 199
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/kodak-pro-image-100-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Fujifilm 200
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 189
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/fujifilm-200-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Cinestill 50D
+    boxSpeed: 50
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 279
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/cinestill-50d-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Cinestill 800Tungsten
+    boxSpeed: 800
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 299
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/cinestill-800t-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Fujifilm Velvia 100
+    boxSpeed: 100
+    maxPushPull: 1
+    process: E6
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 339
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/fujifilm-velvia-100-135-36
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Kentmere Pan 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 99
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/kentmere-100-120
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Kentmere Pan 200
+    boxSpeed: 200
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 109
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/kentmere-200-120
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Kentmere Pan 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 99
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/kentmere-400-120
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Fomapan 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 99
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/fomapan-100-120
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Fomapan 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 99
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/fomapan-400-121
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Ilford Delta 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 189
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/ilford-delta-100-120
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Ilford Delta 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 139
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/ilford-delta-400-120
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Ilford Delta 3200
+    boxSpeed: 3200
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 219
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/ilford-delta-3200-120
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Ilford HP5 Plus
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 169
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/ilford-hp5-plus-120
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Ilford FP4 Plus
+    boxSpeed: 125
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 209
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/ilford-fp4-plus-120
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Ilford Pan F Plus
+    boxSpeed: 50
+    maxPushPull: 1
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 189
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/ilford-pan-f-plus-120
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Ilford XP2 Super
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    colorType: bw
+    devTimeSec: 195
+    devTempC: 38
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 179
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/ilford-xp2-super-400-120
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Kodak Tri-X 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 169
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/kodak-tri-x-400tx-120
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Kodak T-Max 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 199
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/kodak-100-tmax-120
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Kodak T-Max 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 169
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/kodak-400-tmax-120
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Fujifilm Neopan Acros 100 II
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 199
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/fujifilm-neopan-acros-100-ll-120
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Cinestill BwXX
+    boxSpeed: 250
+    maxPushPull: 2
+    process: BW
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 259
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/cinestill-bwxx-120
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Kodak Gold
+    boxSpeed: 200
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 189
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/kodak-gold-200-120
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Kodak Portra 160
+    boxSpeed: 160
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 239
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/kodak-portra-160-120
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Kodak Portra 800
+    boxSpeed: 800
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 319
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/kodak-portra-800-120
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Kodak Ektar 100
+    boxSpeed: 100
+    maxPushPull: 0
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 259
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/kodak-ektar-100-120
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Cinestill 50D
+    boxSpeed: 50
+    maxPushPull: 1
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 339
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/cinestill-50d-120
+        availability: city
+        state: Oslo
+        city: Oslo
+  - name: Cinestill 800Tungsten
+    boxSpeed: 800
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    format: '120'
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 12
+        filmCost: 299
+        storeName: Oslo Foto
+        buyLink: https://oslofoto.as/en/products/cinestill-800t-120
+        availability: city
+        state: Oslo
+        city: Oslo

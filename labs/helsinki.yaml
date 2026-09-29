@@ -1,0 +1,40 @@
+label: Helsinki Labs
+authorship: ai
+country: Finland
+state: Uusimaa
+city: Helsinki
+lat: 60.1699
+lon: 24.9384
+labs:
+  - name: Polakuvaamo
+    hidden: false
+    address: Hansakuja 1, 00930 Helsinki, Finland
+    phone: +358 40 016 4441
+    email: info@polakuvaamo.fi
+    website: https://www.polakuvaamo.fi
+    source: https://www.polakuvaamo.fi/?page_id=2714
+    services:
+      - devCost: 10
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 12
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - C41
+      - devCost: 14.9
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
+      - devCost: 15.9
+        highResScan: false
+        tiffScan: false
+        noPushPull: false
+        processes:
+          - BW
