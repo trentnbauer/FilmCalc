@@ -752,11 +752,13 @@ function presetCheckList(films, labs) {
         const k = placeKey(f);
         if (!groups.has(k)) groups.set(k, { display: k });
         groups.get(k).filmFile = f.file;
+        groups.get(k).filmAuthorship = f.authorship;
     });
     labs.forEach(f => {
         const k = placeKey(f);
         if (!groups.has(k)) groups.set(k, { display: k });
         groups.get(k).labFile = f.file;
+        groups.get(k).labAuthorship = f.authorship;
     });
     const entries = [...groups.values()];
     if (!entries.length) return `<div style="font-size:12px;color:${C.faint};padding:6px 2px">${escapeHtml(t('v3NoPresetsAvailable'))}</div>`;
@@ -771,7 +773,11 @@ function presetCheckList(films, labs) {
     });
     return sorted.map(g => {
         const on = isOn(g);
-        return `<button type="button" onclick="App.togglePresetGroup('${jsAttr(g.filmFile || '')}','${jsAttr(g.labFile || '')}')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:50px;padding:0 14px;border-radius:8px;font:inherit;font-size:14px;cursor:pointer;text-align:left;background:${on ? C.accBg : C.field};border:1px solid ${on ? C.accBorder : C.border};color:${on ? C.acc : C.text2}">${escapeHtml(g.display)} <span>${on ? '✓' : ''}</span></button>`;
+        // Marks rows whose data files declare `authorship: ai` (DATA_SPEC.md) so people know to double-check prices.
+        const aiFilm = g.filmAuthorship === 'ai', aiLab = g.labAuthorship === 'ai';
+        const aiTitle = aiFilm && aiLab ? t('v3AiTagTitleBoth') : aiLab ? t('v3AiTagTitleLabs') : t('v3AiTagTitleFilms');
+        const aiTag = (aiFilm || aiLab) ? `<span role="img" aria-label="${escapeHtml(aiTitle)}" title="${escapeHtml(aiTitle)}" style="flex:none;font-size:10px;font-weight:700;letter-spacing:.06em;line-height:1;padding:3px 6px;border-radius:4px;border:1px solid ${C.border3};color:${C.sub}">${escapeHtml(t('v3AiTag'))}</span>` : '';
+        return `<button type="button" onclick="App.togglePresetGroup('${jsAttr(g.filmFile || '')}','${jsAttr(g.labFile || '')}')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:50px;padding:0 14px;border-radius:8px;font:inherit;font-size:14px;cursor:pointer;text-align:left;background:${on ? C.accBg : C.field};border:1px solid ${on ? C.accBorder : C.border};color:${on ? C.acc : C.text2}"><span style="display:flex;align-items:center;gap:8px;min-width:0"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(g.display)}</span>${aiTag}</span> <span>${on ? '✓' : ''}</span></button>`;
     }).join('');
 }
 function presetCountries() {

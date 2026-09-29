@@ -47,6 +47,7 @@ jobs:
           VALID_AVAILABILITY = set(FILM_SCHEMA["enums"]["availability"])
           VALID_TURNAROUND = set(LAB_SCHEMA["enums"]["turnaroundTime"])
           VALID_PUSHPULL_TYPE = set(LAB_SCHEMA["enums"]["pushPullType"])
+          VALID_AUTHORSHIP = set(FILM_SCHEMA["enums"]["authorship"])
 
           errors = []
 
@@ -99,6 +100,8 @@ jobs:
               for key in FILM_SCHEMA["requiredTopLevelFields"]:
                   if not doc.get(key):
                       err(path, f"missing top-level '{key}' — films/index.json is generated from this")
+              if doc.get("authorship") and doc["authorship"] not in VALID_AUTHORSHIP:
+                  err(path, f"authorship '{doc['authorship']}' must be one of {sorted(VALID_AUTHORSHIP)}")
               if doc.get("city") and (doc.get("lat") is None or doc.get("lon") is None):
                   err(path, "has 'city' but is missing top-level 'lat'/'lon' — required for city-scoped files so the app can geo-match them, see DATA_SPEC.md")
               for key in ("lat", "lon"):
@@ -195,6 +198,8 @@ jobs:
               for key in LAB_SCHEMA["requiredTopLevelFields"]:
                   if not doc.get(key):
                       err(path, f"missing top-level '{key}' — labs/index.json is generated from this")
+              if doc.get("authorship") and doc["authorship"] not in VALID_AUTHORSHIP:
+                  err(path, f"authorship '{doc['authorship']}' must be one of {sorted(VALID_AUTHORSHIP)}")
               for key in ("lat", "lon"):
                   if doc.get(key) is not None and not isinstance(doc[key], (int, float)):
                       err(path, f"top-level '{key}' must be a plain number (no quotes)")

@@ -22,6 +22,11 @@ doesn't conform.
 4. **YAML uses 2-space indentation. Never tabs.**
 5. **Output only the YAML**, with no commentary and no code fence — *except* for the two things you
    are explicitly asked to report at the end (see "What to tell the user" below).
+6. **Every file declares who wrote it, in a top-level `authorship:` field** — `ai` or `human` (or
+   `unknown`, for old files whose origin can't be established). **If you are an AI assistant, always
+   write `authorship: ai`** — including when you only add or change entries in a file that already
+   exists. The import screen shows an **AI** tag next to `ai` files so people know to double-check the
+   prices. See the `authorship` row in the file-level field tables below.
 
 ---
 
@@ -37,6 +42,7 @@ import time by name+boxSpeed+format.
 
 ```yaml
 label: Melbourne Retailers
+authorship: ai
 country: Australia
 state: Victoria
 city: Melbourne
@@ -65,6 +71,7 @@ films:
 | Field | Rules |
 |---|---|
 | `label` | Shown in the app's Import screen. |
+| `authorship` | **Required.** Who wrote the data in this file: `ai` or `human` (or `unknown`, only for legacy files whose origin can't be established — never for a new file). Use `human` only if a person typed every entry in the file themselves; if an AI wrote or edited *any* of it (including an AI-assisted submission where an assistant generated the YAML), it is `ai`. Editing an existing file with an AI flips it to `ai`. The deploy workflow copies it into `films/index.json` and the app shows an **AI** tag next to `ai` files in the import menu. |
 | `country` | **Required.** The country this file's films are grouped by — always present, even for a city-scoped file (a city file's presets are still within one country). The deploy workflow (`build-github-page.yml`) reads this — plus `state`/`city` below — straight out of the file to (re)generate `films/index.json` at build time, fresh on every deploy. Never hand-edit that JSON file; it's a generated artifact, and a PR never needs to touch it. The app also reads these values at runtime to pre-tick this file for a visitor whose device location/timezone matches, so get them right even beyond keeping the generated index accurate. |
 | `state` / `city` | Present **only** if every bundle in this file is city/state-scoped (see `availability` below) — that's what makes this a city file (`melbourne-retailers.yaml`) instead of a country file (`australian-retailers.yaml`). Omit both for a country-wide file. |
 | `lat` / `lon` | **Required whenever `city` is set, omit otherwise.** The city's coordinates (city-centre is fine, 4 decimal places is plenty — e.g. `-37.8136` / `144.9631` for Melbourne). The deploy workflow copies these straight into `films/index.json` alongside `country`/`state`/`city`; the app uses them at runtime to match a visitor's device location to this file without any hardcoded per-city list to maintain — get them right or this file simply never gets geo-matched, same as leaving `city` blank. |
@@ -100,6 +107,7 @@ Goes in a file under `labs/`, grouped **by city**.
 
 ```yaml
 label: Melbourne Labs
+authorship: ai
 country: Australia
 state: Victoria
 city: Melbourne
@@ -130,6 +138,7 @@ labs:
 | Field | Rules |
 |---|---|
 | `label` | Shown in the app's Import screen. |
+| `authorship` | **Required.** Same rule as for films: `ai` or `human` (or `unknown` for legacy files only). Use `human` only if a person typed every entry themselves; any AI involvement makes it `ai`. Copied into `labs/index.json` at deploy time; the app shows an **AI** tag next to `ai` files in the import menu. |
 | `country` / `state` / `city` | **All three required.** A lab is always tied to one physical place, unlike a film (which can be national). As with films, the deploy workflow regenerates `labs/index.json` from these at build time — never hand-edit that file, and a PR never needs to touch it — and the app reads them at runtime to pre-tick this file for a visitor whose device location/timezone matches. |
 | `lat` / `lon` | **Required.** The city's coordinates (city-centre is fine, 4 decimal places is plenty — e.g. `-37.8136` / `144.9631` for Melbourne). Same deal as films: copied into `labs/index.json` at build time, used for runtime geo-matching, and this file just won't geo-match without it. |
 
@@ -248,8 +257,8 @@ After the YAML, add a short note with exactly these three things:
    | **Labs** (always by city) | `london.yaml`, `new-york.yaml` | `London Labs`, `New York Labs` |
 
    Then check the existing files and tell the user which case applies:
-   - **The file already exists** → they should open it and paste your entry at the bottom of the list.
-   - **It doesn't exist** → they need to create it, and the file must start with `label:`, `country:`,
+   - **The file already exists** → they should open it, paste your entry at the bottom of the list, **and change the file's top-level `authorship:` line to `ai`** (an AI wrote part of it now).
+   - **It doesn't exist** → they need to create it, and the file must start with `label:`, `authorship:`, `country:`,
      and — for a city-scoped film file or any lab file — `state:`/`city:` too. Don't touch
      `films/index.json` or `labs/index.json`, and don't worry about keeping them in sync — the
      deploy workflow regenerates both automatically from these fields on every deploy.

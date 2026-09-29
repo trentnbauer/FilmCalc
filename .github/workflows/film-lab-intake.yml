@@ -116,9 +116,11 @@ jobs:
             `country:`/`state:`/`city:` fields at the top of existing `films/*.yaml`/`labs/*.yaml` files
             for one matching this submission's country/state/city). Create a branch
             `add-film-lab-issue-${{ github.event.issue.number }}`, add the entry to the existing file, or
-            create a new one — if creating a new file, it MUST start with `label:`, `country:`, and (for
+            create a new one — if creating a new file, it MUST start with `label:`, `authorship: ai`, `country:`, and (for
             a city-scoped film file or any lab file) `state:`/`city:` per DATA_SPEC.md, since that's what
-            `build-github-page.yml` reads to regenerate the index at deploy time. Commit and push. Then open
+            `build-github-page.yml` reads to regenerate the index at deploy time. Whether you create a file or add
+            to an existing one, the file's top-level `authorship:` must be `ai` when you're done (an unattended
+            Claude run wrote part of it — see DATA_SPEC.md). Commit and push. Then open
             a PR with `gh pr create`: title like `Add <name> to <file>`, a body explaining what was
             requested and citing `Closes #${{ github.event.issue.number }}`, and a note on what you
             verified (screenshot read, source fetched, etc.) and anything you couldn't confirm. Do NOT
