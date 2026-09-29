@@ -344,7 +344,8 @@ jobs:
               matches, create a new file following the filename/label convention in DATA_SPEC.md's "What
               to tell the user" section (e.g. `us-retailers.yaml` / `US Retailers` for a country file,
               `melbourne-retailers.yaml` / `Melbourne Retailers` for a city file) — it must start with
-              `label:`, `country:`, and (for a city file) `state:`/`city:`.
+              `label:`, `authorship: ai`, `country:`, and (for a city file) `state:`/`city:`. Whenever you add to an
+              existing file, set that file's top-level `authorship:` to `ai` too (DATA_SPEC.md).
             - A film with both national and city-scoped bundles for the same name/boxSpeed/format is
               normal — DATA_SPEC.md says it should be split into two separate entries, one per file.
               Split it yourself if the submitter didn't already.

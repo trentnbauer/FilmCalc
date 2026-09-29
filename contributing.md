@@ -44,6 +44,7 @@ Claude gives you back:
 - ✅ the **YAML entry**, correctly formatted
 - ✅ the **filename** to use (e.g. `us-retailers.yaml`)
 - ✅ whether that file **already exists**, or you need to create it
+- ✅ an `authorship: ai` line in the file header — leave it in (or, for an existing file, set it to `ai`). The import screen shows an **AI** tag next to AI-written files so people know to double-check the prices.
 
 ### 3️⃣ Check the prices ⚠️
 
@@ -156,6 +157,9 @@ The full field reference lives in **[DATA_SPEC.md](https://github.com/trentnbaue
 
 **Safest approach:** copy an existing entry from the file and edit it. YAML uses spaces (never tabs),
 and indentation is what gives it meaning.
+
+Put `authorship: human` at the top of a new file if you typed every entry yourself (`authorship: ai` if an AI assistant
+produced any of it) — the import screen shows an **AI** tag next to `ai` files.
 
 Then carry on from **[step 4](#4️⃣-upload-it-to-github)**.
 

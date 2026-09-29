@@ -297,7 +297,7 @@ jobs:
             on merge, and merge it yourself — no separate confidence gate, every finding already cleared
             that bar before it became a comment) — is written into the issue body itself. Read and follow
             it exactly. Every YAML edit follows `DATA_SPEC.md`'s formatting rules, same as any other data
-            change in this repo.
+            change in this repo — including setting the edited file's top-level `authorship:` to `ai`.
 
             Work through open `price-audit` issues in any order, and within each issue work unchecked
             boxes top to bottom. This can be a lot of items — you will likely run out of turns before

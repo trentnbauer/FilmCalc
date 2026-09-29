@@ -114,7 +114,7 @@ jobs:
                       continue
                   filename = path.split("/")[-1]
                   entry = {"file": filename, "label": doc.get("label") or filename}
-                  for key in ("country", "state", "city", "lat", "lon"):
+                  for key in ("country", "state", "city", "lat", "lon", "authorship"):
                       if doc.get(key) is not None:
                           entry[key] = doc[key]
                   entries.append(entry)
