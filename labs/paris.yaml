@@ -102,7 +102,7 @@ labs:
         processes:
           - C41
           - BW
-      - devCost: 19.00
+      - devCost: 20.00
         turnaroundTime: next_day
         highResScan: false
         tiffScan: false
