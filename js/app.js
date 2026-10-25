@@ -908,7 +908,7 @@ function buildFilmProfilesFromEntries(entries) {
             const key = filmKey(f.name, f.boxSpeed, f.format);
             const bundle = { rolls: f.rolls, exposures: f.exposures, filmCost: f.filmCost, storeName: f.storeName, buyLink: f.buyLink };
             if (result[key]) result[key].bundles.push(bundle);
-            else result[key] = { name: f.name, boxSpeed: f.boxSpeed, maxPushPull: f.maxPushPull ?? 1, process: f.process || 'C41', format: f.format || '35mm', bundles: [bundle] };
+            else result[key] = { name: f.name, boxSpeed: f.boxSpeed, maxPushPull: f.maxPushPull ?? 1, process: f.process || 'C41', colorType: f.colorType, format: f.format || '35mm', bundles: [bundle] };
         });
     }
     return result;

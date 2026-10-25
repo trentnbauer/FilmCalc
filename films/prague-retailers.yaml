@@ -10,6 +10,7 @@ films:
     boxSpeed: 400
     maxPushPull: 2
     process: BW
+    colorType: bw
     format: 35mm
     hidden: false
     bundles:
@@ -43,6 +44,7 @@ films:
     boxSpeed: 400
     maxPushPull: 2
     process: BW
+    colorType: bw
     format: 35mm
     hidden: false
     bundles:
@@ -58,6 +60,7 @@ films:
     boxSpeed: 125
     maxPushPull: 2
     process: BW
+    colorType: bw
     format: 35mm
     hidden: false
     bundles:
@@ -73,6 +76,7 @@ films:
     boxSpeed: 3200
     maxPushPull: 2
     process: BW
+    colorType: bw
     format: 35mm
     hidden: false
     bundles:
@@ -88,6 +92,7 @@ films:
     boxSpeed: 100
     maxPushPull: 2
     process: BW
+    colorType: bw
     format: 35mm
     hidden: false
     bundles:
@@ -103,6 +108,7 @@ films:
     boxSpeed: 400
     maxPushPull: 2
     process: BW
+    colorType: bw
     format: 35mm
     hidden: false
     bundles:
@@ -118,6 +124,7 @@ films:
     boxSpeed: 400
     maxPushPull: 2
     process: BW
+    colorType: bw
     format: 35mm
     hidden: false
     bundles:
@@ -133,6 +140,7 @@ films:
     boxSpeed: 160
     maxPushPull: 2
     process: C41
+    colorType: color
     format: '120'
     devTimeSec: 195
     devTempC: 38
@@ -150,6 +158,7 @@ films:
     boxSpeed: 200
     maxPushPull: 1
     process: C41
+    colorType: color
     format: '120'
     devTimeSec: 195
     devTempC: 38
@@ -167,6 +176,7 @@ films:
     boxSpeed: 400
     maxPushPull: 2
     process: C41
+    colorType: color
     format: '120'
     devTimeSec: 195
     devTempC: 38
@@ -184,6 +194,7 @@ films:
     boxSpeed: 400
     maxPushPull: 2
     process: BW
+    colorType: bw
     format: '120'
     hidden: false
     bundles:
@@ -199,6 +210,7 @@ films:
     boxSpeed: 800
     maxPushPull: 1
     process: C41
+    colorType: color
     format: '120'
     devTimeSec: 195
     devTempC: 38
@@ -234,6 +246,7 @@ films:
     boxSpeed: 3200
     maxPushPull: 2
     process: BW
+    colorType: bw
     format: '120'
     hidden: false
     bundles:
@@ -249,6 +262,7 @@ films:
     boxSpeed: 125
     maxPushPull: 2
     process: BW
+    colorType: bw
     format: '120'
     hidden: false
     bundles:
@@ -264,6 +278,7 @@ films:
     boxSpeed: 200
     maxPushPull: 2
     process: BW
+    colorType: bw
     format: '120'
     hidden: false
     bundles:
@@ -279,6 +294,7 @@ films:
     boxSpeed: 400
     maxPushPull: 2
     process: BW
+    colorType: bw
     format: '120'
     hidden: false
     bundles:
@@ -294,6 +310,7 @@ films:
     boxSpeed: 100
     maxPushPull: 0
     process: C41
+    colorType: color
     format: '120'
     devTimeSec: 195
     devTempC: 38
@@ -311,6 +328,7 @@ films:
     boxSpeed: 100
     maxPushPull: 2
     process: BW
+    colorType: bw
     format: '120'
     hidden: false
     bundles:
@@ -326,6 +344,7 @@ films:
     boxSpeed: 400
     maxPushPull: 2
     process: BW
+    colorType: bw
     format: '120'
     hidden: false
     bundles:
@@ -341,6 +360,7 @@ films:
     boxSpeed: 200
     maxPushPull: 1
     process: C41
+    colorType: color
     format: 35mm
     devTimeSec: 195
     devTempC: 38
@@ -358,6 +378,7 @@ films:
     boxSpeed: 160
     maxPushPull: 2
     process: C41
+    colorType: color
     format: 35mm
     devTimeSec: 195
     devTempC: 38
@@ -375,6 +396,7 @@ films:
     boxSpeed: 200
     maxPushPull: 1
     process: C41
+    colorType: color
     format: 35mm
     devTimeSec: 195
     devTempC: 38
@@ -400,6 +422,7 @@ films:
     boxSpeed: 400
     maxPushPull: 1
     process: C41
+    colorType: color
     format: 35mm
     devTimeSec: 195
     devTempC: 38
@@ -417,6 +440,7 @@ films:
     boxSpeed: 800
     maxPushPull: 1
     process: C41
+    colorType: color
     format: 35mm
     devTimeSec: 195
     devTempC: 38
@@ -434,6 +458,7 @@ films:
     boxSpeed: 400
     maxPushPull: 1
     process: C41
+    colorType: color
     format: 35mm
     devTimeSec: 195
     devTempC: 38
@@ -451,6 +476,7 @@ films:
     boxSpeed: 200
     maxPushPull: 1
     process: C41
+    colorType: color
     format: 35mm
     devTimeSec: 195
     devTempC: 38
@@ -486,6 +512,7 @@ films:
     boxSpeed: 200
     maxPushPull: 1
     process: C41
+    colorType: color
     format: 35mm
     devTimeSec: 195
     devTempC: 38
@@ -503,6 +530,7 @@ films:
     boxSpeed: 100
     maxPushPull: 0
     process: C41
+    colorType: color
     format: 35mm
     devTimeSec: 195
     devTempC: 38
@@ -520,6 +548,7 @@ films:
     boxSpeed: 100
     maxPushPull: 1
     process: C41
+    colorType: color
     format: 35mm
     devTimeSec: 195
     devTempC: 38

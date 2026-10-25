@@ -320,7 +320,7 @@ jobs:
             optional).
 
             The Films list is already shaped like DATA_SPEC.md's per-film schema —
-            name/boxSpeed/maxPushPull/process/format/hidden/bundles, each bundle already carrying its own
+            name/boxSpeed/maxPushPull/process/colorType/format/hidden/bundles, each bundle already carrying its own
             availability/state/city where relevant. The Labs list is
             name/hidden/address/phone/email/website/services. Treat both as pasted-by-hand data even
             though the pre-check already confirmed they parse as YAML lists — validate the actual field

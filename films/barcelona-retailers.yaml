@@ -10,6 +10,7 @@ films:
     boxSpeed: 100
     maxPushPull: 2
     process: BW
+    colorType: bw
     format: 35mm
     hidden: false
     bundles:
@@ -25,6 +26,7 @@ films:
     boxSpeed: 125
     maxPushPull: 2
     process: BW
+    colorType: bw
     format: 35mm
     hidden: false
     bundles:
@@ -40,6 +42,7 @@ films:
     boxSpeed: 100
     maxPushPull: 1
     process: BW
+    colorType: bw
     format: 35mm
     hidden: false
     bundles:

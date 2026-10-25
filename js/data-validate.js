@@ -46,7 +46,7 @@ function validateFilmEntries(entries, schema) {
         const unknownHits = [];
         findUnknown(film, where, unknownHits);
         unknownHits.forEach(hit => errors.push(`${hit}: still has 'UNKNOWN' as a value`));
-        (s ? s.requiredFields : ['name', 'boxSpeed', 'process', 'bundles']).forEach(key => {
+        (s ? s.requiredFields : ['name', 'boxSpeed', 'process', 'colorType', 'bundles']).forEach(key => {
             if (!(key in film)) errors.push(`${where}: missing '${key}'`);
         });
         if (s && film.process && !s.enums.process.includes(film.process)) errors.push(`${where}: process '${film.process}' must be one of ${s.enums.process.join(', ')}`);
