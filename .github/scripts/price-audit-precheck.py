@@ -29,7 +29,7 @@ REPO = os.environ.get("GITHUB_REPOSITORY", "")
 DEADLINE = time.monotonic() + 15 * 60  # stop fetching new pages after 15 minutes
 
 ITEM_RE = re.compile(r"^- \[ \] .* — (?:devCost )?(?P<price>[\d.]+) — (?P<link>\S+) <!-- price-audit-key: (?P<key>[^ ]+.*?) -->$")
-CURRENCY = (r"[$€£¥₩₹฿₺₱]|kr\.?|zł|kč|ft|lei|лв|chf|eur|usd|gbp|aud|nzd|cad|sgd|hkd|jpy|krw"
+CURRENCY = (r"[$€£¥₩₹฿₺₱円]|kr\.?|zł|kč|ft|lei|лв|chf|eur|usd|gbp|aud|nzd|cad|sgd|hkd|jpy|krw"
             r"|thb|sek|nok|dkk|isk|pln|czk|huf|ron|bgn|mxn|r\$")
 
 
@@ -39,6 +39,13 @@ def price_patterns(price):
     decimals = f"{value:.2f}"
     forms = {re.escape(decimals), re.escape(decimals.replace(".", ","))}
     plain = {re.escape(price)} | ({re.escape(whole)} if whole else set())
+    if value >= 1000:  # thousands separators: 4 990 Ft, 4.990 Ft, 4,990円, 1.299,00 €
+        int_part, cents = decimals.split(".")
+        for sep in (" ", ".", ",", "'", "\u202f"):
+            grouped = f"{int(int_part):,}".replace(",", sep)
+            if whole:
+                plain.add(re.escape(grouped))
+            forms |= {re.escape(f"{grouped}{dec}{cents}") for dec in ".," if dec != sep}
     num = r"(?<![\d.,])(?:%s)(?![\d])"
     # decimals alone are distinctive enough; a bare whole number needs a currency beside it
     return [
@@ -131,6 +138,11 @@ if __name__ == "__main__":
         assert not price_on_page("16", "open 16 hours a day")
         assert not price_on_page("6", "16 €")
         assert not price_on_page("16", "116 €")
+        assert price_on_page("4990", "Ár: 4 990 Ft")
+        assert price_on_page("4990", "4.990 Ft")
+        assert price_on_page("4990", "4,990円（税込）")
+        assert price_on_page("1299", "1.299,00 €")
+        assert not price_on_page("4990", "14 990 Ft")
         line = ("- [ ] Contado Pierde — service #1 (C41, ?) — devCost 16 — https://x.test/p "
                 "<!-- price-audit-key: labs/madrid.yaml#Contado Pierde#0 -->")
         film = ("- [ ] Portra 400 — 400 ISO, 35mm — bundle: 1 roll(s) x 36 exp @ Shop — 20 — no buy link "
