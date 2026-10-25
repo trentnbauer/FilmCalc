@@ -182,7 +182,7 @@ films:
     bundles:
       - rolls: 1
         exposures: 36
-        filmCost: 5.8
+        filmCost: 6.50
         storeName: John Gunn Camera Shop
         buyLink: https://www.johngunn.ie/FOMAPAN-400-36-EXP-35MM-8593346115023-1312/
         availability: city

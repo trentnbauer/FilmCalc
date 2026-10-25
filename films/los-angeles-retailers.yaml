@@ -18,7 +18,7 @@ films:
     bundles:
       - rolls: 1
         exposures: 36
-        filmCost: 16.79
+        filmCost: 18.29
         storeName: Freestyle Photo & Imaging Supplies
         buyLink: https://www.freestylephoto.com/60316781-Kodak-Portra-400-ISO-35mm-x-36-exp.-(Single-Roll-Unboxed)-Color-Film
         availability: city
@@ -44,7 +44,7 @@ films:
     bundles:
       - rolls: 1
         exposures: 12
-        filmCost: 16.79
+        filmCost: 17.89
         storeName: Freestyle Photo & Imaging Supplies
         buyLink: https://www.freestylephoto.com/83315061-Kodak-Portra-400-ISO-120-Size-(Single-Roll-Unboxed)-Color-Film
         availability: city
@@ -52,7 +52,7 @@ films:
         city: Los Angeles
       - rolls: 5
         exposures: 12
-        filmCost: 79.99
+        filmCost: 84.95
         storeName: Freestyle Photo & Imaging Supplies
         buyLink: https://www.freestylephoto.com/8331506-Kodak-Portra-400-ISO-120-Size-5-Pack-Color-Film
         availability: city
@@ -106,7 +106,7 @@ films:
     bundles:
       - rolls: 1
         exposures: 36
-        filmCost: 16.99
+        filmCost: 16.49
         storeName: Freestyle Photo & Imaging Supplies
         buyLink: https://www.freestylephoto.com/6031330-Kodak-Ektar-100-ISO-35mm-x-36-exp.
         availability: city
@@ -124,7 +124,7 @@ films:
     bundles:
       - rolls: 1
         exposures: 36
-        filmCost: 11.49
+        filmCost: 9.99
         storeName: Freestyle Photo & Imaging Supplies
         buyLink: https://www.freestylephoto.com/5745771-Ilford-HP5+-400-ISO-35mm-x-36-exp.
         availability: city
@@ -160,7 +160,7 @@ films:
     bundles:
       - rolls: 1
         exposures: 36
-        filmCost: 16.99
+        filmCost: 15.99
         storeName: Freestyle Photo & Imaging Supplies
         buyLink: https://www.freestylephoto.com/649587-Ilford-Delta-Pro-400-ISO-35mm-x-36-exp.
         availability: city

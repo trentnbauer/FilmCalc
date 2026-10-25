@@ -54,7 +54,7 @@ films:
     bundles:
       - rolls: 1
         exposures: 36
-        filmCost: 70
+        filmCost: 65
         storeName: °isopatrusute
         buyLink: https://isopatrusute.ro/shop/ultramax400/
         availability: city
@@ -204,7 +204,7 @@ films:
     bundles:
       - rolls: 1
         exposures: 36
-        filmCost: 120
+        filmCost: 115
         storeName: °isopatrusute
         buyLink: https://isopatrusute.ro/shop/ektar/
         availability: city
@@ -408,7 +408,7 @@ films:
     bundles:
       - rolls: 1
         exposures: 36
-        filmCost: 65
+        filmCost: 60
         storeName: °isopatrusute
         buyLink: https://isopatrusute.ro/shop/kodak-kodacolor-200/
         availability: city
@@ -590,7 +590,7 @@ films:
     bundles:
       - rolls: 1
         exposures: 36
-        filmCost: 75
+        filmCost: 65
         storeName: °isopatrusute
         buyLink: https://isopatrusute.ro/shop/kodak-kodacolor-100/
         availability: city

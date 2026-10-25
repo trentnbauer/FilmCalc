@@ -486,7 +486,7 @@ films:
     bundles:
       - rolls: 1
         exposures: 36
-        filmCost: 299
+        filmCost: 329
         storeName: Oslo Foto
         buyLink: https://oslofoto.as/en/products/kodak-portra-800-135-36
         availability: city

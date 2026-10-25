@@ -124,7 +124,7 @@ films:
     bundles:
       - rolls: 1
         exposures: 36
-        filmCost: 105
+        filmCost: 120
         storeName: Shutterbug
         buyLink: https://shutterbugcph.dk/products/fujifilm-200-135-36-1-pak
         availability: city
