@@ -13,6 +13,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const {
     filmKey,
+    computeStockRecommendations,
+    computePickerExposure,
     filmColorType,
     normalizeFilmBundles,
     normalizeLabServices,
@@ -717,4 +719,61 @@ test('bundleCostForRolls: rounds up to whole packs, never fractional', () => {
     assert.equal(bundleCostForRolls(fivePack, 1), 45); // 1 roll still costs a whole pack
     assert.equal(bundleCostForRolls(fivePack, 5), 45);
     assert.equal(bundleCostForRolls(fivePack, 6), 90); // needs a second pack
+});
+
+// ---- Pick a film ----
+// window light (EV 9), portrait (1/125), f/2.8 -> needed ISO
+//   = 100 * 2.8^2 / (2^9 * 1/125) = 784 / 4.096 = ~191
+const pickerTier = { devCost: 10, mailFee: 0, noPushPull: false, pushPullCost: 3, pushPullType: 'per_stop' };
+const pickerFilm = (name, boxSpeed, extra = {}) => ({ name, boxSpeed, process: 'C41', format: '35mm', maxPushPull: 1, bundles: [{ rolls: 1, exposures: 36, filmCost: 10 }], ...extra });
+const pickerOpts = { subject: 'portrait', look: 'color', format: '35mm', light: 'window', lens: 2.8 };
+
+test('computeStockRecommendations: pushes a slow stock just enough and prices the push fee', () => {
+    const films = { a: pickerFilm('Fast 400', 400), b: pickerFilm('Slow 100', 100, { maxPushPull: 2, bundles: [{ rolls: 1, exposures: 36, filmCost: 5 }] }) };
+    const { rows, needed } = computeStockRecommendations(films, () => pickerTier, pickerOpts);
+    assert.ok(Math.abs(needed - 191.4) < 0.1);
+    // Slow 100: +1 stop -> EI 200 >= 191; roll = 5 + 10 dev + 3 push = 18 -> 0.5/frame, beats Fast 400's (10+10)/36
+    assert.equal(rows[0].film.name, 'Slow 100');
+    assert.equal(rows[0].stops, 1);
+    assert.equal(rows[0].ei, 200);
+    assert.equal(rows[0].perFrame, 0.5);
+    assert.equal(rows[1].stops, 0);
+});
+
+test('computeStockRecommendations: short stocks sort after fitting ones, hopeless or unpushable ones drop', () => {
+    const films = { a: pickerFilm('Stuck 100', 100, { maxPushPull: 0 }), c: pickerFilm('Fast 400', 400, { bundles: [{ rolls: 1, exposures: 36, filmCost: 30 }] }) };
+    const { rows } = computeStockRecommendations(films, () => pickerTier, pickerOpts);
+    // 100 can't be pushed: 100 >= 191/2 but < 191*0.92, so it's "short" and comes last even though it's cheaper
+    assert.deepEqual(rows.map(r => r.film.name), ['Fast 400', 'Stuck 100']);
+    assert.equal(rows[0].short, false);
+    assert.equal(rows[1].short, true);
+    // 50 would need a push to reach 100, but the lab doesn't push and 50 < 191/2 -> dropped
+    const noPush = computeStockRecommendations({ b: pickerFilm('Slow 50', 50) }, () => ({ ...pickerTier, noPushPull: true }), pickerOpts);
+    assert.equal(noPush.rows.length, 0);
+});
+
+test('computeStockRecommendations: light cap, look filter (XP2 is bw not colour), format and missing lab tier', () => {
+    const films = {
+        a: pickerFilm('Fast 1600', 1600), b: pickerFilm('Gold 200', 200),
+        c: pickerFilm('XP2', 400, { colorType: 'bw' }), d: pickerFilm('Tri-X', 400, { process: 'BW' }),
+        e: pickerFilm('Gold 200 120', 200, { format: '120' }), f: pickerFilm('Slide', 100, { process: 'E6' })
+    };
+    const names = o => computeStockRecommendations(films, () => pickerTier, { ...pickerOpts, ...o }).rows.map(r => r.film.name).sort();
+    assert.deepEqual(names({ light: 'sun' }), ['Gold 200']); // 1600 > the 800 sun cap
+    assert.deepEqual(names({ look: 'bw' }), ['Tri-X', 'XP2']);
+    assert.deepEqual(names({ look: 'slide' }), ['Slide']);
+    assert.deepEqual(names({ format: '120' }), ['Gold 200 120']);
+    const noE6 = computeStockRecommendations(films, p => (p === 'E6' ? null : pickerTier), { ...pickerOpts, look: 'slide' });
+    assert.equal(noE6.rows.length, 0);
+    assert.equal(noE6.poolCount, 1);
+});
+
+test('computePickerExposure: snaps to a standard shutter and stops down when the shutter would be faster than 1/1000', () => {
+    // EV 9, EI 400, f/2.8: t = 7.84 * 100 / (512 * 400) = 1/261 -> snaps to 1/250
+    const a = computePickerExposure(9, 400, 2.8, 2.8, 1 / 125);
+    assert.equal(a.aperture, 2.8);
+    assert.equal(a.shutter, 1 / 250);
+    // EV 15, EI 800, f/2.8: far faster than 1/1000 -> stopped down
+    const b = computePickerExposure(15, 800, 2.8, 1.4, 1 / 125);
+    assert.ok(b.aperture > 2.8);
 });
