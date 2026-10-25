@@ -114,6 +114,7 @@ function normalizeLabServices(lab) {
             tiffScan: !!s.tiffScan,
             noPushPull: !!s.noPushPull,
             mailBackCost: parseMailBackCost(s.mailBackCost),
+            nonStandardFrameCost: parseMailBackCost(s.nonStandardFrameCost),
             processes: Array.isArray(s.processes) && s.processes.length > 0 ? s.processes : [s.process || 'C41']
         }));
     }
@@ -126,6 +127,7 @@ function normalizeLabServices(lab) {
         tiffScan: !!lab.tiffScan,
         noPushPull: !!lab.noPushPull,
         mailBackCost: parseMailBackCost(lab.mailBackCost),
+        nonStandardFrameCost: parseMailBackCost(lab.nonStandardFrameCost),
         processes: Array.isArray(lab.processes) && lab.processes.length > 0 ? lab.processes : [lab.process || 'C41']
     }];
 }
@@ -154,6 +156,12 @@ function effectiveMailBackFee(tier, opts) {
     const rollCount = Math.max(1, parseInt(opts.mailBackRollCount) || 1);
     const mailToLabFee = parseFloat(opts.mailToLabFee) || 0;
     return ((parseFloat(tier.mailBackCost) || 0) + mailToLabFee) / rollCount;
+}
+
+// Flat per-roll surcharge for half frame / XPan (issue #708). Unknown (null)
+// is costed as $0 but, like mailBackCost, isn't claimed to be free.
+function nonStandardFrameFee(tier, isNonStandard) {
+    return isNonStandard ? (tier.nonStandardFrameCost || 0) : 0;
 }
 
 // Total cost of buying enough of one bundle (repeated) to cover a given
@@ -723,6 +731,7 @@ if (typeof module !== 'undefined' && module.exports) {
         normalizeLabServices,
         computeCostPerPhoto,
         effectiveMailBackFee,
+        nonStandardFrameFee,
         bundleCostForRolls,
         computeBundleBreakEven,
         tierMatchesFilmProcess,

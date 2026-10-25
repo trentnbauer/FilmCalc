@@ -103,6 +103,8 @@ function validateLabEntries(entries, schema) {
             else if (typeof svc.devCost === 'number' && svc.devCost < 0) errors.push(`${sw}: devCost can't be negative`);
             if (typeof svc.mailBackCost === 'string') errors.push(`${sw}: mailBackCost must be a number, not text`);
             else if (typeof svc.mailBackCost === 'number' && svc.mailBackCost < 0) errors.push(`${sw}: mailBackCost can't be negative`);
+            if (typeof svc.nonStandardFrameCost === 'string') errors.push(`${sw}: nonStandardFrameCost must be a number, not text`);
+            else if (typeof svc.nonStandardFrameCost === 'number' && svc.nonStandardFrameCost < 0) errors.push(`${sw}: nonStandardFrameCost can't be negative`);
             if (s && svc.turnaroundTime && !s.enums.turnaroundTime.includes(svc.turnaroundTime)) errors.push(`${sw}: turnaroundTime '${svc.turnaroundTime}' must be one of ${s.enums.turnaroundTime.join(', ')}`);
             if (s && svc.pushPullType && !s.enums.pushPullType.includes(svc.pushPullType)) errors.push(`${sw}: pushPullType '${svc.pushPullType}' must be 'per_stop' or 'flat'`);
             if (svc.source && !isValidUrl(svc.source)) errors.push(`${sw}: source doesn't look like a URL`);

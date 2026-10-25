@@ -327,7 +327,8 @@ function rankLabs() {
             const why = tierWhy(t, stopsAbs);
             const pushFee = pushFeeFor(t, stopsAbs);
             const mailFee = effectiveMailBackFee(t, opts);
-            return { ...t, label, why, ok: !why, pushFee, mailFee, cost: t.devCost + pushFee + mailFee };
+            const frameFee = nonStandardFrameFee(t, state.format === '35mm' && state.frame35 !== 'full');
+            return { ...t, label, why, ok: !why, pushFee, mailFee, frameFee, cost: t.devCost + pushFee + mailFee + frameFee };
         });
         const okTiers = tiers.filter(t => t.ok).sort((a, b) => a.cost - b.cost);
         const pick = (preferredLabel && okTiers.find(t => t.label === preferredLabel)) || okTiers[0];
@@ -373,7 +374,7 @@ function computeFilmRows(home) {
         const pushRate = home ? home.pick.pushPullType : null;
         const fee = (home && stopsAbs) ? pushFeeFor(home.pick, stopsAbs) : 0;
         const feeBlocked = home && stopsAbs > 0 && home.pick.noPushPull;
-        const devPerRoll = home ? home.pick.devCost + fee + home.pick.mailFee : 0;
+        const devPerRoll = home ? home.pick.devCost + fee + home.pick.mailFee + home.pick.frameFee : 0;
         const perRoll = bestBundle.filmCost / bestBundle.rolls;
         const perFrame = (perRoll + devPerRoll) / bestBundle.exposures;
         return { f, bundle: bestBundle, stopsAbs, overLimit, feeBlocked, dir: stopsSigned > 0 ? 'push' : 'pull', perRoll, perFrame, exposures: bestBundle.exposures };
@@ -406,7 +407,7 @@ function computeCheaperFilm(home) {
         });
         if (!bestBundle) return;
         const fee = pushFeeFor(home.pick, stopsAbs);
-        const dev = home.pick.devCost + fee + home.pick.mailFee;
+        const dev = home.pick.devCost + fee + home.pick.mailFee + home.pick.frameFee;
         const cpp = (bestBundle.filmCost / bestBundle.rolls + dev) / bestBundle.exposures;
         const cand = { f, bundle: bestBundle, stopsSigned, stopsAbs, cpp };
         if (stopsAbs === 0) { if (!bestNative || cpp < bestNative.cpp) bestNative = cand; }
@@ -1139,7 +1140,8 @@ function viewLookup() {
     const homeDev = home ? home.pick.devCost : 0;
     const homePush = home ? home.pick.pushFee : 0;
     const homeFee = home ? home.pick.mailFee : 0;
-    const rollTotal = (perRoll + homeDev + homePush + homeFee) || 1;
+    const homeFrame = home ? home.pick.frameFee : 0;
+    const rollTotal = (perRoll + homeDev + homePush + homeFee + homeFrame) || 1;
     const best = r.ranked[0];
     const homeCpp = home ? home.cpp : 0;
     const saveC = best ? (homeCpp - best.cpp) * 100 : 0;
@@ -1170,7 +1172,7 @@ ${home && home.lab.address ? `<button type="button" onclick="App.openMaps()" ari
 </div>
 <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-top:8px">
 <div style="display:flex;align-items:baseline;gap:5px"><span style="font-size:24px;font-weight:500;color:${beatsAllSaved ? GOLD.fg : C.sub}">${CUR()}</span><span style="font-size:66px;font-weight:700;line-height:.84;color:${beatsAllSaved ? GOLD.fg : (cheaper.tone === 'warn' ? C.red : C.text)};letter-spacing:-.035em">${home ? money(homeCpp) : '—'}</span><span style="font-size:12px;color:${beatsAllSaved ? '#c9b98a' : C.sub}">${escapeHtml(t('v3PerFrame'))}</span></div>
-<div style="text-align:right;padding-bottom:6px"><div style="font-size:11px;color:${C.sub}">${escapeHtml(t('v3TotalCost'))}</div><div style="font-size:24px;font-weight:600;color:${C.text}">${CUR()}${home ? money(perRoll + homeDev + homePush + homeFee) : '0.00'}</div></div>
+<div style="text-align:right;padding-bottom:6px"><div style="font-size:11px;color:${C.sub}">${escapeHtml(t('v3TotalCost'))}</div><div style="font-size:24px;font-weight:600;color:${C.text}">${CUR()}${home ? money(perRoll + homeDev + homePush + homeFee + homeFrame) : '0.00'}</div></div>
 </div>
 ${cheaper.tone === 'warn' ? `<div style="display:flex;align-items:center;gap:7px;margin-top:10px;padding:7px 10px;border-radius:8px;background:${C.redBg};border:1px solid ${C.redBorder}">
 <svg style="width:13px;height:13px;flex:none;color:${C.red}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5L2.8 20h18.4L12 4.5z"></path><path stroke-linecap="round" d="M12 10v4.2"></path><circle cx="12" cy="17.2" r="1" fill="currentColor" stroke="none"></circle></svg>
@@ -1182,9 +1184,10 @@ ${cheaper.tone === 'warn' ? `<div style="display:flex;align-items:center;gap:7px
 <div style="flex:1"><div style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:2px;background:${C.blue}"></span><span style="font-size:11px;color:${C.sub}">${escapeHtml(t('v3LabelDev'))}</span></div><div style="font-size:15px;font-weight:600;color:${C.text};margin-top:3px">${CUR()}${money(homeDev)}</div></div>
 <div style="flex:1.2;min-width:0">
 <div style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;flex:none;border-radius:2px;background:#ff9a5c"></span><span style="font-size:11px;color:${C.sub}">${escapeHtml(t('v3LabelFees'))}</span></div>
-${(homePush <= 0 && homeFee <= 0) ? `<div style="font-size:15px;font-weight:600;color:${C.faint};margin-top:3px">${escapeHtml(t('v3FeesNone'))}</div>` : `<div style="display:flex;gap:10px;margin-top:3px">
+${(homePush <= 0 && homeFee <= 0 && homeFrame <= 0) ? `<div style="font-size:15px;font-weight:600;color:${C.faint};margin-top:3px">${escapeHtml(t('v3FeesNone'))}</div>` : `<div style="display:flex;gap:10px;margin-top:3px">
 ${homePush > 0 ? `<span style="min-width:0"><span style="display:block;font-size:15px;font-weight:600;color:${C.text}">${CUR()}${money(homePush)}</span><span style="display:flex;align-items:center;gap:4px;margin-top:2px"><span style="width:6px;height:6px;flex:none;border-radius:2px;background:#b3541a"></span><span style="font-size:10px;color:${C.faint}">${escapeHtml(t('v3FeePush'))}</span></span></span>` : ''}
 ${homeFee > 0 ? `<span style="min-width:0"><span style="display:block;font-size:15px;font-weight:600;color:${C.text}">${CUR()}${money(homeFee)}</span><span style="display:flex;align-items:center;gap:4px;margin-top:2px"><span style="width:6px;height:6px;flex:none;border-radius:2px;background:#ff9a5c"></span><span style="font-size:10px;color:${C.faint}">${escapeHtml(t('v3FeePost'))}</span></span></span>` : ''}
+${homeFrame > 0 ? `<span style="min-width:0"><span style="display:block;font-size:15px;font-weight:600;color:${C.text}">${CUR()}${money(homeFrame)}</span><span style="display:flex;align-items:center;gap:4px;margin-top:2px"><span style="width:6px;height:6px;flex:none;border-radius:2px;background:#8c6bd1"></span><span style="font-size:10px;color:${C.faint}">${escapeHtml(t('v3FeeFrame'))}</span></span></span>` : ''}
 </div>`}
 </div>
 </div>

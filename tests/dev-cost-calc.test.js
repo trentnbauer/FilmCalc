@@ -20,6 +20,7 @@ const {
     normalizeLabServices,
     computeCostPerPhoto,
     effectiveMailBackFee,
+    nonStandardFrameFee,
     bundleCostForRolls,
     computeBundleBreakEven,
     tierMatchesFilmProcess,
@@ -776,4 +777,28 @@ test('computePickerExposure: snaps to a standard shutter and stops down when the
     // EV 15, EI 800, f/2.8: far faster than 1/1000 -> stopped down
     const b = computePickerExposure(15, 800, 2.8, 1.4, 1 / 125);
     assert.ok(b.aperture > 2.8);
+});
+
+// ---------- nonStandardFrameCost (issue #708) ----------
+// Flat per-roll fee for half frame / XPan; null = unknown, costed as 0.
+
+test('normalizeLabServices: nonStandardFrameCost is null unless set, keeps explicit 0', () => {
+    const [unset, nul, zero, five] = normalizeLabServices({ services: [
+        { devCost: 15 }, { devCost: 15, nonStandardFrameCost: null },
+        { devCost: 15, nonStandardFrameCost: 0 }, { devCost: 15, nonStandardFrameCost: 5 }] });
+    assert.equal(unset.nonStandardFrameCost, null);
+    assert.equal(nul.nonStandardFrameCost, null);
+    assert.equal(zero.nonStandardFrameCost, 0);
+    assert.equal(five.nonStandardFrameCost, 5);
+});
+
+test('nonStandardFrameFee: charged only for non-full frames, with or without the field', () => {
+    const withFee = { nonStandardFrameCost: 5 };
+    const without = { nonStandardFrameCost: null };
+    // full frame: never charged
+    assert.equal(nonStandardFrameFee(withFee, false), 0);
+    assert.equal(nonStandardFrameFee(without, false), 0);
+    // half frame / XPan (isNonStandard = true)
+    assert.equal(nonStandardFrameFee(withFee, true), 5);
+    assert.equal(nonStandardFrameFee(without, true), 0);
 });
