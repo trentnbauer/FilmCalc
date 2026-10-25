@@ -14,7 +14,7 @@ labs:
     website: https://www.contadopierde.com
     source: https://www.contadopierde.com/revelado-de-carretes/
     services:
-      - devCost: 6
+      - devCost: 16
         pushPullCost: 2
         pushPullType: per_stop
         highResScan: false
