@@ -59,6 +59,14 @@ jobs:
             --description "A price-audit entry Claude could not verify. Reply with the correct value and mention @claude." \
             --force
 
+      - name: Pre-check price-audit items
+        # Free: ticks every box whose price still shows on its linked page, and closes checklists
+        # that then have nothing left, so Claude's turns go only to items that need judgment.
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/price-audit-precheck.py
+
       - name: Prepare Tier 1 security-alert data
         # The Claude GitHub App's own installation token has no
         # security_events access at all -- requesting it via
