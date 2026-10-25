@@ -10,8 +10,8 @@ the issue can see exactly what Claude is meant to do with it.
 
 One issue per file, not one giant issue, because a single combined checklist across all
 ~15 files comfortably exceeds GitHub's issue body size limit. Safe to run anytime, not
-just on the monthly schedule — `open_audit_paths()` skips any file that already has an
-open price-audit issue, so a manual `workflow_dispatch` re-run mid-month (e.g. to pick up
+just on the monthly schedule — `main()` skips any file that already has an open
+price-audit issue for the current month, so a manual `workflow_dispatch` re-run mid-month (e.g. to pick up
 files added since the last run) only opens issues for what's actually missing, never a
 duplicate checklist for a file still being worked through.
 
@@ -207,25 +207,39 @@ def create_issue(title, body):
 TITLE_RE = re.compile(r"^Price audit: (.+?) — ")
 
 
-def open_audit_paths():
-    """Every films/*.yaml or labs/*.yaml path that already has an open
-    price-audit issue, so a re-run (whether the monthly schedule or a manual
-    workflow_dispatch, possibly mid-month to pick up files added since the
-    last run) never opens a second, duplicate checklist for a file whose
-    first one is still being worked through — while still opening one for
-    any file that doesn't have one yet."""
+def open_audit_issues():
+    """Open price-audit issues as {path: (number, title)}."""
     result = subprocess.run(
         ["gh", "issue", "list", "--repo", REPO, "--label", "price-audit",
-         "--state", "open", "--json", "title", "--limit", "200"],
+         "--state", "open", "--json", "number,title", "--limit", "500"],
         capture_output=True, text=True, check=True,
     )
-    titles = (t["title"] for t in json.loads(result.stdout))
-    return {m.group(1) for t in titles if (m := TITLE_RE.match(t))}
+    return {m.group(1): (i["number"], i["title"])
+            for i in json.loads(result.stdout) if (m := TITLE_RE.match(i["title"]))}
+
+
+def close_stale(number, month):
+    """Close a previous month's checklist that was never finished, so it doesn't sit open
+    forever (and block this month's from being opened) — its prices get re-audited from
+    scratch in the new one."""
+    subprocess.run(
+        ["gh", "issue", "close", str(number), "--repo", REPO, "--reason", "not planned",
+         "--comment", f"Superseded by the {month} price audit, which re-checks every entry "
+                      "in this file. Any open `price-audit-flag` issues stay open."],
+        check=True,
+    )
 
 
 def main():
     now = datetime.now(timezone.utc)
-    already_open = open_audit_paths()
+    month = now.strftime("%B %Y")
+    already_open = set()
+    for path, (number, title) in open_audit_issues().items():
+        if title.endswith(f" — {month}"):
+            already_open.add(path)
+        else:
+            close_stale(number, month)
+            print(f"{path}: closed stale #{number} ({title})")
     created = []
     files = sorted(glob.glob("films/*.yaml") + glob.glob("films/*.yml"))
     files += sorted(glob.glob("labs/*.yaml") + glob.glob("labs/*.yml"))

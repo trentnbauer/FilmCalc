@@ -80,7 +80,8 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           additional_permissions: |
             actions: read
-          claude_args: '--allowed-tools "Bash(gh:*),Bash(git:*),Bash(node:*),Bash(python3:*),Read,Edit,Write,Grep,Glob,WebFetch"'
+          # WebSearch is needed by the price-audit checklist (finding a lab's pricing page).
+          claude_args: '--max-turns 300 --allowed-tools "Bash(gh:*),Bash(git:*),Bash(node:*),Bash(python3:*),Read,Edit,Write,Grep,Glob,WebFetch,WebSearch"'
           prompt: |
             You are running as a scheduled, unattended job with no human present. Be conservative:
             implement real, working fixes, and do not refactor or "improve" unrelated code. This run
@@ -305,9 +306,14 @@ jobs:
             a finding comment, or opening a flag issue), immediately save that progress with
             `gh issue edit <number> --body-file <file>` before starting the next item, so a run that
             gets cut off mid-audit loses nothing — tomorrow night's Tier 5 just resumes at the next
-            unchecked box. Never batch several items' worth of tick-marks into one save. If you sense
-            you're low on remaining turns, finish the item you're on, save, and stop there rather than
-            starting another.
+            unchecked box. Never batch several items' worth of tick-marks into one save.
+
+            Finishing one issue is not the end of this tier: as soon as one price-audit issue is closed
+            (or its PR is opened), pick the next open one and keep going. This run has a budget of 300
+            turns (`--max-turns`); only stop Tier 5 when no open `price-audit` issue is left or you are
+            within about 20 turns of that budget. Ending early with unchecked boxes left and turns to
+            spare leaves the month's audit unfinished — at one file a night it never completes before
+            the next month's issues replace it.
 
             **Tier 5b — Revisit stale price-audit-flag issues**
 

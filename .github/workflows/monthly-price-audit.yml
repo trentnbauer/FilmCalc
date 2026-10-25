@@ -13,7 +13,8 @@ name: Monthly Price Audit
 # Safe to run more than once a month: generate-price-audit-issues.py skips any file that
 # already has an open price-audit issue, so a re-run — scheduled or manual — only opens
 # issues for files that don't have one yet, never a duplicate checklist for a file whose
-# first one is still being worked through.
+# first one is still being worked through. A checklist left open from a previous month is
+# closed as superseded first, so unfinished audits don't pile up.
 on:
   schedule:
     - cron: '0 14 1 * *'
