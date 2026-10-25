@@ -133,6 +133,7 @@ wants — no AI needed, just some manual reformatting.
   boxSpeed: 200
   maxPushPull: 1
   process: C41
+  colorType: color
   format: 35mm
   hidden: false
   bundles:

@@ -12,6 +12,7 @@ films:
     process: C41
     devTimeSec: 195
     devTempC: 38
+    colorType: color
     format: 35mm
     hidden: false
     bundles:

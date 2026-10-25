@@ -12,6 +12,7 @@ films:
     process: C41
     devTimeSec: 195
     devTempC: 38
+    colorType: color
     format: 35mm
     hidden: false
     bundles:
@@ -29,6 +30,7 @@ films:
     process: C41
     devTimeSec: 195
     devTempC: 38
+    colorType: color
     format: '120'
     hidden: false
     bundles:
@@ -46,6 +48,7 @@ films:
     process: C41
     devTimeSec: 195
     devTempC: 38
+    colorType: color
     format: '120'
     hidden: false
     bundles:
@@ -63,6 +66,7 @@ films:
     process: C41
     devTimeSec: 195
     devTempC: 38
+    colorType: color
     format: '120'
     hidden: false
     bundles:
@@ -78,6 +82,7 @@ films:
     boxSpeed: 100
     maxPushPull: 2
     process: BW
+    colorType: bw
     format: '120'
     hidden: false
     bundles:
@@ -93,6 +98,7 @@ films:
     boxSpeed: 400
     maxPushPull: 2
     process: BW
+    colorType: bw
     format: '120'
     hidden: false
     bundles:
@@ -108,6 +114,7 @@ films:
     boxSpeed: 3200
     maxPushPull: 2
     process: BW
+    colorType: bw
     format: '120'
     hidden: false
     bundles:
@@ -139,6 +146,7 @@ films:
     boxSpeed: 125
     maxPushPull: 2
     process: BW
+    colorType: bw
     format: '120'
     hidden: false
     bundles:
@@ -154,6 +162,7 @@ films:
     boxSpeed: 400
     maxPushPull: 2
     process: BW
+    colorType: bw
     format: '120'
     hidden: false
     bundles:
@@ -171,6 +180,7 @@ films:
     process: C41
     devTimeSec: 195
     devTempC: 38
+    colorType: color
     format: '120'
     hidden: false
     bundles:
@@ -188,6 +198,7 @@ films:
     process: C41
     devTimeSec: 195
     devTempC: 38
+    colorType: color
     format: '120'
     hidden: false
     bundles:

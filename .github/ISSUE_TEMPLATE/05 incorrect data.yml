@@ -17,7 +17,7 @@ body:
       options:
         - A film stock's price
         - A film stock's push/pull limit (maxPushPull)
-        - A film stock's box speed, process, or format
+        - A film stock's box speed, process, picture type (colour / B&W / speciality), or format
         - A lab's development cost
         - A lab's push/pull fee
         - A lab's service tier (turnaround / hi-res / processes offered)

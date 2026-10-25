@@ -76,7 +76,8 @@ body:
       value: |
         - Format (35mm / 120 / 110 / …):
         - Box speed (ISO):
-        - Process (C41 / BW / E6 / ECN-2):
+        - Process / development chemistry (C41 / BW / E6 / ECN-2):
+        - Picture type (color / bw / speciality — e.g. XP2 is C41 process but bw):
         - Exposures per roll:
         - Push/pull limit in stops (maxPushPull):
         - Regular price (not sale price):
