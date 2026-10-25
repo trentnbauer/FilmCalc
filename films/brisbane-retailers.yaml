@@ -18,7 +18,7 @@ films:
     bundles:
       - rolls: 1
         exposures: 36
-        filmCost: 23.00
+        filmCost: 25.00
         storeName: CameraPro
         buyLink: https://www.camerapro.com.au/12475-kodak-film-ultramax-400-color-negative-film-35mm-roll-film-36-exposures.html
         availability: city

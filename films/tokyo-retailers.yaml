@@ -18,7 +18,7 @@ films:
     bundles:
       - rolls: 1
         exposures: 36
-        filmCost: 1978
+        filmCost: 1948
         storeName: Fujiya Camera
         buyLink: https://www.fujiya-camera.co.jp/shop/g/gC0086806034067/
         availability: city

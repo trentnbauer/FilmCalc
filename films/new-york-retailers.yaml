@@ -124,7 +124,7 @@ films:
     bundles:
       - rolls: 1
         exposures: 36
-        filmCost: 8.99
+        filmCost: 10.99
         storeName: K&M Camera
         buyLink: https://kmcamera.com/products/fuj600022186
         availability: city
@@ -194,7 +194,7 @@ films:
         city: New York
       - rolls: 1
         exposures: 24
-        filmCost: 6.95
+        filmCost: 7.99
         storeName: K&M Camera
         buyLink: https://kmcamera.com/products/ken6012379
         availability: city
@@ -212,7 +212,7 @@ films:
     bundles:
       - rolls: 1
         exposures: 36
-        filmCost: 15.99
+        filmCost: 16.49
         storeName: K&M Camera
         buyLink: https://kmcamera.com/products/ilf1748192
         availability: city

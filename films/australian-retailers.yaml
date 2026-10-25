@@ -14,7 +14,7 @@ films:
     bundles:
       - rolls: 10
         exposures: 36
-        filmCost: 180
+        filmCost: 180.95
         storeName: Woolworths
         buyLink: >-
           https://www.woolworths.com.au/shop/productdetails/1120752907/kodak-gold-200-colour-film-35mm-36-exposures-pack-of-10-
@@ -185,7 +185,7 @@ films:
     bundles:
       - rolls: 1
         exposures: 24
-        filmCost: 21.95
+        filmCost: 23.95
         storeName: Teds Cameras
         buyLink: https://www.teds.com.au/products/kodak-ultramax-135-36-400-35mm-film
   - name: Ilford Ilfocolor

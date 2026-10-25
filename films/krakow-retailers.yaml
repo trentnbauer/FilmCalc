@@ -556,7 +556,7 @@ films:
     bundles:
       - rolls: 1
         exposures: 36
-        filmCost: 85
+        filmCost: 87
         storeName: Foto-Kram
         buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-kodak-ektar-100-36/
         availability: city
@@ -610,7 +610,7 @@ films:
     bundles:
       - rolls: 1
         exposures: 36
-        filmCost: 105
+        filmCost: 110
         storeName: Foto-Kram
         buyLink: https://foto-kram.pl/produkt/akcesoria/filmy-i-klisze/film-kodak-portra-80036/
         availability: city

@@ -144,7 +144,7 @@ films:
     bundles:
       - rolls: 1
         exposures: 36
-        filmCost: 13
+        filmCost: 15
         storeName: FCF
         buyLink: https://www.fcf.it/fujicolor-200-135-36-200-iso-rullino-singolo.html
         availability: city
