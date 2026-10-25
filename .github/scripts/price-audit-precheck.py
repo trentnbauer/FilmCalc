@@ -52,9 +52,13 @@ def price_on_page(price, text):
     return any(p.search(text) for p in price_patterns(price))
 
 
+SKIP_HOSTS = set()  # hosts that refused (403) or timed out once this run; their other pages are left to Claude
+
+
 def page_text(url, cache):
     if url not in cache:
-        if time.monotonic() > DEADLINE:
+        host = urllib.parse.urlsplit(url).netloc
+        if time.monotonic() > DEADLINE or host in SKIP_HOSTS:
             return None
         try:
             # quote non-ASCII paths (e.g. wywoływanie_filmow.html); browser headers, since some
@@ -72,6 +76,9 @@ def page_text(url, cache):
         except Exception as e:  # blocked, timeout, dead link: Claude looks at it
             print(f"  fetch failed ({e}) {url}", file=sys.stderr)
             cache[url] = None
+            if getattr(e, "code", None) == 403 or "timed out" in str(e):
+                SKIP_HOSTS.add(host)
+                print(f"  skipping the rest of {host} this run", file=sys.stderr)
     return cache[url]
 
 
@@ -134,6 +141,12 @@ if __name__ == "__main__":
         assert n == 0
         assert urllib.parse.quote("http://x.pl/wywoływanie_filmow.html?a=1", safe=":/?&=#%+@,;~!$'()*[]") \
             == "http://x.pl/wywo%C5%82ywanie_filmow.html?a=1"
+        import urllib.error
+        SKIP_HOSTS.clear(); urllib.request.urlopen = lambda *a, **k: (_ for _ in ()).throw(
+            urllib.error.HTTPError("https://blocked.test/a", 403, "Forbidden", {}, None))
+        c = {}
+        assert page_text("https://blocked.test/a", c) is None and "blocked.test" in SKIP_HOSTS
+        assert page_text("https://blocked.test/b", c) is None and "https://blocked.test/b" not in c
         print("self-test OK")
     else:
         main()
