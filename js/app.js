@@ -196,7 +196,7 @@ const state = {
     frame35: localStorage.getItem('globalCamera35Type') || 'full',
     pushPull: '0',
     tab: 'stock', fHiRes: (readJSON('reqFilters', {}) || {}).hiRes || false, fRush: (readJSON('reqFilters', {}) || {}).rush || false,
-    includePush: true,
+    includePush: true, matchChem: true,
     postModal: false, postTo: '', postRolls: localStorage.getItem('mailBackRollCount') || '1', mailBack: false,
     shareModal: false, copied: false, shareKind: 'roll',
     libTab: 'films', libSearch: '', libFilter: 'All', libProcess: 'All', libFormat: 'All', libIso: 'All', libOpen: null, libFilterModal: false,
@@ -325,6 +325,12 @@ function rankLabs() {
     return { ranked, filmPerRoll, exp, stopsSigned, stopsAbs };
 }
 
+// "Match chemistry + type" chip: only stocks with the selected process
+// (C41/BW/E6/ECN-2) and colour type (colour/B&W/speciality).
+function filmMatchesChem(f) {
+    return !state.matchChem || ((f.process || 'C41') === state.process && filmColorType(f) === state.filmColor);
+}
+
 // Every saved film able to shoot in the active format/colour, priced at
 // the home lab (falling back to cheapest) including whatever push/pull it
 // takes to reach the box speed actually entered.
@@ -332,7 +338,7 @@ function computeFilmRows(home) {
     const allFilms = getAllFilms();
     const iso = shootIso() || num(state.boxSpeed);
     const override = camOverride();
-    const rows = Object.values(allFilms).filter(f => !f.hidden && (f.format || '35mm') === FORMAT_VALUE[state.format]).map(f => {
+    const rows = Object.values(allFilms).filter(f => !f.hidden && (f.format || '35mm') === FORMAT_VALUE[state.format] && filmMatchesChem(f)).map(f => {
         const boxSpeed = parseFloat(f.boxSpeed) || 0;
         if (!boxSpeed) return null;
         const stopsSigned = iso ? Math.round(Math.log2(iso / boxSpeed)) : 0;
@@ -370,7 +376,7 @@ function computeCheaperFilm(home) {
     }
     const override = camOverride();
     let bestNative = null, bestPushPull = null;
-    Object.values(getAllFilms()).filter(f => !f.hidden && (f.format || '35mm') === FORMAT_VALUE[state.format]).forEach(f => {
+    Object.values(getAllFilms()).filter(f => !f.hidden && (f.format || '35mm') === FORMAT_VALUE[state.format] && filmMatchesChem(f)).forEach(f => {
         const boxSpeed = parseFloat(f.boxSpeed) || 0;
         if (!boxSpeed) return;
         const stopsSigned = Math.round(Math.log2(target / boxSpeed));
@@ -1188,7 +1194,8 @@ ${cheaper.buyLink ? `<a href="${sanitizeUrl(cheaper.buyLink)}" target="_blank" r
         ? [chip(escapeHtml(t('dcHiResScanLabel')), state.fHiRes, () => `App.toggleFlag('fHiRes')`), chip(escapeHtml(t('v2FilterNextDay')), state.fRush, () => `App.toggleFlag('fRush')`)]
         : [
             `<button type="button" style="height:32px;padding:0 11px;display:flex;align-items:center;gap:6px;border-radius:8px;font:inherit;font-size:12px;background:${C.panel};border:1px solid ${C.border2};color:${C.sub}">${shootIso() ? escapeHtml(t('v3IsoValue', { iso: shootIso() })) : escapeHtml(t('v3AnyIsoCheapestFirst'))}</button>`,
-            chip(escapeHtml(t('v3PushPullChip')), state.includePush, () => `App.toggleFlag('includePush')`)
+            chip(escapeHtml(t('v3PushPullChip')), state.includePush, () => `App.toggleFlag('includePush')`),
+            chip(escapeHtml(t('v3MatchChemChip')), state.matchChem, () => `App.toggleFlag('matchChem')`)
         ];
 
     const totalLabs = Object.keys(getAllLabs()).filter(n => !getAllLabs()[n].hidden).length;
