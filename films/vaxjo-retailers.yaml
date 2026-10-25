@@ -88,7 +88,7 @@ films:
     bundles:
       - rolls: 1
         exposures: 36
-        filmCost: 199
+        filmCost: 249
         storeName: Ernstson Foto
         buyLink: https://www.ernstsonfoto.se/135-fujifilm-400-36ex/
         availability: city
