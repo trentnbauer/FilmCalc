@@ -81,7 +81,7 @@ jobs:
           additional_permissions: |
             actions: read
           # WebSearch is needed by the price-audit checklist (finding a lab's pricing page).
-          claude_args: '--max-turns 300 --allowed-tools "Bash(gh:*),Bash(git:*),Bash(node:*),Bash(python3:*),Read,Edit,Write,Grep,Glob,WebFetch,WebSearch"'
+          claude_args: '--max-turns 300 --add-dir ${{ runner.temp }} --allowed-tools "Bash(gh:*),Bash(git:*),Bash(node:*),Bash(python3:*),Read,Edit,Write,Grep,Glob,WebFetch,WebSearch"'
           prompt: |
             You are running as a scheduled, unattended job with no human present. Be conservative:
             implement real, working fixes, and do not refactor or "improve" unrelated code. This run
@@ -307,6 +307,13 @@ jobs:
             `gh issue edit <number> --body-file <file>` before starting the next item, so a run that
             gets cut off mid-audit loses nothing — tomorrow night's Tier 5 just resumes at the next
             unchecked box. Never batch several items' worth of tick-marks into one save.
+
+            Only plain `gh`, `git`, `node` and `python3` commands are allowed: pipes, `>` redirects,
+            `&&`, `cd`, `cat`, `sed`, `sleep` and `bash` are all refused. Save a checklist like this:
+            read it with `gh issue view <number> --json body --jq .body`, write the updated body with
+            the Write tool to `${{ runner.temp }}/audit-body-<number>.md`, then run
+            `gh issue edit <number> --body-file ${{ runner.temp }}/audit-body-<number>.md`. Tick only
+            the boxes you actually checked, and close an issue only once every box in it is ticked.
 
             Never `sleep`, wait or poll inside this run, even where an older issue body says to wait
             for the `claude-sanity-check` comment — check once, and if it isn't there yet leave the PR
