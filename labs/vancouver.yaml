@@ -196,8 +196,8 @@ labs:
     website: https://abcphoto.com
     source: https://abcphoto.com/film-processing/
     services:
-      - devCost: 8.50
-        pushPullCost: 5.00
+      - devCost: 13.50
+        pushPullCost: 8.00
         pushPullType: flat
         highResScan: false
         tiffScan: false
@@ -210,8 +210,8 @@ labs:
         processes:
           - C41
           - BW
-      - devCost: 11.50
-        pushPullCost: 5.00
+      - devCost: 18.00
+        pushPullCost: 8.00
         pushPullType: flat
         highResScan: false
         tiffScan: false
