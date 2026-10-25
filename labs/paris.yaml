@@ -86,7 +86,7 @@ labs:
     website: https://negatifplus.com
     source: https://negatifplus.com/content/38-service-argentique
     services:
-      - devCost: 12.00
+      - devCost: 14.00
         turnaroundTime: longer
         highResScan: false
         tiffScan: false
