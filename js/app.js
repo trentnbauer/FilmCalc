@@ -196,7 +196,7 @@ const state = {
     frame35: localStorage.getItem('globalCamera35Type') || 'full',
     pushPull: '0',
     tab: 'stock', fHiRes: (readJSON('reqFilters', {}) || {}).hiRes || false, fRush: (readJSON('reqFilters', {}) || {}).rush || false,
-    includePush: true, matchChem: true,
+    includePush: true, matchChem: true, matchType: true,
     postModal: false, postTo: '', postRolls: localStorage.getItem('mailBackRollCount') || '1', mailBack: false,
     shareModal: false, copied: false, shareKind: 'roll',
     libTab: 'films', libSearch: '', libFilter: 'All', libProcess: 'All', libFormat: 'All', libIso: 'All', libOpen: null, libFilterModal: false,
@@ -325,10 +325,11 @@ function rankLabs() {
     return { ranked, filmPerRoll, exp, stopsSigned, stopsAbs };
 }
 
-// "Match chemistry + type" chip: only stocks with the selected process
-// (C41/BW/E6/ECN-2) and colour type (colour/B&W/speciality).
+// "Match chemistry" / "Match type" chips: only stocks with the selected
+// process (C41/BW/E6/ECN-2) and/or colour type (colour/B&W/speciality).
 function filmMatchesChem(f) {
-    return !state.matchChem || ((f.process || 'C41') === state.process && filmColorType(f) === state.filmColor);
+    return (!state.matchChem || (f.process || 'C41') === state.process)
+        && (!state.matchType || filmColorType(f) === state.filmColor);
 }
 
 // Every saved film able to shoot in the active format/colour, priced at
@@ -1195,7 +1196,8 @@ ${cheaper.buyLink ? `<a href="${sanitizeUrl(cheaper.buyLink)}" target="_blank" r
         : [
             `<button type="button" style="height:32px;padding:0 11px;display:flex;align-items:center;gap:6px;border-radius:8px;font:inherit;font-size:12px;background:${C.panel};border:1px solid ${C.border2};color:${C.sub}">${shootIso() ? escapeHtml(t('v3IsoValue', { iso: shootIso() })) : escapeHtml(t('v3AnyIsoCheapestFirst'))}</button>`,
             chip(escapeHtml(t('v3PushPullChip')), state.includePush, () => `App.toggleFlag('includePush')`),
-            chip(escapeHtml(t('v3MatchChemChip')), state.matchChem, () => `App.toggleFlag('matchChem')`)
+            chip(escapeHtml(t('v3MatchChemChip')), state.matchChem, () => `App.toggleFlag('matchChem')`),
+            chip(escapeHtml(t('v3MatchTypeChip')), state.matchType, () => `App.toggleFlag('matchType')`)
         ];
 
     const totalLabs = Object.keys(getAllLabs()).filter(n => !getAllLabs()[n].hidden).length;
