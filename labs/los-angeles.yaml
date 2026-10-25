@@ -162,12 +162,12 @@ labs:
         tiffScan: false
         processes:
           - C41
-      - devCost: 29.99
+      - devCost: 14.99
         highResScan: false
         tiffScan: false
         processes:
           - BW
-      - devCost: 19.99
+      - devCost: 14.99
         highResScan: false
         tiffScan: false
         processes:
@@ -183,12 +183,12 @@ labs:
         processes:
           - BW
           - E6
-      - devCost: 24.99
+      - devCost: 29.99
         highResScan: true
         tiffScan: true
         processes:
           - C41
-      - devCost: 29.99
+      - devCost: 34.99
         highResScan: true
         tiffScan: true
         processes:
