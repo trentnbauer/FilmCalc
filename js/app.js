@@ -2532,6 +2532,10 @@ function viewRollDetails() {
 <div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${seg(PROCESSES, PROCESS_LABEL[state.process], l => `App.setField('process','${PROCESS_VALUE[l]}')`)}</div>
 <div style="font-size:11px;line-height:1.5;color:${C.faint};margin-top:6px">${escapeHtml(t('v3DevelopmentTypeHelp'))}</div>
 </div>
+<div>
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v3PictureTypeLabel'))}</div>
+<div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${seg(Object.entries(FILM_COLOR_LABEL), state.filmColor, v => `App.setField('filmColor','${v}')`)}</div>
+</div>
 <div style="display:flex;gap:10px">
 <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:5px;margin-bottom:6px">
 ${overLimit ? `<svg style="width:13px;height:13px;flex:none;color:${C.red}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5L2.8 20h18.4L12 4.5z"></path><path stroke-linecap="round" d="M12 10v4.2"></path><circle cx="12" cy="17.2" r="1" fill="currentColor" stroke="none"></circle></svg>` : ''}
@@ -3361,6 +3365,7 @@ const App = {
         if (key === 'libFilterModal' && val === true) { /* keep current tab's filters */ }
         // 127's back sizes share this state key but aren't 120 backs — don't let one clobber the remembered 120 back.
         if (key === 'frame120' && val in FRAME120) try { localStorage.setItem('globalCamera120Type', val); } catch {}
+        if (key === 'filmColor') try { localStorage.setItem('globalFilmColor', val); } catch {}
         if (key === 'frame35') try { localStorage.setItem('globalCamera35Type', val); } catch {}
         if (key === 'depthDist') try { localStorage.setItem('depthDist', val); } catch {}
         if (key === 'depthFocal') try { localStorage.setItem('depthFocal', val); } catch {}
