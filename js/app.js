@@ -110,6 +110,13 @@ function filmKeyOf(f) { return filmKey(f.name, f.boxSpeed, f.format); }
 
 // ---------- Option lists (fixed set the mockup designed UI for) ----------
 const FORMATS = ['35mm', '120', '110', '127', '220', 'Sheet'];
+const PICK_SUBJECTS = ['portrait', 'landscape', 'street', 'action', 'party', 'everyday'];
+const PICK_LOOKS = ['color', 'bw', 'slide', 'speciality'];
+const PICK_LIGHTS = ['sun', 'cloudy', 'golden', 'window', 'indoor', 'dark'];
+const PICK_LENSES = [1.4, 2, 2.8, 4, 5.6];
+function pickStored(key, allowed, fallback) {
+    try { const v = localStorage.getItem(key); return allowed.map(String).includes(v) ? v : fallback; } catch { return fallback; }
+}
 const FORMAT_VALUE = { '35mm': '35mm', '120': '120', '110': '110', '127': '127', '220': '220', 'Sheet': 'sheet' };
 const FORMAT_LABEL = { '35mm': '35mm', '120': '120', '110': '110', '127': '127', '220': '220', 'sheet': 'Sheet' };
 const FILM_COLORS = ['Colour', 'B&W', 'Speciality'];
@@ -214,6 +221,13 @@ const state = {
     // Depth tab remembers the last shot the user set up, same as the
     // cost-calc's globalFormat/globalProcess — each field its own key so a
     // returning user picks up exactly where they left off.
+    // Pick a film tab: the sentence's blanks and the lens, each remembered under its own key.
+    pickSubject: pickStored('pickSubject', PICK_SUBJECTS, 'portrait'),
+    pickLook: pickStored('pickLook', PICK_LOOKS, 'color'),
+    pickFormat: pickStored('pickFormat', FORMATS, '35mm'),
+    pickLight: pickStored('pickLight', PICK_LIGHTS, 'window'),
+    pickLens: parseFloat(pickStored('pickLens', PICK_LENSES, '2.8')),
+    pickActive: 'light',
     depthSubject: localStorage.getItem('depthSubject') || 'portrait',
     depthTarget: localStorage.getItem('depthTarget') || 'front',
     depthDist: localStorage.getItem('depthDist') || '5',
@@ -1083,7 +1097,7 @@ ${state.toast ? `<div style="position:fixed;left:50%;transform:translateX(-50%);
 }
 
 function viewMobileHeader() {
-    const title = state.view === 'expired' ? t('v3TitleExpiredFilm') : state.view === 'settings' ? t('navSettings') : state.view === 'library' ? t('navLibrary') : state.view === 'depth' ? t('v4NavDepth') : state.view === 'process' ? t('v4NavProcess') : t('appTitle');
+    const title = state.view === 'expired' ? t('v3TitleExpiredFilm') : state.view === 'settings' ? t('navSettings') : state.view === 'library' ? t('navLibrary') : state.view === 'picker' ? t('v5NavPicker') : state.view === 'depth' ? t('v4NavDepth') : state.view === 'process' ? t('v4NavProcess') : t('appTitle');
     return `<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px">
 <span style="font-size:17px;font-weight:700;letter-spacing:-.01em;color:${C.text}">${escapeHtml(title)}</span>
 <button type="button" onclick="App.openMenu()" aria-label="${escapeHtml(t('v3MenuHeading'))}" style="width:44px;height:44px;margin-right:-12px;display:flex;align-items:center;justify-content:center;background:transparent;border:0;color:${C.sub};cursor:pointer"><svg style="width:20px;height:20px" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"></path></svg></button>
@@ -1100,7 +1114,7 @@ function viewDesktopHeader() {
     // like backend configuration for it (saved data, preferences) — kept
     // visually separate on the right rather than lumped in with the
     // calculator tabs on the left.
-    const frontTabs = [['lookup', t('v3NavLookup')], ['expired', t('v3NavExpired')], ['depth', t('v4NavDepth')], ['process', t('v4NavProcess')]].map(([k, l]) => tab(k, l)).join('');
+    const frontTabs = [['lookup', t('v3NavLookup')], ['picker', t('v5NavPicker')], ['expired', t('v3NavExpired')], ['depth', t('v4NavDepth')], ['process', t('v4NavProcess')]].map(([k, l]) => tab(k, l)).join('');
     const backTabs = [['library', t('navLibrary')], ['settings', t('navSettings')]].map(([k, l]) => tab(k, l)).join('');
     return `<div style="display:flex;align-items:center;gap:26px;padding:16px 28px;border-bottom:1px solid ${C.border}">
 <span style="font-size:18px;font-weight:700;letter-spacing:-.01em;color:${C.text}">${escapeHtml(t('appTitle'))}</span>
@@ -1313,6 +1327,7 @@ function viewBody() {
     if (state.view === 'expired') return viewExpired();
     if (state.view === 'settings') return viewSettings();
     if (state.view === 'library') return viewLibrary();
+    if (state.view === 'picker') return viewPicker();
     if (state.view === 'depth') return viewDepth();
     if (state.view === 'process') return viewProcess();
     return viewLookup();
@@ -1531,6 +1546,190 @@ ${vals.formats.map(f => `<option value="${escapeHtml(f.value)}" ${f.value === va
 <div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${depthSeg(vals.unitOpts)}</div>
 </div>
 <div style="font-size:12px;line-height:1.5;color:${C.faint}">${escapeHtml(vals.cocNote)}</div>`;
+}
+
+// ---------- Pick a film ----------
+// Describe the shot as a sentence; the ranking maths lives in
+// computeStockRecommendations() (js/dev-cost-calc.js). The top rows are kept
+// here so App.pickLoad(i) can hand one to Lookup.
+let pickRows = [];
+const pickCap = id => id.charAt(0).toUpperCase() + id.slice(1);
+const pickFmtShutter = s => s >= 1 ? s + '"' : '1/' + Math.round(1 / s);
+const PICK_GOLD_BG = 'linear-gradient(100deg,#2a1f0a 0%,#3a2b0e 40%,#5a4416 70%,#3a2b0e 100%)';
+
+// The lab the picker prices development at: the home lab when it's set and
+// still there, otherwise whichever lab Lookup would rank first. Returns the
+// getTier(process) callback computeStockRecommendations() wants.
+function pickerLab() {
+    const labs = getAllLabs();
+    const home = state.homeLab && labs[state.homeLab] && !labs[state.homeLab].hidden ? state.homeLab : '';
+    const name = home || (rankLabs().ranked[0] || {}).name || '';
+    const lab = labs[name];
+    if (!lab) return { name, getTier: () => ({ devCost: 0, mailFee: 0, noPushPull: false, pushPullCost: 0, pushPullType: 'flat' }) };
+    const rawTiers = Array.isArray(lab.services) && lab.services.length ? lab.services : [lab];
+    const tiers = normalizeLabServices(lab).map((x, i) => ({ ...x, label: (rawTiers[i] && rawTiers[i].label) || tierDescription(x) }));
+    const opts = mailOpts();
+    return {
+        name,
+        getTier: process => {
+            const ok = tiers.filter(x => tierMatchesFilmProcess(x, { process })).sort((a, b) => a.devCost - b.devCost);
+            const pick = ok.find(x => x.label === state.tier) || ok[0];
+            return pick ? { ...pick, mailFee: effectiveMailBackFee(pick, opts) } : null;
+        }
+    };
+}
+
+function viewPicker() {
+    const desktop = state.desktop;
+    const lab = pickerLab();
+    const res = computeStockRecommendations(getAllFilms(), lab.getTier, { subject: state.pickSubject, look: state.pickLook, format: FORMAT_VALUE[state.pickFormat], light: state.pickLight, lens: state.pickLens });
+    const rows = res.rows;
+    pickRows = rows.slice(0, 8);
+    const labelOf = (group, id) => t('v5Pick' + group + pickCap(id));
+    const lookLabel = labelOf('Look', state.pickLook);
+    const subjectLabel = labelOf('Subject', state.pickSubject);
+    const proc = r => PROCESS_LABEL[r.film.process || 'C41'] || r.film.process;
+
+    // Sentence with a tappable token for each blank. The placeholders go through
+    // t() as sentinels so each language can reorder them.
+    const tok = (key, label) => {
+        const on = state.pickActive === key;
+        return `<button type="button" onclick="App.pickActivate('${key}')" aria-pressed="${on}" style="font:inherit;font-size:inherit;font-weight:700;line-height:inherit;letter-spacing:inherit;padding:0 4px;margin:0 -2px;border-radius:6px;cursor:pointer;color:${C.acc};background:${on ? C.accBg : 'transparent'};border:0;border-bottom:${on ? '2px solid ' + C.acc : '2px dashed ' + C.accBorder}">${escapeHtml(label)}</button>`;
+    };
+    const toks = { subject: tok('subject', subjectLabel), look: tok('look', lookLabel), format: tok('format', state.pickFormat), light: tok('light', labelOf('Light', state.pickLight)) };
+    const sentence = escapeHtml(t('v5PickerSentence', { subject: '\u0001subject\u0001', look: '\u0001look\u0001', format: '\u0001format\u0001', light: '\u0001light\u0001' }))
+        .replace(/\u0001(\w+)\u0001/g, (_, k) => toks[k]);
+
+    const optionSets = {
+        subject: { title: t('v5PickWhatShooting'), field: 'subject', list: PICK_SUBJECTS.map(id => [id, labelOf('Subject', id)]), cur: state.pickSubject },
+        look: { title: t('v5PickTheLook'), field: 'look', list: PICK_LOOKS.map(id => [id, labelOf('Look', id)]), cur: state.pickLook },
+        format: { title: t('v5PickFilmSize'), field: 'format', list: FORMATS.map(f => [f, f]), cur: state.pickFormat },
+        light: { title: t('v5PickTheLight'), field: 'light', list: PICK_LIGHTS.map(id => [id, labelOf('Light', id)]), cur: state.pickLight }
+    };
+    const opt = optionSets[state.pickActive] || optionSets.light;
+    const chips = opt.list.map(([v, l]) => {
+        const on = v === opt.cur;
+        return `<button type="button" onclick="App.pickSet('${opt.field}','${v}')" style="height:38px;padding:0 13px;border-radius:9px;font:inherit;font-size:13px;cursor:pointer;background:${on ? C.accBg : 'transparent'};border:1px solid ${on ? C.accBorder : C.border2};color:${on ? C.acc : C.text2};font-weight:${on ? 600 : 400}">${escapeHtml(l)}</button>`;
+    }).join('');
+    const sentenceCard = `<div style="padding:${desktop ? '18px 18px 16px' : '16px'};background:${C.panel};border:1px solid ${C.border};border-radius:10px;display:flex;flex-direction:column;gap:${desktop ? 16 : 14}px">
+<div style="font-size:${desktop ? 24 : 22}px;line-height:1.6;font-weight:600;letter-spacing:-.01em;color:${C.text};text-wrap:pretty">${sentence}</div>
+<div style="border-top:1px solid ${C.border};padding-top:${desktop ? 14 : 12}px">
+<div style="font-size:11px;color:${C.sub};margin-bottom:8px">${escapeHtml(opt.title)}</div>
+<div style="display:flex;flex-wrap:wrap;gap:6px">${chips}</div>
+</div>
+</div>`;
+    const lensCard = `<div style="padding:14px;background:${C.panel};border:1px solid ${C.border};border-radius:10px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span style="font-size:11px;color:${C.sub}">${escapeHtml(t('v5PickLensLabel'))}</span><span style="font-size:11px;color:${C.faint}">${escapeHtml(t('v5PickOptional'))}</span></div>
+<div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${seg(PICK_LENSES.map(n => [n, 'f/' + n]), state.pickLens, v => `App.pickSet('lens',${v})`)}</div>
+</div>`;
+
+    let reason = t('v5PickReasonLight', { light: labelOf('LightName', state.pickLight), ev: res.ev, subject: subjectLabel, x: res.shutter, why: labelOf('SubjectWhy', state.pickSubject) });
+    reason += res.needed <= 100
+        ? t('v5PickReasonPlenty', { lens: state.pickLens }) + (res.cap ? t('v5PickReasonCap', { cap: res.cap }) : '')
+        : t('v5PickReasonNeed', { lens: state.pickLens, iso: res.neededNice, lab: lab.name || t('v3NoHomeLab') });
+    const reasonCard = `<div style="padding:${desktop ? '14px' : '12px 14px'};border:1px dashed ${C.border3};border-radius:10px;display:flex;flex-direction:column;gap:6px">
+<div style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.sub}">${escapeHtml(t('v5PickHow'))}</div>
+<div style="font-size:${desktop ? 13 : 12}px;line-height:1.55;color:${C.text2};text-wrap:pretty">${escapeHtml(reason)}</div>
+</div>`;
+
+    const clock = `<svg style="width:14px;height:14px;flex:none;color:${C.sub}" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"></circle><path stroke-linecap="round" d="M12 8v4l2.5 2.5"></path></svg>`;
+    const cart = `<svg style="width:16px;height:16px" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4h2.2l2.1 10.4a1.5 1.5 0 001.5 1.2h8.4a1.5 1.5 0 001.5-1.2L20.5 7H6"></path><circle cx="10" cy="19.5" r="1.4"></circle><circle cx="17" cy="19.5" r="1.4"></circle></svg>`;
+    const cardData = (r, i) => {
+        const gold = i === 0 && !r.short;
+        const f = r.film, e = r.exposure;
+        const dim = gold ? GOLD.fg : C.sub, faint = gold ? GOLD.fg : C.faint, main = gold ? GOLD.fg : C.text;
+        const how = r.stops
+            ? t('v5PickHowPush', { n: r.stops, iso: r.ei, amount: CUR() + money(r.pushFee) })
+            : t('v5PickHowBox', { iso: r.boxSpeed });
+        const warn = r.short ? t('v5PickWarnShort', { shutter: pickFmtShutter(e.shutter) }) : (e.rawShutter > 1 / 30 ? t('v5PickWarnSlow') : '');
+        const store = r.bundle.storeName;
+        const rank = gold ? t('v5PickCheapestFit') : (r.short ? t('v5PickOneStopShort') : '#' + (i + 1));
+        const rankColor = gold ? GOLD.fg : (r.short ? C.red : C.sub);
+        return {
+            gold, f, how, warn, rank, rankColor, dim, faint, main,
+            process: proc(r) + ' · ' + (f.format || '35mm'),
+            exposure: t('v5PickExposure', { shutter: pickFmtShutter(e.shutter), aperture: 'f/' + e.aperture }),
+            rollNote: store
+                ? t('v5PickRollNote', { roll: CUR() + money(r.roll), film: CUR() + money(r.filmPerRoll), store, dev: CUR() + money(r.dev) })
+                : t('v5PickRollNoStore', { roll: CUR() + money(r.roll), film: CUR() + money(r.filmPerRoll), dev: CUR() + money(r.dev) }),
+            rollShort: t('v5PickRollShort', { roll: CUR() + money(r.roll), n: r.bundle.exposures }),
+            buy: r.bundle.buyLink ? `<a href="${sanitizeUrl(r.bundle.buyLink)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(store ? t('v3BuyAtStore', { store }) : t('v3FindThisStock'))}" title="${escapeHtml(store ? t('v3BuyAtStore', { store }) : t('v3FindThisStock'))}" style="width:40px;height:38px;flex:none;border-radius:8px;display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid ${C.border2};color:${C.text2};text-decoration:none">${cart}</a>` : ''
+        };
+    };
+    const deskCard = (r, i) => {
+        const d = cardData(r, i);
+        return `<div style="padding:16px;border-radius:10px;display:flex;flex-direction:column;background:${d.gold ? PICK_GOLD_BG : C.panel};border:1px solid ${d.gold ? GOLD.border : C.border};box-shadow:${d.gold ? '0 0 0 1px rgba(201,161,68,.25),0 2px 14px rgba(201,161,68,.28)' : 'none'}">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${d.rankColor}">${escapeHtml(d.rank)}</span><span style="font-size:11px;white-space:nowrap;color:${d.gold ? '#c9b98a' : C.sub}">${escapeHtml(d.process)}</span></div>
+<div style="font-size:17px;font-weight:600;margin-top:12px;line-height:1.25;color:${d.main}">${escapeHtml(d.f.name)}</div>
+<div style="font-size:12px;margin-top:4px;color:${d.dim}">${escapeHtml(d.how)}</div>
+<div style="display:flex;align-items:baseline;gap:4px;margin-top:14px"><span style="font-size:18px;font-weight:500;color:${d.dim}">${CUR()}</span><span style="font-size:40px;font-weight:700;line-height:.9;letter-spacing:-.03em;color:${d.main}">${money(r.perFrame)}</span><span style="font-size:12px;color:${d.dim}">${escapeHtml(t('v3PerFrame'))}</span></div>
+<div style="font-size:12px;margin-top:6px;color:${d.faint}">${escapeHtml(d.rollNote)}</div>
+<div style="display:flex;align-items:center;gap:7px;margin-top:12px;padding-top:10px;border-top:1px solid ${C.border}">${clock}<span style="font-size:12px;color:${d.gold ? GOLD.fg : C.text2}">${escapeHtml(d.exposure)}</span></div>
+${d.warn ? `<div style="font-size:11px;line-height:1.45;color:${C.red};margin-top:6px">${escapeHtml(d.warn)}</div>` : ''}
+<div style="display:flex;gap:6px;margin-top:auto;padding-top:14px"><button type="button" onclick="App.pickLoad(${i})" style="flex:1;min-width:0;height:38px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text};font:inherit;font-size:12px;font-weight:600;cursor:pointer">${escapeHtml(t('v5PickPriceIt'))}</button>${d.buy}</div>
+</div>`;
+    };
+    const mobCard = (r, i) => {
+        const d = cardData(r, i);
+        return `<div style="padding:14px;border-radius:10px;background:${d.gold ? PICK_GOLD_BG : C.panel};border:1px solid ${d.gold ? GOLD.border : C.border};box-shadow:${d.gold ? '0 0 0 1px rgba(201,161,68,.25),0 2px 14px rgba(201,161,68,.28)' : 'none'}">
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+<span style="min-width:0"><span style="display:inline-block;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${d.rankColor}">${escapeHtml(d.rank)}</span><span style="display:block;font-size:16px;font-weight:600;margin-top:8px;color:${d.main}">${escapeHtml(d.f.name)}</span><span style="display:block;font-size:12px;margin-top:3px;color:${d.dim}">${escapeHtml(d.how)}</span></span>
+<span style="text-align:right;flex:none"><span style="display:flex;align-items:baseline;gap:3px;justify-content:flex-end"><span style="font-size:15px;color:${d.dim}">${CUR()}</span><span style="font-size:30px;font-weight:700;line-height:.9;letter-spacing:-.03em;color:${d.main}">${money(r.perFrame)}</span></span><span style="display:block;font-size:11px;margin-top:3px;color:${d.faint}">${escapeHtml(t('v3PerFrame'))}</span></span>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid ${C.border}"><span style="font-size:12px;color:${d.gold ? GOLD.fg : C.text2}">${escapeHtml(d.exposure)}</span><span style="font-size:12px;color:${d.faint}">${escapeHtml(d.rollShort)}</span></div>
+${d.warn ? `<div style="font-size:11px;line-height:1.45;color:${C.red};margin-top:6px">${escapeHtml(d.warn)}</div>` : ''}
+<div style="display:flex;gap:6px;margin-top:12px"><button type="button" onclick="App.pickLoad(${i})" style="flex:1;min-width:0;height:38px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text};font:inherit;font-size:12px;font-weight:600;cursor:pointer">${escapeHtml(t('v5PickPriceIt'))}</button>${d.buy}</div>
+</div>`;
+    };
+    const moreRows = rows.slice(3, 8).map((r, k) => {
+        const i = k + 3;
+        const meta = t(r.stops ? 'v5PickMetaPush' : 'v5PickMetaBox', { iso: r.boxSpeed, process: proc(r), n: r.stops }) + (r.short ? t('v5PickMetaShort') : '');
+        return `<button type="button" onclick="App.pickLoad(${i})" style="width:100%;display:flex;align-items:center;gap:12px;padding:12px 0;background:transparent;border:0;border-top:1px solid ${C.border};font:inherit;text-align:left;cursor:pointer;color:${C.text}">
+<span style="flex:1;min-width:0"><span style="display:block;font-size:15px">${escapeHtml(r.film.name)}</span><span style="display:block;font-size:12px;color:${C.faint};margin-top:3px">${escapeHtml(meta)}</span></span>
+<span style="text-align:right;flex:none"><span style="display:block;font-size:${desktop ? 20 : 18}px;font-weight:600;color:${C.text2}">${CUR()}${money(r.perFrame)}</span><span style="display:block;font-size:11px;color:${C.faint};margin-top:2px">${escapeHtml(t('v5PickDiffCents', { c: ((r.perFrame - rows[0].perFrame) * 100).toFixed(1) }))}</span></span>
+${desktop ? `<span style="color:${C.border3};font-size:18px;flex:none">›</span>` : ''}
+</button>`;
+    }).join('');
+    const more = rows.length > 3 ? `<div style="margin-top:${desktop ? 8 : 4}px"><div style="font-size:11px;color:${C.sub};margin-bottom:2px">${escapeHtml(t('v5PickAlsoWorks'))}</div>${moreRows}</div>` : '';
+
+    // Empty states: nothing of that look/format at all, or nothing fast enough.
+    let empty = '';
+    if (!rows.length) {
+        const hasLook = fmt => Object.values(getAllFilms()).some(f => !f.hidden && (f.format || '35mm') === FORMAT_VALUE[fmt] && pickerLookMatches(f, state.pickLook));
+        const alt = res.poolCount ? '' : FORMATS.find(f => f !== state.pickFormat && hasLook(f));
+        const title = res.poolCount ? t('v5PickEmptyDarkTitle', { look: lookLabel, format: state.pickFormat }) : t('v5PickEmptyNoneTitle', { look: lookLabel, format: state.pickFormat });
+        const body = res.poolCount ? t('v5PickEmptyDarkBody', { iso: res.neededNice }) : (alt ? t('v5PickEmptyNoneAlt', { look: lookLabel, other: alt, format: state.pickFormat }) : t('v5PickEmptyNoneAdd'));
+        empty = `<div style="padding:${desktop ? '28px 22px' : '22px 18px'};border:1px dashed ${C.border2};border-radius:10px;text-align:center">
+<div style="font-size:15px;font-weight:600;color:${C.text2}">${escapeHtml(title)}</div>
+<div style="font-size:13px;line-height:1.55;color:${C.faint};margin:6px auto 0;max-width:460px">${escapeHtml(body)}</div>
+<div style="display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap">
+${alt ? `<button type="button" onclick="App.pickSet('format','${alt}')" style="height:42px;padding:0 16px;border-radius:8px;background:${C.accBg};border:1px solid ${C.accBorder};color:${C.acc};font:inherit;font-size:13px;font-weight:600;cursor:pointer">${escapeHtml(t('v5PickSwitchTo', { format: alt }))}</button>` : ''}
+<button type="button" onclick="App.setView('library')" style="height:42px;padding:0 16px;border-radius:8px;background:transparent;border:1px solid ${C.border2};color:${C.text};font:inherit;font-size:13px;cursor:pointer">${escapeHtml(t('v5PickAddStock'))}</button>
+</div>
+</div>`;
+    }
+    const header = `<div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px"><span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${C.acc}">${escapeHtml(rows.length ? t('v5PickEyebrow') : t('v5PickNothingFits'))}</span><span style="font-size:11px;color:${C.faint};text-align:right">${rows.length ? escapeHtml(t('v5PickCount', { n: rows.length, total: res.poolCount, look: lookLabel, format: state.pickFormat, lab: lab.name })) : ''}</span></div>`;
+
+    if (desktop) {
+        return `<div style="display:grid;grid-template-columns:420px minmax(0,1fr);gap:28px;padding:22px 28px 0;align-items:start">
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="font-size:14px;line-height:1.5;color:${C.sub}">${escapeHtml(t('v5PickerIntro'))}</div>
+${sentenceCard}
+${lensCard}
+${reasonCard}
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;padding-top:34px">
+${header}
+${rows.length ? `<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">${rows.slice(0, 3).map(deskCard).join('')}</div>${more}` : empty}
+</div>
+</div>`;
+    }
+    return `<div style="padding:4px 20px 0;display:flex;flex-direction:column;gap:12px">
+${sentenceCard}
+<div style="margin-top:6px">${header}</div>
+${rows.length ? rows.slice(0, 3).map(mobCard).join('') + more : empty}
+${reasonCard}
+</div>`;
 }
 
 function viewDepth() {
@@ -3096,6 +3295,7 @@ function b64DecodeShare(str) {
 function viewMenu() {
     const items = [
         ['lookup', t('v3NavLookup'), t('v3MenuLookupMeta')],
+        ['picker', t('v5NavPicker'), t('v5MenuPickerMeta')],
         ['expired', t('v3TitleExpiredFilm'), t('v3MenuExpiredMeta')],
         ['depth', t('v4NavDepth'), t('v4MenuDepthMeta')],
         ['process', t('v4NavProcess'), t('v4MenuProcessMeta')],
@@ -3623,6 +3823,29 @@ const App = {
         if (!href) { say(t('v3NoAddressSavedToast')); return; }
         window.open(href, '_blank', 'noopener');
     },
+    pickActivate(key) { state.pickActive = key; render(); },
+    pickSet(field, val) {
+        const key = 'pick' + field.charAt(0).toUpperCase() + field.slice(1);
+        state[key] = field === 'lens' ? parseFloat(val) : val;
+        try { localStorage.setItem(key, String(val)); } catch {}
+        render();
+    },
+    // Same hand-off as loadCheaper(): put the stock, push and pack in Lookup.
+    pickLoad(i) {
+        const r = pickRows[i];
+        if (!r) return;
+        const f = r.film;
+        state.boxSpeed = String(f.boxSpeed);
+        state.pushPull = String(r.stops);
+        state.format = Object.keys(FORMAT_VALUE).find(k => FORMAT_VALUE[k] === (f.format || '35mm')) || state.format;
+        state.process = f.process || 'C41';
+        state.filmColor = filmColorType(f);
+        state.packCost = String(r.bundle.filmCost);
+        state.rolls = String(r.bundle.rolls || 1);
+        state.exposures = String(r.bundle.exposures || 36);
+        say(t('v3NameLoadedToast', { name: f.name }));
+        App.setView('lookup');
+    },
     loadCheaper() {
         const home = rankLabs().ranked.find(l => l.name === state.homeLab) || rankLabs().ranked[0];
         const cheaper = computeCheaperFilm(home);
@@ -4130,7 +4353,7 @@ window.App = App;
 // still reads /depth rather than the redirect's query string. A direct
 // pathname match is also handled (harmless if nothing ever serves it, but
 // costs nothing and helps local dev servers that do rewrite to index.html).
-const LINKABLE_VIEWS = ['lookup', 'expired', 'depth', 'process', 'library', 'settings'];
+const LINKABLE_VIEWS = ['lookup', 'picker', 'expired', 'depth', 'process', 'library', 'settings'];
 // 'lookup' is the default view, so it lives at '/' rather than '/lookup'.
 function pathForView(view) { return view === 'lookup' ? '/' : '/' + view; }
 function restoreViewFromLocation() {

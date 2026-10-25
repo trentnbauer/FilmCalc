@@ -634,6 +634,86 @@ function reorderDefaultLabFirst(priceSortedRows, defaultLabName) {
 // UMD-lite: plain globals for the browser <script src> case, CommonJS
 // export for node:test. `typeof module` is safe to check even when
 // undeclared (browsers), so this never throws in either environment.
+// ---------- Pick a film (stock recommender) ----------
+// Subject -> preferred aperture (n) and slowest safe shutter (1/x); light ->
+// EV at ISO 100 and the fastest box speed worth considering (0 = no cap).
+const PICKER_SUBJECTS = {
+    portrait: { n: 2.8, shutter: 125 }, landscape: { n: 8, shutter: 30 }, street: { n: 5.6, shutter: 250 },
+    action: { n: 4, shutter: 500 }, party: { n: 2.8, shutter: 60 }, everyday: { n: 5.6, shutter: 125 }
+};
+const PICKER_LIGHTS = {
+    sun: { ev: 15, cap: 800 }, cloudy: { ev: 12, cap: 1600 }, golden: { ev: 11, cap: 0 },
+    window: { ev: 9, cap: 0 }, indoor: { ev: 6, cap: 0 }, dark: { ev: 4, cap: 0 }
+};
+const PICKER_STOPS = [1.4, 2, 2.8, 4, 5.6, 8, 11, 16];
+const PICKER_SHUTTERS = [1 / 1000, 1 / 500, 1 / 250, 1 / 125, 1 / 60, 1 / 30, 1 / 15, 1 / 8, 1 / 4, 1 / 2, 1, 2, 4];
+const PICKER_NICE_ISO = [25, 50, 100, 200, 400, 800, 1600, 3200, 6400, 12800, 25600];
+
+function pickerLookMatches(f, look) {
+    const process = f.process || 'C41';
+    if (look === 'slide') return process === 'E6';
+    if (look === 'color') return filmColorType(f) === 'color' && process === 'C41';
+    return filmColorType(f) === look;
+}
+
+// Aperture + shutter for a given exposure index: start at the subject's
+// preferred aperture, open up to the lens if that's too slow for the
+// subject, then stop down while the shutter would exceed 1/1000.
+function computePickerExposure(ev, ei, subjectN, lens, tmin) {
+    const timeFor = n => n * n * 100 / (Math.pow(2, ev) * ei);
+    let n = Math.max(subjectN, lens);
+    let t = timeFor(n);
+    if (t > tmin) { n = lens; t = timeFor(n); }
+    let i = PICKER_STOPS.findIndex(x => x >= n);
+    if (i < 0) i = PICKER_STOPS.length - 1;
+    while (t < 1 / 1000 && i < PICKER_STOPS.length - 1) { i++; n = PICKER_STOPS[i]; t = timeFor(n); }
+    const snapped = PICKER_SHUTTERS.reduce((a, b) => Math.abs(Math.log(b / t)) < Math.abs(Math.log(a / t)) ? b : a);
+    return { aperture: n, shutter: snapped, rawShutter: t };
+}
+
+// Cheapest stocks (per frame, at the lab) able to shoot opts.subject in
+// opts.light, pushing where needed and allowed. getTier(process) returns the
+// lab tier to price that process at ({ devCost, mailFee, noPushPull,
+// pushPullCost, pushPullType }) or null when the lab can't develop it.
+// Rows not quite fast enough ("short", within a stop) sort after the rest.
+function computeStockRecommendations(allFilms, getTier, opts) {
+    const subject = PICKER_SUBJECTS[opts.subject] || PICKER_SUBJECTS.everyday;
+    const light = PICKER_LIGHTS[opts.light] || PICKER_LIGHTS.window;
+    const lens = opts.lens;
+    const tmin = 1 / subject.shutter;
+    const needed = 100 * lens * lens / (Math.pow(2, light.ev) * tmin);
+    const neededNice = PICKER_NICE_ISO.find(i => i >= needed * 0.92) || 25600;
+    const pool = Object.values(allFilms).filter(f => !f.hidden && (f.format || '35mm') === opts.format && pickerLookMatches(f, opts.look));
+    const rows = [];
+    pool.forEach(f => {
+        const boxSpeed = parseFloat(f.boxSpeed) || 0;
+        if (!boxSpeed || (light.cap && boxSpeed > light.cap)) return;
+        const tier = getTier(f.process || 'C41');
+        if (!tier) return;
+        const maxStops = tier.noPushPull ? 0 : Math.max(0, parseFloat(f.maxPushPull ?? 1));
+        let stops = 0;
+        while (boxSpeed * Math.pow(2, stops) < needed && stops < maxStops) stops++;
+        const ei = boxSpeed * Math.pow(2, stops);
+        if (ei < needed / 2) return;
+        let bundle = null, bestCpp = null;
+        normalizeFilmBundles(f, null).forEach(b => {
+            const cpp = computeCostPerPhoto(b.filmCost, b.rolls, b.exposures);
+            if (cpp !== null && cpp > 0 && (bestCpp === null || cpp < bestCpp)) { bestCpp = cpp; bundle = b; }
+        });
+        if (!bundle) return;
+        const pushFee = stops ? (tier.pushPullType === 'flat' ? tier.pushPullCost : tier.pushPullCost * stops) : 0;
+        const filmPerRoll = bundle.filmCost / bundle.rolls;
+        const dev = tier.devCost + pushFee + (tier.mailFee || 0);
+        rows.push({
+            film: f, bundle, stops, ei, boxSpeed, short: ei < needed * 0.92, pushFee, filmPerRoll, dev,
+            roll: filmPerRoll + dev, perFrame: (filmPerRoll + dev) / bundle.exposures,
+            exposure: computePickerExposure(light.ev, ei, subject.n, lens, tmin)
+        });
+    });
+    rows.sort((a, b) => (a.short - b.short) || (a.perFrame - b.perFrame));
+    return { rows, poolCount: pool.length, needed, neededNice, ev: light.ev, cap: light.cap, shutter: subject.shutter };
+}
+
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         TURNAROUND_RANK,
@@ -656,6 +736,10 @@ if (typeof module !== 'undefined' && module.exports) {
         findHiResFastestUpgrade,
         reorderFavouriteLabsFirst,
         reorderFavouriteFilmsFirst,
-        reorderDefaultLabFirst
+        reorderDefaultLabFirst,
+        PICKER_SUBJECTS,
+        PICKER_LIGHTS,
+        computePickerExposure,
+        computeStockRecommendations
     };
 }
