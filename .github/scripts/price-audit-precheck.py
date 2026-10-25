@@ -21,6 +21,7 @@ import re
 import subprocess
 import sys
 import time
+import urllib.parse
 import urllib.request
 from html import unescape
 
@@ -56,13 +57,20 @@ def page_text(url, cache):
         if time.monotonic() > DEADLINE:
             return None
         try:
-            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 FilmCalc price audit"})
+            # quote non-ASCII paths (e.g. wywoływanie_filmow.html); browser headers, since some
+            # shops refuse anything that doesn't look like a browser
+            req = urllib.request.Request(urllib.parse.quote(url, safe=":/?&=#%+@,;~!$'()*[]"), headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                              "(KHTML, like Gecko) Chrome/130.0 Safari/537.36",
+                "Accept": "text/html,application/xhtml+xml,*/*;q=0.8",
+                "Accept-Language": "en;q=0.9,*;q=0.5",
+            })
             with urllib.request.urlopen(req, timeout=20) as resp:
                 html = resp.read(3_000_000).decode("utf-8", "replace")
             text = re.sub(r"<script.*?</script>|<style.*?</style>|<[^>]+>", " ", html, flags=re.S | re.I)
             cache[url] = re.sub(r"\s+", " ", unescape(text)).replace(" ", " ")
         except Exception as e:  # blocked, timeout, dead link: Claude looks at it
-            print(f"  fetch failed {url}: {e}", file=sys.stderr)
+            print(f"  fetch failed ({e}) {url}", file=sys.stderr)
             cache[url] = None
     return cache[url]
 
@@ -124,6 +132,8 @@ if __name__ == "__main__":
         assert n == 2 and "- [ ]" not in out, out
         out, n = precheck(line, {"https://x.test/p": "C-41 18 € each"})
         assert n == 0
+        assert urllib.parse.quote("http://x.pl/wywoływanie_filmow.html?a=1", safe=":/?&=#%+@,;~!$'()*[]") \
+            == "http://x.pl/wywo%C5%82ywanie_filmow.html?a=1"
         print("self-test OK")
     else:
         main()
