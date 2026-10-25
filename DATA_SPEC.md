@@ -162,6 +162,7 @@ labs:
 | `tiffScan` | `true` if this tier includes TIFF (or other lossless) scans, else `false`. Independent of `highResScan` — a tier can be either, both, or neither. |
 | `noPushPull` | `true` **only** if this tier cannot push/pull at all (e.g. a same-day minilab). Otherwise `false`. |
 | `mailBackCost` | **Optional — omitting it and writing `0` mean different things.** Omit the field entirely for a walk-in-only lab, or a mail-in lab whose return-postage fee you couldn't confirm — the app treats a missing value as "unknown/can't mail back" and hides that tier whenever someone filters for mail-back options, rather than implying it's free. Write `0` only if the lab's own pricing page explicitly states mail-back is free. Otherwise, write the return postage the page states the customer pays (or the round-trip cost, whichever the page states) — added into the per-roll dev cost the same way `pushPullCost` is. Never estimate a postage cost that isn't stated on the page; omit the field rather than guess. |
+| `nonStandardFrameCost` | **Optional — same omit-vs-`0` rule as `mailBackCost`.** Flat per-roll surcharge a lab charges for non-standard 35mm frames (half frame, XPan), added to the per-roll dev cost only when the camera isn't full frame. Omit it or write `null` when unknown/not listed (the app costs it as $0 without claiming it's free). Write `0` only if the price list explicitly says no extra charge. Never guess. |
 | `processes` | A list of the processes this tier handles: any of `C41`, `BW`, `E6`, `ECN2`. |
 
 ### Getting `services` right
