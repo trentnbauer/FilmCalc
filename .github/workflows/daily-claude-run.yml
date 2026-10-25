@@ -308,6 +308,10 @@ jobs:
             gets cut off mid-audit loses nothing — tomorrow night's Tier 5 just resumes at the next
             unchecked box. Never batch several items' worth of tick-marks into one save.
 
+            Never `sleep`, wait or poll inside this run, even where an older issue body says to wait
+            for the `claude-sanity-check` comment — check once, and if it isn't there yet leave the PR
+            open and move on; a later night's run picks the PR up again through the issue's step 0.
+
             Finishing one issue is not the end of this tier: as soon as one price-audit issue is closed
             (or its PR is opened), pick the next open one and keep going. This run has a budget of 300
             turns (`--max-turns`); only stop Tier 5 when no open `price-audit` issue is left or you are
@@ -354,6 +358,15 @@ jobs:
 
             If a tier has nothing to do, move on to the next one silently. If every tier is empty, do
             nothing at all — no branches, no PRs, no comments.
+
+      - name: List denied tool calls
+        # The action hides Claude's full output; this prints only which calls were refused, so a
+        # run that quits early shows why.
+        if: always()
+        run: |
+          f="${{ runner.temp }}/claude-execution-output.json"
+          [ -f "$f" ] && jq -r '.[] | select(.type == "result") | .permission_denials[]?
+            | "\(.tool_name): \(.tool_input.command // .tool_input.url // .tool_input.query // "" | .[0:120])"' "$f" || true
 
       - name: Apply Tier 1 false-positive dismissals
         # Same reason as the prep step: Claude's own token can't call the
