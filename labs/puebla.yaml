@@ -14,7 +14,7 @@ labs:
     website: https://fotostar.mx
     source: https://fotostar.mx/products/copia-de-revelado-digitalizado-rollos-nacional
     services:
-      - devCost: 285
+      - devCost: 360
         pushPullCost: 0
         pushPullType: flat
         turnaroundTime: same_week
