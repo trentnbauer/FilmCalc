@@ -741,6 +741,16 @@ test('computeStockRecommendations: pushes a slow stock just enough and prices th
     assert.equal(rows[1].stops, 0);
 });
 
+test('computeStockRecommendations: a long lens raises the hand-held shutter floor to 1/focal and so the ISO needed', () => {
+    const films = { a: pickerFilm('Fast 400', 400) };
+    const short = computeStockRecommendations(films, () => pickerTier, { ...pickerOpts, focal: 50 });
+    assert.equal(short.shutter, 125); // 1/50 is slower than the portrait floor, so no change
+    assert.ok(Math.abs(short.needed - 191.4) < 0.1);
+    const long = computeStockRecommendations(films, () => pickerTier, { ...pickerOpts, focal: 250 });
+    assert.equal(long.shutter, 250);
+    assert.ok(Math.abs(long.needed - 382.8) < 0.1);
+});
+
 test('computeStockRecommendations: short stocks sort after fitting ones, hopeless or unpushable ones drop', () => {
     const films = { a: pickerFilm('Stuck 100', 100, { maxPushPull: 0 }), c: pickerFilm('Fast 400', 400, { bundles: [{ rolls: 1, exposures: 36, filmCost: 30 }] }) };
     const { rows } = computeStockRecommendations(films, () => pickerTier, pickerOpts);
