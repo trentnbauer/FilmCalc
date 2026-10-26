@@ -227,6 +227,7 @@ const state = {
     pickFormat: pickStored('pickFormat', FORMATS, '35mm'),
     pickLight: pickStored('pickLight', PICK_LIGHTS, 'window'),
     pickLens: parseFloat(pickStored('pickLens', PICK_LENSES, '2.8')),
+    pickFocal: (() => { try { return String(Math.min(1200, Math.max(8, parseInt(localStorage.getItem('pickFocal'), 10) || 50))); } catch { return '50'; } })(),
     pickActive: 'light',
     depthSubject: localStorage.getItem('depthSubject') || 'portrait',
     depthTarget: localStorage.getItem('depthTarget') || 'front',
@@ -1585,7 +1586,7 @@ function pickerLab() {
 function viewPicker() {
     const desktop = state.desktop;
     const lab = pickerLab();
-    const res = computeStockRecommendations(getAllFilms(), lab.getTier, { subject: state.pickSubject, look: state.pickLook, format: FORMAT_VALUE[state.pickFormat], light: state.pickLight, lens: state.pickLens });
+    const res = computeStockRecommendations(getAllFilms(), lab.getTier, { subject: state.pickSubject, look: state.pickLook, format: FORMAT_VALUE[state.pickFormat], light: state.pickLight, lens: state.pickLens, focal: state.pickFocal });
     const rows = res.rows;
     pickRows = rows.slice(0, 8);
     const labelOf = (group, id) => t('v5Pick' + group + pickCap(id));
@@ -1624,6 +1625,14 @@ function viewPicker() {
     const lensCard = `<div style="padding:14px;background:${C.panel};border:1px solid ${C.border};border-radius:10px;display:flex;flex-direction:column;gap:10px">
 <div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span style="font-size:11px;color:${C.sub}">${escapeHtml(t('v5PickLensLabel'))}</span><span style="font-size:11px;color:${C.faint}">${escapeHtml(t('v5PickOptional'))}</span></div>
 <div style="display:flex;gap:4px;padding:4px;background:${C.field};border:1px solid ${C.border};border-radius:9px">${seg(PICK_LENSES.map(n => [n, 'f/' + n]), state.pickLens, v => `App.pickSet('lens',${v})`)}</div>
+<label style="display:block">
+<div style="font-size:11px;color:${C.sub};margin-bottom:6px">${escapeHtml(t('v5PickFocalLabel'))}</div>
+<div style="height:48px;background:${C.field};border:1px solid ${C.border};border-radius:8px;display:flex;align-items:center;gap:4px;padding:0 12px">
+<input type="text" inputmode="numeric" value="${escapeHtml(state.pickFocal)}" onchange="App.pickSet('focal',this.value)" aria-label="${escapeHtml(t('v5PickFocalLabel'))}" style="width:100%;background:transparent;border:0;outline:none;text-align:right;font:inherit;font-size:22px;font-weight:600;color:${C.text}">
+<span style="font-size:13px;color:${C.faint}">mm</span>
+</div>
+</label>
+<div style="font-size:12px;line-height:1.45;color:${C.text2}">${escapeHtml(t('v5PickHandheldNote', { focal: res.shutter }))}</div>
 </div>`;
 
     let reason = t('v5PickReasonLight', { light: labelOf('LightName', state.pickLight), ev: res.ev, subject: subjectLabel, x: res.shutter, why: labelOf('SubjectWhy', state.pickSubject) });
@@ -1729,6 +1738,7 @@ ${rows.length ? `<div style="display:grid;grid-template-columns:repeat(3,minmax(
     }
     return `<div style="padding:4px 20px 0;display:flex;flex-direction:column;gap:12px">
 ${sentenceCard}
+${lensCard}
 <div style="margin-top:6px">${header}</div>
 ${rows.length ? rows.slice(0, 3).map(mobCard).join('') + more : empty}
 ${reasonCard}
@@ -3831,6 +3841,7 @@ const App = {
     pickActivate(key) { state.pickActive = key; render(); },
     pickSet(field, val) {
         const key = 'pick' + field.charAt(0).toUpperCase() + field.slice(1);
+        if (field === 'focal') val = String(Math.min(1200, Math.max(8, parseInt(val, 10) || 50)));
         state[key] = field === 'lens' ? parseFloat(val) : val;
         try { localStorage.setItem(key, String(val)); } catch {}
         render();

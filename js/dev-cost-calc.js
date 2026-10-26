@@ -688,7 +688,9 @@ function computeStockRecommendations(allFilms, getTier, opts) {
     const subject = PICKER_SUBJECTS[opts.subject] || PICKER_SUBJECTS.everyday;
     const light = PICKER_LIGHTS[opts.light] || PICKER_LIGHTS.window;
     const lens = opts.lens;
-    const tmin = 1 / subject.shutter;
+    // Hand-held rule of thumb: shutter at least 1/focal length, so a long lens raises the subject's floor.
+    const minShutter = Math.max(subject.shutter, parseFloat(opts.focal) || 0);
+    const tmin = 1 / minShutter;
     const needed = 100 * lens * lens / (Math.pow(2, light.ev) * tmin);
     const neededNice = PICKER_NICE_ISO.find(i => i >= needed * 0.92) || 25600;
     const pool = Object.values(allFilms).filter(f => !f.hidden && (f.format || '35mm') === opts.format && pickerLookMatches(f, opts.look));
@@ -719,7 +721,7 @@ function computeStockRecommendations(allFilms, getTier, opts) {
         });
     });
     rows.sort((a, b) => (a.short - b.short) || (a.perFrame - b.perFrame));
-    return { rows, poolCount: pool.length, needed, neededNice, ev: light.ev, cap: light.cap, shutter: subject.shutter };
+    return { rows, poolCount: pool.length, needed, neededNice, ev: light.ev, cap: light.cap, shutter: Math.round(minShutter) };
 }
 
 if (typeof module !== 'undefined' && module.exports) {
