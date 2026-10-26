@@ -60,3 +60,215 @@ films:
         availability: city
         state: New South Wales
         city: Sydney
+  - name: Fujifilm Neopan Acros 100 II
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    devTimeSec: 630
+    devTempC: 20
+    colorType: bw
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 28.90
+        storeName: Rewind Photo Lab
+        buyLink: https://rewindphotolab.com.au/products/fujifilm-acros-100
+        availability: city
+        state: New South Wales
+        city: Sydney
+  - name: Ilford Delta 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    devTimeSec: 660
+    devTempC: 20
+    colorType: bw
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 23.99
+        storeName: Rewind Photo Lab
+        buyLink: https://rewindphotolab.com.au/products/ilford-delta-100
+        availability: city
+        state: New South Wales
+        city: Sydney
+  - name: Ilford Delta 3200
+    boxSpeed: 3200
+    maxPushPull: 2
+    process: BW
+    devTimeSec: 570
+    devTempC: 20
+    colorType: bw
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 19.95
+        storeName: Georges
+        buyLink: https://georges.com.au/products/ilford-delta-3200-iso-professional-35mm-36-exposure-black-white-film
+        availability: city
+        state: New South Wales
+        city: Sydney
+      - rolls: 1
+        exposures: 36
+        filmCost: 24.99
+        storeName: Rewind Photo Lab
+        buyLink: https://rewindphotolab.com.au/products/ilford-delta-3200
+        availability: city
+        state: New South Wales
+        city: Sydney
+  - name: Ilford Delta 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    devTimeSec: 840
+    devTempC: 20
+    colorType: bw
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 21.50
+        storeName: Georges
+        buyLink: https://georges.com.au/products/ilford-delta-400-iso-professional-35mm-36-exposure-black-white-film
+        availability: city
+        state: New South Wales
+        city: Sydney
+      - rolls: 1
+        exposures: 36
+        filmCost: 24.99
+        storeName: Rewind Photo Lab
+        buyLink: https://rewindphotolab.com.au/products/ilford-delta-400
+        availability: city
+        state: New South Wales
+        city: Sydney
+  - name: Ilford FP4+ 125
+    boxSpeed: 125
+    maxPushPull: 2
+    process: BW
+    devTimeSec: 660
+    devTempC: 20
+    colorType: bw
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 16.52
+        storeName: Georges
+        buyLink: https://georges.com.au/products/ilford-fp4-plus-black-and-white-35mm-film-36-exposures
+        availability: city
+        state: New South Wales
+        city: Sydney
+      - rolls: 1
+        exposures: 36
+        filmCost: 21.99
+        storeName: Rewind Photo Lab
+        buyLink: https://rewindphotolab.com.au/products/ilford-fp4-125
+        availability: city
+        state: New South Wales
+        city: Sydney
+  - name: Ilford HP5+ 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    devTimeSec: 780
+    devTempC: 20
+    colorType: bw
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 20.50
+        storeName: Rewind Photo Lab
+        buyLink: https://rewindphotolab.com.au/products/ilford-hp5-400
+        availability: city
+        state: New South Wales
+        city: Sydney
+  - name: Ilford XP2 Super 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: C41
+    devTimeSec: 195
+    devTempC: 38
+    colorType: bw
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 16.52
+        storeName: Georges
+        buyLink: https://georges.com.au/products/ilford-xp2-super-iso-400-35mm-36-exposure-black-white-film
+        availability: city
+        state: New South Wales
+        city: Sydney
+      - rolls: 1
+        exposures: 36
+        filmCost: 22.99
+        storeName: Rewind Photo Lab
+        buyLink: https://rewindphotolab.com.au/products/ilford-xp2-400
+        availability: city
+        state: New South Wales
+        city: Sydney
+  - name: Kodak T-Max 100
+    boxSpeed: 100
+    maxPushPull: 2
+    process: BW
+    devTimeSec: 570
+    devTempC: 20
+    colorType: bw
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 24.00
+        storeName: Rewind Photo Lab
+        buyLink: https://rewindphotolab.com.au/products/kodak-t-max-100
+        availability: city
+        state: New South Wales
+        city: Sydney
+  - name: Kodak T-Max 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    devTimeSec: 615
+    devTempC: 20
+    colorType: bw
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 31.00
+        storeName: Rewind Photo Lab
+        buyLink: https://rewindphotolab.com.au/products/kodak-t-max-400
+        availability: city
+        state: New South Wales
+        city: Sydney
+  - name: Kodak Tri-X 400
+    boxSpeed: 400
+    maxPushPull: 2
+    process: BW
+    devTimeSec: 585
+    devTempC: 20
+    colorType: bw
+    format: 35mm
+    hidden: false
+    bundles:
+      - rolls: 1
+        exposures: 36
+        filmCost: 24.00
+        storeName: Rewind Photo Lab
+        buyLink: https://rewindphotolab.com.au/products/kodak-tri-x-400
+        availability: city
+        state: New South Wales
+        city: Sydney
