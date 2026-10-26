@@ -3568,7 +3568,9 @@ const App = {
         if (key === 'libFilterModal' && val === true) { /* keep current tab's filters */ }
         // 127's back sizes share this state key but aren't 120 backs — don't let one clobber the remembered 120 back.
         if (key === 'frame120' && val in FRAME120) try { localStorage.setItem('globalCamera120Type', val); } catch {}
-        if (key === 'filmColor') try { localStorage.setItem('globalFilmColor', val); } catch {}
+        // B&W chemistry means a B&W film; keep the Colour filter in step (C-41 B&W stocks like XP2 can still be re-picked by hand).
+        if (key === 'process' && val === 'BW') state.filmColor = 'bw';
+        if (key === 'filmColor' || (key === 'process' && val === 'BW')) try { localStorage.setItem('globalFilmColor', state.filmColor); } catch {}
         if (key === 'frame35') try { localStorage.setItem('globalCamera35Type', val); } catch {}
         if (key === 'depthDist') try { localStorage.setItem('depthDist', val); } catch {}
         if (key === 'depthFocal') try { localStorage.setItem('depthFocal', val); } catch {}
@@ -4044,7 +4046,11 @@ const App = {
                 : { name: '', address: '', website: '', phone: '', email: '', source: '', services: [] };
         render();
     },
-    setDraft(key, val) { state.draft[key] = val; render(); },
+    setDraft(key, val) {
+        state.draft[key] = val;
+        if (key === 'process' && val === 'B&W' && state.draftKind === 'film') state.draft.colorType = 'B&W';
+        render();
+    },
     addSub() {
         const isFilm = state.draftKind === 'film';
         const list = isFilm ? state.draft.bundles : state.draft.services;
