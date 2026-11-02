@@ -23,7 +23,7 @@ labs:
         noPushPull: false
         processes:
           - C41
-      - devCost: 8
+      - devCost: 10
         pushPullCost: 3.5
         pushPullType: flat
         turnaroundTime: next_day
